@@ -2,7 +2,10 @@
 """Charts for the README from a `lab.py run` result: grouped horizontal bars
 as SVG, one group per network, one bar per tool, the median of the runs.
 
-    python3 benchmark/lab/charts.py benchmark/lab/out/run-<time>.json docs/bench
+    python3 benchmark/lab/charts.py benchmark/lab/out/run-<time>.json docs/bench [chart ...]
+
+With chart names (fps-dashboard, fps-random, age, flood, traffic, memory),
+only those; a chart the result has no data for is left out.
 
 Colors are a validated categorical palette (light and dark), assigned to the
 tools in a fixed order; every bar carries its value, so identity and value
@@ -30,10 +33,34 @@ def medians(results, test, key, scene=None):
     return {net: {tool: statistics.median(v) for tool, v in tools.items()} for net, tools in out.items()}
 
 
+def per_frame(results, scene):
+    """{net: {tool: median KB received per frame shown}}."""
+    out = {}
+    for r in results:
+        if r.get("test") == "render" and r.get("scene") == scene and r.get("kbit_s") and r.get("fps"):
+            out.setdefault(r["net"], {}).setdefault(r["tool"], []).append(r["kbit_s"] * 1000 / 8 / r["fps"] / 1024)
+    return {net: {tool: statistics.median(v) for tool, v in tools.items()} for net, tools in out.items()}
+
+
+def memory(results):
+    """[(side, {tool: median MB})] over every render run."""
+    sides = []
+    for key, label in (("rss_client_kb", "Client"), ("rss_server_kb", "Server (one session; sshd counts its listener)")):
+        values = {}
+        for r in results:
+            if r.get("test") == "render" and r.get(key):
+                values.setdefault(r["tool"], []).append(r[key] / 1024)
+        if values:
+            sides.append((label, {tool: statistics.median(v) for tool, v in values.items()}))
+    return sides
+
+
 def svg(title, note, groups, fmt, higher, log=False, missing="n/a"):
     """`groups`: [(label, {tool: value})]; `missing` stands where a tool
     has no value (e.g. it did not finish)."""
     tools = [t for t in ORDER if any(t in values for _, values in groups)]
+    if not tools:
+        return None
     known = [v for _, values in groups for v in values.values() if v is not None]
     # Log scale from a little under the least value, so the least bar shows.
     least = min(known) if known else 1.0
@@ -80,10 +107,11 @@ def svg(title, note, groups, fmt, higher, log=False, missing="n/a"):
 
 
 def main():
-    if len(sys.argv) != 3:
+    if len(sys.argv) < 3:
         sys.exit(__doc__)
     results = json.load(open(sys.argv[1]))["results"]
     os.makedirs(sys.argv[2], exist_ok=True)
+    only = set(sys.argv[3:])
     def groups(table):
         return [(label, table[net]) for net, label in NETS if net in table]
     charts = {
@@ -95,8 +123,17 @@ def main():
                        groups(medians(results, "render", "age_ms", "compress")), lambda v: "%.0f ms" % v if v < 1000 else "%.1f s" % (v / 1000), False, log=True),
         "flood.svg": svg("Time to finish `seq 1 100000`", "until the prompt is back",
                          groups(medians(results, "flood", "flood_s")), lambda v: "%.2f s" % v, False, log=True, missing="> 30 s (not done)"),
+        "traffic.svg": svg("Data received per frame shown: a full-screen dashboard at 30 fps", "network bytes into the client, median of runs",
+                           groups(per_frame(results, "compress")), lambda v: "%.2f KB" % v, False, log=True),
+        "memory.svg": svg("Memory while drawing at 30 fps", "resident memory halfway through each render, median of all of them",
+                          memory(results), lambda v: "%.1f MB" % v, False),
     }
+    unknown = only - {name[:-4] for name in charts}
+    if unknown:
+        sys.exit("charts.py: no chart %s; there are %s" % (", ".join(sorted(unknown)), ", ".join(name[:-4] for name in charts)))
     for name, text in charts.items():
+        if only and name[:-4] not in only or text is None:
+            continue
         with open(os.path.join(sys.argv[2], name), "w") as f:
             f.write(text)
         print(os.path.join(sys.argv[2], name))

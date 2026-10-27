@@ -308,7 +308,11 @@ def run_job(k, job):
                     shape(k, what[1])
                 elif what[0] == "roam":
                     roam(k, job["net"])
-                proc.stdin.write("OK\n")
+                answer = ""
+                if what[0] == "rss":
+                    # The server side's memory, which only the host sees.
+                    answer = " %s" % rss_kb(srv(k), SERVER_PROCESS[job["tool"]])
+                proc.stdin.write("OK%s\n" % answer)
                 proc.stdin.flush()
             elif line.startswith("{"):
                 result = json.loads(line)

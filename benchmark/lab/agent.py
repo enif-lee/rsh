@@ -198,11 +198,24 @@ def connect(tool, name, cols, rows, timeout=30):
 
 
 def ask(request):
-    """A step only the host can take; returns once it is done."""
+    """A step only the host can take; returns once it is done, with what the
+    host answered after its OK."""
     print("REQ " + request, flush=True)
     line = sys.stdin.readline()
     if not line.startswith("OK"):
         raise SystemExit("host: " + line.strip())
+    return line[2:].strip()
+
+
+# Each tool's client process, as `ps -C` names it.
+PROCESS = {"ssh": "ssh", "et": "et", "mosh": "mosh-client", "rsh": "rsh", "rsh-tcp": "rsh"}
+
+
+def rss_kb(names):
+    """Resident memory of this container's processes so named, KB."""
+    out = subprocess.run(["ps", "-o", "rss=", "-C", names], capture_output=True, text=True).stdout
+    sizes = [int(x) for x in out.split() if x.isdigit()]
+    return sum(sizes) if sizes else None
 
 
 def block(on, udp_only=False):
@@ -276,9 +289,10 @@ def render_stats(seen, start, end):
     }
 
 
-def run_scene(c, scene, seconds, fps, steps=()):
+def run_scene(c, scene, seconds, fps, steps=(), tool=None):
     """Runs scene.py for `seconds`; `steps` are (at seconds, request) for
-    the host during it. Returns the frames' window."""
+    the host during it. With `tool`, the client's and the server's memory
+    halfway through. Returns the frames' window."""
     # Every tool's screen is rebuilt while a scene runs: what it shows is
     # checked for tearing and flashes (`Client.look`).
     c.emulate = True
@@ -301,6 +315,11 @@ def run_scene(c, scene, seconds, fps, steps=()):
             ask(request)
         # From when the change is made.
         marks[request] = time.time()
+    if tool:
+        time.sleep(max(0.0, start + seconds / 2 - time.time()))
+        marks["rss_client_kb"] = rss_kb(PROCESS[tool])
+        server = ask("rss")
+        marks["rss_server_kb"] = int(server) if server.isdigit() else None
     time.sleep(max(0.0, start + seconds - time.time()))
     stop = time.time()
     c.watching = False
@@ -395,9 +414,10 @@ def main_run(job):
         c.finish()
         return out
     if test == "render":
-        start, stop, marks = run_scene(c, job["scene"], job["duration"], job["scene_fps"])
+        start, stop, marks = run_scene(c, job["scene"], job["duration"], job["scene_fps"], tool=job["tool"])
         seen = frames_between(c, job["scene"], start, stop)
-        out.update(render_stats(seen, start, stop), kbit_s=marks["kbit_s"], stalls=stalls(seen), stall_at=stall_times(seen), **screen_stats(c, start, stop, seen))
+        out.update(render_stats(seen, start, stop), kbit_s=marks["kbit_s"], stalls=stalls(seen), stall_at=stall_times(seen), **screen_stats(c, start, stop, seen),
+                   rss_client_kb=marks["rss_client_kb"], rss_server_kb=marks["rss_server_kb"])
     elif test == "switch":
         # The link changes during the scene: how fast the tool follows.
         at = job["switch_at"]

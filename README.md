@@ -25,6 +25,19 @@ Same machine, same simulated links, five clients: rsh over UDP, rsh over TCP (UD
 - **Big output does not block you.** `seq 1 100000` returns the prompt in 0.13 to 0.41 s on every link. OpenSSH and ET take 1.6 to 23 s, and more than 30 s at 64 kbit/s.
 - **Sessions survive.** After a 5 s outage rsh is back about 1 s (median 0.95 s) after the link returns. After the client moves to another IP address it carries on in about 2 s. A client killed and started again returns to the same shell in 0.5 s.
 
+### Memory and traffic
+
+<p align="center">
+  <img src="docs/bench/memory.svg" alt="Client and server resident memory while drawing at 30 fps, per tool" width="760">
+</p>
+
+<p align="center">
+  <img src="docs/bench/traffic.svg" alt="Network data received per frame shown for a full-screen dashboard, per network and tool" width="760">
+</p>
+
+- **Memory.** While drawing at 30 fps the rsh client holds 2.4 MB (OpenSSH 7.4, mosh 14.5, ET 17.4 MB). On the server one `rsh serve` process carries every session; with one session it holds 5.7 MB (`mosh-server` 10.4, ET 13.3, `sshd` 18.7 MB with its listener).
+- **Traffic.** A dashboard frame on screen costs rsh 0.45 to 0.59 KB on the wire and mosh 0.62 to 0.69 KB, against 4.8 to 5.2 KB for OpenSSH and ET, which carry every byte the program writes. At 2% loss rsh over UDP takes 0.88 KB, as lost datagrams go again.
+
 <details>
 <summary>More charts: random full screen, bulk output</summary>
 
@@ -45,7 +58,7 @@ Same machine, same simulated links, five clients: rsh over UDP, rsh over TCP (UD
 > - When the link changes under a random full screen, rsh takes longer to adapt: from RTT 100 ms to 256 kbit/s it shows 1.8 fps afterwards (OpenSSH and ET 2.5, mosh and rsh over TCP 5.3); from a LAN to RTT 300 ms, 18.0 fps (OpenSSH 29.0, ET 29.2).
 > - rsh over TCP does not resume after an outage or a move within the 4 s the test watches.
 >
-> One of ET's three bulk-output runs at 512 kbit/s did not connect; its value is the median of two.
+> One of ET's three bulk-output runs at 512 kbit/s did not connect; its value is the median of two. Memory comes from a second run of the render tests (180 runs, 36 per tool), the rest from the first.
 
 ## Feature matrix
 
@@ -138,10 +151,11 @@ python3 benchmark/lab/lab.py run --iterations 3 \
                                                     # the README's run; results in benchmark/lab/out/run-<time>.json
 python3 benchmark/lab/lab.py demo                   # the tools side by side in tmux, then a summary
 python3 benchmark/lab/lab.py stop                   # stop a run or demo from another shell
-python3 benchmark/lab/charts.py benchmark/lab/out/run-<time>.json docs/bench
+python3 benchmark/lab/charts.py benchmark/lab/out/run-<time>.json docs/bench   # every chart the run has data for
+python3 benchmark/lab/charts.py benchmark/lab/out/run-<time>.json docs/bench memory   # only these
 ```
 
-`--tests`, `--tools`, `--nets`, `--scenes`, `--switches`, `--fps` and `--duration` pick what runs (without `--tests`, render and switch only); `--rsh <linux binary>` tests another build without rebuilding the image.
+Render runs record the client's and the server's memory halfway through each scene, which the `memory` chart uses. `--tests`, `--tools`, `--nets`, `--scenes`, `--switches`, `--fps` and `--duration` pick what runs (without `--tests`, render and switch only); `--rsh <linux binary>` tests another build without rebuilding the image.
 
 ## Development
 
