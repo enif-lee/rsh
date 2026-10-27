@@ -1437,7 +1437,12 @@ impl State {
         if let (Some(path), Some(report)) = (attach.path.as_mut(), proto::Feedback::decode(stream.feedback).filter(|_| !stream.feedback.is_empty())) {
             path.feedback(&report, now);
             if !is_tcp_addr(attach.addr) {
-                attach.output.set_path(path.rate(now), path.window_rtt(now));
+                // A rate over `SLOW_RATE` holds nothing up for the sender (it
+                // takes none over it from its own measure either), and its
+                // window is then the model's: a long burst over a fast path
+                // spreads too (1.3 MB/s read over RTT 300 ms with nothing in
+                // the way kept the sender's own shrunken window).
+                attach.output.set_path(path.rate(now).filter(|rate| *rate < proto::SLOW_RATE), path.window_rtt(now));
             }
         }
         attach.open_window(now);

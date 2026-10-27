@@ -1103,7 +1103,7 @@ impl Sender {
         // path's for longer, and timed out spuriously (twice in the first
         // 300 ms of LAN to 1 Mbit/s: a frame held 80 to 118 ms).
         let model = self.path.and_then(|(_, rtt)| rtt);
-        let least = model.map_or(Duration::ZERO, |rtt| Duration::from_secs_f64((rtt * 1.25 + 30.0) / 1000.0));
+        let least = model.map_or(Duration::ZERO, |rtt| Duration::from_secs_f64((rtt * 1.25 + 30.0) / 1000.0)).min(SLOW_MAX_RTO);
         let floor = match (model, self.floor_rtt) {
             (Some(model), Some(own)) => Some(model.max(own)),
             (model, own) => model.or(own),
@@ -2090,6 +2090,17 @@ mod tests {
         let back = ClientStream::decode(&encoded).unwrap();
         assert_eq!((back.feedback, back.data), (&feedback[..], &b"ab"[..]));
         assert_eq!(Feedback::decode(back.feedback), Some(Feedback { sent_us: 9, arrivals: vec![(1, 100), (2, 140)] }));
+    }
+
+    #[test]
+    fn the_timeout_is_no_shorter_than_the_path_models_round_trip() {
+        let start = Instant::now();
+        let mut tx = Sender::new(1);
+        tx.push(&[0; 100]);
+        tx.set_path(None, Some(300.0));
+        assert!(tx.next_chunk(start).is_some());
+        let deadline = tx.deadline().expect("a timeout");
+        assert!(deadline >= start + Duration::from_millis(400), "{:?}", deadline - start);
     }
 
     #[test]

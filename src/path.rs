@@ -356,11 +356,7 @@ impl PathModel {
         // front of it (it was busy all along): a few low samples must not
         // pace output under what the link carries.
         let busy = if self.queue_ms >= 5.0 { self.delivery_rate } else { 0.0 };
-        // A rate over `SLOW_RATE` is no bottleneck that holds anything up
-        // (the sender takes none over it either): a long burst over a fast
-        // path spreads past `SPREAD_US` too (1.3 MB/s read over RTT 300 ms
-        // with nothing in the way, which kept the window of a slow link).
-        Some(median.max(busy)).filter(|rate| *rate < crate::proto::SLOW_RATE)
+        Some(median.max(busy))
     }
 
     /// Whether the path has room for copies of what goes now: no queue
@@ -512,10 +508,19 @@ mod tests {
         assert_eq!(fast.rate(now), None);
         let rtt = fast.min_rtt().expect("a round trip");
         assert!((rtt - 300.0).abs() < 5.0, "{rtt}");
-        // A long burst spreads past `SPREAD_US` on a fast link too: far
-        // over `SLOW_RATE`, no bottleneck.
-        let now = run(&mut fast, now, 64, 1000, 10, 10e6, 150);
-        assert_eq!(fast.rate(now), None);
+    }
+
+    #[test]
+    fn a_queue_over_a_fast_bottleneck_stays_a_queue() {
+        // 1 MB/s (8 Mbit/s) sent at 1.3 MB/s: a rate shows, so the queue
+        // that grows is not taken for a longer path.
+        let start = Instant::now();
+        let mut model = PathModel::new(start);
+        let now = run(&mut model, start, 3000, 1200, 900, 1e6, 50);
+        let rtt = model.min_rtt().expect("a round trip");
+        assert!(rtt < 110.0, "{rtt}");
+        assert!(model.queue_ms() > 100.0, "{}", model.queue_ms());
+        assert!(model.rate(now).is_some());
     }
 
     #[test]
