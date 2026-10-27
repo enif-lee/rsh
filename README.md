@@ -1,11 +1,19 @@
-# rsh
+<p align="center">
+  <img src="docs/assets/rsh-icon.png" alt="rsh icon: a terminal prompt with a reconnect arrow" width="128" height="128">
+</p>
 
-[![Rust](https://img.shields.io/badge/rust-2021-orange?logo=rust)](Cargo.toml)
-[![Release](https://img.shields.io/github/v/release/enif-lee/rsh)](https://github.com/enif-lee/rsh/releases/latest)
-[![Platforms](https://img.shields.io/badge/platforms-linux%20%7C%20macOS-lightgrey)](#installation)
-[![Transport](https://img.shields.io/badge/transport-UDP%20%2B%20TCP%20fallback-blue)](#how-it-works)
+<h1 align="center">rsh</h1>
 
-> A remote shell that keeps your session through disconnects and keeps the screen current on slow, far and lossy links.
+<p align="center">
+  <a href="Cargo.toml"><img src="https://img.shields.io/badge/rust-2021-orange?logo=rust" alt="Rust"></a>
+  <a href="https://github.com/enif-lee/rsh/releases/latest"><img src="https://img.shields.io/github/v/release/enif-lee/rsh" alt="Release"></a>
+  <a href="#installation"><img src="https://img.shields.io/badge/platforms-linux%20%7C%20macOS-lightgrey" alt="Platforms"></a>
+  <a href="#how-it-works"><img src="https://img.shields.io/badge/transport-UDP%20%2B%20TCP%20fallback-blue" alt="Transport"></a>
+</p>
+
+<p align="center">
+  <em>A remote shell that keeps your session through disconnects and keeps the screen current on slow, far and lossy links.</em>
+</p>
 
 rsh opens a shell on a host the way `ssh` does, but the session lives on the server: close the laptop, change networks, or kill the client, and `rsh <host>` brings you back to the same shell. Over UDP it echoes your keys at once and, when the link cannot carry every byte, it sends the latest screen instead of a backlog. Where only TCP gets through, it falls back to TCP on the same port.
 
