@@ -1,0 +1,27 @@
+[package]
+name = "rsh"
+version = "0.1.0"
+edition = "2021"
+description = "UDP remote shell with one connection per host and a client terminal"
+
+[dependencies]
+alacritty_terminal = { version = "0.26.0", default-features = false }
+chacha20poly1305 = "0.10.1"
+clap = { version = "4.6.7", features = ["derive", "env"] }
+console = "0.16.6"
+dialoguer = { version = "0.12.0", features = ["fuzzy-select"] }
+indicatif = "0.18.6"
+libc = "0.2"
+miniz_oxide = "0.9"
+ratatui = "0.30.2"
+sha2 = "0.10.9"
+unicode-width = "0.2.2"
+x25519-dalek = { version = "2.0.1", features = ["static_secrets"] }
+
+[[bin]]
+name = "rsh"
+path = "src/main.rs"
+
+[lib]
+name = "rsh"
+path = "src/lib.rs"
