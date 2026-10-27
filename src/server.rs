@@ -1387,6 +1387,7 @@ impl State {
                 }
                 attach.output.set_lossless(is_tcp_addr(addr));
                 attach.output.forget_capacity();
+                attach.link_free = None;
                 if let Some(path) = attach.path.as_mut() {
                     path.forget(now);
                 }
@@ -1695,7 +1696,7 @@ impl State {
             let loss = attach.output.loss();
             let resent = attach.output.take_resend();
             // A slow link has no room for copies (with the path model: when
-            // they would not fit in its rate).
+            // a queue stands or they would not fit in its rate).
             let roomy = match attach.path.as_ref() {
                 Some(path) => path.room_for_copies(now),
                 None => attach.output.slow_rate().is_none(),
@@ -1939,10 +1940,11 @@ impl Attachment {
         let Some(rtt) = path.window_rtt(now) else {
             return;
         };
-        // With no bottleneck no queue stands to inflate the smoothed round
-        // trip, and the least may be a shorter path's (100 ms that turned
-        // 300 kept the window a third short for seconds).
-        let rtt = if path.rate(now).is_none() { path.srtt().map_or(rtt, |srtt| srtt.max(rtt)) } else { rtt };
+        // With neither a bottleneck nor a queue the smoothed round trip is
+        // the path's, and the least may be a shorter path's (100 ms that
+        // turned 300 kept the window a third short for seconds); with a
+        // queue, sized by it the window would keep the queue standing.
+        let rtt = if path.rate(now).is_none() && path.queue_ms() < 20.0 { path.srtt().map_or(rtt, |srtt| srtt.max(rtt)) } else { rtt };
         // The program's pace only on a path seen to take a burst at once:
         // on a slow one not yet measured, the first of a burst would queue.
         let made = if path.fast(now) { self.stream_len(self.made.1.max(self.made.2)) as f64 / SYNC_SPAN.as_secs_f64() } else { 0.0 };

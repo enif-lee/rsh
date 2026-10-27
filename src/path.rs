@@ -88,7 +88,8 @@ pub struct PathModel {
     /// When a train of 600 bytes or more (after its first) last arrived
     /// spread less than `SPREAD_US`: the path took it over `SLOW_RATE`.
     fast_seen: Option<Instant>,
-    /// Such trains since the last rate sample (see `end_train`).
+    /// Such trains in a row, each far over the rate measured (see
+    /// `end_train`).
     fast_trains: u32,
     /// (when, wire bytes) of datagrams sent over the last second.
     sent_log: VecDeque<(Instant, u32)>,
@@ -319,16 +320,17 @@ impl PathModel {
             // ever deliver that rate, never showing the link got faster.
             if spread < SPREAD_US && train.bytes >= 600 {
                 self.fast_seen = Some(now);
-                let shown = train.bytes as f64 * 1_000_000.0 / SPREAD_US as f64;
-                if self.rate(now).is_some_and(|rate| shown > 2.0 * rate) {
-                    self.fast_trains += 1;
-                    if self.fast_trains >= 2 {
-                        self.rates.clear();
-                    }
+            }
+            let shown = train.bytes as f64 * 1_000_000.0 / SPREAD_US as f64;
+            if spread < SPREAD_US && train.bytes >= 600 && self.rate(now).is_some_and(|rate| shown > 2.0 * rate) {
+                self.fast_trains += 1;
+                if self.fast_trains >= 2 {
+                    self.rates.clear();
                 }
+            } else if train.bytes > 0 {
+                self.fast_trains = 0;
             }
             if spread >= SPREAD_US && train.bytes > 0 {
-                self.fast_trains = 0;
                 self.rates.push_back((now, train.bytes as f64 * 1_000_000.0 / spread as f64));
                 while self.rates.len() > RATE_KEPT {
                     self.rates.pop_front();
@@ -357,10 +359,11 @@ impl PathModel {
         Some(median.max(busy))
     }
 
-    /// Whether the path has room for copies of what goes now: twice the
-    /// rate of originals sent over the last second fits in its rate with a
-    /// margin (or no rate shows: nothing waited on it). Copies themselves
-    /// do not count, or turning them on would turn them off.
+    /// Whether the path has room for copies of what goes now: no queue
+    /// stands, and twice the rate of originals sent over the last second
+    /// fits in its rate with a margin (or no rate shows: nothing waited on
+    /// it). Copies themselves do not count, or turning them on would turn
+    /// them off.
     pub fn room_for_copies(&self, now: Instant) -> bool {
         // A queue standing is no room, whatever the rate (a link that just
         // turned slow drops what it had: that loss is its queue's).
@@ -388,8 +391,10 @@ impl PathModel {
     pub fn window_rtt(&self, _now: Instant) -> Option<f64> {
         // The least alone: a recent least takes in a standing queue, and a
         // window sized by it keeps the queue standing (LAN to 512 kbit/s:
-        // 224 ms grew to 605 with half a second of queue). A near path that
-        // turned far is rebased (`rebase_if_changed`).
+        // 224 ms grew to 605 with half a second of queue). A path that
+        // turned far is rebased (`rebase_if_changed`); the server sizes a
+        // window by the smoothed round trip only with neither a bottleneck
+        // nor a queue in sight.
         self.min_rtt()
     }
 
@@ -398,14 +403,18 @@ impl PathModel {
     /// start again from them, so neither the window nor the queue reads the
     /// old path for seconds. Not from a far least: there a queue of this
     /// sender's own (a slow link's at the start) looks the same. But a queue
-    /// standing with no bottleneck seen (trains arrive unspread) is a
-    /// longer path (RTT 100 ms that turned 300 read as 100 ms of queue).
+    /// standing while trains lately arrived unspread and none spread
+    /// (`fast_seen`, no rate) is a longer path (RTT 100 ms that turned 300
+    /// read as 100 ms of queue). No trains at all is no such evidence:
+    /// single datagrams a frame apart over a link a little too slow form
+    /// none, and a queue of their own would become the floor.
     fn rebase_if_changed(&mut self, now: Instant) {
         let (Some(least), Some(last)) = (self.min_rtt(), self.last_rtts.iter().copied().reduce(f64::min)) else {
             return;
         };
         let near_turned_far = least < 20.0 && last > 3.0 * least + 20.0;
-        let longer = self.rate(now).is_none() && self.queue_ms >= 20.0 && last > least + 20.0;
+        let unspread = self.fast_seen.is_some_and(|at| now.duration_since(at) <= RATE_SPAN);
+        let longer = unspread && self.rate(now).is_none() && self.queue_ms >= 20.0 && last > least + 20.0;
         if self.last_rtts.len() < LAST_RTTS || !(near_turned_far || longer) {
             return;
         }
@@ -457,13 +466,20 @@ mod tests {
     /// Datagrams of `size` sent `send_gap_us` apart through a link of `rate`
     /// bytes a second and `delay_ms`, reported in groups of four.
     fn run(model: &mut PathModel, start: Instant, count: u32, size: usize, send_gap_us: u64, rate: f64, delay_ms: u64) -> Instant {
+        run_from(model, start, start, count, size, send_gap_us, rate, delay_ms)
+    }
+
+    /// `run` with the client's clock counted from `origin`, so that runs
+    /// one after another read one clock.
+    #[allow(clippy::too_many_arguments)]
+    fn run_from(model: &mut PathModel, origin: Instant, start: Instant, count: u32, size: usize, send_gap_us: u64, rate: f64, delay_ms: u64) -> Instant {
         let mut link_free = 0f64;
         let mut pending = Vec::new();
         let mut now = start;
         for i in 0..count {
             now = start + Duration::from_micros(u64::from(i) * send_gap_us);
             let pn = model.number(now, size, false);
-            let sent_us = now.duration_since(start).as_micros() as f64;
+            let sent_us = now.duration_since(origin).as_micros() as f64;
             let out = sent_us.max(link_free) + size as f64 / rate * 1e6;
             link_free = out;
             let arrive = out + delay_ms as f64 * 1000.0;
@@ -471,7 +487,7 @@ mod tests {
             if pending.len() == 4 {
                 let last = pending.last().expect("four").1;
                 let report = Feedback { sent_us: last + 500, arrivals: std::mem::take(&mut pending) };
-                let at = start + Duration::from_micros(u64::from(last) + 500 + delay_ms * 1000);
+                let at = origin + Duration::from_micros(u64::from(last) + 500 + delay_ms * 1000);
                 model.feedback(&report, at.max(now));
             }
         }
@@ -522,6 +538,48 @@ mod tests {
         let rtt = model.window_rtt(now).expect("a round trip");
         assert!((rtt - 100.0).abs() < 5.0, "{rtt}");
         assert!(model.queue_ms() < 5.0, "the new path's delay is no queue: {}", model.queue_ms());
+    }
+
+    #[test]
+    fn a_slow_link_gone_is_unlearned_after_two_fast_trains() {
+        let start = Instant::now();
+        let mut model = PathModel::new(start);
+        let now = run(&mut model, start, 64, 1000, 10, 32_000.0, 50);
+        assert!(model.rate(now).is_some());
+        // One burst let through at once says nothing yet.
+        let now = run(&mut model, now + Duration::from_millis(200), 4, 1000, 10, 10e6, 50);
+        assert!(model.rate(now).is_some());
+        let now = run(&mut model, now + Duration::from_millis(200), 4, 1000, 10, 10e6, 50);
+        // (A train is told when what follows it arrives.)
+        let now = run(&mut model, now + Duration::from_millis(200), 4, 1000, 10, 10e6, 50);
+        assert_eq!(model.rate(now), None);
+    }
+
+    #[test]
+    fn a_longer_path_is_rebased_and_a_queue_of_ones_own_is_not() {
+        let start = Instant::now();
+        // RTT 100 ms that turned 300, nothing in the way (frames of four
+        // datagrams arrive unspread): the floor follows.
+        let mut model = PathModel::new(start);
+        let mut now = start;
+        for delay_ms in [50, 150] {
+            for _ in 0..20 {
+                now = run_from(&mut model, start, now + Duration::from_millis(33), 4, 1000, 10, 10e6, delay_ms);
+            }
+        }
+        let rtt = model.min_rtt().expect("a round trip");
+        assert!((rtt - 300.0).abs() < 10.0, "{rtt}");
+        assert!(model.queue_ms() < 5.0, "{}", model.queue_ms());
+        // Single datagrams a frame apart over a link a little too slow
+        // (37.5 ms each, 33 ms apart): no train forms, the queue grows,
+        // and the floor stays.
+        let mut model = PathModel::new(start);
+        let now = run(&mut model, start, 40, 300, 30_000, 10e6, 50);
+        let now = run_from(&mut model, start, now + Duration::from_secs(2), 160, 1200, 33_333, 32_000.0, 50);
+        let rtt = model.min_rtt().expect("a round trip");
+        assert!(rtt < 110.0, "{rtt}");
+        assert!(model.queue_ms() > 100.0, "{}", model.queue_ms());
+        assert!(!model.room_for_copies(now));
     }
 
     #[test]
