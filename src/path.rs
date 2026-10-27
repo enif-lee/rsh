@@ -356,7 +356,11 @@ impl PathModel {
         // front of it (it was busy all along): a few low samples must not
         // pace output under what the link carries.
         let busy = if self.queue_ms >= 5.0 { self.delivery_rate } else { 0.0 };
-        Some(median.max(busy))
+        // A rate over `SLOW_RATE` is no bottleneck that holds anything up
+        // (the sender takes none over it either): a long burst over a fast
+        // path spreads past `SPREAD_US` too (1.3 MB/s read over RTT 300 ms
+        // with nothing in the way, which kept the window of a slow link).
+        Some(median.max(busy)).filter(|rate| *rate < crate::proto::SLOW_RATE)
     }
 
     /// Whether the path has room for copies of what goes now: no queue
@@ -508,6 +512,10 @@ mod tests {
         assert_eq!(fast.rate(now), None);
         let rtt = fast.min_rtt().expect("a round trip");
         assert!((rtt - 300.0).abs() < 5.0, "{rtt}");
+        // A long burst spreads past `SPREAD_US` on a fast link too: far
+        // over `SLOW_RATE`, no bottleneck.
+        let now = run(&mut fast, now, 64, 1000, 10, 10e6, 150);
+        assert_eq!(fast.rate(now), None);
     }
 
     #[test]
