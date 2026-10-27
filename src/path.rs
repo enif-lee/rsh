@@ -88,6 +88,8 @@ pub struct PathModel {
     /// When a train of 600 bytes or more (after its first) last arrived
     /// spread less than `SPREAD_US`: the path took it over `SLOW_RATE`.
     fast_seen: Option<Instant>,
+    /// Such trains since the last rate sample (see `end_train`).
+    fast_trains: u32,
     /// (when, wire bytes) of datagrams sent over the last second.
     sent_log: VecDeque<(Instant, u32)>,
     /// Lost datagrams over all reported or aged out, as a moving share,
@@ -117,6 +119,7 @@ impl PathModel {
             last_rtts: VecDeque::new(),
             rates: VecDeque::new(),
             fast_seen: None,
+            fast_trains: 0,
             sent_log: VecDeque::new(),
             loss: 0.0,
             random_loss: 0.0,
@@ -171,6 +174,7 @@ impl PathModel {
         self.last_rtts.clear();
         self.rates.clear();
         self.fast_seen = None;
+        self.fast_trains = 0;
         self.delivered = (now, 0);
     }
 
@@ -308,11 +312,23 @@ impl PathModel {
     fn end_train(&mut self, now: Instant) {
         if let Some(train) = self.train.take() {
             let spread = train.last_us - train.first_us;
-            // 600 bytes in under `SPREAD_US`: over `SLOW_RATE`.
+            // 600 bytes in under `SPREAD_US`: over `SLOW_RATE`. Two in a
+            // row well over the rate measured (one can be two datagrams
+            // let through together): the bottleneck is gone (the client
+            // moved off a slow link), and pacing at the old rate would only
+            // ever deliver that rate, never showing the link got faster.
             if spread < SPREAD_US && train.bytes >= 600 {
                 self.fast_seen = Some(now);
+                let shown = train.bytes as f64 * 1_000_000.0 / SPREAD_US as f64;
+                if self.rate(now).is_some_and(|rate| shown > 2.0 * rate) {
+                    self.fast_trains += 1;
+                    if self.fast_trains >= 2 {
+                        self.rates.clear();
+                    }
+                }
             }
             if spread >= SPREAD_US && train.bytes > 0 {
+                self.fast_trains = 0;
                 self.rates.push_back((now, train.bytes as f64 * 1_000_000.0 / spread as f64));
                 while self.rates.len() > RATE_KEPT {
                     self.rates.pop_front();
@@ -376,13 +392,16 @@ impl PathModel {
     /// over its least turned far: the least round trip and one-way delay
     /// start again from them, so neither the window nor the queue reads the
     /// old path for seconds. Not from a far least: there a queue of this
-    /// sender's own (a slow link's at the start) looks the same, and the
-    /// recent least of `window_rtt` follows a longer path.
+    /// sender's own (a slow link's at the start) looks the same. But a queue
+    /// standing with no bottleneck seen (trains arrive unspread) is a
+    /// longer path (RTT 100 ms that turned 300 read as 100 ms of queue).
     fn rebase_if_changed(&mut self, now: Instant) {
         let (Some(least), Some(last)) = (self.min_rtt(), self.last_rtts.iter().copied().reduce(f64::min)) else {
             return;
         };
-        if self.last_rtts.len() < LAST_RTTS || least >= 20.0 || last <= 3.0 * least + 20.0 {
+        let near_turned_far = least < 20.0 && last > 3.0 * least + 20.0;
+        let longer = self.rate(now).is_none() && self.queue_ms >= 20.0 && last > least + 20.0;
+        if self.last_rtts.len() < LAST_RTTS || !(near_turned_far || longer) {
             return;
         }
         self.rtt.clear();

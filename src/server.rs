@@ -1859,16 +1859,17 @@ impl Attachment {
             let gap = if self.modelled() {
                 // With the path model's rate the link's time is reckoned,
                 // not measured: the next update goes once what went before
-                // is off the link within a frame (`link_free`), so the
-                // queue stays under a frame and updates skip whole frames
-                // only (an update of 38 ms over 33 ms frames: five sent,
-                // one skipped). In flight past the round trip and four
-                // updates (losses, resends) holds them as a safeguard.
+                // is off the link (`link_free`), with the screen as it is
+                // then. Not a frame early to keep the program's pace: an
+                // update of 38 ms over 33 ms frames then skipped whole
+                // frames, gaps of 66 to 80 ms where the link's pace gives
+                // 33 to 55. In flight past the round trip and four updates
+                // (losses, resends) holds them as a safeguard.
                 if in_flight > 0 && in_flight + update > bdp + 4 * update {
                     return None;
                 }
                 let free = self.link_free.unwrap_or(last);
-                free.saturating_duration_since(last).saturating_sub(self.screen_gap())
+                free.saturating_duration_since(last)
             } else {
                 // A slow link: the next update waits until it fits what the
                 // path delivers in its least round trip plus two updates, so
@@ -1938,6 +1939,10 @@ impl Attachment {
         let Some(rtt) = path.window_rtt(now) else {
             return;
         };
+        // With no bottleneck no queue stands to inflate the smoothed round
+        // trip, and the least may be a shorter path's (100 ms that turned
+        // 300 kept the window a third short for seconds).
+        let rtt = if path.rate(now).is_none() { path.srtt().map_or(rtt, |srtt| srtt.max(rtt)) } else { rtt };
         // The program's pace only on a path seen to take a burst at once:
         // on a slow one not yet measured, the first of a burst would queue.
         let made = if path.fast(now) { self.stream_len(self.made.1.max(self.made.2)) as f64 / SYNC_SPAN.as_secs_f64() } else { 0.0 };

@@ -13,7 +13,7 @@ send screen differences (only the digits that changed), so their screen
 is rebuilt with pyte, on another thread. Steps the host must take (link changes, a move to another
 address) are asked for on stdout (`REQ ...`) and confirmed on stdin.
 """
-import fcntl, json, math, os, pty, queue, random, re, signal, statistics, struct, subprocess, sys, termios, threading, time
+import collections, fcntl, json, math, os, pty, queue, random, re, signal, statistics, struct, subprocess, sys, termios, threading, time
 import pyte
 
 COMMAND = {
@@ -304,6 +304,8 @@ def render_stats(seen, start, end):
         # As games count them: the rate the slowest 1% and 5% of frame
         # times would give (1000 / the 99th and 95th percentile gap, ms).
         **lows(seen),
+        # Frame gaps by 10 ms, for where the slow ones come from.
+        "gap_hist": sorted(collections.Counter(int((b[0] - a[0]) * 100) * 10 for a, b in zip(seen, seen[1:])).items()),
         "per_s": [sum(1 for f in seen if start + k <= f[0] < start + k + 1) for k in range(int(span))],
         # The first second alone: how fast the tool settles at the start.
         "first_s_fps": sum(1 for f in seen if f[0] < start + 1),
