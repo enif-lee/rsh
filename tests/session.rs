@@ -467,6 +467,7 @@ fn server_adopts_new_client_address() {
             out_gen: 0,
             out_ack: 0,
             in_offset: 0,
+            feedback: &[],
             data: b"",
         };
         let bytes = proto::seal(&attached.key, proto::Dir::ToServer, KIND_STREAM, attached.attach, &stream.encode());
@@ -485,7 +486,7 @@ fn server_adopts_new_client_address() {
         thread::sleep(Duration::from_millis(10));
     }
     let replayed_old_counter = {
-        let stream = ClientStream { flags: 0, cols: 80, rows: 24, out_gen: 0, out_ack: 0, in_offset: 0, data: b"" };
+        let stream = ClientStream { flags: 0, cols: 80, rows: 24, out_gen: 0, out_ack: 0, in_offset: 0, feedback: &[], data: b"" };
         proto::seal(&attached.key, proto::Dir::ToServer, KIND_STREAM, attached.attach, &stream.encode())
     };
     send(&new);
@@ -612,7 +613,7 @@ fn ctrl_c_drops_a_large_unacked_backlog() {
     let sock = UdpSocket::bind("127.0.0.1:0").unwrap();
     let mut offset = 0u64;
     let mut type_bytes = |bytes: &[u8]| {
-        let stream = ClientStream { flags: 0, cols: 80, rows: 24, out_gen: 0, out_ack: 0, in_offset: offset, data: bytes };
+        let stream = ClientStream { flags: 0, cols: 80, rows: 24, out_gen: 0, out_ack: 0, in_offset: offset, feedback: &[], data: bytes };
         sock.send_to(&proto::seal(&attached.key, proto::Dir::ToServer, KIND_STREAM, attached.attach, &stream.encode()), server.addr()).unwrap();
         offset += bytes.len() as u64;
     };
@@ -779,7 +780,7 @@ fn end_offset_follows_a_repaint_after_exit() {
         }
     }
     let gen = exited_gen.expect("exit seen");
-    let redraw = ClientStream { flags: FLAG_REDRAW, cols: 80, rows: 24, out_gen: gen, out_ack: 0, in_offset: 0, data: b"" };
+    let redraw = ClientStream { flags: FLAG_REDRAW, cols: 80, rows: 24, out_gen: gen, out_ack: 0, in_offset: 0, feedback: &[], data: b"" };
     sock.send_to(&proto::seal(&attached.key, proto::Dir::ToServer, KIND_STREAM, attached.attach, &redraw.encode()), server.addr()).unwrap();
     let mut seen_end = 0u64;
     let mut advertised = None;

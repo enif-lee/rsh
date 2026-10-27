@@ -279,6 +279,14 @@ def stall_times(seen):
     return [(round(at, 3), round(ms), skipped) for at, ms, skipped in gaps if ms > 2.5 * usual][:10]
 
 
+def lows(seen):
+    gaps = sorted((b[0] - a[0]) * 1000 for a, b in zip(seen, seen[1:]))
+    if len(gaps) < 10:
+        return {"low1_fps": None, "low5_fps": None}
+    at = lambda q: gaps[min(len(gaps) - 1, math.ceil(len(gaps) * q) - 1)]
+    return {"low1_fps": round(1000 / max(at(0.99), 1e-3), 1), "low5_fps": round(1000 / max(at(0.95), 1e-3), 1)}
+
+
 def render_stats(seen, start, end):
     """fps, frame age (made on the server, shown here; the containers
     share a clock), the longest gap (edges included), fps each second."""
@@ -291,6 +299,9 @@ def render_stats(seen, start, end):
         "age_ms": round(statistics.median(ages)) if ages else None,
         "age_p95_ms": round(ages[math.ceil(len(ages) * 0.95) - 1]) if len(ages) >= 20 else None,
         "max_gap_ms": round(max(b - a for a, b in zip(times, times[1:])) * 1000),
+        # As games count them: the rate the slowest 1% and 5% of frame
+        # times would give (1000 / the 99th and 95th percentile gap, ms).
+        **lows(seen),
         "per_s": [sum(1 for f in seen if start + k <= f[0] < start + k + 1) for k in range(int(span))],
         # The first second alone: how fast the tool settles at the start.
         "first_s_fps": sum(1 for f in seen if f[0] < start + 1),
@@ -436,7 +447,8 @@ def main_run(job):
         moved = marks["shape " + job["to"]]
         before = render_stats([f for f in seen if f[0] < moved], start, moved)
         after = render_stats([f for f in seen if f[0] >= moved], moved, stop)
-        out.update(fps_before=before["fps"], fps_after=after["fps"], age_after_ms=after["age_ms"])
+        out.update(fps_before=before["fps"], fps_after=after["fps"], age_after_ms=after["age_ms"],
+                   low1_after=after["low1_fps"], low5_after=after["low5_fps"])
         # Seconds from the change until a second at 90% of the rate the
         # tool settles at (the median of the last half).
         per = after["per_s"]

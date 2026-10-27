@@ -5,6 +5,8 @@ use std::time::{Duration, Instant};
 
 pub const MAGIC: &[u8; 4] = b"RSH3";
 pub const HEADER_LEN: usize = 4 + 1 + 8 + NONCE_LEN;
+/// What sealing adds to a payload.
+pub const SEAL_OVERHEAD: usize = HEADER_LEN + TAG_LEN;
 /// Largest stream payload per datagram. Header, tag and stream fields keep
 /// the datagram under the 1280-byte IPv6 minimum MTU.
 pub const CHUNK: usize = 1100;
@@ -120,6 +122,14 @@ pub const FLAG_ZSTREAM: u8 = 2;
 /// rest of it (`end_offset`) rather than showing part of a frame. Older
 /// clients ignore it.
 pub const FLAG_UPDATES: u8 = 8;
+/// HELLO features: the client reports when each numbered datagram arrived
+/// (`FLAG_NUMBERED`, `FLAG_FEEDBACK`), for the server's path model.
+pub const FEATURE_PATH: u8 = 16;
+/// Server stream flag: the datagram carries its number (`pn`).
+pub const FLAG_NUMBERED: u8 = 16;
+/// Client stream flag: the packet carries arrival times of numbered
+/// datagrams (`Feedback`).
+pub const FLAG_FEEDBACK: u8 = 8;
 /// Stream bytes one compressed datagram may stand for.
 pub const SQUEEZED: usize = 16 * CHUNK;
 
@@ -750,33 +760,60 @@ pub struct ClientStream<'a> {
     pub out_gen: u32,
     pub out_ack: u64,
     pub in_offset: u64,
+    /// An encoded `Feedback` (`FLAG_FEEDBACK`), or empty.
+    pub feedback: &'a [u8],
     pub data: &'a [u8],
 }
 
 impl<'a> ClientStream<'a> {
     pub fn encode(&self) -> Vec<u8> {
-        Writer::new()
-            .u8(self.flags)
-            .u16(self.cols)
-            .u16(self.rows)
-            .u32(self.out_gen)
-            .u64(self.out_ack)
-            .u64(self.in_offset)
-            .rest(self.data)
-            .finish()
+        let mut w = Writer::new();
+        let flags = if self.feedback.is_empty() { self.flags & !FLAG_FEEDBACK } else { self.flags | FLAG_FEEDBACK };
+        w.u8(flags).u16(self.cols).u16(self.rows).u32(self.out_gen).u64(self.out_ack).u64(self.in_offset);
+        if !self.feedback.is_empty() {
+            w.bytes(self.feedback);
+        }
+        w.rest(self.data).finish()
     }
 
     pub fn decode(buf: &'a [u8]) -> Option<Self> {
         let mut r = Reader::new(buf);
-        Some(Self {
-            flags: r.u8()?,
-            cols: r.u16()?,
-            rows: r.u16()?,
-            out_gen: r.u32()?,
-            out_ack: r.u64()?,
-            in_offset: r.u64()?,
-            data: r.rest(),
-        })
+        let flags = r.u8()?;
+        let (cols, rows, out_gen, out_ack, in_offset) = (r.u16()?, r.u16()?, r.u32()?, r.u64()?, r.u64()?);
+        let feedback = if flags & FLAG_FEEDBACK != 0 { r.bytes()? } else { &[] };
+        Some(Self { flags, cols, rows, out_gen, out_ack, in_offset, feedback, data: r.rest() })
+    }
+}
+
+/// When numbered datagrams arrived, by the client's clock (microseconds,
+/// wrapping), and when the packet carrying this left it: the server learns
+/// the path's delay changes and how fast datagrams came off its bottleneck
+/// without the time either end spent on its work.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct Feedback {
+    pub sent_us: u32,
+    /// (datagram number, arrival), in arrival order.
+    pub arrivals: Vec<(u32, u32)>,
+}
+
+impl Feedback {
+    pub fn encode(&self) -> Vec<u8> {
+        let mut w = Writer::new();
+        w.u32(self.sent_us);
+        for &(pn, at) in &self.arrivals {
+            w.u32(pn).u32(at);
+        }
+        w.finish()
+    }
+
+    pub fn decode(buf: &[u8]) -> Option<Self> {
+        let mut r = Reader::new(buf);
+        let sent_us = r.u32()?;
+        let mut arrivals = Vec::new();
+        while let Some(pn) = r.u32() {
+            arrivals.push((pn, r.u32()?));
+        }
+        Some(Self { sent_us, arrivals })
     }
 }
 
@@ -788,33 +825,29 @@ pub struct ServerStream<'a> {
     pub out_offset: u64,
     pub exit_code: i32,
     pub end_offset: u64,
+    /// The datagram's number (`FLAG_NUMBERED`), for the client's
+    /// `Feedback`.
+    pub pn: Option<u32>,
     pub data: &'a [u8],
 }
 
 impl<'a> ServerStream<'a> {
     pub fn encode(&self) -> Vec<u8> {
-        Writer::new()
-            .u8(self.flags)
-            .u64(self.in_ack)
-            .u32(self.out_gen)
-            .u64(self.out_offset)
-            .i32(self.exit_code)
-            .u64(self.end_offset)
-            .rest(self.data)
-            .finish()
+        let mut w = Writer::new();
+        let flags = if self.pn.is_some() { self.flags | FLAG_NUMBERED } else { self.flags & !FLAG_NUMBERED };
+        w.u8(flags).u64(self.in_ack).u32(self.out_gen).u64(self.out_offset).i32(self.exit_code).u64(self.end_offset);
+        if let Some(pn) = self.pn {
+            w.u32(pn);
+        }
+        w.rest(self.data).finish()
     }
 
     pub fn decode(buf: &'a [u8]) -> Option<Self> {
         let mut r = Reader::new(buf);
-        Some(Self {
-            flags: r.u8()?,
-            in_ack: r.u64()?,
-            out_gen: r.u32()?,
-            out_offset: r.u64()?,
-            exit_code: r.i32()?,
-            end_offset: r.u64()?,
-            data: r.rest(),
-        })
+        let flags = r.u8()?;
+        let (in_ack, out_gen, out_offset, exit_code, end_offset) = (r.u64()?, r.u32()?, r.u64()?, r.i32()?, r.u64()?);
+        let pn = if flags & FLAG_NUMBERED != 0 { Some(r.u32()?) } else { None };
+        Some(Self { flags, in_ack, out_gen, out_offset, exit_code, end_offset, pn, data: r.rest() })
     }
 }
 
@@ -933,6 +966,11 @@ pub struct Sender {
     /// before (see `waited`).
     took_lately: VecDeque<f64>,
     waited: u32,
+    /// The path model's bottleneck rate (wire bytes a second; None when
+    /// nothing waits on it) and least round trip, ms, when the client
+    /// reports arrivals (`set_path`): they stand in for the rate and floor
+    /// this sender would read from its acks, which carry both ends' work.
+    path: Option<(Option<f64>, Option<f64>)>,
     /// The link loses nothing (TCP): no timeout or duplicate-ack resends,
     /// which would only queue copies ahead of new data. A new connection
     /// `rewind`s instead.
@@ -991,6 +1029,7 @@ impl Sender {
             refloored_at: None,
             took_lately: VecDeque::new(),
             waited: 0,
+            path: None,
             lossless: false,
         }
     }
@@ -1000,6 +1039,9 @@ impl Sender {
     /// until they have, as the extra time large datagrams take over small
     /// ones.
     pub fn slow_rate(&self) -> Option<f64> {
+        if self.path.is_some() {
+            return self.rate_seen();
+        }
         // Only over a far path (20 ms or more) and a clear difference (5 ms
         // or more): near, the client's own work on a large datagram (or a
         // timer's slack) would look like a slow link.
@@ -1013,6 +1055,9 @@ impl Sender {
     /// over any path: what a datagram's time on the link is reckoned with
     /// (`on_ack`), also before a path that turned far is known to be far.
     fn rate_seen(&self) -> Option<f64> {
+        if let Some((rate, _)) = self.path {
+            return rate.map(|rate| rate.max(MIN_CAPACITY)).filter(|rate| *rate < SLOW_RATE);
+        }
         // Until a few delivery samples were taken on this path (the first
         // ones of a session come low, the client busy with its start), the
         // larger of the two; then the samples alone, which follow a link
@@ -1141,7 +1186,13 @@ impl Sender {
 
     /// What a slow link delivers in its least round trip.
     pub fn slow_bdp(&self) -> Option<u64> {
-        Some((self.slow_rate()? * self.floor_rtt? / 1000.0) as u64)
+        let floor = self.path.and_then(|(_, rtt)| rtt).or(self.floor_rtt)?;
+        Some((self.slow_rate()? * floor / 1000.0) as u64)
+    }
+
+    /// The path model's rate and least round trip (see `path`).
+    pub fn set_path(&mut self, rate: Option<f64>, rtt: Option<f64>) {
+        self.path = Some((rate, rtt));
     }
 
     /// Another path (the client moved): its capacity is learned again.
@@ -1984,9 +2035,19 @@ mod tests {
             out_offset: 4,
             exit_code: -1,
             end_offset: 6,
+            pn: None,
             data: b"xy",
         };
-        assert_eq!(ServerStream::decode(&stream.encode()), Some(stream));
+        assert_eq!(ServerStream::decode(&stream.encode()), Some(stream.clone()));
+        let numbered = ServerStream { pn: Some(7), ..stream };
+        assert_eq!(ServerStream::decode(&numbered.encode()).map(|s| s.flags & FLAG_NUMBERED != 0), Some(true));
+        assert_eq!(ServerStream::decode(&numbered.encode()).and_then(|s| s.pn), Some(7));
+        let feedback = Feedback { sent_us: 9, arrivals: vec![(1, 100), (2, 140)] }.encode();
+        let client = ClientStream { flags: 0, cols: 80, rows: 24, out_gen: 1, out_ack: 2, in_offset: 3, feedback: &feedback, data: b"ab" };
+        let encoded = client.encode();
+        let back = ClientStream::decode(&encoded).unwrap();
+        assert_eq!((back.feedback, back.data), (&feedback[..], &b"ab"[..]));
+        assert_eq!(Feedback::decode(back.feedback), Some(Feedback { sent_us: 9, arrivals: vec![(1, 100), (2, 140)] }));
     }
 
     #[test]

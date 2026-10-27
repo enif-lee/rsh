@@ -6,6 +6,7 @@ use crate::proto::{
     ServerStream, SessionInfo, FLAG_DETACH, FLAG_EXITED, FLAG_REDRAW, KIND_ATTACHED, KIND_CHANNEL, KIND_CONFIRM,
     KIND_DENIED, KIND_HELLO, KIND_KICKED, KIND_LIST, KIND_LIST_REPLY, KIND_PING, KIND_PONG, KIND_READY, KIND_STREAM,
 };
+use crate::path::PathModel;
 use crate::pty::{kill_group, try_wait, Pty, SpawnOptions};
 use crate::terminal::Terminal;
 use crate::wire::{is_tcp_addr, TcpSide};
@@ -224,6 +225,9 @@ struct Attachment {
     /// The client writes to a terminal, so screen updates may stand in
     /// for the bytes (HELLO features); a pipe gets every byte.
     screens: bool,
+    /// The path as the client's arrival reports show it, when it sends
+    /// them (`FEATURE_PATH`).
+    path: Option<PathModel>,
     /// The client inflates a generation sent as one deflate stream, and
     /// whether it asked for that on any link (HELLO features).
     zstream: bool,
@@ -748,6 +752,7 @@ fn import(bytes: &[u8]) -> Option<Handoff> {
                 shadow: None,
                 deflate: false,
                 screens: false,
+                path: None,
                 zstream: false,
                 compress: false,
                 z: None,
@@ -1181,6 +1186,7 @@ impl State {
             shadow: None,
             deflate: hello.features & proto::FEATURE_DEFLATE != 0,
             screens: hello.features & proto::FEATURE_SCREENS != 0,
+            path: (hello.features & proto::FEATURE_PATH != 0).then(|| PathModel::new(now)),
             zstream: hello.features & proto::FEATURE_ZSTREAM != 0,
             compress: hello.features & proto::FEATURE_COMPRESS != 0,
             z: None,
@@ -1376,6 +1382,9 @@ impl State {
                 }
                 attach.output.set_lossless(is_tcp_addr(addr));
                 attach.output.forget_capacity();
+                if let Some(path) = attach.path.as_mut() {
+                    path.forget(now);
+                }
                 attach.addr = addr;
                 attach.heard_at_addr = now;
                 attach.candidate = None;
@@ -1419,13 +1428,19 @@ impl State {
             session.resize(stream.cols.min(MAX_COLS), stream.rows.min(MAX_ROWS));
         }
         let attach = session.attach.as_mut().expect("attachment");
+        if let (Some(path), Some(report)) = (attach.path.as_mut(), proto::Feedback::decode(stream.feedback).filter(|_| !stream.feedback.is_empty())) {
+            path.feedback(&report, now);
+            if !is_tcp_addr(attach.addr) {
+                attach.output.set_path(path.rate(now), path.window_rtt(now));
+            }
+        }
         let advanced = attach.output.on_ack(stream.out_gen, stream.out_ack, now, !stream.data.is_empty() || stream.flags & proto::FLAG_REPEAT != 0);
         if !stream.data.is_empty() && stream.in_offset > attach.input.next {
             // Past a gap: acked at once, so duplicate acks reach the client.
             attach.reply_due = true;
         } else if !stream.data.is_empty() {
             attach.ack_at.get_or_insert(now + INPUT_ACK_DELAY);
-        } else if stream.flags & !proto::FLAG_REPEAT != 0 || (!advanced && attach.output.deadline().is_none()) {
+        } else if stream.flags & !(proto::FLAG_REPEAT | proto::FLAG_FEEDBACK) != 0 || (!advanced && attach.output.deadline().is_none()) {
             // A heartbeat with nothing in flight: the answer is how the
             // client knows the server is there. Acks need no answer.
             attach.reply_due = true;
@@ -1647,15 +1662,24 @@ impl State {
                     keep = (keep / 2).max(proto::CHUNK);
                 }
             }
-            let stream = ServerStream {
+            let udp = !is_tcp_addr(attach.addr);
+            // Each datagram a number of its own (copies too), for the path
+            // model: its size on the wire is known only once sealed, and
+            // the number's four bytes are part of it.
+            let number = |path: &mut Option<PathModel>, len: usize| {
+                path.as_mut().filter(|_| udp).map(|path| path.number(Instant::now(), len + 4 + proto::SEAL_OVERHEAD + 28))
+            };
+            let mut stream = ServerStream {
                 flags,
                 in_ack: attach.input.next,
                 out_gen: attach.output.gen,
                 out_offset: offset,
                 exit_code: exit_code.unwrap_or(0),
                 end_offset: attach.end_offset.unwrap_or_else(|| attach.output.end()),
+                pn: None,
                 data: &data,
             };
+            stream.pn = number(&mut attach.path, stream.encode().len());
             let sealed = proto::seal(&attach.key, Dir::ToClient, KIND_STREAM, attach.id, &stream.encode());
             // On a lossy path with room to spare, data goes twice (each copy
             // sealed apart, as the replay window wants unique nonces).
@@ -1663,18 +1687,24 @@ impl State {
             // TCP loses nothing.
             let loss = attach.output.loss();
             let resent = attach.output.take_resend();
-            // A slow link has no room for copies.
-            attach.doubling = !is_tcp_addr(attach.addr)
-                && attach.output.slow_rate().is_none()
-                && (resent || loss > DOUBLE_ON || (attach.doubling && loss > DOUBLE_OFF));
+            // A slow link has no room for copies (with the path model: when
+            // they would not fit in its rate).
+            let roomy = match attach.path.as_ref() {
+                Some(path) => path.room_for_copies(now),
+                None => attach.output.slow_rate().is_none(),
+            };
+            attach.doubling = !is_tcp_addr(attach.addr) && roomy && (resent || loss > DOUBLE_ON || (attach.doubling && loss > DOUBLE_OFF));
             // Nor has a path whose acks show a queue growing (a link that
             // turned slow before its rate is known: copies would take half
             // of it); a passing one, so doubling stays on for after it.
             let room = attach.output.in_flight() < attach.output.window() / 2 && !attach.output.waited();
-            if !stream.data.is_empty() && attach.doubling && room {
-                batch.push(proto::seal(&attach.key, Dir::ToClient, KIND_STREAM, attach.id, &stream.encode()));
-            }
+            // The copy after the original: numbers go out in order, which
+            // the path model reads trains by.
             batch.push(sealed);
+            if !stream.data.is_empty() && attach.doubling && room {
+                let copy = ServerStream { pn: number(&mut attach.path, stream.encode().len()), ..stream.clone() };
+                batch.push(proto::seal(&attach.key, Dir::ToClient, KIND_STREAM, attach.id, &copy.encode()));
+            }
             sent = true;
             attach.reply_due = false;
             attach.ack_at = None;
@@ -1685,6 +1715,9 @@ impl State {
             }
         } else {
             crate::net::send_all(socket, attach.addr, &batch);
+            if let Some(path) = attach.path.as_mut() {
+                path.departed(Instant::now());
+            }
         }
     }
 

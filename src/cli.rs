@@ -1068,6 +1068,7 @@ fn attach(
         if tty {
             hello.features |= crate::proto::FEATURE_SCREENS;
         }
+        hello.features |= crate::proto::FEATURE_PATH;
         match opts.compress.unwrap_or(config.compress) {
             crate::config::Compress::Adaptive => {}
             crate::config::Compress::Always => hello.features |= crate::proto::FEATURE_COMPRESS,

@@ -8,10 +8,10 @@
 use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
 use std::io::{self, ErrorKind, Read, Write};
-use std::net::{IpAddr, Ipv6Addr, SocketAddr, TcpListener, TcpStream, UdpSocket};
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, SocketAddrV6, TcpListener, TcpStream, UdpSocket};
 use std::os::fd::{AsRawFd, RawFd};
 use std::sync::{mpsc, Arc, Mutex};
-use std::time::{Duration, Instant};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 /// Bytes kept for a TCP connection the kernel takes no more from. Past
 /// this the connection is given up: over TCP the stream resends nothing
@@ -126,6 +126,17 @@ fn unframe(rbuf: &mut Vec<u8>) -> Option<Vec<u8>> {
 impl Wire {
     pub fn udp(sock: Arc<UdpSocket>, peer: SocketAddr) -> io::Result<Self> {
         sock.set_nonblocking(true)?;
+        // When each datagram arrived, by the kernel (`recv_stamped`).
+        let on: libc::c_int = 1;
+        unsafe {
+            libc::setsockopt(
+                sock.as_raw_fd(),
+                libc::SOL_SOCKET,
+                libc::SO_TIMESTAMP,
+                (&on as *const libc::c_int).cast(),
+                std::mem::size_of_val(&on) as libc::socklen_t,
+            );
+        }
         Ok(Wire::Udp { sock, peer })
     }
 
@@ -190,28 +201,30 @@ impl Wire {
         matches!(self, Wire::Tcp(tcp) if tcp.stream.is_none())
     }
 
-    /// The next packet from the server into `buf`, if one is here.
-    pub fn recv(&mut self, buf: &mut [u8]) -> Option<usize> {
+    /// The next packet from the server into `buf`, if one is here, and
+    /// when it arrived (the kernel's time over UDP; now over TCP).
+    pub fn recv(&mut self, buf: &mut [u8]) -> Option<(usize, Instant)> {
         match self {
             Wire::Udp { sock, peer } => loop {
-                match sock.recv_from(buf) {
+                match recv_stamped(sock, buf) {
                     // The peer's address, or its port on another address
                     // of the host (an answer from another interface).
-                    Ok((n, from)) if from == *peer || from.port() == peer.port() => return Some(n),
+                    Ok((n, from, at)) if from == *peer || from.port() == peer.port() => return Some((n, at)),
                     Ok(_) => {}
                     Err(err) if err.kind() == ErrorKind::Interrupted => {}
                     Err(_) => return None,
                 }
             },
             Wire::Tcp(tcp) => {
+                let now = Instant::now();
                 if let Some(n) = unframe_into(&mut tcp.rbuf, buf) {
-                    return Some(n);
+                    return Some((n, now));
                 }
                 let alive = tcp.stream.as_mut().is_some_and(|stream| fill(stream, &mut tcp.rbuf));
                 if !alive && tcp.stream.is_some() {
                     tcp.broke(Instant::now());
                 }
-                unframe_into(&mut tcp.rbuf, buf)
+                unframe_into(&mut tcp.rbuf, buf).map(|n| (n, now))
             }
         }
     }
@@ -249,6 +262,59 @@ impl Wire {
             }
             tcp.reconnect(now);
         }
+    }
+}
+
+/// One datagram from `sock` into `buf`, where it came from, and when the
+/// kernel took it in (`SO_TIMESTAMP`; now if it gave no time): a client
+/// busy with the datagram before reads the next one late, and the server's
+/// path model must not read that as the link's.
+fn recv_stamped(sock: &UdpSocket, buf: &mut [u8]) -> io::Result<(usize, SocketAddr, Instant)> {
+    let mut addr: libc::sockaddr_storage = unsafe { std::mem::zeroed() };
+    let mut iov = libc::iovec { iov_base: buf.as_mut_ptr().cast(), iov_len: buf.len() };
+    let mut control = [0u64; 16];
+    let mut msg: libc::msghdr = unsafe { std::mem::zeroed() };
+    msg.msg_name = (&mut addr as *mut libc::sockaddr_storage).cast();
+    msg.msg_namelen = std::mem::size_of::<libc::sockaddr_storage>() as libc::socklen_t;
+    msg.msg_iov = &mut iov;
+    msg.msg_iovlen = 1;
+    msg.msg_control = control.as_mut_ptr().cast();
+    msg.msg_controllen = std::mem::size_of_val(&control) as _;
+    let n = unsafe { libc::recvmsg(sock.as_raw_fd(), &mut msg, 0) };
+    if n < 0 {
+        return Err(io::Error::last_os_error());
+    }
+    let now = Instant::now();
+    let mut at = now;
+    unsafe {
+        let mut cmsg = libc::CMSG_FIRSTHDR(&msg);
+        while !cmsg.is_null() {
+            if (*cmsg).cmsg_level == libc::SOL_SOCKET && (*cmsg).cmsg_type == libc::SCM_TIMESTAMP {
+                let tv: libc::timeval = std::ptr::read_unaligned(libc::CMSG_DATA(cmsg).cast());
+                let stamp = UNIX_EPOCH + Duration::new(tv.tv_sec as u64, tv.tv_usec as u32 * 1000);
+                if let Ok(ago) = SystemTime::now().duration_since(stamp) {
+                    at = now.checked_sub(ago).unwrap_or(now);
+                }
+            }
+            cmsg = libc::CMSG_NXTHDR(&msg, cmsg);
+        }
+    }
+    let from = socket_addr(&addr).ok_or_else(|| io::Error::from(ErrorKind::InvalidData))?;
+    Ok((n as usize, from, at))
+}
+
+fn socket_addr(addr: &libc::sockaddr_storage) -> Option<SocketAddr> {
+    match i32::from(addr.ss_family) {
+        libc::AF_INET => {
+            let a = unsafe { &*(addr as *const libc::sockaddr_storage).cast::<libc::sockaddr_in>() };
+            Some(SocketAddr::from((Ipv4Addr::from(u32::from_be(a.sin_addr.s_addr)), u16::from_be(a.sin_port))))
+        }
+        libc::AF_INET6 => {
+            let a = unsafe { &*(addr as *const libc::sockaddr_storage).cast::<libc::sockaddr_in6>() };
+            let ip = Ipv6Addr::from(a.sin6_addr.s6_addr);
+            Some(SocketAddr::V6(SocketAddrV6::new(ip, u16::from_be(a.sin6_port), a.sin6_flowinfo, a.sin6_scope_id)))
+        }
+        _ => None,
     }
 }
 
@@ -477,14 +543,14 @@ mod tests {
         let end = Instant::now() + Duration::from_secs(2);
         while got.len() < 3 && Instant::now() < end {
             match wire.recv(&mut buf) {
-                Some(n) => got.push(buf[..n].to_vec()),
+                Some((n, _)) => got.push(buf[..n].to_vec()),
                 None => wait_readable(&wire, Duration::from_millis(50)),
             }
         }
         assert_eq!(got, [b"one".to_vec(), b"two".to_vec(), b"three".to_vec()]);
-        assert_eq!(wire.recv(&mut buf), None, "half a frame waits");
+        assert_eq!(wire.recv(&mut buf).map(|(n, _)| n), None, "half a frame waits");
         server.write_all(&bytes[bytes.len() - 2..]).unwrap();
         wait_readable(&wire, Duration::from_secs(1));
-        assert_eq!(wire.recv(&mut buf).map(|n| buf[..n].to_vec()), Some(b"four".to_vec()));
+        assert_eq!(wire.recv(&mut buf).map(|(n, _)| buf[..n].to_vec()), Some(b"four".to_vec()));
     }
 }

@@ -34,6 +34,8 @@ const HOLD_LIMIT: usize = 64 * 1024;
 /// after the first unacked byte, whichever comes first.
 const ACK_BYTES: usize = 16 * 1024;
 const ACK_DELAY: Duration = Duration::from_millis(2);
+/// Arrivals a packet reports at most: more, and one goes at once.
+const ARRIVALS_MAX: usize = 48;
 /// Duplicate acks sent per gap: the server retransmits after three, and
 /// a few spare ones keep a lost ack from leaving it to the timeout.
 const DUP_ACKS: u8 = 8;
@@ -497,15 +499,35 @@ struct Link {
     owed: Option<(Instant, usize)>,
     /// The output ack (generation, offset) the last packet carried.
     acked: (u32, u64),
+    /// Numbered datagrams that arrived since the last packet, and when
+    /// (microseconds since `clock`), for the server's path model.
+    arrivals: Vec<(u32, u32)>,
+    clock: Instant,
 }
 
 impl Link {
     fn send(&mut self, stream: &ClientStream, now: Instant) {
+        let report = if self.arrivals.is_empty() {
+            Vec::new()
+        } else {
+            let sent_us = self.micros(Instant::now());
+            proto::Feedback { sent_us, arrivals: std::mem::take(&mut self.arrivals) }.encode()
+        };
+        let stream = ClientStream { feedback: &report, ..stream.clone() };
         let bytes = proto::seal(&self.key, Dir::ToServer, KIND_STREAM, self.attach, &stream.encode());
         let _ = self.wire.send(&bytes);
         self.last_sent = now;
         self.owed = None;
         self.acked = (stream.out_gen, stream.out_ack);
+    }
+
+    fn micros(&self, at: Instant) -> u32 {
+        at.saturating_duration_since(self.clock).as_micros() as u32
+    }
+
+    fn arrived(&mut self, pn: u32, at: Instant) {
+        let at = self.micros(at);
+        self.arrivals.push((pn, at));
     }
 }
 
@@ -526,6 +548,8 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
         last_sent: start - HEARTBEAT,
         owed: None,
         acked: (0, 0),
+        arrivals: Vec::new(),
+        clock: start,
     };
     let mut ping: Option<[u8; 24]> = None;
     let mut last_ping = start;
@@ -664,7 +688,7 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
             force_send = true;
             tx.rewind();
         }
-        while let Some(n) = link.wire.recv(&mut buf) {
+        while let Some((n, arrived)) = link.wire.recv(&mut buf) {
             if proto::peek(&buf[..n]).is_some_and(|(kind, _)| kind == KIND_PONG) {
                 // The server's answer to a PING, sealed with the token key.
                 let Some(packet) = proto::open(&attached.token_key, Dir::ToClient, &buf[..n]) else {
@@ -710,6 +734,12 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                 continue;
             }
             last_heard = now;
+            if let Some(pn) = stream.pn {
+                link.arrived(pn, arrived);
+                if link.arrivals.len() >= ARRIVALS_MAX {
+                    force_send = true;
+                }
+            }
             // A compressed datagram stands for more stream bytes than it holds.
             let inflated;
             let data: &[u8] = if stream.flags & proto::FLAG_DEFLATE != 0 {
@@ -1109,6 +1139,7 @@ fn client_stream<'a>(rx: &Receiver, size: (u16, u16), flags: u8, offset: u64, da
         out_gen: rx.gen,
         out_ack: rx.next,
         in_offset: offset,
+        feedback: &[],
         data,
     }
 }

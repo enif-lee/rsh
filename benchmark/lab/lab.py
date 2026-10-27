@@ -397,9 +397,9 @@ def run_on(opts):
 
 # Figures each test reports: (key, column, format).
 COLUMNS = {
-    "render": [("fps", "fps", "%.1f"), ("age_ms", "age ms", "%.0f"), ("max_gap_ms", "gap ms", "%.0f"), ("stalls", "stalls", "%.0f"),
+    "render": [("fps", "fps", "%.1f"), ("low1_fps", "1% low", "%.1f"), ("low5_fps", "5% low", "%.1f"), ("age_ms", "age ms", "%.0f"), ("max_gap_ms", "gap ms", "%.0f"), ("stalls", "stalls", "%.0f"),
                ("torn", "torn", "%.0f"), ("blank", "blank", "%.0f"), ("kbit_s", "kbit/s in", "%.0f"), ("first_s_fps", "1st s fps", "%.0f")],
-    "switch": [("fps_before", "fps before", "%.1f"), ("fps_after", "fps after", "%.1f"), ("age_after_ms", "age after", "%.0f"), ("max_gap_ms", "gap ms", "%.0f"),
+    "switch": [("fps_before", "fps before", "%.1f"), ("fps_after", "fps after", "%.1f"), ("low1_after", "1% low", "%.1f"), ("low5_after", "5% low", "%.1f"), ("age_after_ms", "age after", "%.0f"), ("max_gap_ms", "gap ms", "%.0f"),
                ("stalls", "stalls", "%.0f"), ("torn", "torn", "%.0f"), ("blank", "blank", "%.0f")],
     "echo": [("echo_ms", "echo ms", "%.0f"), ("echo_max_ms", "max ms", "%.0f"), ("lost", "lost", "%.0f")],
     "flood": [("flood_s", "seconds", "%.2f"), ("bytes_to_terminal", "bytes", "%.0f")],

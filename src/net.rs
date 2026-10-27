@@ -332,7 +332,7 @@ fn request(
             if wire.down() {
                 return Err(io::Error::new(ErrorKind::ConnectionReset, format!("{peer} closed the TCP connection")));
             }
-            let Some(n) = wire.recv(&mut buf) else {
+            let Some((n, _)) = wire.recv(&mut buf) else {
                 wire::wait_readable(wire, left);
                 continue;
             };

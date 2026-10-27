@@ -5,6 +5,7 @@ pub mod config;
 pub mod crypto;
 pub mod forward;
 pub mod net;
+pub mod path;
 pub mod predict;
 pub mod proto;
 pub mod pty;
