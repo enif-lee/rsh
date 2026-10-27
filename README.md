@@ -1,6 +1,7 @@
 # rsh
 
 [![Rust](https://img.shields.io/badge/rust-2021-orange?logo=rust)](Cargo.toml)
+[![Release](https://img.shields.io/github/v/release/enif-lee/rsh)](https://github.com/enif-lee/rsh/releases/latest)
 [![Platforms](https://img.shields.io/badge/platforms-linux%20%7C%20macOS-lightgrey)](#installation)
 [![Transport](https://img.shields.io/badge/transport-UDP%20%2B%20TCP%20fallback-blue)](#how-it-works)
 
@@ -96,16 +97,29 @@ Times come from the lab run above. The OSC counts and ET's reconnect time come f
 
 ## Installation
 
-Requires Rust (stable) to build, Docker for the static Linux builds that rsh copies to servers, and `ssh` access to each host for its first setup.
+```sh
+curl -fsSL https://raw.githubusercontent.com/enif-lee/rsh/main/install.sh | bash
+```
+
+This puts the latest release for your machine (Linux or macOS, x86_64 or arm64), checked against the release's SHA-256 sums, at `~/.rsh/bin/rsh` and links it from `~/.local/bin/rsh`. `RSH_VERSION=v0.1.0` picks a release; running it again upgrades.
+
+The first `rsh <host>` sets the host up over `ssh`: it copies the same build there (a binary for the host's platform comes from this version's GitHub release and is kept in `~/.rsh/dist`), starts `rsh serve` and saves a token. A host already running `rsh serve` can be used directly with `--peer <host>:2222`.
+
+> [!NOTE]
+> **Upgrades.** Once a day, when you connect, rsh looks for a newer release. If there is one it downloads the binary for your platform, checks it, replaces `~/.rsh/bin/rsh` and runs the new one with the same arguments; the next connection to each host then brings its server to the same build, in place, keeping its sessions. `RSH_NO_UPDATE=1` turns this off, and a build run from anywhere else than `~/.rsh/bin` never replaces itself.
+
+### From source
+
+Requires Rust (stable), and Docker for the static Linux builds that rsh copies to servers.
 
 ```sh
-git clone git@github.com:enif-lee/rsh.git
+git clone https://github.com/enif-lee/rsh.git
 cd rsh
-scripts/dist.sh                         # builds ~/.rsh/dist/rsh-{linux-x86_64,linux-aarch64,<this platform>}
+scripts/dist.sh                         # ~/.rsh/dist/rsh-<platform> for Linux and macOS, and SHA256SUMS
 install -m 755 target/release/rsh ~/.local/bin/rsh
 ```
 
-`rsh <host>` copies the matching binary from `~/.rsh/dist` to `~/.rsh/bin/rsh` on the host the first time, so run `scripts/dist.sh` again after changing the source. A host already running `rsh serve` can be used directly with `--peer <host>:2222`.
+A build of your own looks in `~/.rsh/dist` first for the hosts' binaries, so run `scripts/dist.sh` again after changing the source.
 
 ## Usage
 

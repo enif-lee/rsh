@@ -210,7 +210,8 @@ pub struct Binary {
 }
 
 /// This executable when the host has the same platform, else
-/// `rsh-<platform>` from the dist directories.
+/// `rsh-<platform>` from the dist directories, else from this version's
+/// release on GitHub (kept in `~/.rsh/dist` for the next host).
 pub fn binary_for(platform: &str, home: &Path) -> Result<Binary, String> {
     if !valid_platform(platform) {
         return Err(format!("unexpected platform {platform:?}"));
@@ -221,6 +222,7 @@ pub fn binary_for(platform: &str, home: &Path) -> Result<Binary, String> {
         return Ok(Binary { bytes, path, this_build: true });
     }
     let name = format!("rsh-{platform}");
+    let mut stale = None;
     for dir in dist_dirs(home) {
         let path = dir.join(&name);
         if !path.exists() {
@@ -231,12 +233,31 @@ pub fn binary_for(platform: &str, home: &Path) -> Result<Binary, String> {
         }
         if let Ok(bytes) = std::fs::read(&path) {
             let this_build = version::is_this_build(&bytes);
-            return Ok(Binary { bytes, path, this_build });
+            // Another build at hand (an older one): the release may have
+            // this one; if not, that is what the caller decides about.
+            if this_build || cfg!(test) {
+                return Ok(Binary { bytes, path, this_build });
+            }
+            stale.get_or_insert(Binary { bytes, path, this_build });
         }
     }
-    Err(format!(
-        "no rsh binary for {platform}: put {name} in ~/.rsh/dist (scripts/dist.sh builds them)"
-    ))
+    let tag = crate::release::this_tag();
+    let fetched = if cfg!(test) {
+        Err("not in tests".to_string())
+    } else {
+        let _ = writeln!(io::stderr(), "rsh: fetching {name} of {tag} from GitHub");
+        crate::release::download(&tag, platform)
+    };
+    match fetched {
+        Ok(bytes) if version::is_this_build(&bytes) => {
+            let path = home.join(".rsh").join("dist").join(&name);
+            crate::release::install(&bytes, &path)?;
+            Ok(Binary { bytes, path, this_build: true })
+        }
+        _ if stale.is_some() => Ok(stale.expect("stale")),
+        Ok(_) => Err(format!("{name} of release {tag} is another build than this rsh; put this build's {name} in ~/.rsh/dist (scripts/dist.sh builds them)")),
+        Err(why) => Err(format!("no rsh binary for {platform}: {why}; put {name} in ~/.rsh/dist (scripts/dist.sh builds them)")),
+    }
 }
 
 /// What onboarding decided to put on the host.

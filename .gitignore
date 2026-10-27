@@ -14,3 +14,6 @@ __pycache__/
 /benchmark/benchmark.md
 /benchmark/results/
 /benchmark/lab/out/
+
+# Release binaries (scripts/dist.sh dist).
+/dist/

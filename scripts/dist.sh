@@ -1,7 +1,7 @@
 #!/bin/sh
 # Builds rsh for every platform onboarding may meet and puts the binaries
 # where the client looks for them (default ~/.rsh/dist, or the first
-# argument). Linux builds are static (musl) and made in docker, so they run
+# argument, e.g. dist/ for a release), with their SHA256SUMS. Linux builds are static (musl) and made in docker, so they run
 # on any distribution; all builds come from this tree and share its build id.
 set -eu
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
@@ -26,5 +26,21 @@ echo "building the local binary"
 (cd "$ROOT" && cargo build --release --locked)
 local_platform=$("$ROOT/target/release/rsh" --version >/dev/null && uname -sm | awk '{ os = tolower($1); arch = $2; if (arch == "arm64") arch = "aarch64"; if (arch == "amd64") arch = "x86_64"; print os "-" arch }')
 cp "$ROOT/target/release/rsh" "$OUT/rsh-$local_platform.new" && mv -f "$OUT/rsh-$local_platform.new" "$OUT/rsh-$local_platform"
+# On macOS the other architecture too, when rustup has its target.
+if [ "$(uname -s)" = Darwin ]; then
+    for arch in aarch64 x86_64; do
+        target=$arch-apple-darwin
+        [ "darwin-$arch" = "$local_platform" ] && continue
+        if rustup target list --installed 2>/dev/null | grep -qx "$target"; then
+            echo "building rsh-darwin-$arch"
+            (cd "$ROOT" && cargo build --release --locked --target "$target")
+            cp "$ROOT/target/$target/release/rsh" "$OUT/rsh-darwin-$arch.new" && mv -f "$OUT/rsh-darwin-$arch.new" "$OUT/rsh-darwin-$arch"
+        else
+            echo "skipping rsh-darwin-$arch: rustup target add $target"
+        fi
+    done
+fi
+# The sums a release carries (install.sh and rsh check downloads with them).
+(cd "$OUT" && for f in rsh-*; do case $f in *.new) ;; *) shasum -a 256 "$f" 2>/dev/null || sha256sum "$f" ;; esac; done) > "$OUT/SHA256SUMS"
 "$ROOT/target/release/rsh" --version
 ls -l "$OUT"

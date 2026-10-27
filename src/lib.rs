@@ -8,6 +8,7 @@ pub mod net;
 pub mod predict;
 pub mod proto;
 pub mod pty;
+pub mod release;
 pub mod remote;
 pub mod server;
 pub mod terminal;

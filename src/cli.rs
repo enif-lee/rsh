@@ -419,7 +419,10 @@ fn session(args: &[String], keys: &mut Keys, stdout: &mut dyn Write, tty: bool) 
         }
         Sub::Install => install_launch_agent(&opts, stdout).map(|_| 0),
         Sub::Bootstrap => bootstrap(&opts, stdout).map(|_| 0),
-        Sub::List => list_and_attach(&opts, keys, stdout, tty),
+        Sub::List => {
+            crate::release::upgrade_and_rerun(&home(), args);
+            list_and_attach(&opts, keys, stdout, tty)
+        }
         Sub::Kill => kill(&opts, stdout),
         Sub::TestRender => match opts.host.clone() {
             None => crate::bench::live(opts.bench.seconds, f64::from(opts.bench.fps), stdout).map(|_| 0).map_err(|err| err.to_string()),
@@ -446,6 +449,7 @@ fn session(args: &[String], keys: &mut Keys, stdout: &mut dyn Write, tty: bool) 
         }
         Sub::Connect => {
             let host = opts.host.clone().ok_or("host required; see rsh --help")?;
+            crate::release::upgrade_and_rerun(&home(), args);
             connect_host(&host, &opts, keys, stdout, tty)
         }
     }

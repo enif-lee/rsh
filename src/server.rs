@@ -70,6 +70,14 @@ const FRESH_WAIT: Duration = Duration::from_millis(20);
 /// is a repaint, a new generation whose start the ack clock holds back (a
 /// frame split over a round trip, a stall at RTT 300 ms).
 const TAIL_WAIT: Duration = Duration::from_millis(20);
+/// Output for the compressor waits while the program is still writing (its
+/// next read this soon), up to `GATHER_MAX` or `GATHER_BYTES`: one flush
+/// and datagram for what came in many small reads (`yes`, a build log), not
+/// a datagram of headers around a few bytes each. Output that stops (a
+/// key's echo) goes after `GATHER_GAP`.
+const GATHER_GAP: Duration = Duration::from_millis(2);
+const GATHER_MAX: Duration = Duration::from_millis(10);
+const GATHER_BYTES: usize = 16 * 1024;
 /// On a slow link, how much later than the link is through with the last
 /// update the next may go: a little room keeps a queue from forming on the
 /// link, which would age every update after it.
@@ -225,6 +233,8 @@ struct Attachment {
     /// Output not yet in the stream: for the compressor (one flush per
     /// pump), or until the plain generation before is all acked.
     zraw: Vec<u8>,
+    /// Since when `zraw` has gathered (see `GATHER_GAP`).
+    gathering: Option<Instant>,
     /// The generation `stage` opened to start compressing, which repaints
     /// nothing.
     switched: Option<u32>,
@@ -742,6 +752,7 @@ fn import(bytes: &[u8]) -> Option<Handoff> {
                 compress: false,
                 z: None,
                 zraw: Vec::new(),
+                gathering: None,
                 update_len: 0,
                 updates: 0,
                 switched: None,
@@ -791,6 +802,9 @@ impl State {
                 wait = wait.min(at.saturating_duration_since(now));
             }
             if let Some(at) = session.attach.as_ref().and_then(Attachment::next_screen_at).filter(|_| reachable) {
+                wait = wait.min(at.saturating_duration_since(now));
+            }
+            if let Some(at) = session.attach.as_ref().filter(|a| a.output.all_sent()).and_then(Attachment::gathered_at).filter(|_| reachable) {
                 wait = wait.min(at.saturating_duration_since(now));
             }
             if session.closed_at.is_some() && session.exit_code.is_none() {
@@ -1171,6 +1185,7 @@ impl State {
             compress: hello.features & proto::FEATURE_COMPRESS != 0,
             z: None,
             zraw: Vec::new(),
+            gathering: None,
             update_len: 0,
             updates: 0,
             switched: None,
@@ -1577,7 +1592,8 @@ impl State {
         }
         // While the stream still has unsent bytes, output gathers: one flush
         // for all of it compresses better and costs fewer datagrams.
-        if attach.output.all_sent() || exit_code.is_some() {
+        let gathered = |a: &Attachment| a.gathered_at().is_some_and(|at| now >= at);
+        if exit_code.is_some() || (attach.output.all_sent() && gathered(attach)) {
             attach.stage(exit_code.is_some());
         }
         if exit_code.is_some() {
@@ -1592,7 +1608,7 @@ impl State {
             let squeeze = attach.deflate && attach.z.is_none() && (attach.syncing_until.is_some() || attach.output.srtt().is_some_and(|srtt| srtt >= DEFLATE_RTT));
             let chunk = attach.output.next_chunk_max(now, if squeeze { proto::SQUEEZED } else { proto::CHUNK });
             let ack_due = attach.reply_due || attach.ack_at.is_some_and(|at| now >= at);
-            if chunk.is_none() && attach.output.all_sent() && attach.stage(false) > 0 {
+            if chunk.is_none() && attach.output.all_sent() && gathered(attach) && attach.stage(false) > 0 {
                 // What gathered while the stream was busy goes now.
                 continue;
             }
@@ -1720,7 +1736,8 @@ impl State {
             }
             if let Some(attach) = self.sessions.get(&id).and_then(|s| s.attach.as_ref()) {
                 let ack_due = attach.ack_at.is_some_and(|at| now >= at);
-                if attach.output.deadline().is_some_and(|deadline| now >= deadline) || attach.reply_due || ack_due || attach.next_screen_due(now) {
+                let gathered = attach.output.all_sent() && attach.gathered_at().is_some_and(|at| now >= at);
+                if attach.output.deadline().is_some_and(|deadline| now >= deadline) || attach.reply_due || ack_due || attach.next_screen_due(now) || gathered {
                     self.pump(id, now);
                 }
             }
@@ -1865,12 +1882,26 @@ impl Attachment {
     fn push_output(&mut self, bytes: &[u8]) -> bool {
         // Behind what already waits, whatever is wanted now: never ahead of it.
         if self.z.is_some() || !self.zraw.is_empty() || self.wants_z() {
+            if self.zraw.is_empty() {
+                self.gathering = Some(Instant::now());
+            }
             self.zraw.extend_from_slice(bytes);
             false
         } else {
             self.output.push(bytes);
             true
         }
+    }
+
+    /// When what `zraw` gathered may go into the stream (see
+    /// `GATHER_GAP`); None when nothing waits.
+    fn gathered_at(&self) -> Option<Instant> {
+        let since = self.gathering.filter(|_| !self.zraw.is_empty())?;
+        if self.zraw.len() >= GATHER_BYTES {
+            return Some(since);
+        }
+        let quiet = self.output_at.map_or(since, |at| at + GATHER_GAP);
+        Some(quiet.min(since + GATHER_MAX))
     }
 
     /// Bytes `bytes` are expected to take in the stream.
