@@ -1897,6 +1897,11 @@ impl Attachment {
     /// `GATHER_GAP`); None when nothing waits.
     fn gathered_at(&self) -> Option<Instant> {
         let since = self.gathering.filter(|_| !self.zraw.is_empty())?;
+        // Waiting for the plain generation's acks before compressing
+        // (`stage`): nothing goes until they come, so no time is due.
+        if self.z.is_none() && self.wants_z() && self.output.acked() != self.output.end() {
+            return None;
+        }
         if self.zraw.len() >= GATHER_BYTES {
             return Some(since);
         }

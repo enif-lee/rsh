@@ -24,7 +24,7 @@ pub fn this_tag() -> String {
 /// `url` into `dest` with curl; false if it could not be had.
 fn fetch(url: &str, dest: &Path, timeout: Duration) -> bool {
     Command::new("curl")
-        .args(["-fsSL", "--max-time", &timeout.as_secs().to_string(), "-o"])
+        .args(["-fsSL", "--connect-timeout", "5", "--max-time", &timeout.as_secs().to_string(), "-o"])
         .arg(dest)
         .arg(url)
         .stdin(Stdio::null())
@@ -34,10 +34,16 @@ fn fetch(url: &str, dest: &Path, timeout: Duration) -> bool {
 }
 
 /// `rsh-<platform>` of release `tag`, checked against the release's
-/// SHA256SUMS.
-pub fn download(tag: &str, platform: &str) -> Result<Vec<u8>, String> {
-    let dir = std::env::temp_dir().join(format!("rsh-release-{}", std::process::id()));
-    fs::create_dir_all(&dir).map_err(|err| err.to_string())?;
+/// SHA256SUMS. Downloaded into a directory of this user's own under
+/// `~/.rsh`, made new (0700, never one already there): in a shared /tmp
+/// another user could swap the files between download and check.
+pub fn download(tag: &str, platform: &str, home: &Path) -> Result<Vec<u8>, String> {
+    use std::os::unix::fs::DirBuilderExt;
+    let rsh = home.join(".rsh");
+    crate::net::private_dir(&rsh).map_err(|err| format!("{}: {err}", rsh.display()))?;
+    let nanos = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).map_or(0, |d| d.as_nanos());
+    let dir = rsh.join(format!("download-{}-{nanos}", std::process::id()));
+    fs::DirBuilder::new().mode(0o700).create(&dir).map_err(|err| format!("{}: {err}", dir.display()))?;
     let name = format!("rsh-{platform}");
     let (file, sums) = (dir.join(&name), dir.join("SHA256SUMS"));
     let base = format!("{REPO}/releases/download/{tag}");
@@ -58,11 +64,34 @@ pub fn download(tag: &str, platform: &str) -> Result<Vec<u8>, String> {
     Ok(bytes)
 }
 
+/// Marks that this build's `rsh-<platform>` could not be had from its
+/// release (no network, or a release of another build: a build of one's
+/// own), so a connect does not try again, for a day.
+pub fn note_unavailable(home: &Path, platform: &str) {
+    let _ = fs::write(unavailable_stamp(home, platform), version::build());
+}
+
+/// Whether `note_unavailable` was said of this build lately.
+pub fn unavailable(home: &Path, platform: &str) -> bool {
+    let stamp = unavailable_stamp(home, platform);
+    let fresh = fs::metadata(&stamp)
+        .and_then(|meta| meta.modified())
+        .is_ok_and(|at| SystemTime::now().duration_since(at).is_ok_and(|age| age < CHECK_EVERY));
+    fresh && fs::read_to_string(&stamp).is_ok_and(|build| build == version::build())
+}
+
+fn unavailable_stamp(home: &Path, platform: &str) -> PathBuf {
+    home.join(".rsh").join(format!("unavailable-{platform}"))
+}
+
 /// Writes `bytes` as an executable at `path`, by rename: a running copy is
 /// never rewritten in place.
 pub fn install(bytes: &[u8], path: &Path) -> Result<(), String> {
+    use std::os::unix::fs::DirBuilderExt;
     let dir = path.parent().ok_or("no directory")?;
-    fs::create_dir_all(dir).map_err(|err| err.to_string())?;
+    // 0755 whatever the umask: a group-writable directory is not trusted
+    // for what is installed from it (`remote::trusted`).
+    fs::DirBuilder::new().recursive(true).mode(0o755).create(dir).map_err(|err| format!("{}: {err}", dir.display()))?;
     let tmp = path.with_extension("new");
     let mut file = fs::File::create(&tmp).map_err(|err| format!("{}: {err}", tmp.display()))?;
     file.write_all(bytes).map_err(|err| err.to_string())?;
@@ -96,11 +125,16 @@ fn is_newer(tag: &str) -> bool {
     matches!((numbers(tag), numbers(version::VERSION)), (Some(new), Some(me)) if new > me)
 }
 
-/// The install this client manages: `~/.rsh/bin/rsh`, when it is what runs.
+/// The install this client manages: `~/.rsh/bin/rsh`, a file of its own
+/// (not a link to a build elsewhere, which an upgrade would overwrite),
+/// when it is what runs.
 fn managed_exe(home: &Path) -> Option<PathBuf> {
+    let managed = home.join(".rsh").join("bin").join("rsh");
+    if !fs::symlink_metadata(&managed).ok()?.file_type().is_file() {
+        return None;
+    }
     let exe = fs::canonicalize(std::env::current_exe().ok()?).ok()?;
-    let managed = fs::canonicalize(home.join(".rsh").join("bin").join("rsh")).ok()?;
-    (exe == managed).then_some(managed)
+    (exe == fs::canonicalize(&managed).ok()?).then_some(managed)
 }
 
 /// Once a day at most, and only for the install it manages (not a build
@@ -127,7 +161,7 @@ pub fn upgrade_and_rerun(home: &Path, args: &[String]) {
     };
     let mut err = std::io::stderr();
     let _ = writeln!(err, "rsh: upgrading to {tag}");
-    match download(&tag, &version::local_platform()).and_then(|bytes| install(&bytes, &exe)) {
+    match download(&tag, &version::local_platform(), home).and_then(|bytes| install(&bytes, &exe)) {
         Ok(()) => {
             let failed = Command::new(&exe).args(args).env("RSH_NO_UPDATE", "1").exec();
             let _ = writeln!(err, "rsh: could not run {}: {failed}", exe.display());
@@ -156,7 +190,9 @@ mod tests {
     #[ignore]
     fn this_release_carries_this_build() {
         for platform in ["linux-x86_64", "linux-aarch64", "darwin-aarch64", "darwin-x86_64"] {
-            let bytes = download(&this_tag(), platform).unwrap();
+            let home = std::env::temp_dir().join(format!("rsh-release-test-{}", std::process::id()));
+            let bytes = download(&this_tag(), platform, &home).unwrap();
+            let _ = fs::remove_dir_all(&home);
             assert!(version::is_this_build(&bytes), "{platform}");
         }
     }

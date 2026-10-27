@@ -52,7 +52,8 @@ sha256() {
 }
 
 tmp=$(mktemp -d)
-trap 'rm -rf "$tmp"' EXIT INT TERM
+trap 'rm -rf "$tmp"' EXIT
+trap 'exit 1' INT TERM
 
 say "downloading $name"
 fetch "$base/$name" "$tmp/rsh" || die "could not download $base/$name"
@@ -72,6 +73,10 @@ mkdir -p "$HOME/.local/bin"
 if [ -e "$link" ] && [ ! -L "$link" ]; then
     say "$link is another program; left alone (this rsh is $bin/rsh)"
 else
+    old=$(readlink "$link" 2>/dev/null || true)
+    if [ -n "$old" ] && [ "$old" != "$bin/rsh" ]; then
+        say "$link pointed at $old; now at $bin/rsh"
+    fi
     ln -sf "$bin/rsh" "$link"
 fi
 
