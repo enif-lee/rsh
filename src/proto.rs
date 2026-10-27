@@ -1097,7 +1097,18 @@ impl Sender {
     /// ones, and a timeout that fires too soon queues resends in front of
     /// everything after it.
     fn timeout(&self, now: Instant) -> Duration {
-        match (self.slow_rate(), self.floor_rtt) {
+        // The path model's least round trip, when it speaks: a path that
+        // turned far (LAN to RTT 100 ms) is rebased there within a round
+        // trip, while this sender's own floor and timeout are the old
+        // path's for longer, and timed out spuriously (twice in the first
+        // 300 ms of LAN to 1 Mbit/s: a frame held 80 to 118 ms).
+        let model = self.path.and_then(|(_, rtt)| rtt);
+        let least = model.map_or(Duration::ZERO, |rtt| Duration::from_secs_f64((rtt * 1.25 + 30.0) / 1000.0));
+        let floor = match (model, self.floor_rtt) {
+            (Some(model), Some(own)) => Some(model.max(own)),
+            (model, own) => model.or(own),
+        };
+        let timeout = match (self.slow_rate(), floor) {
             (Some(rate), Some(floor)) => {
                 // What a slow link holds is at most twice its delivery per
                 // round trip (and a datagram); more in flight (sent before
@@ -1122,7 +1133,8 @@ impl Sender {
                 _ => self.rto,
             },
             _ => self.rto,
-        }
+        };
+        timeout.max(least)
     }
 
     /// What the path delivered over its last two least round trips, wire
