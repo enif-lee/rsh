@@ -1910,12 +1910,12 @@ impl Attachment {
     }
 
     /// The sender's least window with no bottleneck in the path model:
-    /// twice what the path took lately, or what the program writes (stream
+    /// twice what the path took lately, or, over a path seen to take a
+    /// burst at once (`PathModel::fast`), what the program writes (stream
     /// bytes a second; a burst after a pause, as an animation starting,
     /// opens it at once rather than a doubling a round trip from what the
-    /// pause delivered: a bottleneck shows in the first of it, and the
-    /// model's rate takes over), over the round trip. Kept current as
-    /// output comes, not only as reports do (a round trip later).
+    /// pause delivered), over the round trip. Kept current as output
+    /// comes, not only as reports do (a round trip later).
     fn open_window(&mut self, now: Instant) {
         if !self.modelled() {
             return;
@@ -1926,7 +1926,9 @@ impl Attachment {
         let Some(rtt) = path.window_rtt(now) else {
             return;
         };
-        let made = self.stream_len(self.made.1.max(self.made.2)) as f64 / SYNC_SPAN.as_secs_f64();
+        // The program's pace only on a path seen to take a burst at once:
+        // on a slow one not yet measured, the first of a burst would queue.
+        let made = if path.fast(now) { self.stream_len(self.made.1.max(self.made.2)) as f64 / SYNC_SPAN.as_secs_f64() } else { 0.0 };
         let rate = path.delivery_rate().max(made);
         self.output.set_path_window(rate, rtt);
     }

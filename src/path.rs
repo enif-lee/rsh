@@ -79,6 +79,9 @@ pub struct PathModel {
     srtt: Option<f64>,
     last_rtts: VecDeque<f64>,
     rates: VecDeque<(Instant, f64)>,
+    /// When a train of 600 bytes or more (after its first) last arrived
+    /// spread less than `SPREAD_US`: the path took it over `SLOW_RATE`.
+    fast_seen: Option<Instant>,
     /// (when, wire bytes) of datagrams sent over the last second.
     sent_log: VecDeque<(Instant, u32)>,
     /// Lost datagrams over all reported or aged out, as a moving share,
@@ -106,6 +109,7 @@ impl PathModel {
             srtt: None,
             last_rtts: VecDeque::new(),
             rates: VecDeque::new(),
+            fast_seen: None,
             sent_log: VecDeque::new(),
             loss: 0.0,
             random_loss: 0.0,
@@ -158,6 +162,7 @@ impl PathModel {
         self.srtt = None;
         self.last_rtts.clear();
         self.rates.clear();
+        self.fast_seen = None;
         self.delivered = (now, 0);
     }
 
@@ -290,6 +295,10 @@ impl PathModel {
     fn end_train(&mut self, now: Instant) {
         if let Some(train) = self.train.take() {
             let spread = train.last_us - train.first_us;
+            // 600 bytes in under `SPREAD_US`: over `SLOW_RATE`.
+            if spread < SPREAD_US && train.bytes >= 600 {
+                self.fast_seen = Some(now);
+            }
             if spread >= SPREAD_US && train.bytes > 0 {
                 self.rates.push_back((now, train.bytes as f64 * 1_000_000.0 / spread as f64));
                 while self.rates.len() > RATE_KEPT {
@@ -368,6 +377,12 @@ impl PathModel {
 
     pub fn srtt(&self) -> Option<f64> {
         self.srtt
+    }
+
+    /// Whether the path lately took a train at well over `SLOW_RATE` and no
+    /// bottleneck shows since: what goes may go at the program's pace.
+    pub fn fast(&self, now: Instant) -> bool {
+        self.rate(now).is_none() && self.fast_seen.is_some_and(|at| now.duration_since(at) <= RATE_SPAN)
     }
 
     /// What the client took lately, wire bytes a second.
