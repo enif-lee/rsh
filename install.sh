@@ -11,6 +11,9 @@
 set -eu
 
 REPO=enif-lee/rsh
+# ~/.rsh not group-writable whatever the umask (rsh does not trust such
+# directories).
+umask 022
 
 say() { printf 'rsh install: %s\n' "$*"; }
 die() { say "$*" >&2; exit 1; }

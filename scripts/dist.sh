@@ -5,6 +5,9 @@
 # on any distribution; all builds come from this tree and share its build id.
 set -eu
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
+# Not group-writable whatever the umask: the client does not trust what
+# such a directory holds (remote::trusted).
+umask 022
 OUT=${1:-$HOME/.rsh/dist}
 mkdir -p "$OUT"
 # What this run builds: only these go in SHA256SUMS (not a binary left in
