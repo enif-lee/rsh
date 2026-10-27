@@ -14,7 +14,11 @@ const SENT_KEPT: usize = 4096;
 /// How long the least one-way delay and round trip are taken over: the
 /// path's own delay, with no queue in it, is the least seen lately.
 const FLOOR_SPAN: Duration = Duration::from_secs(10);
-/// The latest round trips `window_rtt` tells a changed path by.
+/// The queue that stands is the least over this: the last datagram of a
+/// burst waits behind the others on a slow link, which is no queue left
+/// standing (an update of four datagrams over 1 Mbit/s read as 28 ms).
+const STANDING: Duration = Duration::from_millis(50);
+/// The latest round trips `rebase_if_changed` tells a changed path by.
 const LAST_RTTS: usize = 4;
 /// Rate samples kept: the rate is their median.
 const RATE_KEPT: usize = 24;
@@ -73,6 +77,9 @@ pub struct PathModel {
     /// increasing delays: the front is the least over `FLOOR_SPAN`.
     owd: VecDeque<(Instant, f64)>,
     queue_ms: f64,
+    /// (when, queue ms) of arrivals over the last `STANDING`: the queue
+    /// that stands is their least (see `queue_ms`).
+    queues: VecDeque<(Instant, f64)>,
     /// (when, round trip less the client's hold, ms), as `owd`.
     rtt: VecDeque<(Instant, f64)>,
     srtt: Option<f64>,
@@ -104,6 +111,7 @@ impl PathModel {
             train: None,
             owd: VecDeque::new(),
             queue_ms: 0.0,
+            queues: VecDeque::new(),
             rtt: VecDeque::new(),
             srtt: None,
             last_rtts: VecDeque::new(),
@@ -157,6 +165,7 @@ impl PathModel {
         self.train = None;
         self.owd.clear();
         self.queue_ms = 0.0;
+        self.queues.clear();
         self.rtt.clear();
         self.srtt = None;
         self.last_rtts.clear();
@@ -215,7 +224,12 @@ impl PathModel {
             while self.owd.len() > 1 && self.owd.front().is_some_and(|(when, _)| now.duration_since(*when) > FLOOR_SPAN) {
                 self.owd.pop_front();
             }
-            self.queue_ms = owd - self.owd.front().map_or(owd, |(_, d)| *d);
+            let queue = owd - self.owd.front().map_or(owd, |(_, d)| *d);
+            self.queues.push_back((now, queue));
+            while self.queues.len() > 1 && self.queues.front().is_some_and(|(when, _)| now.duration_since(*when) > STANDING) {
+                self.queues.pop_front();
+            }
+            self.queue_ms = self.queues.iter().map(|(_, q)| *q).fold(f64::MAX, f64::min);
             let joins = self.last.is_some_and(|last| {
                 let send_gap = at.saturating_duration_since(last.sent).as_micros() as i64;
                 let busy = (at_us - last.at_us) as f64 > SPREAD_SHARE * send_gap as f64 + SPREAD_MARGIN_US;
@@ -380,6 +394,7 @@ impl PathModel {
             self.owd.clear();
             self.owd.push_back((now, newest));
             self.queue_ms = 0.0;
+            self.queues.clear();
         }
     }
 

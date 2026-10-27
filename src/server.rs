@@ -244,6 +244,9 @@ struct Attachment {
     switched: Option<u32>,
     /// Bytes of the last screen update as sent, and how many went.
     update_len: usize,
+    /// When the updates sent so far are off a slow link at the path
+    /// model's rate (see `screen_due_at`).
+    link_free: Option<Instant>,
     updates: u32,
     /// When the program last wrote, and the usual time between its writes
     /// lately.
@@ -759,6 +762,7 @@ fn import(bytes: &[u8]) -> Option<Handoff> {
                 zraw: Vec::new(),
                 gathering: None,
                 update_len: 0,
+                link_free: None,
                 updates: 0,
                 switched: None,
                 output_at: None,
@@ -1193,6 +1197,7 @@ impl State {
             zraw: Vec::new(),
             gathering: None,
             update_len: 0,
+            link_free: None,
             updates: 0,
             switched: None,
             output_at: None,
@@ -1848,30 +1853,36 @@ impl Attachment {
         }
         let last = self.screen_at?;
         if let Some(bdp) = self.output.slow_bdp() {
-            // A slow link: the next update waits until it fits what the
-            // path delivers in its least round trip plus two updates, so
-            // updates do not queue on the link and age there (with one,
-            // an update now and then waited a round trip).
             let in_flight = self.output.in_flight_wire();
             let update = self.update_len as u64 + proto::WIRE_OVERHEAD;
-            let budget = bdp + 2 * update;
-            if in_flight > 0 && in_flight + update > budget {
-                return None;
-            }
-            // Then once the last update is off the link at its rate. Output
-            // that came while it was busy waits a little for newer output:
-            // an update of the newest screen as it comes shows it younger
-            // than one of an older screen at once.
             let rate = self.output.slow_rate().expect("slow");
-            let mut gap = Duration::from_secs_f64((self.update_len as u64 + proto::WIRE_OVERHEAD) as f64 / rate) + SLOW_ROOM;
-            // With the path model measuring the queue itself: while it is
-            // under a frame, updates keep the program's pace even a little
-            // over the rate (an update of 34 ms at the rate, plus the room,
-            // would miss every 33 ms frame and wait for the next: half the
-            // frames); a queue that grows past a frame paces them again.
-            if self.modelled() && self.queue_delay() < self.screen_gap().max(Duration::from_millis(20)) {
-                gap = gap.min(self.screen_gap());
-            }
+            let gap = if self.modelled() {
+                // With the path model's rate the link's time is reckoned,
+                // not measured: the next update goes once what went before
+                // is off the link within a frame (`link_free`), so the
+                // queue stays under a frame and updates skip whole frames
+                // only (an update of 38 ms over 33 ms frames: five sent,
+                // one skipped). In flight past the round trip and four
+                // updates (losses, resends) holds them as a safeguard.
+                if in_flight > 0 && in_flight + update > bdp + 4 * update {
+                    return None;
+                }
+                let free = self.link_free.unwrap_or(last);
+                free.saturating_duration_since(last).saturating_sub(self.screen_gap())
+            } else {
+                // A slow link: the next update waits until it fits what the
+                // path delivers in its least round trip plus two updates, so
+                // updates do not queue on the link and age there (with one,
+                // an update now and then waited a round trip).
+                if in_flight > 0 && in_flight + update > bdp + 2 * update {
+                    return None;
+                }
+                // Then once the last update is off the link at its rate.
+                // Output that came while it was busy waits a little for
+                // newer output: an update of the newest screen as it comes
+                // shows it younger than one of an older screen at once.
+                Duration::from_secs_f64(update as f64 / rate) + SLOW_ROOM
+            };
             // When the program writes in steps (frames), output that came
             // while the link was busy waits for the next step if that is
             // due soon after; output that stopped goes at once.
@@ -1932,6 +1943,26 @@ impl Attachment {
         let made = if path.fast(now) { self.stream_len(self.made.1.max(self.made.2)) as f64 / SYNC_SPAN.as_secs_f64() } else { 0.0 };
         let rate = path.delivery_rate().max(made);
         self.output.set_path_window(rate, rtt);
+    }
+
+    /// An update of `update_len` went now: when the slow link is through
+    /// with it at the path model's rate.
+    fn reckon_link(&mut self, now: Instant) {
+        if !self.modelled() {
+            return;
+        }
+        if let (Some(rate), Some(bdp)) = (self.output.slow_rate(), self.output.slow_bdp()) {
+            // Not before what is in flight past a round trip's worth (the
+            // queue the acks show) is through, less a frame for acks that
+            // come in bursts: the reckoning does not drift from the link.
+            let queued = now + Duration::from_secs_f64(self.output.in_flight_wire().saturating_sub(bdp) as f64 / rate);
+            let queued = queued.checked_sub(self.screen_gap()).unwrap_or(now);
+            let start = self.link_free.map_or(now, |free| free.max(now)).max(queued);
+            // Each datagram's overhead, not the update's once.
+            let datagrams = (self.update_len as u64).div_ceil(proto::CHUNK as u64).max(1);
+            let wire = self.update_len as u64 + datagrams * proto::WIRE_OVERHEAD;
+            self.link_free = Some(start + Duration::from_secs_f64(wire as f64 / rate));
+        }
     }
 
     /// Whether the path model speaks for the path (its reports came).
@@ -2095,6 +2126,7 @@ impl Session {
                     let direct = attach.push_output(&bytes);
                     let staged = attach.stage(false);
                     attach.update_len = if direct { bytes.len() } else if staged > 0 { staged } else { attach.stream_len(bytes.len()) };
+                    attach.reckon_link(now);
                     attach.updates = attach.updates.wrapping_add(1);
                     attach.repaint_due = false;
                     attach.screen_at = Some(now);
@@ -2107,6 +2139,7 @@ impl Session {
         let attach = self.attach.as_mut().expect("attachment");
         attach.reset_output(&screen);
         attach.update_len = attach.output.pending();
+        attach.reckon_link(now);
         attach.updates = attach.updates.wrapping_add(1);
         if attach.syncing_until.is_some() {
             // Updates are paced by the path's queue (`next_screen_at`); a
