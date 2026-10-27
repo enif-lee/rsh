@@ -528,8 +528,15 @@ impl Terminal {
         (point.line.0.max(0) as usize, point.column.0)
     }
 
+    /// Whether the next character goes on a new line: the cursor is past
+    /// the last column with autowrap on. (With it off the emulator still
+    /// marks the cursor so, but the next character only overwrites that
+    /// column, and no client screen could be made to carry the mark: every
+    /// screens-only update then failed `same_screen` and went as a repaint,
+    /// twice the bytes and a flash.)
     pub fn pending_wrap(&self) -> bool {
-        self.term.borrow().grid().cursor.input_needs_wrap
+        let term = self.term.borrow();
+        term.grid().cursor.input_needs_wrap && term.mode().contains(TermMode::LINE_WRAP)
     }
 
     pub fn pen(&self) -> Attr {
@@ -1692,6 +1699,29 @@ mod tests {
         t.feed(b"\x1b[?2026l");
         assert!(!t.synchronized());
         assert_eq!(t.screen_line(0), "inside");
+    }
+
+    #[test]
+    fn a_diff_reproduces_rows_drawn_to_the_edge_with_autowrap_off() {
+        // Rows written to the last column with autowrap off: the client's
+        // screen must come out the same, or each update is a repaint.
+        let frame = |n: usize| {
+            let mut out = String::from("\x1b[?7l");
+            for row in 1..=10 {
+                let ch = (b'a' + ((n + row) % 26) as u8) as char;
+                out.push_str(&format!("\x1b[{row};1H{}", ch.to_string().repeat(40)));
+            }
+            out
+        };
+        let mut now = Terminal::with_history(40, 10, 0);
+        now.feed(frame(0).as_bytes());
+        let mut client = Terminal::with_history(40, 10, 0);
+        client.feed(&now.render(0));
+        assert!(client.same_screen(&now), "after a repaint");
+        now.feed(frame(1).as_bytes());
+        let diff = now.diff_from(&client).expect("a diff");
+        client.feed(&diff);
+        assert!(client.same_screen(&now), "after a diff");
     }
 
     #[test]

@@ -928,6 +928,11 @@ pub struct Sender {
     climb: Option<(f64, Instant)>,
     /// When the least round trip was last raised (see `REFLOOR_REST`).
     refloored_at: Option<Instant>,
+    /// How long the datagrams acked alone lately took, ms (the last four),
+    /// and such acks in a row that took well over the quickest of those
+    /// before (see `waited`).
+    took_lately: VecDeque<f64>,
+    waited: u32,
     /// The link loses nothing (TCP): no timeout or duplicate-ack resends,
     /// which would only queue copies ahead of new data. A new connection
     /// `rewind`s instead.
@@ -984,6 +989,8 @@ impl Sender {
             near_over: (0, f64::MAX),
             climb: None,
             refloored_at: None,
+            took_lately: VecDeque::new(),
+            waited: 0,
             lossless: false,
         }
     }
@@ -1151,6 +1158,8 @@ impl Sender {
         self.above_floor = (0, f64::MAX);
         self.near_over = (0, f64::MAX);
         self.climb = None;
+        self.took_lately.clear();
+        self.waited = 0;
     }
 
     pub fn set_lossless(&mut self, on: bool) {
@@ -1196,6 +1205,17 @@ impl Sender {
     /// that were resends.
     pub fn loss(&self) -> f64 {
         self.resent
+    }
+
+    /// Whether a queue grows on the path, so it has no room to spare: the
+    /// last two datagrams acked alone took well over the quickest of the
+    /// four before. Against those, not the least round trip: a path that
+    /// turned far keeps a near one for a while, and every ack would look
+    /// late; here only its first few do. (Growth against the ack before
+    /// alone, by 0 to 10 ms, missed the queue of a LAN turned 256 kbit/s:
+    /// 26 fps against 30.)
+    pub fn waited(&self) -> bool {
+        self.waited >= 2
     }
 
     /// Whether a resend went out since the last call.
@@ -1333,6 +1353,21 @@ impl Sender {
             self.delivered_wire += wire;
             let own = known.map_or(Duration::ZERO, |rate| Duration::from_secs_f64(wire as f64 / rate));
             queued = Some(queued.unwrap_or(true) && late.is_some_and(|late| now.duration_since(at) > late + own));
+        }
+        // One datagram an ack: one that covers several (a loss's hole
+        // filled) waited on the repair, not on a queue. A repair's acks of
+        // one datagram count, its wait in them: a LAN turned slow repairs
+        // spurious timeouts for a second while its queue grows, and lossy
+        // paths measured no worse for it.
+        if let [(at, _, _)] = popped[..] {
+            let took = now.duration_since(at).as_secs_f64() * 1000.0;
+            let quickest = self.took_lately.iter().copied().reduce(f64::min);
+            let grew = quickest.is_some_and(|least| took > 1.25 * least + 10.0);
+            self.waited = if grew { self.waited.saturating_add(1) } else { 0 };
+            self.took_lately.push_back(took);
+            if self.took_lately.len() > 4 {
+                self.took_lately.pop_front();
+            }
         }
         let mut refloor = None;
         if let ([(at, wire, ahead)], false) = (&popped[..], repairing) {
@@ -2365,6 +2400,46 @@ mod tests {
         assert_eq!(tx.climb, None);
         echo(&mut tx, 300.0, &mut at);
         assert_eq!(tx.floor_rtt, Some(300.0), "a round trip on time");
+    }
+
+    #[test]
+    fn acks_that_waited_on_the_path_say_it_has_no_room() {
+        // A LAN that turned slow before its rate is known: acks come well
+        // later than lately, and the server stops sending copies (`waited`).
+        let mut tx = Sender::new(0);
+        let mut at = Instant::now();
+        let send_and_ack = |tx: &mut Sender, took: u64, at: &mut Instant| {
+            tx.push(&[0u8; 300]);
+            let (offset, data) = tx.next_chunk(*at).expect("a chunk");
+            *at += Duration::from_millis(took);
+            tx.on_ack(0, offset + data.len() as u64, *at, false);
+            *at += Duration::from_millis(30);
+        };
+        for _ in 0..3 {
+            send_and_ack(&mut tx, 1, &mut at);
+        }
+        assert!(!tx.waited(), "a LAN");
+        send_and_ack(&mut tx, 200, &mut at);
+        send_and_ack(&mut tx, 1, &mut at);
+        assert!(!tx.waited(), "one late ack alone");
+        // Acks that cover several datagrams (a loss's hole filled) do not
+        // count, however late.
+        for _ in 0..2 {
+            tx.push(&[0u8; 2 * CHUNK]);
+            while tx.next_chunk(at).is_some() {}
+            at += Duration::from_millis(300);
+            tx.on_ack(0, tx.end(), at, false);
+        }
+        assert!(!tx.waited(), "acks of several datagrams");
+        send_and_ack(&mut tx, 200, &mut at);
+        send_and_ack(&mut tx, 260, &mut at);
+        assert!(tx.waited(), "acks well later than the quickest lately");
+        // Once the four are of the new delay, a path that is far but not
+        // queued has room again.
+        for _ in 0..4 {
+            send_and_ack(&mut tx, 260, &mut at);
+        }
+        assert!(!tx.waited(), "far, not queued");
     }
 
     #[test]

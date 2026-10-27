@@ -1667,7 +1667,11 @@ impl State {
             attach.doubling = !is_tcp_addr(attach.addr)
                 && attach.output.slow_rate().is_none()
                 && (resent || loss > DOUBLE_ON || (attach.doubling && loss > DOUBLE_OFF));
-            if !stream.data.is_empty() && attach.doubling && attach.output.in_flight() < attach.output.window() / 2 {
+            // Nor has a path whose acks show a queue growing (a link that
+            // turned slow before its rate is known: copies would take half
+            // of it); a passing one, so doubling stays on for after it.
+            let room = attach.output.in_flight() < attach.output.window() / 2 && !attach.output.waited();
+            if !stream.data.is_empty() && attach.doubling && room {
                 batch.push(proto::seal(&attach.key, Dir::ToClient, KIND_STREAM, attach.id, &stream.encode()));
             }
             batch.push(sealed);
