@@ -20,10 +20,10 @@ Same machine, same simulated links, five clients: rsh over UDP, rsh over TCP (UD
   <img src="docs/bench/age.svg" alt="Median age of what is on screen for a full-screen dashboard at 30 fps, per network and tool" width="760">
 </p>
 
-- **The screen stays current.** On 1 Mbit/s to 64 kbit/s links rsh shows a 30 fps dashboard at 13 to 30 fps, and what is on screen is 56 to 132 ms old over UDP (up to 207 ms over TCP). OpenSSH and ET show 1.5 to 24 fps of frames that are 0.5 to 2.4 s old, because every byte waits its turn on the link.
+- **The screen stays current.** On 1 Mbit/s to 64 kbit/s links rsh over UDP shows a 30 fps dashboard at 14 to 30 fps, and what is on screen is 56 to 132 ms old (over TCP 13 to 30 fps, up to 207 ms). OpenSSH and ET show 1.5 to 24 fps of frames that are 0.5 to 2.4 s old, because every byte waits its turn on the link.
 - **Keys echo at once.** Local echo prediction answers a key in about 4 to 6 ms on every link. OpenSSH and ET wait a round trip: 107 to 319 ms.
 - **Big output does not block you.** `seq 1 100000` returns the prompt in 0.13 to 0.41 s on every link. OpenSSH and ET take 1.6 to 23 s, and more than 30 s at 64 kbit/s.
-- **Sessions survive.** After a 5 s outage rsh is back 0.9 to 1.0 s after the link returns. After the client moves to another IP address it carries on in about 2 s. A client killed and started again returns to the same shell in 0.5 s.
+- **Sessions survive.** After a 5 s outage rsh is back about 1 s (median 0.95 s) after the link returns. After the client moves to another IP address it carries on in about 2 s. A client killed and started again returns to the same shell in 0.5 s.
 
 <details>
 <summary>More charts: random full screen, bulk output</summary>
@@ -39,7 +39,13 @@ Same machine, same simulated links, five clients: rsh over UDP, rsh over TCP (UD
 </details>
 
 > [!NOTE]
-> These come from [`benchmark/lab`](benchmark/lab): two Docker containers per client on one machine, with `tc netem` for delay, loss and rate. Real radio links add jitter and reordering that netem only partly imitates. Where rsh is behind, the charts show it: on the dashboard at RTT 300 ms and 2% loss OpenSSH and ET reach 30 fps against rsh's 28 to 30 (they keep a backlog in flight, so their screen is older on slow links); on a random full screen at 256 kbit/s and 64 kbit/s mosh shows slightly more frames (6.0 and 1.7 against 5.5 and 1.5); and rsh over TCP does not resume after an outage or a move within the 4 s the test watches.
+> These come from [`benchmark/lab`](benchmark/lab): two Docker containers per client on one machine, with `tc netem` for delay, loss and rate. Real radio links add jitter and reordering that netem only partly imitates. Where rsh is behind:
+> - On the dashboard at RTT 300 ms and 2% loss, OpenSSH and ET reach 29.5 to 30 fps against rsh's 28 to 30 (they keep a backlog in flight, so their screen is older on slow links).
+> - On a random full screen at 256 kbit/s and 64 kbit/s, mosh shows slightly more frames (6.0 and 1.7 against 5.5 and 1.5).
+> - When the link changes under a random full screen, rsh takes longer to adapt: from RTT 100 ms to 256 kbit/s it shows 1.8 fps afterwards (OpenSSH and ET 2.5, mosh and rsh over TCP 5.3); from a LAN to RTT 300 ms, 18.0 fps (OpenSSH 29.0, ET 29.2).
+> - rsh over TCP does not resume after an outage or a move within the 4 s the test watches.
+>
+> One of ET's three bulk-output runs at 512 kbit/s did not connect; its value is the median of two.
 
 ## Feature matrix
 
@@ -47,8 +53,8 @@ Same machine, same simulated links, five clients: rsh over UDP, rsh over TCP (UD
 | --- | --- | --- | --- | --- |
 | Transport | TCP | TCP | UDP | UDP, or TCP on the same port when UDP is blocked |
 | Works where only TCP gets through | ✅ | ✅ | ❌ cannot connect | ✅ connects over TCP in 2.0 s |
-| Client changes IP address | ❌ connection drops | ⚠️ reconnects over a new TCP connection, slowly | ✅ ~3.1 s | ✅ ~2.0 s (UDP) |
-| Link down for a few seconds | ⚠️ only while TCP survives its backoff | ⚠️ reconnects | ✅ back ~1.0 s after the link | ✅ back 0.9–1.0 s after the link (UDP) |
+| Client changes IP address | ❌ connection drops | ⚠️ reconnects over a new TCP connection (about 23 s in an earlier run) | ✅ ~3.0 s | ✅ ~2.1 s (UDP) |
+| Link down for a few seconds | ⚠️ only while TCP survives its backoff (not back within 4 s here) | ⚠️ reconnects (not within 4 s here) | ✅ back ~1.0 s after the link | ✅ back ~0.95 s after the link (UDP) |
 | Client killed, started again | ❌ new shell | ❌ new shell | ❌ new shell | ✅ same shell (`rsh <host> <name>`) |
 | Local echo prediction | ❌ | ❌ | ✅ adaptive | ✅ adaptive |
 | Slow link: shows the latest screen, not a backlog | ❌ | ❌ | ✅ | ✅ |
@@ -62,7 +68,7 @@ Same machine, same simulated links, five clients: rsh over UDP, rsh over TCP (UD
 | Upgrade the server without dropping sessions | n/a | not checked | n/a | ✅ hands sessions to the new binary |
 | Authentication | SSH keys, passwords | via SSH | via SSH | per-client token issued over SSH; X25519 per attach, XChaCha20-Poly1305 |
 
-Measured rows come from the lab above; the rest from each project's documentation and source.
+Times come from the lab run above. The OSC counts and ET's reconnect time come from an earlier run of [`benchmark/harness`](benchmark/harness); the other cells from each project's documentation and source.
 
 ## Features
 
@@ -125,13 +131,17 @@ Keys, typed at the start of a line as in ssh:
 
 ```sh
 benchmark/harness/run.py build                      # the image with sshd, ET, mosh and this rsh
-python3 benchmark/lab/lab.py run --iterations 3     # results in benchmark/lab/out/run-<time>.json
+python3 benchmark/lab/lab.py run --iterations 3 \
+    --tests render,switch,echo,flood,outage,roam,reattach,udpblock \
+    --nets lowbw,verylow,slow64k,highlat,lossy,mobile \
+    --switches lan:highlat,lan:lowbw,lowbw:highlat,highlat:lossy,wan:verylow
+                                                    # the README's run; results in benchmark/lab/out/run-<time>.json
 python3 benchmark/lab/lab.py demo                   # the tools side by side in tmux, then a summary
 python3 benchmark/lab/lab.py stop                   # stop a run or demo from another shell
 python3 benchmark/lab/charts.py benchmark/lab/out/run-<time>.json docs/bench
 ```
 
-`--tools`, `--nets`, `--scenes`, `--switches`, `--fps` and `--duration` pick what runs; `--rsh <linux binary>` tests another build without rebuilding the image.
+`--tests`, `--tools`, `--nets`, `--scenes`, `--switches`, `--fps` and `--duration` pick what runs (without `--tests`, render and switch only); `--rsh <linux binary>` tests another build without rebuilding the image.
 
 ## Development
 
