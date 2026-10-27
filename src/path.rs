@@ -1,6 +1,7 @@
 // The path from the server to a client, as the client's arrival reports
 // show it (`proto::Feedback`): its bottleneck rate, the queue in front of
-// it, the round trip and the share of datagrams lost. Measured from when
+// it, the round trip, whether it takes a burst at once, and the share of
+// datagrams lost (kept for loss protection to come). Measured from when
 // datagrams left the server and arrived at the client (its kernel's
 // receive time), so neither end's own work reads as the link's.
 

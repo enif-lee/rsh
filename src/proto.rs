@@ -967,9 +967,11 @@ pub struct Sender {
     took_lately: VecDeque<f64>,
     waited: u32,
     /// The path model's bottleneck rate (wire bytes a second; None when
-    /// nothing waits on it) and least round trip, ms, when the client
-    /// reports arrivals (`set_path`): they stand in for the rate and floor
-    /// this sender would read from its acks, which carry both ends' work.
+    /// nothing waits on it) and the round trip windows are sized by, ms
+    /// (`PathModel::window_rtt`), when the client reports arrivals
+    /// (`set_path`): they stand in for the rate and floor this sender would
+    /// read from its acks, which carry both ends' work. With them a slow
+    /// link is one over a near path too.
     path: Option<(Option<f64>, Option<f64>)>,
     /// With no bottleneck in the path model, the least window (wire bytes)
     /// it allows: twice what the path took lately over its round trip, so
@@ -1201,8 +1203,8 @@ impl Sender {
         self.path = Some((rate, rtt));
     }
 
-    /// The least window while the path model sees no bottleneck: what the
-    /// path took lately (wire bytes a second) over twice its round trip.
+    /// The least window while the path model sees no bottleneck: twice
+    /// `rate` (bytes a second) over the round trip.
     /// The delay-based window grows a quarter a round trip, too slow for
     /// 60 frames a second of a full screen over a far path; the model knows
     /// nothing waits.
@@ -1226,6 +1228,10 @@ impl Sender {
         self.climb = None;
         self.took_lately.clear();
         self.waited = 0;
+        // The path model speaks again once the new path's reports come
+        // (over TCP never).
+        self.path = None;
+        self.path_window = 0;
     }
 
     pub fn set_lossless(&mut self, on: bool) {

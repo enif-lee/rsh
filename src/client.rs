@@ -34,7 +34,8 @@ const HOLD_LIMIT: usize = 64 * 1024;
 /// after the first unacked byte, whichever comes first.
 const ACK_BYTES: usize = 16 * 1024;
 const ACK_DELAY: Duration = Duration::from_millis(2);
-/// Arrivals a packet reports at most: more, and one goes at once.
+/// Arrivals a packet reports at most (less than a datagram); as many
+/// waiting, and one goes at once.
 const ARRIVALS_MAX: usize = 48;
 /// Duplicate acks sent per gap: the server retransmits after three, and
 /// a few spare ones keep a lost ack from leaving it to the timeout.
@@ -507,11 +508,15 @@ struct Link {
 
 impl Link {
     fn send(&mut self, stream: &ClientStream, now: Instant) {
+        // A datagram's worth at most: few beside a chunk of input, the rest
+        // with the next packet.
+        let most = if stream.data.len() > 600 { 8 } else { ARRIVALS_MAX };
         let report = if self.arrivals.is_empty() {
             Vec::new()
         } else {
             let sent_us = self.micros(Instant::now());
-            proto::Feedback { sent_us, arrivals: std::mem::take(&mut self.arrivals) }.encode()
+            let arrivals = self.arrivals.drain(..self.arrivals.len().min(most)).collect();
+            proto::Feedback { sent_us, arrivals }.encode()
         };
         let stream = ClientStream { feedback: &report, ..stream.clone() };
         let bytes = proto::seal(&self.key, Dir::ToServer, KIND_STREAM, self.attach, &stream.encode());
