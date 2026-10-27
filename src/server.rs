@@ -244,6 +244,10 @@ struct Attachment {
     switched: Option<u32>,
     /// Bytes of the last screen update as sent, and how many went.
     update_len: usize,
+    /// Stream bytes an update took lately, as a moving average: a slow
+    /// link's updates go at the pace of that, not of each one (a large one
+    /// then a small one would show as a long gap then a short one).
+    update_avg: f64,
     updates: u32,
     /// When the program last wrote, and the usual time between its writes
     /// lately.
@@ -759,6 +763,7 @@ fn import(bytes: &[u8]) -> Option<Handoff> {
                 zraw: Vec::new(),
                 gathering: None,
                 update_len: 0,
+                update_avg: 0.0,
                 updates: 0,
                 switched: None,
                 output_at: None,
@@ -1193,6 +1198,7 @@ impl State {
             zraw: Vec::new(),
             gathering: None,
             update_len: 0,
+            update_avg: 0.0,
             updates: 0,
             switched: None,
             output_at: None,
@@ -1863,7 +1869,8 @@ impl Attachment {
             // an update of the newest screen as it comes shows it younger
             // than one of an older screen at once.
             let rate = self.output.slow_rate().expect("slow");
-            let gap = Duration::from_secs_f64((self.update_len as u64 + proto::WIRE_OVERHEAD) as f64 / rate) + SLOW_ROOM;
+            let size = if self.modelled() { self.update_avg.max(1.0) } else { self.update_len as f64 };
+            let gap = Duration::from_secs_f64((size + proto::WIRE_OVERHEAD as f64) / rate) + SLOW_ROOM;
             // When the program writes in steps (frames), output that came
             // while the link was busy waits for the next step if that is
             // due soon after; output that stopped goes at once.
@@ -1920,7 +1927,7 @@ impl Attachment {
             return;
         };
         let made = self.stream_len(self.made.1.max(self.made.2)) as f64 / SYNC_SPAN.as_secs_f64();
-        let rate = path.delivery_rate().max(0.6 * made);
+        let rate = path.delivery_rate().max(made);
         self.output.set_path_window(rate, rtt);
     }
 
@@ -2085,6 +2092,7 @@ impl Session {
                     let direct = attach.push_output(&bytes);
                     let staged = attach.stage(false);
                     attach.update_len = if direct { bytes.len() } else if staged > 0 { staged } else { attach.stream_len(bytes.len()) };
+                    attach.update_avg = if attach.update_avg == 0.0 { attach.update_len as f64 } else { 0.75 * attach.update_avg + 0.25 * attach.update_len as f64 };
                     attach.updates = attach.updates.wrapping_add(1);
                     attach.repaint_due = false;
                     attach.screen_at = Some(now);
