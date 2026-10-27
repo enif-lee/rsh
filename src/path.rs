@@ -362,6 +362,11 @@ impl PathModel {
     /// margin (or no rate shows: nothing waited on it). Copies themselves
     /// do not count, or turning them on would turn them off.
     pub fn room_for_copies(&self, now: Instant) -> bool {
+        // A queue standing is no room, whatever the rate (a link that just
+        // turned slow drops what it had: that loss is its queue's).
+        if self.queue_ms >= 20.0 {
+            return false;
+        }
         let Some(rate) = self.rate(now) else {
             return true;
         };
