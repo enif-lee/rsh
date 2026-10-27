@@ -244,10 +244,6 @@ struct Attachment {
     switched: Option<u32>,
     /// Bytes of the last screen update as sent, and how many went.
     update_len: usize,
-    /// Stream bytes an update took lately, as a moving average: a slow
-    /// link's updates go at the pace of that, not of each one (a large one
-    /// then a small one would show as a long gap then a short one).
-    update_avg: f64,
     updates: u32,
     /// When the program last wrote, and the usual time between its writes
     /// lately.
@@ -763,7 +759,6 @@ fn import(bytes: &[u8]) -> Option<Handoff> {
                 zraw: Vec::new(),
                 gathering: None,
                 update_len: 0,
-                update_avg: 0.0,
                 updates: 0,
                 switched: None,
                 output_at: None,
@@ -1198,7 +1193,6 @@ impl State {
             zraw: Vec::new(),
             gathering: None,
             update_len: 0,
-            update_avg: 0.0,
             updates: 0,
             switched: None,
             output_at: None,
@@ -1869,8 +1863,15 @@ impl Attachment {
             // an update of the newest screen as it comes shows it younger
             // than one of an older screen at once.
             let rate = self.output.slow_rate().expect("slow");
-            let size = if self.modelled() { self.update_avg.max(1.0) } else { self.update_len as f64 };
-            let gap = Duration::from_secs_f64((size + proto::WIRE_OVERHEAD as f64) / rate) + SLOW_ROOM;
+            let mut gap = Duration::from_secs_f64((self.update_len as u64 + proto::WIRE_OVERHEAD) as f64 / rate) + SLOW_ROOM;
+            // With the path model measuring the queue itself: while it is
+            // under a frame, updates keep the program's pace even a little
+            // over the rate (an update of 34 ms at the rate, plus the room,
+            // would miss every 33 ms frame and wait for the next: half the
+            // frames); a queue that grows past a frame paces them again.
+            if self.modelled() && self.queue_delay() < self.screen_gap().max(Duration::from_millis(20)) {
+                gap = gap.min(self.screen_gap());
+            }
             // When the program writes in steps (frames), output that came
             // while the link was busy waits for the next step if that is
             // due soon after; output that stopped goes at once.
@@ -2094,7 +2095,6 @@ impl Session {
                     let direct = attach.push_output(&bytes);
                     let staged = attach.stage(false);
                     attach.update_len = if direct { bytes.len() } else if staged > 0 { staged } else { attach.stream_len(bytes.len()) };
-                    attach.update_avg = if attach.update_avg == 0.0 { attach.update_len as f64 } else { 0.75 * attach.update_avg + 0.25 * attach.update_len as f64 };
                     attach.updates = attach.updates.wrapping_add(1);
                     attach.repaint_due = false;
                     attach.screen_at = Some(now);

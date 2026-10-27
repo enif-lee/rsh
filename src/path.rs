@@ -14,8 +14,6 @@ const SENT_KEPT: usize = 4096;
 /// How long the least one-way delay and round trip are taken over: the
 /// path's own delay, with no queue in it, is the least seen lately.
 const FLOOR_SPAN: Duration = Duration::from_secs(10);
-/// What `window_rtt` takes the recent least round trip over.
-const RECENT: Duration = Duration::from_secs(1);
 /// The latest round trips `window_rtt` tells a changed path by.
 const LAST_RTTS: usize = 4;
 /// Rate samples kept: the rate is their median.
@@ -318,7 +316,12 @@ impl PathModel {
             return None;
         }
         recent.sort_by(f64::total_cmp);
-        Some(recent[recent.len() / 2])
+        let median = recent[recent.len() / 2];
+        // Never below what the path delivered lately while a queue stood in
+        // front of it (it was busy all along): a few low samples must not
+        // pace output under what the link carries.
+        let busy = if self.queue_ms >= 5.0 { self.delivery_rate } else { 0.0 };
+        Some(median.max(busy))
     }
 
     /// Whether the path has room for copies of what goes now: twice the
@@ -343,13 +346,13 @@ impl PathModel {
         self.rtt.front().map(|(_, r)| *r)
     }
 
-    /// The round trip a window is sized by: the least over the last second
-    /// when that is longer than the least over `FLOOR_SPAN` (a path that got
-    /// longer, as a LAN turned far, which the long least keeps for seconds).
-    pub fn window_rtt(&self, now: Instant) -> Option<f64> {
-        let least = self.min_rtt()?;
-        let recent = self.rtt.iter().filter(|(when, _)| now.duration_since(*when) <= RECENT).map(|(_, r)| *r).reduce(f64::min);
-        Some(recent.map_or(least, |recent| recent.max(least)))
+    /// The round trip a window is sized by.
+    pub fn window_rtt(&self, _now: Instant) -> Option<f64> {
+        // The least alone: a recent least takes in a standing queue, and a
+        // window sized by it keeps the queue standing (LAN to 512 kbit/s:
+        // 224 ms grew to 605 with half a second of queue). A near path that
+        // turned far is rebased (`rebase_if_changed`).
+        self.min_rtt()
     }
 
     /// A near path (under 20 ms, a LAN) whose last few round trips are far
@@ -367,6 +370,7 @@ impl PathModel {
         }
         self.rtt.clear();
         self.rtt.push_back((now, last));
+        self.fast_seen = None;
         // The newest delay stands for the new path's least until a lower
         // one comes.
         if let Some(&(_, newest)) = self.owd.back() {
@@ -383,7 +387,9 @@ impl PathModel {
     /// Whether the path lately took a train at well over `SLOW_RATE` and no
     /// bottleneck shows since: what goes may go at the program's pace.
     pub fn fast(&self, now: Instant) -> bool {
-        self.rate(now).is_none() && self.fast_seen.is_some_and(|at| now.duration_since(at) <= RATE_SPAN)
+        // A queue standing says otherwise, whatever was seen before (a LAN
+        // that turned slow, before the new rate shows).
+        self.queue_ms < 20.0 && self.rate(now).is_none() && self.fast_seen.is_some_and(|at| now.duration_since(at) <= RATE_SPAN)
     }
 
     /// What the client took lately, wire bytes a second.
@@ -470,7 +476,7 @@ mod tests {
         // The same session over RTT 100 ms: within a few round trips the
         // least round trip is the new path's, not the LAN's for seconds.
         let later = start + Duration::from_secs(2);
-        let now = run(&mut model, later, 8, 300, 30_000, 10e6, 50);
+        let now = run(&mut model, later, 20, 300, 30_000, 10e6, 50);
         let rtt = model.window_rtt(now).expect("a round trip");
         assert!((rtt - 100.0).abs() < 5.0, "{rtt}");
         assert!(model.queue_ms() < 5.0, "the new path's delay is no queue: {}", model.queue_ms());
