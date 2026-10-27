@@ -62,11 +62,12 @@ IMAGE = "rsh-bench"
 # `rsh-tcp` is rsh over TCP: its slot's server drops UDP, so the client
 # goes over TCP as on a network that lets only TCP through.
 TOOLS = ["ssh", "et", "mosh", "rsh", "rsh-tcp"]
-LABEL = {"ssh": "OpenSSH", "et": "ET", "mosh": "mosh", "rsh": "rsh (UDP)", "rsh-tcp": "rsh (TCP)"}
-PROCESS = {"ssh": "ssh", "et": "et", "mosh": "mosh-client", "rsh": "rsh", "rsh-tcp": "rsh"}
+LABEL = {"ssh": "OpenSSH", "et": "ET", "mosh": "mosh", "rsh": "rsh (UDP)", "rsh-tcp": "rsh (TCP)", "rsh-b": "rsh (B)"}
+PROCESS = {"ssh": "ssh", "et": "et", "mosh": "mosh-client", "rsh": "rsh", "rsh-tcp": "rsh", "rsh-b": "rsh-b"}
 # Each tool's server side, as `ps -C` names it (sshd: the listener too).
-SERVER_PROCESS = {"ssh": "sshd", "et": "etserver,etterminal", "mosh": "mosh-server", "rsh": "rsh", "rsh-tcp": "rsh"}
-CLIENT = {"ssh": "ssh -tt dev@server", "et": "et dev@server:2022", "mosh": "mosh dev@server", "rsh": "rsh server demo", "rsh-tcp": "rsh server demo"}
+SERVER_PROCESS = {"ssh": "sshd", "et": "etserver,etterminal", "mosh": "mosh-server", "rsh": "rsh", "rsh-tcp": "rsh", "rsh-b": "rsh-b"}
+CLIENT = {"ssh": "ssh -tt dev@server", "et": "et dev@server:2022", "mosh": "mosh dev@server", "rsh": "rsh server demo", "rsh-tcp": "rsh server demo",
+          "rsh-b": "env RSH_PEER=server:2223 rsh-b server demo"}
 # One-way delay (ms, both ways), loss (%, both ways), server-to-client rate.
 NETS = {
     "lan": (0, 0, None, "LAN"),
@@ -132,6 +133,18 @@ def guard():
 
 def start_rsh(k):
     dexec(srv(k), "sh", "-c", "pkill -x rsh; sleep 0.3; su dev -c 'nohup rsh serve --bind 0.0.0.0:2222 --authorized /home/dev/.rsh/authorized >/tmp/rsh.log 2>&1 &'", check=False)
+
+
+def install_rsh_b(path, ks):
+    """A second rsh build as the tool `rsh-b` (its server on port 2223), to
+    compare two builds in one run: the same slots, networks and moment."""
+    def one(k):
+        for c in (srv(k), cli(k)):
+            sh("docker", "cp", path, "%s:/usr/local/bin/rsh-b" % c)
+        dexec(srv(k), "sh", "-c", "pkill -x rsh-b; sleep 0.3; su dev -c 'nohup rsh-b serve --bind 0.0.0.0:2223 --authorized /home/dev/.rsh/authorized >/tmp/rsh-b.log 2>&1 &'", check=False)
+    with concurrent.futures.ThreadPoolExecutor(8) as ex:
+        list(ex.map(one, ks))
+    time.sleep(1)
 
 
 def install_rsh(path, ks):
@@ -237,7 +250,7 @@ def prepare(k, net, udp_dropped=False):
     """A slot as a job finds it: no rule, client or ticker left from an
     earlier job, the link of `net`; one docker call per container."""
     # `[a]gent`: the pattern does not match this shell's own command line.
-    client = ["iptables -F", "pkill -9 -x ssh; pkill -9 -x et; pkill -9 -x mosh-client; pkill -9 -x rsh; pkill -9 -x script; pkill -9 -f '[a]gent.py'"]
+    client = ["iptables -F", "pkill -9 -x ssh; pkill -9 -x et; pkill -9 -x mosh-client; pkill -9 -x rsh; pkill -9 -x rsh-b; pkill -9 -x script; pkill -9 -f '[a]gent.py'"]
     server = ["iptables -F", "pkill -f '[s]cene.py'; pkill -x mosh-server; pkill -x etterminal"] + (["iptables -I INPUT -p udp -j DROP"] if udp_dropped else [])
     for c, lines in ((cli(k), client), (srv(k), server)):
         dexec(c, "sh", "-c", "; ".join(lines + netem(k, c, net)) + "; true", check=False)
@@ -350,6 +363,8 @@ def run_on(opts):
     free = slots()
     if opts.rsh:
         install_rsh(opts.rsh, free)
+    if opts.rsh_b:
+        install_rsh_b(opts.rsh_b, free)
     parallel = min(opts.parallel, len(free))
     jobs = jobs_of(opts)
     pool = queue.Queue()
@@ -816,7 +831,7 @@ def control(opts):
             remove_slots()
 
 
-COLOR = {"ssh": 245, "et": 214, "mosh": 39, "rsh": 42, "rsh-tcp": 141}
+COLOR = {"ssh": 245, "et": 214, "mosh": 39, "rsh": 42, "rsh-tcp": 141, "rsh-b": 208}
 
 
 def bar(value, most, width):
@@ -967,6 +982,7 @@ def main():
     p.add_argument("path", nargs="?", help="rsh build (action rsh)")
     p.add_argument("--slots", type=int, default=4, help="up: container pairs")
     p.add_argument("--rsh", help="an rsh Linux build to test instead of the image's")
+    p.add_argument("--rsh-b", help="a second rsh Linux build, as the tool rsh-b (compare two builds in one run)")
     p.add_argument("--tools", default=",".join(TOOLS))
     p.add_argument("--tests", default="render,switch", help="run: " + ",".join(COLUMNS))
     p.add_argument("--nets", default="lowbw,highlat,lossy", help=",".join(NETS))

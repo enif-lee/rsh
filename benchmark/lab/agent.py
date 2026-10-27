@@ -23,6 +23,8 @@ COMMAND = {
     "rsh": ["rsh", "server"],
     # Over TCP: the host drops UDP at the server (lab.py `prepare`).
     "rsh-tcp": ["rsh", "server"],
+    # A second build (lab.py --rsh-b), its server on another port.
+    "rsh-b": ["rsh-b", "server"],
 }
 FRAME = re.compile(rb"FRAME (\d+) T=(\d+) (\w+)")
 FRAME_TEXT = re.compile(r"FRAME (\d+) T=(\d+) (\w+)")
@@ -50,9 +52,9 @@ class Client:
     def __init__(self, tool, name, cols, rows):
         self.tool, self.cols, self.rows = tool, cols, rows
         # Tools that may send differences: frames from the rebuilt screen.
-        self.diffs = tool in ("mosh", "rsh", "rsh-tcp")
-        argv = COMMAND[tool] + ([name] if tool in ("rsh", "rsh-tcp") else [])
-        env = dict(os.environ, TERM="xterm-256color", LANG="C.UTF-8", RSH_PEER="server:2222")
+        self.diffs = tool in ("mosh", "rsh", "rsh-tcp", "rsh-b")
+        argv = COMMAND[tool] + ([name] if tool in ("rsh", "rsh-tcp", "rsh-b") else [])
+        env = dict(os.environ, TERM="xterm-256color", LANG="C.UTF-8", RSH_PEER="server:2223" if tool == "rsh-b" else "server:2222")
         pid, fd = pty.fork()
         if pid == 0:
             os.execvpe(argv[0], argv, env)
@@ -217,7 +219,7 @@ def ask(request):
 
 
 # Each tool's client process, as `ps -C` names it.
-PROCESS = {"ssh": "ssh", "et": "et", "mosh": "mosh-client", "rsh": "rsh", "rsh-tcp": "rsh"}
+PROCESS = {"ssh": "ssh", "et": "et", "mosh": "mosh-client", "rsh": "rsh", "rsh-tcp": "rsh", "rsh-b": "rsh-b"}
 
 
 def rss_kb(names):

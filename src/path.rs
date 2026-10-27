@@ -312,7 +312,10 @@ impl PathModel {
     pub fn rate(&self, now: Instant) -> Option<f64> {
         let mut recent: Vec<f64> =
             self.rates.iter().filter(|(when, _)| now.duration_since(*when) <= RATE_SPAN).map(|(_, r)| *r).collect();
-        if recent.len() < 3 {
+        // One sample is enough: samples come only from trains the
+        // bottleneck was busy with, so a slow link shows from the first
+        // burst (the first frames of an animation would queue otherwise).
+        if recent.is_empty() {
             return None;
         }
         recent.sort_by(f64::total_cmp);
