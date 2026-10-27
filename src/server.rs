@@ -1434,6 +1434,7 @@ impl State {
                 attach.output.set_path(path.rate(now), path.window_rtt(now));
             }
         }
+        attach.open_window(now);
         let advanced = attach.output.on_ack(stream.out_gen, stream.out_ack, now, !stream.data.is_empty() || stream.flags & proto::FLAG_REPEAT != 0);
         if !stream.data.is_empty() && stream.in_offset > attach.input.next {
             // Past a gap: acked at once, so duplicate acks reach the client.
@@ -1616,6 +1617,7 @@ impl State {
             // repaint starts a new generation; it must follow that.
             attach.end_offset = Some(attach.output.end());
         }
+        attach.open_window(now);
         let mut sent = false;
         let mut batch = Vec::new();
         loop {
@@ -1666,8 +1668,8 @@ impl State {
             // Each datagram a number of its own (copies too), for the path
             // model: its size on the wire is known only once sealed, and
             // the number's four bytes are part of it.
-            let number = |path: &mut Option<PathModel>, len: usize| {
-                path.as_mut().filter(|_| udp).map(|path| path.number(Instant::now(), len + 4 + proto::SEAL_OVERHEAD + 28))
+            let number = |path: &mut Option<PathModel>, len: usize, copy: bool| {
+                path.as_mut().filter(|_| udp).map(|path| path.number(Instant::now(), len + 4 + proto::SEAL_OVERHEAD + 28, copy))
             };
             let mut stream = ServerStream {
                 flags,
@@ -1679,7 +1681,7 @@ impl State {
                 pn: None,
                 data: &data,
             };
-            stream.pn = number(&mut attach.path, stream.encode().len());
+            stream.pn = number(&mut attach.path, stream.encode().len(), false);
             let sealed = proto::seal(&attach.key, Dir::ToClient, KIND_STREAM, attach.id, &stream.encode());
             // On a lossy path with room to spare, data goes twice (each copy
             // sealed apart, as the replay window wants unique nonces).
@@ -1702,7 +1704,7 @@ impl State {
             // the path model reads trains by.
             batch.push(sealed);
             if !stream.data.is_empty() && attach.doubling && room {
-                let copy = ServerStream { pn: number(&mut attach.path, stream.encode().len()), ..stream.clone() };
+                let copy = ServerStream { pn: number(&mut attach.path, stream.encode().len(), true), ..stream.clone() };
                 batch.push(proto::seal(&attach.key, Dir::ToClient, KIND_STREAM, attach.id, &copy.encode()));
             }
             sent = true;
@@ -1875,7 +1877,7 @@ impl Attachment {
                 None => idle,
             });
         }
-        if self.output.queueing() < LAG_LIMIT / 2 {
+        if self.queue_delay() < LAG_LIMIT / 2 {
             // Not faster than a frame every 20 ms (or the program's step):
             // a burst of output (a `cat`) would otherwise queue an update
             // per read.
@@ -1898,6 +1900,53 @@ impl Attachment {
     /// The program draws frames (see `ANIMATION_FRAMES`).
     fn animating(&self) -> bool {
         self.frames >= ANIMATION_FRAMES
+    }
+
+    /// The sender's least window with no bottleneck in the path model:
+    /// twice what the path took lately, or what the program writes (stream
+    /// bytes a second; a burst after a pause, as an animation starting,
+    /// opens it at once rather than a doubling a round trip from what the
+    /// pause delivered: a bottleneck shows in the first of it, and the
+    /// model's rate takes over), over the round trip. Kept current as
+    /// output comes, not only as reports do (a round trip later).
+    fn open_window(&mut self, now: Instant) {
+        if !self.modelled() {
+            return;
+        }
+        let Some(path) = self.path.as_ref() else {
+            return;
+        };
+        let Some(rtt) = path.window_rtt(now) else {
+            return;
+        };
+        let made = self.stream_len(self.made.1.max(self.made.2)) as f64 / SYNC_SPAN.as_secs_f64();
+        let rate = path.delivery_rate().max(0.6 * made);
+        self.output.set_path_window(rate, rtt);
+    }
+
+    /// Whether the path model speaks for the path (its reports came).
+    fn modelled(&self) -> bool {
+        self.path.as_ref().is_some_and(PathModel::reported) && !is_tcp_addr(self.addr)
+    }
+
+    /// How fast output drains, when that holds it up: a slow link's rate,
+    /// or, with no path model, for a program drawing frames the ack
+    /// clock's guess (which the model, seeing the bottleneck itself, does
+    /// not need: a far path with no bottleneck takes every frame).
+    fn drain_guess(&self, now: Instant) -> Option<f64> {
+        if self.modelled() {
+            return self.output.slow_rate();
+        }
+        self.output.slow_rate().or_else(|| self.output.drain_rate(now).filter(|_| self.animating()))
+    }
+
+    /// The queue in front of the path's bottleneck: the model's (from
+    /// arrival times), else what the round trips show over their least.
+    fn queue_delay(&self) -> Duration {
+        match self.path.as_ref().filter(|_| self.modelled()) {
+            Some(path) => Duration::from_secs_f64(path.queue_ms().max(0.0) / 1000.0),
+            None => self.output.queueing(),
+        }
     }
 
     fn next_screen_due(&self, now: Instant) -> bool {
@@ -2073,7 +2122,7 @@ impl Session {
             // (an animation) faster than the ack clock lets through: within
             // a frame or two of its start, not after a queue of it formed.
             let now = Instant::now();
-            let rate = attach.output.slow_rate().or_else(|| attach.output.drain_rate(now).filter(|_| attach.animating()));
+            let rate = attach.drain_guess(now);
             if let Some(rate) = rate.filter(|_| {
                 attach.syncing_until.is_none() && !attach.repaint_due && attach.output.all_sent() && attach.zraw.is_empty()
             }) {
@@ -2141,11 +2190,11 @@ impl Session {
             // mode until they stop: going back to bytes only to fall behind
             // again costs a repaint, which restarts the ack clock, a stall
             // each time over a far path.
-            let rate = attach.output.slow_rate().or_else(|| attach.output.drain_rate(now).filter(|_| attach.animating()));
+            let rate = attach.drain_guess(now);
             let heavy = rate.is_some_and(|rate| {
                 attach.stream_len(attach.made.1.max(attach.made.2)) as f64 > rate * SYNC_SPAN.as_secs_f64() / 2.0
             });
-            if heavy || attach.output.queueing() > LAG_LIMIT / 2 || !attach.output.all_sent() {
+            if heavy || attach.queue_delay() > LAG_LIMIT / 2 || !attach.output.all_sent() {
                 attach.syncing_until = Some(now + SYNC_SPAN);
             }
             if attach.syncing_until.is_some_and(|until| now < until) || attach.repaint_due || !was_ground {
@@ -2174,10 +2223,10 @@ impl Session {
         // On a slow link: longer than the limit to drain at its rate.
         // Or a program drawing in steps that the ack clock would take
         // longer than the limit to let through, before the rate is known.
-        let stepped = attach.animating();
+        let stepped = attach.animating() && !attach.modelled();
         let slow = output.first_acked()
             && ((lag > 2 * output.window() as usize && output.srtt().is_some_and(|srtt| srtt.mul_f64(lag as f64 / window) > LAG_LIMIT))
-                || (output.pending() > 0 && output.queueing() > LAG_LIMIT)
+                || (output.pending() > 0 && attach.queue_delay() > LAG_LIMIT)
                 || (attach.screens && output.slow_rate().is_some_and(|rate| lag > 512 && lag as f64 / rate > LAG_LIMIT.as_secs_f64()))
                 || (attach.screens && stepped && output.drain_rate(now).is_some_and(|rate| lag > 512 && lag as f64 / rate > LAG_LIMIT.as_secs_f64())));
         // Memory: what is held, staged bytes as they are.

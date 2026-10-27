@@ -971,6 +971,11 @@ pub struct Sender {
     /// reports arrivals (`set_path`): they stand in for the rate and floor
     /// this sender would read from its acks, which carry both ends' work.
     path: Option<(Option<f64>, Option<f64>)>,
+    /// With no bottleneck in the path model, the least window (wire bytes)
+    /// it allows: twice what the path took lately over its round trip, so
+    /// a sender held by its window doubles each round trip (see
+    /// `set_path_window`).
+    path_window: u64,
     /// The link loses nothing (TCP): no timeout or duplicate-ack resends,
     /// which would only queue copies ahead of new data. A new connection
     /// `rewind`s instead.
@@ -1030,6 +1035,7 @@ impl Sender {
             took_lately: VecDeque::new(),
             waited: 0,
             path: None,
+            path_window: 0,
             lossless: false,
         }
     }
@@ -1195,6 +1201,15 @@ impl Sender {
         self.path = Some((rate, rtt));
     }
 
+    /// The least window while the path model sees no bottleneck: what the
+    /// path took lately (wire bytes a second) over twice its round trip.
+    /// The delay-based window grows a quarter a round trip, too slow for
+    /// 60 frames a second of a full screen over a far path; the model knows
+    /// nothing waits.
+    pub fn set_path_window(&mut self, delivered: f64, rtt_ms: f64) {
+        self.path_window = (2.0 * delivered * rtt_ms / 1000.0) as u64 + 4 * CHUNK as u64;
+    }
+
     /// Another path (the client moved): its capacity is learned again.
     pub fn forget_capacity(&mut self) {
         self.capacity = None;
@@ -1240,6 +1255,10 @@ impl Sender {
 
     /// Bytes allowed in flight now.
     pub fn window(&self) -> u64 {
+        // With no bottleneck in the path model, its window when larger.
+        if matches!(self.path, Some((None, _))) {
+            return self.window.max(self.path_window.min(MAX_WINDOW));
+        }
         self.window
     }
 
@@ -1772,6 +1791,9 @@ impl Sender {
             return None;
         }
         let mut window = self.window.saturating_sub(self.carried).max(CHUNK as u64);
+        if matches!(self.path, Some((None, _))) {
+            window = window.max(self.path_window.min(MAX_WINDOW));
+        }
         if let Some(bdp) = self.slow_bdp() {
             // A slow link: twice its delivery per round trip keeps it busy
             // with a queue of at most one round trip.
@@ -1783,7 +1805,9 @@ impl Sender {
             // (acks slow down or stop) is not handed a window to queue
             // before its rate is known. After a pause it starts again from
             // `least_flight`; at a start (no ack yet) the window alone holds.
-            if self.flight_wire() >= delivered.max(self.least_flight()) {
+            // The path model's window too, when it sees no bottleneck.
+            let open = if matches!(self.path, Some((None, _))) { self.path_window } else { 0 };
+            if self.flight_wire() >= delivered.max(self.least_flight()).max(open) {
                 self.limited = true;
                 return None;
             }

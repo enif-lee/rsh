@@ -86,8 +86,9 @@ pub struct PathModel {
     loss: f64,
     random_loss: f64,
     /// Bytes the client reported since `delivered_from`, for telling a
-    /// link faster than the rate measured.
+    /// link faster than the rate measured, and the rate of the last span.
     delivered: (Instant, u64),
+    delivery_rate: f64,
 }
 
 impl PathModel {
@@ -109,15 +110,19 @@ impl PathModel {
             loss: 0.0,
             random_loss: 0.0,
             delivered: (now, 0),
+            delivery_rate: 0.0,
         }
     }
 
-    /// A number for a datagram of `wire` bytes going out now.
-    pub fn number(&mut self, now: Instant, wire: usize) -> u32 {
+    /// A number for a datagram of `wire` bytes going out now; a copy of
+    /// one sent already does not count in what `room_for_copies` weighs.
+    pub fn number(&mut self, now: Instant, wire: usize, copy: bool) -> u32 {
         let pn = self.next_pn;
         self.next_pn = self.next_pn.wrapping_add(1);
         self.sent.push_back(Sent { pn, at: now, wire: wire as u32, arrived: false, departed: false });
-        self.sent_log.push_back((now, wire as u32));
+        if !copy {
+            self.sent_log.push_back((now, wire as u32));
+        }
         while self.sent_log.front().is_some_and(|(when, _)| now.duration_since(*when) > Duration::from_secs(1)) {
             self.sent_log.pop_front();
         }
@@ -271,8 +276,9 @@ impl PathModel {
         // Delivered well over the measured rate with no queue: the link got
         // faster (or the samples were low); they are learned again.
         let span = now.duration_since(self.delivered.0).as_secs_f64();
-        if span >= 0.5 {
+        if span >= 0.25 {
             let delivered = self.delivered.1 as f64 / span;
+            self.delivery_rate = delivered;
             if self.queue_ms < 5.0 && self.rate(now).is_some_and(|rate| delivered > 1.25 * rate) {
                 self.rates.clear();
             }
@@ -306,8 +312,9 @@ impl PathModel {
     }
 
     /// Whether the path has room for copies of what goes now: twice the
-    /// rate sent over the last second fits in its rate with a margin (or
-    /// no rate shows: nothing waited on it).
+    /// rate of originals sent over the last second fits in its rate with a
+    /// margin (or no rate shows: nothing waited on it). Copies themselves
+    /// do not count, or turning them on would turn them off.
     pub fn room_for_copies(&self, now: Instant) -> bool {
         let Some(rate) = self.rate(now) else {
             return true;
@@ -363,6 +370,16 @@ impl PathModel {
         self.srtt
     }
 
+    /// What the client took lately, wire bytes a second.
+    pub fn delivery_rate(&self) -> f64 {
+        self.delivery_rate
+    }
+
+    /// Whether reports have come: the model speaks for the path.
+    pub fn reported(&self) -> bool {
+        self.srtt.is_some()
+    }
+
     /// Share of datagrams lost lately, and of those with no queue in front.
     pub fn loss(&self) -> (f64, f64) {
         (self.loss, self.random_loss)
@@ -381,7 +398,7 @@ mod tests {
         let mut now = start;
         for i in 0..count {
             now = start + Duration::from_micros(u64::from(i) * send_gap_us);
-            let pn = model.number(now, size);
+            let pn = model.number(now, size, false);
             let sent_us = now.duration_since(start).as_micros() as f64;
             let out = sent_us.max(link_free) + size as f64 / rate * 1e6;
             link_free = out;
