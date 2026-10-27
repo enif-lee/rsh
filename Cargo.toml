@@ -1,6 +1,6 @@
 [package]
 name = "rsh"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 description = "UDP remote shell with one connection per host and a client terminal"
 

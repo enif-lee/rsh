@@ -245,12 +245,14 @@ pub fn binary_for(platform: &str, home: &Path) -> Result<Binary, String> {
     let fetched = if cfg!(test) {
         Err("not in tests".to_string())
     } else if crate::release::unavailable(home, platform) {
-        Err(format!("not in release {tag} (looked for in the last day)"))
+        Err(format!("not to be had from release {tag} lately (see ~/.rsh/unavailable-{platform})"))
     } else {
         let _ = writeln!(io::stderr(), "rsh: fetching {name} of {tag} from GitHub");
         let fetched = crate::release::download(&tag, platform, home);
-        if !fetched.as_ref().is_ok_and(|bytes| version::is_this_build(bytes)) {
-            crate::release::note_unavailable(home, platform);
+        match &fetched {
+            Ok(bytes) if version::is_this_build(bytes) => {}
+            Ok(_) => crate::release::note_unavailable(home, platform, true),
+            Err(_) => crate::release::note_unavailable(home, platform, false),
         }
         fetched
     };

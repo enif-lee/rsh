@@ -64,20 +64,34 @@ pub fn download(tag: &str, platform: &str, home: &Path) -> Result<Vec<u8>, Strin
     Ok(bytes)
 }
 
+/// How long a failed download of a host's binary (no network, or a release
+/// still spreading: its files can answer 404 for minutes) keeps a connect
+/// from trying again. A release of another build (a build of one's own)
+/// is not tried again for `CHECK_EVERY`.
+const RETRY_AFTER: Duration = Duration::from_secs(10 * 60);
+
 /// Marks that this build's `rsh-<platform>` could not be had from its
-/// release (no network, or a release of another build: a build of one's
-/// own), so a connect does not try again, for a day.
-pub fn note_unavailable(home: &Path, platform: &str) {
-    let _ = fs::write(unavailable_stamp(home, platform), version::build());
+/// release: `other_build` when the release has another build, else the
+/// download failed.
+pub fn note_unavailable(home: &Path, platform: &str, other_build: bool) {
+    let why = if other_build { "other" } else { "failed" };
+    let _ = fs::write(unavailable_stamp(home, platform), format!("{why} {}", version::build()));
 }
 
 /// Whether `note_unavailable` was said of this build lately.
 pub fn unavailable(home: &Path, platform: &str) -> bool {
     let stamp = unavailable_stamp(home, platform);
-    let fresh = fs::metadata(&stamp)
+    let Ok(text) = fs::read_to_string(&stamp) else {
+        return false;
+    };
+    let wait = match text.split_once(' ') {
+        Some(("other", build)) if build == version::build() => CHECK_EVERY,
+        Some(("failed", build)) if build == version::build() => RETRY_AFTER,
+        _ => return false,
+    };
+    fs::metadata(&stamp)
         .and_then(|meta| meta.modified())
-        .is_ok_and(|at| SystemTime::now().duration_since(at).is_ok_and(|age| age < CHECK_EVERY));
-    fresh && fs::read_to_string(&stamp).is_ok_and(|build| build == version::build())
+        .is_ok_and(|at| SystemTime::now().duration_since(at).is_ok_and(|age| age < wait))
 }
 
 fn unavailable_stamp(home: &Path, platform: &str) -> PathBuf {
@@ -183,6 +197,27 @@ mod tests {
         assert!(is_newer("v999.0.0"));
         assert!(!is_newer(&this_tag()));
         assert!(!is_newer("v0.0.1"));
+    }
+
+    #[test]
+    fn a_failed_download_is_tried_again_sooner_than_another_build() {
+        let home = std::env::temp_dir().join(format!("rsh-unavailable-{}", std::process::id()));
+        fs::create_dir_all(home.join(".rsh")).unwrap();
+        let aged = |minutes: u64| {
+            let file = fs::File::options().write(true).open(unavailable_stamp(&home, "linux-x86_64")).unwrap();
+            file.set_modified(SystemTime::now() - Duration::from_secs(minutes * 60)).unwrap();
+        };
+        assert!(!unavailable(&home, "linux-x86_64"));
+        note_unavailable(&home, "linux-x86_64", false);
+        assert!(unavailable(&home, "linux-x86_64"));
+        aged(11);
+        assert!(!unavailable(&home, "linux-x86_64"), "a failure is tried again after 10 minutes");
+        note_unavailable(&home, "linux-x86_64", true);
+        aged(11);
+        assert!(unavailable(&home, "linux-x86_64"), "another build waits a day");
+        fs::write(unavailable_stamp(&home, "linux-x86_64"), "other 000000000000").unwrap();
+        assert!(!unavailable(&home, "linux-x86_64"), "said of another build of this client");
+        let _ = fs::remove_dir_all(&home);
     }
 
     /// Needs the network and this version's release: `cargo test -- --ignored`.
