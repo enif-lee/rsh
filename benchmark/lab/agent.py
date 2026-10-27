@@ -26,6 +26,16 @@ COMMAND = {
 }
 FRAME = re.compile(rb"FRAME (\d+) T=(\d+) (\w+)")
 FRAME_TEXT = re.compile(r"FRAME (\d+) T=(\d+) (\w+)")
+def header(screen, width):
+    """The scene's frame header: row 0, or row 1 in a narrow pane."""
+    for y in (0, 1):
+        row = screen.buffer[y]
+        m = FRAME_TEXT.search("".join(row[x].data for x in range(min(screen.columns, width))))
+        if m:
+            return m
+    return None
+
+
 # The end of a synchronized update: a terminal shows the screen as it is
 # there, not what came between (rsh wraps each write in one).
 SYNC_END = b"\x1b[?2026l"
@@ -106,8 +116,7 @@ class Client:
                     if self.sync_open:
                         continue
                     if self.diffs:
-                        row = self.screen.buffer[0]
-                        m = FRAME_TEXT.search("".join(row[x].data for x in range(min(self.cols, 60))))
+                        m = header(self.screen, 60)
                         if m:
                             self.frame(now, int(m.group(1)), int(m.group(2)), m.group(3))
                     if self.watching:
@@ -495,8 +504,7 @@ def main_watch(log, status_path, frames_path):
                     sync_open = True
                 if sync_open:
                     continue
-                row = "".join(screen.buffer[0][x].data for x in range(min(screen.columns, 80)))
-                m = FRAME_TEXT.search(row)
+                m = header(screen, 80)
                 if m:
                     n, made, scene = int(m.group(1)), int(m.group(2)) / 1000.0, m.group(3)
                     if not seen or seen[-1][1] != n:

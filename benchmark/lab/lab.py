@@ -39,8 +39,8 @@ The connect time of every job is kept too. Each test runs `--iterations`
 times; the summary shows the median (and the range of the main figure).
 The events run on `--event-net`. Results go to `out/run-<time>.json`.
 
-The demo (`demo`) runs the tools' clients in tmux panes of one size (rows
-of the full width) on slots 0 to n-1
+The demo (`demo`) runs the tools' clients in tmux panes of one size
+(stacked, or side by side in a terminal wider than tall) on slots 0 to n-1
 (`tmux -L rshlab`): the render scenes on each network, each until every
 client has shown its end (a slow link's backlog; `RENDER_LAG` at most),
 then the connection scenarios (`--events`). Over each pane: frames a second, frame
@@ -73,6 +73,8 @@ NETS = {
     "wan": (50, 0, None, "RTT 100 ms"),
     "lowbw": (50, 0, "1mbit", "1 Mbit/s, RTT 100 ms"),
     "mobile": (100, 1, "512kbit", "512 kbit/s, RTT 200 ms, 1% loss"),
+    # Twice as bad as `mobile` on each count: a weak cellular signal.
+    "badmobile": (200, 2, "256kbit", "256 kbit/s, RTT 400 ms, 2% loss"),
     "verylow": (50, 0, "256kbit", "256 kbit/s, RTT 100 ms"),
     "slow64k": (50, 0, "64kbit", "64 kbit/s, RTT 100 ms"),
     "highlat": (150, 0, None, "RTT 300 ms"),
@@ -284,7 +286,7 @@ def jobs_of(opts):
     # The longest first (slow links, tests that wait out a failure), so the
     # last ones running are short and the slots finish together.
     cost = {"flood": 4, "udpblock": 3, "outage": 3, "switch": 2, "reattach": 2, "echo": 1, "roam": 1, "render": 0}
-    slow = {"slow64k": 2, "verylow": 1, "mobile": 1}
+    slow = {"slow64k": 2, "verylow": 1, "mobile": 1, "badmobile": 2}
     jobs.sort(key=lambda j: (cost[j["test"]], slow.get(j["net"], 0) + slow.get(j.get("to"), 0)), reverse=True)
     return jobs
 
@@ -537,20 +539,33 @@ class Demo:
         return [shown.get(k) for k in range(len(self.tools))]
 
     def layout(self):
-        """Panes of one size: the panes window as tall as a whole number of
-        them fits in the viewer's terminal (each pane and its header line),
-        stacked evenly. Again when the terminal's size changes."""
+        """Panes of one size, split along the viewer's terminal's longer
+        side: stacked when it is taller than wide (a character cell is about
+        twice as tall as wide), side by side when wider (and each pane 30
+        columns at least). The panes window is
+        cut to what a whole number of panes fills. Again when the terminal's
+        size changes."""
         size = tmux("list-clients", "-t", SESSION, "-F", "#{client_width} #{client_height}", check=False).stdout.split()
         if len(size) < 2 or (size[0], size[1]) == getattr(self, "laid_out", None):
             return
         self.laid_out = (size[0], size[1])
         n = len(self.tools)
-        # Less the status line; each pane has its header line above it.
-        rows = (int(size[1]) - 1) // n * n
+        # Less the status line.
+        width, height = int(size[0]), int(size[1]) - 1
+        # Side by side down to 30-column panes: narrower, the scenes'
+        # frame headers (`scene.py`) are cut and nothing can be measured.
+        if width >= 2 * height and (width + 1) // n - 1 >= 30:
+            # A border column between panes.
+            width, how = (width + 1) // n * n - 1, "even-horizontal"
+            self.pane_cols = (width + 1) // n - 1
+        else:
+            # Each pane has its header line above it.
+            height, how = height // n * n, "even-vertical"
+            self.pane_cols = width
         target = "%s:panes" % SESSION
         tmux("set", "-w", "-t", target, "window-size", "manual", check=False)
-        tmux("resize-window", "-t", target, "-x", size[0], "-y", str(rows), check=False)
-        tmux("select-layout", "-t", target, "even-vertical", check=False)
+        tmux("resize-window", "-t", target, "-x", str(width), "-y", str(height), check=False)
+        tmux("select-layout", "-t", target, how, check=False)
 
     def status_loop(self):
         name = max(len(LABEL[tool]) for tool in self.tools)
@@ -565,6 +580,11 @@ class Demo:
                 still = s.get("still_s")
                 frozen = " │ ■ frozen %4.1f s" % still if self.ticking and still is not None and still >= 1.0 else ""
                 text = "%-*s │ %4.1f fps │ age %s │ ↓ %6.0f kbit/s%s │ %s" % (name, LABEL[tool], s["fps"], age, s["kbit_s"], frozen, self.label)
+                if len(text) > getattr(self, "pane_cols", 1000) - 4:
+                    # A narrow pane: the figures first, the label after.
+                    age = "%.0fms" % s["age_ms"] if s.get("age_ms") is not None else "-ms"
+                    frozen = " ■%.1fs" % still if frozen else ""
+                    text = "%s %.1ffps %s ↓%.0fk%s │ %s" % (LABEL[tool], s["fps"], age, s["kbit_s"], frozen, self.label)
                 tmux("set", "-p", "-t", pane(k), "@status", text.replace("%", "%%"), check=False)
             time.sleep(0.25)
 
@@ -719,8 +739,8 @@ def demo(opts):
             tmux("new-session", "-d", "-s", SESSION, "-n", "panes", "-x", "240", "-y", "66", line)
         else:
             tmux("split-window", "-t", "%s:panes" % SESSION, line)
-        # Stacked rows of the full width, all the same height: every tool
-        # gets the same terminal size (a tiled grid is uneven for 3 or 5).
+        # All panes the same size, every tool the same terminal (a tiled
+        # grid is uneven for 3 or 5); `Demo.layout` picks the direction.
         tmux("select-layout", "-t", "%s:panes" % SESSION, "even-vertical")
     for option, value in (("pane-border-status", "top"), ("pane-border-format", " #[bold]#{@status} "),
                           ("status-style", "bg=colour236,fg=colour250"), ("status-left-length", "200"),
@@ -859,7 +879,9 @@ def demo_summary(tools, windows):
                 notes[tool] = "(no end)"
             # Made in this window, too: a client still behind after an
             # earlier one timed out shows its frames in this one.
-            seen = [f for f in frames[tool] if f[3] == w["scene"] and w["start"] <= f[0] <= w.get("until", w["end"] + 5) and f[2] >= w["start"] - 1]
+            # A pane narrower than the frame's header (or rsh's badge over
+            # it) cuts its scene name.
+            seen = [f for f in frames[tool] if w["scene"].startswith(f[3]) and w["start"] <= f[0] <= w.get("until", w["end"] + 5) and f[2] >= w["start"] - 1]
             # What came in for each frame shown, all of the scene's.
             data[tool] = w["rx_bytes"][k] / len(seen) / 1024 if seen and "rx_bytes" in w else None
             if "rss_kb" in w:
@@ -894,7 +916,7 @@ def demo_summary(tools, windows):
         if "start" in w:
             freeze, notes = {}, {}
             for k, tool in enumerate(tools):
-                seen = [f for f in frames[tool] if f[3] == "ticker" and w["start"] <= f[0] <= w["end"]]
+                seen = [f for f in frames[tool] if "ticker".startswith(f[3]) and w["start"] <= f[0] <= w["end"]]
                 if not seen or seen[0][0] > w["start"] + 3:
                     freeze[tool], notes[tool] = None, "(no data)"
                     continue

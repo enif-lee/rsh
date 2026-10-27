@@ -3,7 +3,8 @@
 
   scene.py <compress|bandwidth|ticker> <seconds> [fps]
 
-Each keeps row 0 as `FRAME nnnnnn T=<ms since epoch> <name>`, so the
+Each keeps row 0 as `FRAME nnnnnn T=<ms since epoch> <name>` (row 1 in a
+pane under 43 columns, where rsh's badge covers the end of row 0), so the
 client side can count the frames that reach the screen and how old they
 are when they do (agent.py). `compress` and `bandwidth` also start every
 other row with the frame's number: a screen whose rows disagree shows
@@ -27,19 +28,22 @@ fps = float(sys.argv[3]) if len(sys.argv) > 3 else 30.0
 cols, rows = os.get_terminal_size()
 out = sys.stdout.buffer
 rng = random.Random(1)
+# The header's row: rsh's badge (13 columns at the right of row 0 from 33
+# columns) would cover its frame time and name in a narrower pane.
+top = 1 if cols >= 43 else 2
 
 
 def header(n):
     text = "FRAME %06d T=%d %s" % (n, int(time.time() * 1000), scene)
-    return "\x1b[1;1H\x1b[7m" + text.ljust(cols)[:cols] + "\x1b[0m"
+    return "\x1b[%d;1H\x1b[7m" % top + text.ljust(cols)[:cols] + "\x1b[0m"
 
 
 def compress(n):
     """About cols×rows characters a frame in a fixed layout."""
     parts = [header(n)]
     bar_width = max(10, cols - 53)
-    for r in range(2, rows + 1):
-        i = r - 2
+    for r in range(top + 1, rows + 1):
+        i = r - top - 1
         load = (n * (i % 7 + 1) + i * 13) % 100
         bar = "█" * (load * bar_width // 100)
         state = "\x1b[32m OK \x1b[0m" if load < 80 else "\x1b[31mBUSY\x1b[0m"
@@ -54,7 +58,7 @@ CHARS = "".join(chr(c) for c in range(33, 127))
 def bandwidth(n):
     """Every cell a random character, colour runs of random length."""
     parts = [header(n)]
-    for r in range(2, rows + 1):
+    for r in range(top + 1, rows + 1):
         line = ["\x1b[0m%06d " % (n % 1000000)]
         c = 7
         while c < cols:
@@ -75,18 +79,23 @@ def ticker(n):
         "  clock     %s" % time.strftime("%H:%M:%S"),
         "  shell     pid %d" % os.getppid(),
     ]
-    return header(n) + "".join("\x1b[%d;3H\x1b[K%s" % (r + 3, l) for r, l in enumerate(lines))
+    return header(n) + "".join("\x1b[%d;3H\x1b[K%s" % (r + top + 2, l) for r, l in enumerate(lines))
 
 
 draw = {"compress": compress, "bandwidth": bandwidth, "ticker": ticker}[scene]
-out.write(b"\x1b[?25l\x1b[2J")
+# No autowrap: in a pane narrower than a row the row is cut at the edge
+# instead of wrapping and scrolling the header away.
+out.write(b"\x1b[?25l\x1b[?7l\x1b[2J")
 start = time.time()
 n = 0
-while time.time() - start < seconds:
-    out.write(draw(n).encode())
+try:
+    while time.time() - start < seconds:
+        out.write(draw(n).encode())
+        out.flush()
+        n += 1
+        time.sleep(max(0.0, start + n / fps - time.time()))
+finally:
+    # Also when stopped (Ctrl-C): the shell goes on with wrap and cursor.
+    out.write(b"\x1b[?7h\x1b[?25h\x1b[2J\x1b[H")
     out.flush()
-    n += 1
-    time.sleep(max(0.0, start + n / fps - time.time()))
-out.write(b"\x1b[?25h\x1b[2J\x1b[H")
-out.flush()
 print("frames %d" % n)
