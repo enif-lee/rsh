@@ -2098,6 +2098,22 @@ impl Attachment {
         self.output.slow_rate().or_else(|| self.output.drain_rate(now).filter(|_| self.animating()))
     }
 
+    /// Bytes waiting for the link, not for an ack of bytes already on
+    /// their way. Up to a bandwidth-delay product can be in flight with
+    /// no queue. Its wire overhead takes part of that allowance too.
+    fn drain_backlog(&self, pending: usize) -> usize {
+        if !self.modelled() {
+            return pending;
+        }
+        let Some(bdp) = self.output.slow_bdp() else {
+            return pending;
+        };
+        let flight = self.output.in_flight();
+        let overhead = self.output.in_flight_wire() - flight;
+        let carried = bdp.saturating_sub(overhead).min(flight);
+        pending.saturating_sub(carried as usize)
+    }
+
     /// Whether the path's model shows a bottleneck well enough to start
     /// screen updates: two trains showed its rate, or a queue stands in
     /// front of it. One spread train alone (a busy host or hop over a fast
@@ -2328,10 +2344,11 @@ impl Session {
             if let Some(rate) = rate.filter(|_| {
                 attach.syncing_until.is_none() && !attach.repaint_due && attach.output.all_sent() && attach.zraw.is_empty() && attach.bottleneck_shown(now)
             }) {
-                let incoming = attach.stream_len(bytes.len()) as f64;
+                let incoming = attach.stream_len(bytes.len());
                 // Half the limit: the first frames of an animation would
                 // otherwise queue before the mode starts.
-                if incoming > 128.0 && (attach.output.in_flight() as f64 + incoming) / rate > LAG_LIMIT.as_secs_f64() / 2.0 {
+                let backlog = attach.drain_backlog(attach.output.in_flight() as usize + incoming);
+                if incoming > 128 && backlog as f64 / rate > LAG_LIMIT.as_secs_f64() / 2.0 {
                     let (cols, rows) = self.term.size();
                     let mut shadow = Terminal::with_history(cols, rows, 0);
                     shadow.feed(&self.term.render(0));
@@ -2416,6 +2433,7 @@ impl Session {
         // Into a compressed stream new bytes take about a ratio's share.
         let incoming = attach.stream_len(bytes.len());
         let lag = output.pending() + attach.stream_len(attach.zraw.len()) + incoming;
+        let backlog = attach.drain_backlog(lag);
         // Time to drain at one window per round trip; a repaint only helps
         // once the client has the last one.
         let window = output.window() as f64;
@@ -2429,7 +2447,7 @@ impl Session {
         let slow = output.first_acked()
             && ((lag > 2 * output.window() as usize && output.srtt().is_some_and(|srtt| srtt.mul_f64(lag as f64 / window) > LAG_LIMIT))
                 || (output.pending() > 0 && attach.queue_delay() > LAG_LIMIT)
-                || (attach.screens && output.slow_rate().is_some_and(|rate| lag > 512 && lag as f64 / rate > LAG_LIMIT.as_secs_f64()))
+                || (attach.screens && output.slow_rate().is_some_and(|rate| backlog > 512 && backlog as f64 / rate > LAG_LIMIT.as_secs_f64()))
                 || (attach.screens && stepped && output.drain_rate(now).is_some_and(|rate| lag > 512 && lag as f64 / rate > LAG_LIMIT.as_secs_f64())));
         // Memory: what is held, staged bytes as they are.
         let held = output.pending() + attach.zraw.len() + bytes.len();
@@ -2465,6 +2483,59 @@ fn sanitize_name(name: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn bytes_in_transit_do_not_start_screen_updates_but_a_backlog_does() {
+        let server = Server::spawn();
+        let mut state = server.state();
+        let now = Instant::now();
+        let key = Key::from_token("test");
+        let command = vec!["sleep".into(), "30".into()];
+        let hello = crate::net::new_hello("test", Action::Default, (80, 24), &command);
+        let packet = Packet { kind: KIND_CONFIRM, session: 1, counter: 0, nonce: [0; 24], payload: Vec::new() };
+        let attached = state.carry_out(1, &key, 0, &hello, &packet, "127.0.0.1:12345".parse().unwrap(), now);
+        let session = state.sessions.get_mut(&attached.session).unwrap();
+
+        let start = now - Duration::from_secs(1);
+        for (rate, unsent, corroborated, screens) in [
+            (55_000.0, 0, true, false),
+            (55_000.0, 0, false, false),
+            (55_000.0, 14_000, true, true),
+            (8_000.0, 0, true, true),
+        ] {
+            let attach = session.attach.as_mut().unwrap();
+            // A few spread datagrams can show a low rate on a fast path.
+            // One sample leaves the proactive gate closed, exercising the
+            // later lag check; two open it, exercising both entry paths.
+            let mut path = PathModel::new(start);
+            let count = if corroborated { 3 } else { 2 };
+            let arrivals = (0..count).map(|i| (path.number(start, 600, false), 150_000 + i * 10_000)).collect();
+            let sent_us = 150_000 + (count - 1) * 10_000;
+            path.feedback(&proto::Feedback { sent_us, arrivals }, start + Duration::from_millis(320));
+            assert_eq!(path.rate_samples(now), (count - 1) as usize);
+            assert!(path.queue_ms() < 5.0);
+            attach.path = Some(path);
+            attach.output = Sender::new(0);
+            attach.output.push(&vec![b'x'; 6_000]);
+            while attach.output.next_chunk(now).is_some() {}
+            assert_eq!(attach.output.in_flight(), 6_000);
+            attach.output.push(&vec![b'x'; unsent]);
+            attach.output.set_path(Some(rate), Some(300.0));
+            attach.screens = true;
+            attach.zstream = false;
+            attach.z = None;
+            attach.zraw.clear();
+            attach.syncing_until = None;
+            attach.repaint_due = false;
+            attach.shadow = None;
+            // At 55 KB/s the 6 KB in flight fits well inside the 300 ms
+            // path. It is not 109 ms of queue; a new 600-byte write fits.
+            // Unsent output, or flight beyond a real slow link's BDP,
+            // still starts screen updates.
+            session.output(&vec![b'x'; 600]);
+            assert_eq!(session.attach.as_ref().unwrap().syncing_until.is_some(), screens, "rate {rate}, unsent {unsent}, corroborated {corroborated}");
+        }
+    }
 
     #[test]
     fn the_level_follows_the_link_at_once_and_the_output_with_a_lag() {
