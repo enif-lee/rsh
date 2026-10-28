@@ -100,6 +100,8 @@ pub struct PathModel {
     /// least, and when the last train that arrived unspread was sent.
     far_since: Option<Instant>,
     fast_sent: Option<Instant>,
+    /// Since when the queue has stood at about this (ms), 20 ms or more.
+    steady: Option<(Instant, f64)>,
     /// Such trains in a row, each far over the rate measured (see
     /// `end_train`).
     fast_trains: u32,
@@ -134,6 +136,7 @@ impl PathModel {
             fast_seen: None,
             far_since: None,
             fast_sent: None,
+            steady: None,
             fast_trains: 0,
             sent_log: VecDeque::new(),
             loss: 0.0,
@@ -192,6 +195,7 @@ impl PathModel {
         self.fast_trains = 0;
         self.far_since = None;
         self.fast_sent = None;
+        self.steady = None;
         self.delivered = (now, 0);
     }
 
@@ -440,27 +444,34 @@ impl PathModel {
         let near_turned_far = quick || (self.last_rtts.len() >= LAST_RTTS && far(last));
         let unspread = self.fast_seen.is_some_and(|at| now.duration_since(at) <= RATE_SPAN);
         let longer = unspread && self.rate(now).is_none() && self.queue_ms >= 20.0 && last > least + 20.0 && self.last_rtts.len() >= LAST_RTTS;
-        // Nor can a queue stand in front of a bottleneck sent well under its
-        // rate: it drains faster than it fills. A slow link's rate kept from
-        // before the path turned longer (1 Mbit/s then RTT 300 ms, a
-        // dashboard's small updates: no train to show it gone) read the
-        // longer delay as a queue for ten seconds, and updates went a few a
-        // second.
+        // A queue that stands still for a second (or three round trips)
+        // while no bottleneck shows, or while it is sent at under half its
+        // rate, is a longer path: a queue of this sender's own grows while
+        // it sends over the link's rate and drains while under it (a link
+        // that turned slow, its queue draining, reads a falling queue).
+        // After 1 Mbit/s then RTT 300 ms a dashboard's small updates (no
+        // train to show the link gone) read 100 ms of queue for ten
+        // seconds, and updates went a few a second.
         // (The last second of sends, not the second before this report:
-        // behind a long queue reports come long after their sends.)
-        // Over half a second of them at least: at a start the second is not
-        // full yet.
+        // behind a long queue reports come long after their sends; over
+        // half a second of them at least.)
         let sent: u64 = self.sent_log.iter().map(|(_, w)| u64::from(*w)).sum();
         let span = match (self.sent_log.front(), self.sent_log.back()) {
             (Some((first, _)), Some((last, _))) => last.duration_since(*first).as_secs_f64(),
             _ => 0.0,
         };
-        let underfed = span >= 0.5
-            && self.rate(now).is_some_and(|rate| sent as f64 / span < 0.5 * rate)
-            && self.queue_ms >= 20.0
-            && last > least + 20.0
-            && self.last_rtts.len() >= LAST_RTTS;
-        let longer = longer || underfed;
+        let unloaded = match self.rate(now) {
+            None => true,
+            Some(rate) => span >= 0.5 && (sent as f64) / span < 0.5 * rate,
+        };
+        self.steady = match self.steady {
+            Some((since, at)) if self.queue_ms >= 20.0 && (self.queue_ms - at).abs() <= (0.2 * at).max(10.0) => Some((since, at)),
+            _ if self.queue_ms >= 20.0 => Some((now, self.queue_ms)),
+            _ => None,
+        };
+        let hold = Duration::from_secs_f64((3.0 * self.srtt.unwrap_or(0.0) / 1000.0).max(1.0));
+        let still = unloaded && self.steady.is_some_and(|(since, _)| now.duration_since(since) >= hold) && last > least + 20.0 && self.last_rtts.len() >= LAST_RTTS;
+        let longer = longer || still;
         if !(near_turned_far || longer) {
             return;
         }
@@ -484,6 +495,7 @@ impl PathModel {
             self.owd.push_back((now, newest));
             self.queue_ms = 0.0;
             self.queues.clear();
+            self.steady = None;
         }
     }
 
@@ -580,6 +592,16 @@ mod tests {
         assert!(rtt > 250.0, "{rtt}");
         assert!(model.queue_ms() < 20.0, "{}", model.queue_ms());
         let _ = now;
+        // The same once the slow link's rate has aged out while the old
+        // floor has not (small updates kept it): no bottleneck seen, the
+        // queue standing still is the path's.
+        let mut model = PathModel::new(start);
+        let now = run(&mut model, start, 64, 1000, 10, 125_000.0, 50);
+        let now = run_from(&mut model, start, now + Duration::from_secs(1), 300, 400, 33_333, 10e6, 50);
+        let now = run_from(&mut model, start, now + Duration::from_secs(1), 120, 400, 33_333, 10e6, 150);
+        assert_eq!(model.rate(now), None);
+        let rtt = model.min_rtt().expect("a round trip");
+        assert!(rtt > 250.0, "{rtt}");
     }
 
     #[test]
