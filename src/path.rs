@@ -516,6 +516,12 @@ impl PathModel {
         self.delivery_rate
     }
 
+    /// Gives back what its records grew to beyond what they hold now.
+    pub fn trim(&mut self) {
+        crate::proto::shrink(&mut self.sent);
+        crate::proto::shrink(&mut self.sent_log);
+    }
+
     /// Whether reports have come: the model speaks for the path.
     pub fn reported(&self) -> bool {
         self.srtt.is_some()

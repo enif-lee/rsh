@@ -17,6 +17,14 @@ use std::time::{Duration, Instant};
 
 /// Keepalive interval while nothing else is sent.
 pub const HEARTBEAT: Duration = Duration::from_secs(1);
+/// With no key typed and no output for `IDLE_AFTER`, the keepalive goes
+/// this often (as mosh's 3 s, a little longer): an idle session costs a
+/// datagram each way a second otherwise (20 idle sessions, 20 a second).
+/// The silences that show the notice, ping and move port are as many
+/// times longer then; a key typed wakes the session and they count from
+/// it (`Wakeful`).
+pub const IDLE_HEARTBEAT: Duration = Duration::from_secs(5);
+const IDLE_AFTER: Duration = Duration::from_secs(10);
 /// Silence after which the screen dims and the disconnected notice shows.
 pub const SHOW_SILENCE: Duration = Duration::from_secs(3);
 /// Silence after which the client moves to a new local port, as mosh does.
@@ -589,6 +597,7 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
     // a fast retransmit; a few more cover lost ones.
     let mut dup_acked = (0u32, 0u64, 0u8);
     let mut last_output = start;
+    let mut wake = Wakeful::new(start);
     let mut alert_drawn = start;
     let mut sync_since: Option<Instant> = None;
     let mut flags = 0u8;
@@ -615,7 +624,7 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
     };
     loop {
         let now = Instant::now();
-        let mut wait = HEARTBEAT.saturating_sub(now.duration_since(link.last_sent));
+        let mut wait = wake.heartbeat(now).saturating_sub(now.duration_since(link.last_sent));
         if let Some(due) = out.due() {
             wait = wait.min(due.saturating_duration_since(now));
         }
@@ -625,7 +634,7 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
         if let Some((since, _)) = link.owed {
             wait = wait.min((since + ACK_DELAY).saturating_duration_since(now));
         }
-        if decor.alert.is_some() || now.duration_since(last_heard) >= SHOW_SILENCE / 2 {
+        if decor.alert.is_some() || wake.silence(last_heard, now) >= wake.scaled(SHOW_SILENCE, now) / 2 {
             wait = wait.min(Duration::from_millis(250));
         }
         if stdin_eof.is_some() {
@@ -840,6 +849,7 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                     wrote = true;
                     repaint = true;
                     last_output = now;
+                    wake.active(now);
                 }
             }
             if rx.gen != gen {
@@ -926,6 +936,9 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                         predictor.typed(&keys, start, &mirror, now);
                         repaint = true;
                     }
+                    if !keys.is_empty() {
+                        wake.active(now);
+                    }
                     for command in commands {
                     match command {
                         Command::Detach => {
@@ -1002,7 +1015,7 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
             force_send = true;
         }
         // Any packet heard, stream or forwarding, ends the notice.
-        if decor.alert.is_some() && local_ground && now.duration_since(last_heard) < SHOW_SILENCE {
+        if decor.alert.is_some() && local_ground && now.duration_since(last_heard) < wake.scaled(SHOW_SILENCE, now) {
             out.write_all(&decor.undo(&mirror))?;
             decor.alert = None;
             wrote = true;
@@ -1023,7 +1036,7 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
             flags = 0;
             sent = true;
         }
-        if !sent && (force_send || flags != 0 || now.duration_since(link.last_sent) >= HEARTBEAT) {
+        if !sent && (force_send || flags != 0 || now.duration_since(link.last_sent) >= wake.heartbeat(now)) {
             // Repeating an ack the server has is no loss signal: say so.
             let repeat = if link.acked == (rx.gen, rx.next) { proto::FLAG_REPEAT } else { 0 };
             let stream = client_stream(&rx, size, flags | repeat, tx.end(), &[]);
@@ -1048,15 +1061,21 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
             }
         }
 
-        let silence = now.duration_since(last_heard);
+        // While the notice is up the session is not idle: its silences
+        // keep their active lengths (the notice is not taken down by the
+        // longer idle ones).
+        if decor.alert.is_some() {
+            wake.active(now);
+        }
+        let silence = wake.silence(last_heard, now);
         // Nothing heard for a while: the screen dims and a notice in the
         // middle says so, updated every second, until the server answers.
-        if tty && silence >= SHOW_SILENCE && local_ground
+        if tty && silence >= wake.scaled(SHOW_SILENCE, now) && local_ground
             && (decor.alert.is_none() || now.duration_since(alert_drawn) >= Duration::from_secs(1)) {
                 let mut lines = vec![
                     "[ Session disconnected ]".to_string(),
                     String::new(),
-                    format!("Last contact {} ago; reconnecting.", human(silence)),
+                    format!("Last contact {} ago; reconnecting.", human(now.duration_since(last_heard))),
                 ];
                 lines.push("Keys typed now are sent once it is back.".to_string());
                 if let Some(key) = opts.escape {
@@ -1074,7 +1093,7 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                 alert_drawn = now;
                 wrote = true;
             }
-        if silence >= PING_SILENCE && now.duration_since(last_ping) >= PING_SILENCE {
+        if silence >= wake.scaled(PING_SILENCE, now) && now.duration_since(last_ping) >= PING_SILENCE {
             // Only the token key is sure to work with a restarted server.
             let payload = proto::Writer::new().u64(crate::server::now_ms()).u64(link.attach).finish();
             let bytes = proto::seal(&attached.token_key, Dir::ToServer, KIND_PING, attached.token_key.id(), &payload);
@@ -1082,7 +1101,7 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
             let _ = link.wire.send(&bytes);
             last_ping = now;
         }
-        if silence >= PORT_HOP && now.duration_since(last_hop) >= PORT_HOP {
+        if silence >= wake.scaled(PORT_HOP, now) && now.duration_since(last_hop) >= PORT_HOP {
             if link.wire.is_tcp() {
                 link.wire.reset(now);
             } else if let Ok(wire) = mux.rebind_for(&attached.host, attached.peer).and_then(|sock| Wire::udp(sock, attached.peer)) {
@@ -1153,6 +1172,45 @@ fn detach(link: &mut Link, rx: &Receiver, size: (u16, u16), now: Instant) {
     let stream = client_stream(rx, size, FLAG_DETACH, 0, &[]);
     for _ in 0..3 {
         link.send(&stream, now);
+    }
+}
+
+/// Whether the session is idle (no key typed, no output for `IDLE_AFTER`):
+/// then the keepalive is `IDLE_HEARTBEAT`, and silences count as many times
+/// longer. Waking (a key, output) counts silence from then: the last reply
+/// heard while idle may be seconds old, which is no silence yet.
+struct Wakeful {
+    active: Instant,
+    woke: Instant,
+}
+
+impl Wakeful {
+    fn new(now: Instant) -> Self {
+        Wakeful { active: now, woke: now }
+    }
+
+    fn idle(&self, now: Instant) -> bool {
+        now.duration_since(self.active) >= IDLE_AFTER
+    }
+
+    fn active(&mut self, now: Instant) {
+        if self.idle(now) {
+            self.woke = now;
+        }
+        self.active = now;
+    }
+
+    fn heartbeat(&self, now: Instant) -> Duration {
+        if self.idle(now) { IDLE_HEARTBEAT } else { HEARTBEAT }
+    }
+
+    /// `limit` as long as it is while active, or idle.
+    fn scaled(&self, limit: Duration, now: Instant) -> Duration {
+        if self.idle(now) { limit * (IDLE_HEARTBEAT.as_millis() / HEARTBEAT.as_millis()) as u32 } else { limit }
+    }
+
+    fn silence(&self, heard: Instant, now: Instant) -> Duration {
+        now.duration_since(heard.max(self.woke))
     }
 }
 
@@ -1914,6 +1972,22 @@ mod tests {
             out.arrive(at + Duration::from_secs(5) + Duration::from_millis(5) * k);
         }
         assert_eq!(out.every, MIN_REFILL);
+    }
+
+    #[test]
+    fn an_idle_session_keeps_alive_slower_and_wakes_on_a_key() {
+        let start = Instant::now();
+        let mut wake = Wakeful::new(start);
+        assert_eq!(wake.heartbeat(start), HEARTBEAT);
+        let idle = start + IDLE_AFTER;
+        assert_eq!(wake.heartbeat(idle), IDLE_HEARTBEAT);
+        assert_eq!(wake.scaled(SHOW_SILENCE, idle), SHOW_SILENCE * 5);
+        // The last reply came 4 s before the key: no silence yet.
+        let key = idle + Duration::from_secs(4);
+        wake.active(key);
+        assert_eq!(wake.heartbeat(key), HEARTBEAT);
+        assert_eq!(wake.silence(idle, key), Duration::ZERO);
+        assert_eq!(wake.silence(idle, key + SHOW_SILENCE), SHOW_SILENCE);
     }
 
     #[test]

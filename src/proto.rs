@@ -851,6 +851,14 @@ impl<'a> ServerStream<'a> {
     }
 }
 
+/// Shrinks `deque` to what it holds when it holds well under what it has
+/// room for (and more than a little room).
+pub fn shrink<T>(deque: &mut VecDeque<T>) {
+    if deque.capacity() * std::mem::size_of::<T>() > 64 * 1024 && deque.len() < deque.capacity() / 4 {
+        deque.shrink_to(deque.len() * 2);
+    }
+}
+
 /// Reliable, ordered byte stream over datagrams: cumulative byte-offset acks
 /// and a window that grows while the link shows no queueing and shrinks
 /// when it does or a datagram is lost (below `WINDOW` only for a queue the
@@ -1321,6 +1329,15 @@ impl Sender {
     pub fn in_flight_wire(&self) -> u64 {
         let on_way = self.flight.iter().take_while(|(end, _, _, _)| *end <= self.sent).count();
         self.in_flight() + on_way as u64 * WIRE_OVERHEAD
+    }
+
+    /// Gives back what the buffers grew to beyond what they hold now: a
+    /// burst of output (up to `OUTPUT_BACKLOG` in the server) leaves its
+    /// high-water mark allocated for the life of the session otherwise.
+    pub fn trim(&mut self) {
+        shrink(&mut self.buf);
+        shrink(&mut self.flight);
+        shrink(&mut self.acked_at);
     }
 
     /// Lets this generation use the whole window at once: its caller paces

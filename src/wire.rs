@@ -25,7 +25,7 @@ const RECONNECT: Duration = Duration::from_secs(1);
 /// Connections a server keeps at once. One that brought no packet the
 /// server could open is closed after `UNKNOWN_IDLE` (or for a newer one
 /// when all are taken); one that did, after `IDLE` without another
-/// (clients send at least every second).
+/// (clients send at least every `client::IDLE_HEARTBEAT`).
 const MAX_CONNS: usize = 256;
 const IDLE: Duration = Duration::from_secs(120);
 const UNKNOWN_IDLE: Duration = Duration::from_secs(10);

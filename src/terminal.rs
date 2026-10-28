@@ -24,12 +24,18 @@ use alacritty_terminal::vte::ansi::{
 };
 use alacritty_terminal::vte::{Params, Parser, Perform};
 use std::cell::RefCell;
+use std::collections::VecDeque;
 use std::fmt::Write as _;
 use std::sync::{Arc, Mutex};
 
 /// Lines of history a session keeps: as many as an attaching client gets
 /// (`server::ATTACH_HISTORY`); more would only cost memory.
 const SCROLLBACK_LIMIT: usize = 1000;
+/// History kept as alacritty's cells once output goes quiet (`trim`): 24
+/// bytes a cell, so 1000 lines of 160 columns took 3.8 MB a session; older
+/// lines are kept as the bytes that draw them (`render_row`), about a tenth
+/// of that.
+const RECENT_HISTORY: usize = 100;
 /// An escape sequence or string longer than this is cut off and the rest of
 /// it skipped, so program output cannot grow the parsers' buffers.
 const MAX_SEQUENCE: usize = 256 * 1024;
@@ -192,6 +198,9 @@ struct Extra {
     alternate_scroll: bool,
     /// Private modes alacritty does not know but rsh restores.
     modes: Vec<u16>,
+    /// The primary screen's history was cleared (`CSI 3 J`, a reset): what
+    /// `Terminal::kept` holds goes too.
+    history_cleared: bool,
     /// The program used the kitty keyboard protocol. Each screen has its own
     /// stack and only the active one is readable, so both are emptied when
     /// the terminal is handed back.
@@ -212,6 +221,7 @@ impl Extra {
             cursor_style: 0,
             alternate_scroll: false,
             modes: Vec::new(),
+            history_cleared: false,
             kitty_used: false,
             kept_alt: None,
             kitty_depth: [0; 2],
@@ -300,6 +310,11 @@ pub struct Terminal {
     /// The size asked for; the grid has at least 2 columns, as alacritty
     /// panics or hangs on wide characters in 1.
     size: (u16, u16),
+    /// History older than alacritty's, oldest first, each line as the
+    /// bytes that draw it (`trim`); with alacritty's, `history` lines at
+    /// most count. Not reflowed on a resize: drawn at the width it had.
+    kept: VecDeque<Box<str>>,
+    history: usize,
 }
 
 impl Default for Terminal {
@@ -341,6 +356,8 @@ impl Terminal {
             run: 0,
             skip: Skip::Off,
             size,
+            kept: VecDeque::new(),
+            history,
         }
     }
 
@@ -442,6 +459,9 @@ impl Terminal {
             }
         }
         self.flush(&mut pass);
+        if std::mem::take(&mut self.extra.history_cleared) {
+            self.kept.clear();
+        }
         cut
     }
 
@@ -543,12 +563,52 @@ impl Terminal {
         Attr::of(&self.term.borrow().grid().cursor.template)
     }
 
+    /// While output is quiet (the server calls it): moves history past
+    /// `RECENT_HISTORY` out of alacritty's cells into `kept`, and gives back
+    /// the rows alacritty allocated ahead (it grows history a thousand rows
+    /// at a time). alacritty keeps its whole history limit meanwhile, so no
+    /// way of scrolling loses a line. False when it cannot (the alternate
+    /// screen is in use: the history is the primary's).
+    pub fn trim(&mut self) -> bool {
+        let term = self.term.get_mut();
+        if term.mode().contains(TermMode::ALT_SCREEN) {
+            return false;
+        }
+        let history = term.grid().history_size();
+        if history > RECENT_HISTORY {
+            let cols = term.columns();
+            for back in (RECENT_HISTORY + 1..=history).rev() {
+                let mut line = String::new();
+                render_row(&mut line, &term.grid()[Line(-(back as i32))], cols);
+                self.kept.push_back(line.into_boxed_str());
+            }
+            term.grid_mut().update_history(RECENT_HISTORY);
+        }
+        term.grid_mut().truncate();
+        term.grid_mut().update_history(self.history);
+        let recent = term.grid().history_size();
+        while self.kept.len() + recent > self.history {
+            self.kept.pop_front();
+        }
+        true
+    }
+
+    /// Lines of `kept` past the history limit (alacritty's grew since).
+    fn kept_over(&self) -> usize {
+        (self.kept.len() + self.term.borrow().grid().history_size()).saturating_sub(self.history)
+    }
+
     pub fn scrollback_len(&self) -> usize {
-        self.term.borrow().grid().history_size()
+        self.kept.len() - self.kept_over() + self.term.borrow().grid().history_size()
     }
 
     /// Text of a history line, oldest first.
     pub fn scrollback_line(&self, index: usize) -> String {
+        let kept = self.kept.len() - self.kept_over();
+        if index < kept {
+            return drawn_text(&self.kept[self.kept_over() + index]);
+        }
+        let index = index - kept;
         let term = self.term.borrow();
         let history = term.grid().history_size();
         if index >= history {
@@ -599,7 +659,13 @@ impl Terminal {
             };
             let (cols, rows) = (term.columns(), term.screen_lines());
             let history = scrollback.min(term.grid().history_size());
-            if history > 0 {
+            let usable = (self.kept.len() + term.grid().history_size()).min(self.history) - term.grid().history_size().min(self.history);
+            let kept = scrollback.saturating_sub(history).min(usable);
+            for line in self.kept.range(self.kept.len() - kept..) {
+                out.push_str(line);
+                out.push_str("\r\n");
+            }
+            if history + kept > 0 {
                 for back in (1..=history).rev() {
                     render_row(&mut out, &term.grid()[Line(-(back as i32))], cols);
                     out.push_str("\r\n");
@@ -985,6 +1051,47 @@ fn push_cell(out: &mut String, cell: &GridCell) {
     }
 }
 
+/// The text a line kept as drawing bytes (`render_row`) shows: its escape
+/// sequences left out, a move to a column (past a wide character's spacer)
+/// as spaces.
+fn drawn_text(line: &str) -> String {
+    let mut out = String::new();
+    let mut chars = line.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c != '\x1b' {
+            out.push(c);
+            continue;
+        }
+        match chars.next() {
+            Some('[') => {
+                let mut params = String::new();
+                for c in chars.by_ref() {
+                    if ('\x40'..='\x7e').contains(&c) {
+                        if c == 'G' {
+                            let col: usize = params.parse().unwrap_or(1);
+                            while out.chars().count() + 1 < col {
+                                out.push(' ');
+                            }
+                        }
+                        break;
+                    }
+                    params.push(c);
+                }
+            }
+            // A string (a link's OSC 8): to its terminator.
+            Some(']') => {
+                while let Some(c) = chars.next() {
+                    if c == '\x07' || (c == '\x1b' && chars.next_if_eq(&'\\').is_some()) {
+                        break;
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    out.trim_end_matches(' ').to_string()
+}
+
 fn row_text(row: &Row<GridCell>, cols: usize) -> String {
     let mut out = String::new();
     for col in 0..cols {
@@ -1263,7 +1370,6 @@ impl Handler for Tracked<'_> {
         fn save_cursor_position(&mut self);
         fn restore_cursor_position(&mut self);
         fn clear_line(&mut self, mode: LineClearMode);
-        fn clear_screen(&mut self, mode: ClearMode);
         fn clear_tabs(&mut self, mode: TabulationClearMode);
         fn set_tabs(&mut self, interval: u16);
         fn reverse_index(&mut self);
@@ -1388,7 +1494,15 @@ impl Handler for Tracked<'_> {
 
     fn reset_state(&mut self) {
         *self.extra = Extra::new(self.term.screen_lines());
+        self.extra.history_cleared = true;
         self.term.reset_state();
+    }
+
+    fn clear_screen(&mut self, mode: ClearMode) {
+        if matches!(mode, ClearMode::Saved) && !self.term.mode().contains(TermMode::ALT_SCREEN) {
+            self.extra.history_cleared = true;
+        }
+        self.term.clear_screen(mode);
     }
 }
 
@@ -1407,6 +1521,46 @@ fn printable_char(bytes: &[u8]) -> Option<usize> {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn quiet_history_is_kept_compact_and_none_of_it_is_lost() {
+        let mut t = Terminal::with_history(40, 10, 1000);
+        let text: String = (1..=3000).map(|n| format!("\x1b[3{}m{n}\r\n", n % 8)).collect();
+        t.feed(text.as_bytes());
+        assert!(t.trim());
+        assert_eq!(t.kept.len(), 1000 - RECENT_HISTORY);
+        assert_eq!(t.scrollback_len(), 1000);
+        for (index, n) in (1992..2992).enumerate() {
+            assert_eq!(t.scrollback_line(index), n.to_string());
+        }
+        // A client's repaint carries it all.
+        let mut copy = Terminal::with_history(40, 10, 1000);
+        copy.feed(&t.render(1000));
+        assert_eq!(copy.scrollback_len(), 1000);
+        assert_eq!(copy.scrollback_line(0), "1992");
+        assert_eq!(copy.scrollback_line(999), "2991");
+        // Scrolled without a line feed (index, scroll up, a wrapped long
+        // line): alacritty keeps its whole history until the next trim, and
+        // the oldest kept lines past the limit no longer count.
+        t.feed("\x1bD".repeat(300).as_bytes());
+        assert_eq!(t.scrollback_len(), 1000);
+        assert_eq!(t.scrollback_line(0), "2292");
+        assert_eq!(t.scrollback_line(699), "2991");
+        assert_eq!(t.scrollback_line(700), "2992");
+        t.feed(&[b'x'; 4000]);
+        assert!(t.trim());
+        assert_eq!(t.scrollback_len(), 1000);
+        // (99 rows of it scrolled, past the cursor's own.)
+        assert_eq!(t.scrollback_line(599), "2990");
+        assert_eq!(t.scrollback_line(600), "2991");
+        assert_eq!(t.scrollback_line(601), "2992");
+        // A history cleared and refilled in one feed: the kept lines go.
+        t.feed(format!("\x1b[3J{}", "\x1bD".repeat(150)).as_bytes());
+        assert_eq!(t.scrollback_len(), 150);
+        // Not while the alternate screen is in use.
+        t.feed(b"\x1b[?1049h");
+        assert!(!t.trim());
+    }
+
     use super::*;
 
     /// A fresh terminal fed `t.render(..)` shows the same.

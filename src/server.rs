@@ -29,6 +29,8 @@ pub const ATTACH_HISTORY: usize = 1000;
 const INPUT_BACKLOG: usize = 256 * 1024;
 /// Stop sending to a client address not heard from for this long.
 const ASSOCIATION_TIMEOUT: Duration = Duration::from_secs(40);
+/// How long a program is quiet before its session gives back spare memory.
+const TRIM_AFTER: Duration = Duration::from_secs(2);
 /// A finished session is dropped after its client saw the end, or after this.
 const ENDED_LINGER: Duration = Duration::from_secs(60);
 /// Accepted clock skew for HELLO, LIST and KILL, which also bounds replays.
@@ -184,6 +186,10 @@ struct Session {
     attach: Option<Attachment>,
     last_active: Instant,
     last_client: Instant,
+    /// When the program last wrote, and whether the terminal's spare
+    /// history rows were given back since (`Terminal::trim`).
+    output_seen: Instant,
+    trimmed: bool,
 }
 
 struct Attachment {
@@ -715,6 +721,8 @@ fn import(bytes: &[u8]) -> Option<Handoff> {
             attach: None,
             last_active,
             last_client,
+            output_seen: now,
+            trimmed: false,
         };
         if r.u8()? == 1 {
             let attach_id = r.u64()?;
@@ -1259,6 +1267,8 @@ impl State {
                 attach: None,
                 last_active: now,
                 last_client: now,
+                output_seen: now,
+                trimmed: false,
             },
         );
         Ok(id)
@@ -1317,7 +1327,9 @@ impl State {
                 attached: s
                     .attach
                     .as_ref()
-                    .is_some_and(|a| now.duration_since(a.last_heard) < Duration::from_secs(5)),
+                    // Three idle keepalives (`client::IDLE_HEARTBEAT`): one
+                    // lost does not show an idle client as gone.
+                    .is_some_and(|a| now.duration_since(a.last_heard) < 3 * crate::client::IDLE_HEARTBEAT),
                 cols: s.term.size().0,
                 rows: s.term.size().1,
                 created_unix: s.created.duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0),
@@ -1763,6 +1775,29 @@ impl State {
                     continue;
                 }
             }
+            // A session whose program has been quiet a while gives back the
+            // rows alacritty keeps spare for its history (a thousand at a
+            // time: 3.8 MB at 160 columns), and its buffers what a burst of
+            // output grew them to (they stay allocated otherwise).
+            // (Not while the alternate screen is in use: tried again later.)
+            if !session.trimmed && now.duration_since(session.output_seen) >= TRIM_AFTER {
+                session.trimmed = session.term.trim();
+            }
+            if session.pty_in.is_empty() {
+                crate::proto::shrink(&mut session.pty_in);
+            }
+            if session.tail.capacity() > 64 * 1024 && session.tail.len() < session.tail.capacity() / 4 {
+                session.tail.shrink_to(session.tail.len() * 2);
+            }
+            if let Some(attach) = session.attach.as_mut().filter(|a| a.output.all_sent() && a.output.in_flight() == 0) {
+                attach.output.trim();
+                if let Some(path) = attach.path.as_mut() {
+                    path.trim();
+                }
+                if attach.zraw.capacity() > 64 * 1024 && attach.zraw.is_empty() {
+                    attach.zraw.shrink_to(0);
+                }
+            }
             if let Some(attach) = session.attach.as_mut() {
                 // Nobody to forward to while the client is away; reopened
                 // when it is heard again.
@@ -2174,6 +2209,8 @@ impl Session {
     }
 
     fn output(&mut self, bytes: &[u8]) {
+        self.output_seen = Instant::now();
+        self.trimmed = false;
         let was_ground = self.tail.is_empty();
         if let Some(attach) = self.attach.as_mut().filter(|a| a.screens && was_ground) {
             // On a slow link, output that would take long to drain starts
