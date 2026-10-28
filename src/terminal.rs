@@ -315,6 +315,9 @@ pub struct Terminal {
     /// most count. Not reflowed on a resize: drawn at the width it had.
     kept: VecDeque<Box<str>>,
     history: usize,
+    /// `feed_to_ground`'s buffer, kept: a large allocation each feed cost
+    /// more than the parsing in musl's allocator.
+    pass: Vec<u8>,
 }
 
 impl Default for Terminal {
@@ -349,6 +352,7 @@ impl Terminal {
             events,
             extra: Extra::new(rows),
             probe: Parser::new(),
+            pass: Vec::new(),
             ground: true,
             in_sequence: false,
             synchronized: false,
@@ -383,7 +387,8 @@ impl Terminal {
     /// Feeds `bytes` and returns how many of them end at a point where no
     /// escape sequence or UTF-8 character is half done.
     pub fn feed_to_ground(&mut self, bytes: &[u8]) -> usize {
-        let mut pass = Vec::with_capacity(bytes.len());
+        let mut pass = std::mem::take(&mut self.pass);
+        pass.reserve(bytes.len());
         let mut cut = 0;
         let mut skip_to = 0;
         for (index, &byte) in bytes.iter().enumerate() {
@@ -459,6 +464,7 @@ impl Terminal {
             }
         }
         self.flush(&mut pass);
+        self.pass = pass;
         if std::mem::take(&mut self.extra.history_cleared) {
             self.kept.clear();
         }
@@ -570,6 +576,7 @@ impl Terminal {
     /// way of scrolling loses a line. False when it cannot (the alternate
     /// screen is in use: the history is the primary's).
     pub fn trim(&mut self) -> bool {
+        self.pass = Vec::new();
         let term = self.term.get_mut();
         if term.mode().contains(TermMode::ALT_SCREEN) {
             return false;

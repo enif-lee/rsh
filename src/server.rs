@@ -591,6 +591,8 @@ pub fn now_ms() -> u64 {
 
 fn serve(shared: Arc<Shared>) {
     let mut buf = vec![0u8; 65536];
+    // The UDP socket's and the TCP side's entries come first in `fds`.
+    let mut net;
     while !shared.stop.load(Ordering::Relaxed) {
         let (mut fds, timeout) = {
             let state = shared.state.lock().unwrap_or_else(|p| p.into_inner());
@@ -600,6 +602,7 @@ fn serve(shared: Arc<Shared>) {
                 revents: 0,
             }];
             state.tcp.pollfds(&mut fds);
+            net = fds.len();
             for session in state.sessions.values() {
                 if let Some(attach) = &session.attach {
                     attach.forward.pollfds(&mut fds);
@@ -623,7 +626,11 @@ fn serve(shared: Arc<Shared>) {
         }
         let mut state = shared.state.lock().unwrap_or_else(|p| p.into_inner());
         let now = Instant::now();
-        state.receive(&mut buf, now);
+        // Only when there is something: a call that finds nothing is still
+        // a recv and an accept, at every wake.
+        if fds[..net].iter().any(|fd| fd.revents != 0) {
+            state.receive(&mut buf, now);
+        }
         for fd in &fds[1..] {
             if fd.revents == 0 {
                 continue;
