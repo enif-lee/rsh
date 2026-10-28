@@ -21,9 +21,10 @@ FPS=${2:-60}
 SECONDS_=${3:-15}
 BIN=${4:-}
 NET=${NET:-}
-OUT="$HERE/out/$SCENE-$FPS${NET:+-$(echo "$NET" | tr -c 'a-z0-9' '_')}"
+OUT="$HERE/out/$SCENE-$FPS${NET:+-$(printf %s "$NET" | tr -c 'a-z0-9' '_')}"
 mkdir -p "$OUT"
-case $(uname -m) in arm64|aarch64) platform=linux/arm64 ;; *) platform=linux/amd64 ;; esac
+# musl's poll() is the poll syscall where there is one (x86_64), else ppoll.
+case $(uname -m) in arm64|aarch64) platform=linux/arm64 poll=ppoll ;; *) platform=linux/amd64 poll=poll ;; esac
 if [ -z "$BIN" ]; then
     BIN="$HERE/out/rsh-prof"
     docker run --rm --platform "$platform" -v "$ROOT":/src:ro -v rsh-cargo-prof:/usr/local/cargo/registry \
@@ -47,17 +48,19 @@ docker exec $C sh -c '
     pid=$(pgrep -x -u dev rsh | head -1)
     ns() { cat /proc/$pid/task/*/schedstat | awk "{s += \$1} END {print s}"; }
     a=$(ns); t=$(date +%s%N)
-    perf stat -x, -e syscalls:sys_enter_ppoll -p $pid -o /tmp/stat.txt -- sleep '"$SECONDS_"' 2>/dev/null &
+    perf stat -x, -e syscalls:sys_enter_'"$poll"' -p $pid -o /tmp/stat.txt -- sleep '"$SECONDS_"' 2>/dev/null &
     perf record -q -e cpu-clock -F 1999 --call-graph fp -p $pid -o /tmp/server.data -- sleep '"$SECONDS_"' 2>/dev/null
     b=$(ns); u=$(date +%s%N)
     wait
     echo "server cpu: $(echo "$a $b $t $u" | awk "{printf \"%.2f\", (\$2 - \$1) / (\$4 - \$3) * 100}")% of one core over '"$SECONDS_"' s"
-    echo "loop wakes: $(grep ppoll /tmp/stat.txt | cut -d, -f1 | awk "{printf \"%.0f\", \$1 / '"$SECONDS_"'}") a second"
+    echo "loop wakes: $(grep '"$poll"' /tmp/stat.txt | cut -d, -f1 | awk "{printf \"%.0f\", \$1 / '"$SECONDS_"'}") a second"
     perf report -i /tmp/server.data --stdio --no-children --sort symbol --percent-limit 0.7 -g none 2>/dev/null | grep -v "^#" | grep -v "^$" > /tmp/self.txt
     perf report -i /tmp/server.data --stdio --children --sort symbol --percent-limit 3 -g none 2>/dev/null | grep -v "^#" | grep -v "^$" > /tmp/children.txt
 ' | tee "$OUT/cpu.txt"
-# Frames that reached the client's terminal (the scene's header rows), a second.
-docker exec $C sh -c "sleep 2; grep -ao 'FRAME [0-9]*' /tmp/client.log | sort -u | wc -l" | awk '{printf "client frames: %.1f a second\n", $1 / '"$((SECONDS_ + 2))"'}' | tee -a "$OUT/cpu.txt"
+# Frames that reached the client's terminal (the scene's header rows), a
+# second; only without NET: screen updates resend the header's changed
+# digits, not `FRAME` (the lab rebuilds the screen to count them).
+[ -z "$NET" ] && docker exec $C sh -c "sleep 2; grep -ao 'FRAME [0-9]*' /tmp/client.log | sort -u | wc -l" | awk '{printf "client frames: %.1f a second\n", $1 / '"$((SECONDS_ + 2))"'}' | tee -a "$OUT/cpu.txt"
 docker cp $C:/tmp/self.txt "$OUT/self.txt"
 docker cp $C:/tmp/children.txt "$OUT/children.txt"
 docker cp $C:/tmp/server.data "$OUT/server.data" 2>/dev/null || true

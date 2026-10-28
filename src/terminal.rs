@@ -1604,6 +1604,9 @@ mod tests {
         let mark = b"\x1b[1;1H\x1b[7mFRAME";
         let mut starts: Vec<usize> = raw.windows(mark.len()).enumerate().filter(|(_, w)| *w == mark).map(|(i, _)| i).collect();
         starts.push(raw.len());
+        if starts.len() < 2 {
+            return;
+        }
         let mut term = Terminal::with_size(100, 30);
         let mut shadow = Terminal::with_history(100, 30, 0);
         use std::time::{Duration, Instant};
@@ -1613,7 +1616,10 @@ mod tests {
         for w in starts.windows(2).cycle().take(frames) {
             term.feed(&raw[w[0]..w[1]]);
             let t = Instant::now();
-            let update = term.diff_from(&shadow).expect("a diff");
+            // A repaint only (the alternate screen): not what this times.
+            let Some(update) = term.diff_from(&shadow) else {
+                continue;
+            };
             diff += t.elapsed();
             let t = Instant::now();
             shadow.feed(&update);

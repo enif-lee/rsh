@@ -77,6 +77,8 @@ const TAIL_WAIT: Duration = Duration::from_millis(20);
 /// level on any link (`z_level`): a dashboard is 10 to 15, a full screen of
 /// random colours 2 to 3.
 const WELL_COMPRESSED: f64 = 4.0;
+/// Pushes this large or larger say how well output compresses.
+const RATIO_MIN: usize = 256;
 /// Output for the compressor waits while the program is still writing (its
 /// next read this soon), up to `GATHER_MAX` or `GATHER_BYTES`: one flush
 /// and datagram for what came in many small reads (`yes`, a build log), not
@@ -2168,7 +2170,11 @@ impl Attachment {
         let z = self.z.as_mut().expect("compressor");
         z.set_level(level);
         let packed = z.push(&raw);
-        self.ratio = (raw.len() as f64 / packed.len().max(1) as f64).clamp(1.0, 64.0);
+        // Not from a few bytes (a key's echo): a flush's own bytes would
+        // make anything look incompressible, and hold `z_level` low.
+        if raw.len() >= RATIO_MIN {
+            self.ratio = (raw.len() as f64 / packed.len().max(1) as f64).clamp(1.0, 64.0);
+        }
         self.output.push(&packed);
         packed.len()
     }
