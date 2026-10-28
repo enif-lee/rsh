@@ -440,6 +440,27 @@ impl PathModel {
         let near_turned_far = quick || (self.last_rtts.len() >= LAST_RTTS && far(last));
         let unspread = self.fast_seen.is_some_and(|at| now.duration_since(at) <= RATE_SPAN);
         let longer = unspread && self.rate(now).is_none() && self.queue_ms >= 20.0 && last > least + 20.0 && self.last_rtts.len() >= LAST_RTTS;
+        // Nor can a queue stand in front of a bottleneck sent well under its
+        // rate: it drains faster than it fills. A slow link's rate kept from
+        // before the path turned longer (1 Mbit/s then RTT 300 ms, a
+        // dashboard's small updates: no train to show it gone) read the
+        // longer delay as a queue for ten seconds, and updates went a few a
+        // second.
+        // (The last second of sends, not the second before this report:
+        // behind a long queue reports come long after their sends.)
+        // Over half a second of them at least: at a start the second is not
+        // full yet.
+        let sent: u64 = self.sent_log.iter().map(|(_, w)| u64::from(*w)).sum();
+        let span = match (self.sent_log.front(), self.sent_log.back()) {
+            (Some((first, _)), Some((last, _))) => last.duration_since(*first).as_secs_f64(),
+            _ => 0.0,
+        };
+        let underfed = span >= 0.5
+            && self.rate(now).is_some_and(|rate| sent as f64 / span < 0.5 * rate)
+            && self.queue_ms >= 20.0
+            && last > least + 20.0
+            && self.last_rtts.len() >= LAST_RTTS;
+        let longer = longer || underfed;
         if !(near_turned_far || longer) {
             return;
         }
@@ -543,6 +564,22 @@ mod tests {
         assert_eq!(fast.rate(now), None);
         let rtt = fast.min_rtt().expect("a round trip");
         assert!((rtt - 300.0).abs() < 5.0, "{rtt}");
+    }
+
+    #[test]
+    fn a_longer_path_after_a_slow_link_is_learned_from_small_updates() {
+        // 1 Mbit/s at RTT 100 ms, then RTT 300 ms with nothing in the way
+        // and a dashboard's small updates (one datagram each): the rate
+        // stays, the delay is the path's, not a queue.
+        let start = Instant::now();
+        let mut model = PathModel::new(start);
+        let now = run(&mut model, start, 64, 1000, 10, 125_000.0, 50);
+        assert!(model.rate(now).is_some());
+        let now = run_from(&mut model, start, now + Duration::from_secs(1), 120, 400, 33_333, 10e6, 150);
+        let rtt = model.min_rtt().expect("a round trip");
+        assert!(rtt > 250.0, "{rtt}");
+        assert!(model.queue_ms() < 20.0, "{}", model.queue_ms());
+        let _ = now;
     }
 
     #[test]

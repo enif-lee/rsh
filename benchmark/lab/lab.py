@@ -55,7 +55,7 @@ To stop early: Ctrl-C stops a run, Ctrl-b X the demo (in its tmux), and
 `lab.py stop` either from another shell. What ended so far is summed up
 and saved, and the slots they made go as at the end.
 """
-import argparse, concurrent.futures, fcntl, json, os, queue, re, shlex, shutil, signal, statistics, subprocess, sys, threading, time
+import argparse, concurrent.futures, fcntl, json, math, os, queue, re, shlex, shutil, signal, statistics, subprocess, sys, threading, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 IMAGE = "rsh-bench"
@@ -620,8 +620,9 @@ class Demo:
 
     def render(self, windows, nets, scenes, seconds, fps, warmup):
         """The render scenes, each window added to `windows` as it ends;
-        each after `warmup` seconds of its label and a count down (not
-        measured), so every tool starts the scene with its link warm."""
+        each after `warmup` seconds of its label and a count down, and
+        measured from its second second (`DEMO_SKIP`): the links warm up on
+        the scene itself."""
         for net in nets:
             self.shape(net)
             for scene in scenes:
@@ -633,8 +634,8 @@ class Demo:
                 # only the shell's output, not the echoed command, matches.
                 mark = len(windows) + 1
                 rx = self.each(rx_total)
-                self.everyone("clear; python3 /tmp/scene.py %s %g %g %g %s; echo DEMO-$((%d+1))-DONE" % (scene, seconds, fps, warmup, shlex.quote(self.label), mark - 1))
-                time.sleep(warmup)
+                self.everyone("clear; python3 /tmp/scene.py %s %g %g %g %s; echo DEMO-$((%d+1))-DONE" % (scene, seconds + DEMO_SKIP, fps, warmup, shlex.quote(self.label), mark - 1))
+                time.sleep(warmup + DEMO_SKIP)
                 start = self.now()
                 # Memory twice, halfway and at the end, the larger kept.
                 time.sleep(seconds / 2)
@@ -834,6 +835,8 @@ def control(opts):
             remove_slots()
 
 
+# The demo's results leave out each scene's first second.
+DEMO_SKIP = 1.0
 COLOR = {"ssh": 245, "et": 214, "mosh": 39, "rsh": 42, "rsh-tcp": 141, "rsh-b": 208}
 
 
@@ -849,15 +852,22 @@ def chart(title, rows, fmt, higher, log=False):
 
 
 def chart_lines(title, rows, fmt, higher, log, columns):
-    """`chart` as lines `columns` wide, the bars short of the longest note."""
+    """`chart` as lines `columns` wide, the bars short of the longest note.
+    A row may carry each tool's (1% low, 5% low) too: shades of its bar
+    (░ to the 1% low, ▒ to the 5% low, █ to the value) and numbers."""
     import math
-    longest = max((len(note) for _, _, notes in rows for note in notes.values()), default=0)
+    longest = max((len(note) for row in rows for note in row[2].values()), default=0)
     # The names as wide as the longest of them, the bars the rest.
-    name = max((len(LABEL[tool]) for _, values, _ in rows for tool in values), default=0)
-    width = max(10, columns - name - 22 - longest)
+    name = max((len(LABEL[tool]) for row in rows for tool in row[1]), default=0)
+    shaded = any(len(row) > 3 for row in rows)
+    width = max(10, columns - name - 22 - longest - (16 if shaded else 0))
     head = "%s (%s is better%s)" % (title, "higher" if higher else "lower", ", log" if log else "")
     lines = ["", " \x1b[1m%s\x1b[0m%s" % (title, head[len(title):columns - 1])]
-    for label, values, notes in rows:
+    if shaded:
+        lines.append("  \x1b[2m░ 1% low  ▒ 5% low  █ average\x1b[0m")
+    for row in rows:
+        label, values, notes = row[:3]
+        lows = row[3] if len(row) > 3 else {}
         lines.append("  \x1b[2m%s\x1b[0m" % label[:columns - 2])
         known = [v for v in values.values() if v is not None]
         best = (max if higher else min)(known) if known else None
@@ -866,7 +876,14 @@ def chart_lines(title, rows, fmt, higher, log, columns):
         for tool, value in values.items():
             mark = " ★" if value is not None and value == best and len(known) > 1 else ""
             text = "-" if value is None else fmt % value
-            lines.append("    \x1b[38;5;%dm%-*s %s\x1b[0m %8s%s %s" % (COLOR[tool], name, LABEL[tool], bar(scale(value) if value is not None else 0, most, width), text, mark, notes.get(tool, "")))
+            low1, low5 = lows.get(tool, (None, None))
+            if value is not None and low1 is not None:
+                cells = lambda v: int(round(max(0.0, min(1.0, scale(v) / most if most else 0.0)) * width))
+                body = ("░" * cells(low1) + "▒" * (cells(low5) - cells(low1)) + "█" * (cells(value) - cells(low5))).ljust(width)
+                text += " \x1b[2m1%% %4.1f 5%% %4.1f\x1b[22m" % (low1, low5)
+            else:
+                body = bar(scale(value) if value is not None else 0, most, width)
+            lines.append("    \x1b[38;5;%dm%-*s %s\x1b[0m %8s%s %s" % (COLOR[tool], name, LABEL[tool], body, text, mark, notes.get(tool, "")))
     return lines
 
 
@@ -891,7 +908,7 @@ def demo_summary(tools, windows):
     for w in windows:
         if w["kind"] != "render":
             continue
-        fps, age, notes, rss, rss_notes, data = {}, {}, {}, {}, {}, {}
+        fps, age, notes, rss, rss_notes, data, lows = {}, {}, {}, {}, {}, {}, {}
         for k, tool in enumerate(tools):
             if not w.get("done", [True] * len(tools))[k]:
                 notes[tool] = "(no end)"
@@ -899,7 +916,9 @@ def demo_summary(tools, windows):
             # earlier one timed out shows its frames in this one.
             # A pane narrower than the frame's header (or rsh's badge over
             # it) cuts its scene name.
-            seen = [f for f in frames[tool] if w["scene"].startswith(f[3]) and w["start"] <= f[0] <= w.get("until", w["end"] + 5) and f[2] >= w["start"] - 1]
+            # (Made since the window's start: the scene's first second,
+            # left out, may show late within it.)
+            seen = [f for f in frames[tool] if w["scene"].startswith(f[3]) and w["start"] <= f[0] <= w.get("until", w["end"] + 5) and f[2] >= w["start"]]
             # What came in for each frame shown, all of the scene's.
             data[tool] = w["rx_bytes"][k] / len(seen) / 1024 if seen and "rx_bytes" in w else None
             if "rss_kb" in w:
@@ -915,12 +934,17 @@ def demo_summary(tools, windows):
             seen = [f for f in seen if f[0] <= first + w["seconds"]]
             times = [first] + [f[0] for f in seen] + [first + w["seconds"]]
             fps[tool] = len(seen) / w["seconds"]
+            # As games count them: the rate the slowest 1% and 5% of frame
+            # times would give.
+            gaps = sorted(b[0] - a[0] for a, b in zip(seen, seen[1:]))
+            at = lambda q: gaps[min(len(gaps) - 1, math.ceil(len(gaps) * q) - 1)]
+            lows[tool] = (1 / max(at(0.99), 1e-3), 1 / max(at(0.95), 1e-3)) if len(gaps) >= 10 else (None, None)
             age[tool] = statistics.median((f[0] - f[2]) * 1000 for f in seen) if seen else None
-            results.append(dict(kind="render", net=w["net"], scene=w["scene"], tool=tool, fps=fps[tool], age_ms=age[tool],
+            results.append(dict(kind="render", net=w["net"], scene=w["scene"], tool=tool, fps=fps[tool], low1_fps=lows[tool][0], low5_fps=lows[tool][1], age_ms=age[tool],
                                 max_gap_ms=max(b - a for a, b in zip(times, times[1:])) * 1000, to_end=tool not in notes,
                                 rss_mb=rss.get(tool), kb_per_frame=data[tool]))
         label = "%s · %s" % (NETS[w["net"]][3], SCENES[w["scene"]])
-        fps_rows.append((label, fps, notes))
+        fps_rows.append((label, fps, notes, lows))
         age_rows.append((label, age, notes))
         rss_rows.append((label, rss, rss_notes))
         data_rows.append((label, data, {}))
@@ -963,7 +987,7 @@ def demo_summary(tools, windows):
         columns = shutil.get_terminal_size((120, 40)).columns
         two = columns >= 120
         half = columns // 2 if two else columns
-        blocks = [chart_lines("Rendering: frames a second", fps_rows, "%.1f fps", True, False, half - 2),
+        blocks = [chart_lines("Rendering: frames a second, 1% and 5% low", fps_rows, "%.1f fps", True, False, half - 2),
                   chart_lines("Rendering: age of what is on screen", age_rows, "%.0f ms", False, True, half - 2),
                   chart_lines("Memory: RSS, c(lient) s(erver) MB", rss_rows, "%.1f MB", False, False, half - 2),
                   chart_lines("Data: received per frame shown", data_rows, "%.1f KB", False, False, half - 2)]
