@@ -18,8 +18,14 @@ const FLOOR_SPAN: Duration = Duration::from_secs(10);
 /// burst waits behind the others on a slow link, which is no queue left
 /// standing (an update of four datagrams over 1 Mbit/s read as 28 ms).
 const STANDING: Duration = Duration::from_millis(50);
-/// The latest round trips `rebase_if_changed` tells a changed path by.
+/// The latest round trips `rebase_if_changed` tells a changed path by,
+/// and fewer for a near path that turned far with trains still arriving
+/// unspread since: there the old least makes the window nothing (LAN to
+/// RTT 300 ms: one datagram a round trip until the fourth), and no queue
+/// of a slow link is taken for the path (LAN to 256 kbit/s: 264 ms to
+/// 1.8 s when it was).
 const LAST_RTTS: usize = 4;
+const NEAR_RTTS: usize = 2;
 /// Rate samples kept: the rate is their median.
 const RATE_KEPT: usize = 24;
 /// Rate samples older than this no longer count.
@@ -62,6 +68,8 @@ struct Train {
     first_us: i64,
     last_us: i64,
     bytes: u64,
+    /// When its first datagram was sent.
+    sent: Instant,
 }
 
 pub struct PathModel {
@@ -88,6 +96,10 @@ pub struct PathModel {
     /// When a train of 600 bytes or more (after its first) last arrived
     /// spread less than `SPREAD_US`: the path took it over `SLOW_RATE`.
     fast_seen: Option<Instant>,
+    /// Since when (sent) the round trips of a near path are far over its
+    /// least, and when the last train that arrived unspread was sent.
+    far_since: Option<Instant>,
+    fast_sent: Option<Instant>,
     /// Such trains in a row, each far over the rate measured (see
     /// `end_train`).
     fast_trains: u32,
@@ -120,6 +132,8 @@ impl PathModel {
             last_rtts: VecDeque::new(),
             rates: VecDeque::new(),
             fast_seen: None,
+            far_since: None,
+            fast_sent: None,
             fast_trains: 0,
             sent_log: VecDeque::new(),
             loss: 0.0,
@@ -176,6 +190,8 @@ impl PathModel {
         self.rates.clear();
         self.fast_seen = None;
         self.fast_trains = 0;
+        self.far_since = None;
+        self.fast_sent = None;
         self.delivered = (now, 0);
     }
 
@@ -248,12 +264,12 @@ impl PathModel {
                     // its end only.
                     if at_us - train.first_us >= 4 * SPREAD_US {
                         self.end_train(now);
-                        self.train = Some(Train { first_us: at_us, last_us: at_us, bytes: 0 });
+                        self.train = Some(Train { first_us: at_us, last_us: at_us, bytes: 0, sent: at });
                     }
                 }
                 _ => {
                     self.end_train(now);
-                    self.train = Some(Train { first_us: at_us, last_us: at_us, bytes: 0 });
+                    self.train = Some(Train { first_us: at_us, last_us: at_us, bytes: 0, sent: at });
                 }
             }
             self.last = Some(Arrival { pn, at_us, sent: at });
@@ -269,7 +285,7 @@ impl PathModel {
                     if self.last_rtts.len() > LAST_RTTS {
                         self.last_rtts.pop_front();
                     }
-                    self.rebase_if_changed(now);
+                    self.rebase_if_changed(now, at);
                     while self.rtt.back().is_some_and(|(_, r)| *r >= rtt) {
                         self.rtt.pop_back();
                     }
@@ -320,6 +336,7 @@ impl PathModel {
             // ever deliver that rate, never showing the link got faster.
             if spread < SPREAD_US && train.bytes >= 600 {
                 self.fast_seen = Some(now);
+                self.fast_sent = Some(train.sent);
             }
             let shown = train.bytes as f64 * 1_000_000.0 / SPREAD_US as f64;
             if spread < SPREAD_US && train.bytes >= 600 && self.rate(now).is_some_and(|rate| shown > 2.0 * rate) {
@@ -408,19 +425,37 @@ impl PathModel {
     /// read as 100 ms of queue). No trains at all is no such evidence:
     /// single datagrams a frame apart over a link a little too slow form
     /// none, and a queue of their own would become the floor.
-    fn rebase_if_changed(&mut self, now: Instant) {
+    fn rebase_if_changed(&mut self, now: Instant, sent: Instant) {
         let (Some(least), Some(last)) = (self.min_rtt(), self.last_rtts.iter().copied().reduce(f64::min)) else {
             return;
         };
-        let near_turned_far = least < 20.0 && last > 3.0 * least + 20.0;
+        let far = |rtt: f64| least < 20.0 && rtt > 3.0 * least + 20.0;
+        let newest = self.last_rtts.back().copied().unwrap_or(last);
+        // Trains sent before the path changed may arrive together after
+        // it: only those sent since count.
+        self.far_since = if far(newest) { self.far_since.or(Some(sent)) } else { None };
+        let near = self.last_rtts.iter().rev().take(NEAR_RTTS).copied().reduce(f64::min).unwrap_or(last);
+        let unspread_since = self.far_since.is_some_and(|since| self.fast_sent.is_some_and(|at| at >= since));
+        let quick = self.last_rtts.len() >= NEAR_RTTS && far(near) && unspread_since;
+        let near_turned_far = quick || (self.last_rtts.len() >= LAST_RTTS && far(last));
         let unspread = self.fast_seen.is_some_and(|at| now.duration_since(at) <= RATE_SPAN);
-        let longer = unspread && self.rate(now).is_none() && self.queue_ms >= 20.0 && last > least + 20.0;
-        if self.last_rtts.len() < LAST_RTTS || !(near_turned_far || longer) {
+        let longer = unspread && self.rate(now).is_none() && self.queue_ms >= 20.0 && last > least + 20.0 && self.last_rtts.len() >= LAST_RTTS;
+        if !(near_turned_far || longer) {
             return;
         }
+        let last = if quick { near } else { last };
+        self.far_since = None;
         self.rtt.clear();
         self.rtt.push_back((now, last));
-        self.fast_seen = None;
+        if quick {
+            // Trains arrive unspread on the longer path: nothing waits on
+            // it, and a rate sample across the change (the new delay read
+            // as a spread) is no bottleneck's; what the program writes may
+            // go at once.
+            self.rates.clear();
+        } else {
+            self.fast_seen = None;
+        }
         // The newest delay stands for the new path's least until a lower
         // one comes.
         if let Some(&(_, newest)) = self.owd.back() {
