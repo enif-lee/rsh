@@ -305,6 +305,10 @@ def render_stats(seen, start, end):
         # times would give (1000 / the 99th and 95th percentile gap, ms).
         **lows(seen),
         # Frame gaps by 10 ms, for where the slow ones come from.
+        # Every frame gap, ms, so lows can be taken over all the runs
+        # together (`lab.py summary`): one run's 1% low is about its
+        # longest gap alone.
+        "gaps_ms": [round((b[0] - a[0]) * 1000, 1) for a, b in zip(seen, seen[1:])],
         "gap_hist": sorted(collections.Counter(int((b[0] - a[0]) * 100) * 10 for a, b in zip(seen, seen[1:])).items()),
         "per_s": [sum(1 for f in seen if start + k <= f[0] < start + k + 1) for k in range(int(span))],
         # The first second alone: how fast the tool settles at the start.
@@ -452,7 +456,7 @@ def main_run(job):
         before = render_stats([f for f in seen if f[0] < moved], start, moved)
         after = render_stats([f for f in seen if f[0] >= moved], moved, stop)
         out.update(fps_before=before["fps"], fps_after=after["fps"], age_after_ms=after["age_ms"],
-                   low1_after=after["low1_fps"], low5_after=after["low5_fps"])
+                   low1_after=after["low1_fps"], low5_after=after["low5_fps"], gaps_after_ms=after["gaps_ms"])
         # Seconds from the change until a second at 90% of the rate the
         # tool settles at (the median of the last half).
         per = after["per_s"]

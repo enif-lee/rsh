@@ -425,6 +425,21 @@ COLUMNS = {
 }
 
 
+# Lows over all the runs' frame gaps together (`gaps_ms`), not the median
+# of each run's: one run of a few seconds has about a hundred gaps, so its
+# 1% low is its longest gap alone, and one stall moves it far.
+POOLED = {"low1_fps": ("gaps_ms", 0.99), "low5_fps": ("gaps_ms", 0.95), "low1_after": ("gaps_after_ms", 0.99), "low5_after": ("gaps_after_ms", 0.95)}
+
+
+def pooled_low(runs, name):
+    """`name` over the gaps of all `runs`, or None without them."""
+    field, q = POOLED[name]
+    gaps = sorted(g for r in runs for g in r.get(field) or [])
+    if len(gaps) < 10 or any(r.get(field) is None for r in runs):
+        return None
+    return 1000 / max(gaps[min(len(gaps) - 1, math.ceil(len(gaps) * q) - 1)], 1e-3)
+
+
 def summary(results):
     groups = {}
     for r in results:
@@ -451,7 +466,8 @@ def summary(results):
                     elif isinstance(vals[0], bool):
                         cells.append("%12s" % "/".join("y" if v else "n" for v in vals))
                     else:
-                        mid = fmt % statistics.median(vals)
+                        pooled = pooled_low(runs, name) if name in POOLED else None
+                        mid = fmt % (pooled if pooled is not None else statistics.median(vals))
                         # The range of the first figure, over the runs.
                         if i == 0 and len(vals) > 1:
                             mid = "%s(%s-%s)" % (mid, fmt % min(vals), fmt % max(vals))
