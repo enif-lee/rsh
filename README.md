@@ -14,7 +14,7 @@
 <h3 align="center">The remote shell for bad networks.</h3>
 
 <p align="center">
-  <em>30 fps over 256 kbit/s, keys that echo in about 6 ms at any distance, and a session that outlives every dropped link.<br>
+  <em>54 fps over 256 kbit/s, keys that echo in 4 to 7 ms at any distance, and a session that outlives every dropped link.<br>
   Built for 3G, ADSL, trains, planes and hotel Wi-Fi, and just as quick on a LAN.</em>
 </p>
 
@@ -22,10 +22,10 @@ rsh opens a shell on a host the way `ssh` does, but the session lives on the ser
 
 | On a 256 kbit/s link (RTT 100 ms) | rsh | mosh | OpenSSH | Eternal Terminal |
 | --- | --- | --- | --- | --- |
-| A 30 fps dashboard, frames shown a second | **30.0** | 16.0 | 6.0 | 6.1 |
-| Its 1% low (fps of the slowest 1% of frames) | **23.8** | 14.9 | 1.9 | 4.2 |
-| How old the screen is | **69 ms** | 90 ms | 3.4 s | 3.4 s |
-| A key to its echo | **6 ms** | 6 ms | 118 ms | 109 ms |
+| A 60 fps dashboard, frames shown a second | **54.3** | 15.9 | 6.0 | 6.1 |
+| Its 1% low (fps of the slowest 1% of frames) | **36.1** | 14.7 | 1.9 | 4.2 |
+| How old the screen is | **76 ms** | 82 ms | 3.8 s | 3.8 s |
+| A key to its echo | **4 ms** | 4 ms | 120 ms | 108 ms |
 | `seq 1 100000` until the prompt is back | **0.16 s** | 0.24 s | 23 s | 23 s |
 | Memory for 10 idle sessions on a LAN, clients + server | **35 MB** | 242 MB | 222 MB | 207 MB |
 
@@ -93,57 +93,52 @@ Keys, typed at the start of a line as in ssh:
 
 ## Benchmarks
 
-Same machine, same simulated links, five clients: rsh over UDP, rsh over TCP (UDP blocked), OpenSSH, Eternal Terminal (ET) and mosh. Each scene runs 8 s; values are the median of three runs, and the 1% and 5% lows are taken over all three runs' frame gaps together.
+Same machine, same simulated links, five clients: rsh over UDP, rsh over TCP (UDP blocked), OpenSSH, Eternal Terminal (ET) and mosh. Each scene draws 60 frames a second for 8 s; values are the median of six runs for the screen tests and three for the others. The frame-rate charts carry each tool's 1% and 5% lows (the frame rate its slowest 1% and 5% of frames would give), taken over all six runs' frame gaps together: light is the frame rate, mid the 5% low, solid the 1% low.
 
 <p align="center">
-  <img src="docs/bench/fps-dashboard.svg" alt="Frames shown per second for a full-screen dashboard at 30 fps, per network and tool" width="760">
+  <img src="docs/bench/fps-dashboard.svg" alt="Frames shown per second, with 1% and 5% lows, for a full-screen dashboard at 60 fps, per network and tool" width="760">
 </p>
 
 <p align="center">
-  <img src="docs/bench/lows-dashboard.svg" alt="1% and 5% lows for a full-screen dashboard at 30 fps, per network and tool" width="760">
+  <img src="docs/bench/age.svg" alt="Median age of what is on screen for a full-screen dashboard at 60 fps, per network and tool" width="760">
 </p>
 
-<p align="center">
-  <img src="docs/bench/age.svg" alt="Median age of what is on screen for a full-screen dashboard at 30 fps, per network and tool" width="760">
-</p>
+- **The screen stays current.** From 1 Mbit/s down to 64 kbit/s, and at 1% to 2% loss, rsh over UDP shows a 60 fps dashboard at 48 to 60 fps on every link but 64 kbit/s (13.1) and 256 kbit/s with RTT 400 ms and 2% loss (24.2), and what is on screen is 56 to 228 ms old. At 1 Mbit/s, at 256 kbit/s and at 2% loss its slowest 1% of frames still come at 36 to 44 fps. OpenSSH and ET show 1.5 to 38 fps of frames that are 0.3 to 4.6 s old, because every byte waits its turn on the link; mosh 4.7 to 18 fps with 1% lows of 2.4 to 17, and about 47 fps even on a LAN.
+- **Keys echo at once.** Local echo prediction answers a key in 4 to 7 ms on every link. OpenSSH and ET wait a round trip: 105 to 527 ms on the links with delay.
+- **Big output does not block you.** `seq 1 100000` returns the prompt in 0.05 to 0.46 s on every link. OpenSSH and ET take 6 to 24 s on slow links, and more than 30 s at 64 kbit/s.
+- **Sessions survive.** After a 5 s outage rsh is back 0.1 s after the link returns (mosh 1.0 s, OpenSSH and ET about 5 s). After the client moves to another IP address it carries on in 2.1 s (mosh 3.1 s; OpenSSH and ET not within the 8 s watched). A client killed and started again is back in the same shell in 0.5 s.
 
-- **The screen stays current, and smooth.** From 1 Mbit/s down to 64 kbit/s, and at 1% to 2% loss, rsh over UDP shows a 30 fps dashboard at 14.5 to 30 fps, what is on screen is 56 to 220 ms old, and the slowest 1% of frames still come at 11 to 25 fps on every link but the worst (256 kbit/s, RTT 400 ms, 2% loss: 1.9). OpenSSH and ET show 1.2 to 28 fps of frames that are 0.2 to 4.4 s old, because every byte waits its turn on the link; mosh 4.6 to 18 fps with 1% lows of 4.6 to 17.
-- **Keys echo at once.** Local echo prediction answers a key in 5 to 8 ms on every link. OpenSSH and ET wait a round trip: 107 to 542 ms on the links with delay.
-- **Big output does not block you.** `seq 1 100000` returns the prompt in 0.04 to 0.46 s on every link. OpenSSH and ET take 6 to 24 s on slow links, and more than 30 s at 64 kbit/s.
-- **Sessions survive.** After a 5 s outage rsh is back 0.1 s after the link returns (mosh 1.0 s, OpenSSH and ET about 5 s). After the client moves to another IP address it carries on in 2.0 s (mosh 3.1 s; OpenSSH and ET not within the 8 s watched). A client killed and started again is back in the same shell in 0.5 s.
-
-### Memory, traffic and packets
+### Memory
 
 <p align="center">
   <img src="docs/bench/memory-sessions.svg" alt="Resident memory with 10 sessions at once, clients and server side, per tool" width="760">
 </p>
 
 <p align="center">
-  <img src="docs/bench/memory.svg" alt="Client and server resident memory while drawing at 30 fps, per tool" width="760">
+  <img src="docs/bench/memory.svg" alt="Client and server resident memory while drawing at 60 fps, per tool" width="760">
 </p>
 
+- **Ten sessions at once** (each shell having printed 3000 lines, then quiet): the ten rsh clients hold 24 MB and the server 11 MB, all ten sessions in one `rsh serve`. OpenSSH: 74 MB of clients and 148 MB of `sshd`; mosh 144 and 98 MB (a `mosh-server` per session); ET 171 and 36 MB. Idle, the ten rsh sessions cost 2 packets a second each way (mosh 3.4 to 3.6, ET 7.5 to 7.9; OpenSSH sends none).
+- **One session.** While drawing at 60 fps the rsh client holds 2.4 MB (OpenSSH 7.4, mosh 14.5, ET 18.0 MB) and `rsh serve` 5.7 MB (`mosh-server` 10.4, ET 14.2, `sshd` 19.4 MB with its listener).
+
+### Network
+
 <p align="center">
-  <img src="docs/bench/traffic.svg" alt="Network data received per frame shown for a full-screen dashboard, per network and tool" width="760">
+  <img src="docs/bench/network.svg" alt="Network data received per frame shown for a full-screen dashboard, per network and tool" width="760">
 </p>
 
 <p align="center">
   <img src="docs/bench/packets.svg" alt="Packets in and out for each frame shown for a full-screen dashboard, per network and tool" width="760">
 </p>
 
-- **Ten sessions at once** (each shell having printed 3000 lines, then quiet): the ten rsh clients hold 24 MB and the server 11 MB, all ten sessions in one `rsh serve`. OpenSSH: 74 MB of clients and 148 MB of `sshd`; mosh 144 and 98 MB (a `mosh-server` per session); ET 171 and 36 MB. Idle, the ten rsh sessions cost 2 packets a second each way (mosh 3.4 to 3.6, ET 7.5 to 7.9; OpenSSH sends none).
-- **One session.** While drawing at 30 fps the rsh client holds 2.4 MB (OpenSSH 7.4, mosh 14.5, ET 17.7 MB) and `rsh serve` 5.7 MB (`mosh-server` 10.4, ET 14.0, `sshd` 18.8 MB with its listener).
-- **Traffic.** A dashboard frame on screen costs rsh 0.44 to 0.51 KB on the wire on clean links and 0.74 to 0.85 KB on lossy ones (datagrams go twice there while the link has room), mosh 0.60 to 0.69 KB, and OpenSSH and ET 4.9 to 6.2 KB, as they carry every byte the program writes.
-- **Packets.** On clean links rsh takes one datagram a frame and answers each; OpenSSH takes 2.3 to 4.9 packets a frame and ET 1.7 to 2.6, as TCP segments a frame's bytes; mosh takes one and answers about every second one at RTT 100 ms (every fourth on a LAN, each at RTT 300 ms). On lossy links rsh takes 1.5 to 1.9, the copies. A typed key costs rsh 1.1 to 2.1 packets in and 2.2 to 2.5 out, about as many as ET and mosh; OpenSSH 16 to 37 in and 16 to 43 out, as it sends keystroke-timing chaff.
+- **Data.** A dashboard frame on screen costs rsh 0.44 to 0.51 KB on the wire on clean links and 0.59 to 0.91 KB on lossy ones (datagrams go twice there while the link has room), mosh 0.62 to 0.73 KB, and OpenSSH and ET 4.8 to 5.4 KB, as they carry every byte the program writes.
+- **Packets.** On clean links rsh takes one datagram a frame and answers each; OpenSSH takes 1.9 to 3.7 packets a frame and ET 1.5 to 2.5, as TCP segments a frame's bytes; mosh takes one and answers about every second one at RTT 100 ms (every fifth on a LAN, each at RTT 300 ms). On lossy links rsh takes 1.2 to 2.0, the copies. A typed key costs rsh 1.1 to 2.0 packets in and 2.1 to 2.7 out, about as many as ET and mosh; OpenSSH 16 to 31 in and 16 to 35 out, as it sends keystroke-timing chaff.
 
 <details>
 <summary>More charts: random full screen, bulk output</summary>
 
 <p align="center">
-  <img src="docs/bench/fps-random.svg" alt="Frames shown per second for a random full screen at 30 fps" width="760">
-</p>
-
-<p align="center">
-  <img src="docs/bench/lows-random.svg" alt="1% and 5% lows for a random full screen at 30 fps" width="760">
+  <img src="docs/bench/fps-random.svg" alt="Frames shown per second, with 1% and 5% lows, for a random full screen at 60 fps" width="760">
 </p>
 
 <p align="center">
@@ -154,13 +149,13 @@ Same machine, same simulated links, five clients: rsh over UDP, rsh over TCP (UD
 
 > [!NOTE]
 > These come from [`benchmark/lab`](benchmark/lab): two Docker containers per client on one machine, with `tc netem` for delay, loss and rate. Real radio links add jitter and reordering that netem only partly imitates. Where rsh is behind:
-> - On a random full screen (every cell changes each frame), mosh's frames come at more even gaps on slow links: 1% lows of 15.1 at 1 Mbit/s and 4.0 at 512 kbit/s with 1% loss, against rsh's 13.3 and 2.6, at a lower frame rate (16.4 and 7.9 fps against 24.6 and 9.7). On a LAN and at RTT 100 ms, OpenSSH's random-screen 1% lows are higher (27.7 and 25.4 against 24.8 and 18.7), and on a LAN ET's and mosh's too (27.6 and 26.2); on a LAN OpenSSH's and ET's dashboard 1% lows as well (27.3 and 27.5 against 26.0).
-> - At 256 kbit/s, RTT 400 ms and 2% loss, a lost datagram holds a dashboard frame for a resend now and then: rsh's 1% low there is 1.9 (mosh 4.6), though it shows 23.9 fps against mosh's 4.6. Under a random full screen there mosh's lows are a little higher (1.2 and 2.2 against 1.0 and 1.4) at the same frame rate.
-> - When the link drops from RTT 100 ms to 256 kbit/s under a random full screen, rsh shows 4.9 fps afterwards (mosh 5.3) with a 1% low of 2.7 (mosh 3.9) and 41 stalls in three runs (mosh 1), though its screen is 0.2 s old against mosh's 1.0 s. From a LAN to 1 Mbit/s its random-screen 1% low is 8.2 (mosh 10.5).
-> - On a LAN OpenSSH's and ET's screen is 1 ms old, rsh's 5 to 8 ms; at RTT 100 ms 52 ms against 56 to 59 ms. On a LAN ET echoes a key in 6 ms, rsh in 8 ms. On clean links the rsh client sends a packet for every frame it takes, mosh's one for every one to four.
+> - With loss on a slow, far link, a dashboard frame now and then waits for a lost datagram's resend: at 512 kbit/s, RTT 200 ms and 1% loss rsh's 1% low is 4.9 (mosh 7.9), at 256 kbit/s, RTT 400 ms and 2% loss 1.7 (mosh 2.4), though it shows 47.8 and 24.2 fps against mosh's 9.2 and 4.7. Under a random full screen (every cell changes each frame) there mosh shows more frames (4.3 against 3.5 fps) with a higher 1% low (1.1 against 0.5), and at 64 kbit/s about as many (1.5 each) with a higher 1% low (1.4 against 1.2). At 1 Mbit/s mosh's random-screen frames come at more even gaps: a 1% low of 15.1 against 13.0, at 16.4 fps against 23.9.
+> - On near links OpenSSH and ET keep a steady 60 fps where rsh's frames come a little less evenly. On a LAN their 1% lows are 50.3 on the dashboard and 49.8 to 50.0 on the random screen, against rsh's 46.1 and 41.0; at RTT 100 ms 45.7 to 45.9 and (OpenSSH) 29.1 against 44.1 and 23.7. Their 5% lows are higher on a LAN and at RTT 100 and 300 ms, and on the random screen rsh shows 56.7 to 59.7 fps there against their 60. After a switch from a LAN to RTT 300 ms rsh shows 56.1 to 56.8 fps, OpenSSH and ET 59.
+> - When the link drops from RTT 100 ms to 256 kbit/s under a random full screen, rsh shows 4.7 fps afterwards (mosh 5.3) with a 1% low of 2.5 (mosh 3.9) and about 40 stalls a run (mosh 1), though its screen is 0.2 s old against mosh's 0.95 s.
+> - On a LAN OpenSSH's and ET's screen is 1 to 2 ms old, rsh's 5 to 9 ms; at RTT 100 ms 51 to 52 ms against 56 to 60 ms. On a LAN ET echoes a key in 5 ms, rsh in 7 ms. On clean links the rsh client sends a packet for every frame it takes, mosh's one for every one to five.
 > - rsh over TCP is back about 5 s after an outage, as OpenSSH is, and does not follow a move within the 8 s watched. Where UDP is blocked rsh connects in 2.0 s (it tries UDP first), OpenSSH in 1.4 s and ET in 1.9 s.
 >
-> Memory with 10 sessions comes from a separate run of the `sessions` test (two runs, median); the rest from one `lab.py run` of every test, three iterations each.
+> The screen tests (render, switch) come from two `lab.py run --fps 60`s of three iterations each, the other tests from the first of them; memory with 10 sessions from a separate run of the `sessions` test (two runs, median).
 
 ## Feature matrix
 
@@ -168,7 +163,7 @@ Same machine, same simulated links, five clients: rsh over UDP, rsh over TCP (UD
 | --- | --- | --- | --- | --- |
 | Transport | TCP | TCP | UDP | UDP, or TCP on the same port when UDP is blocked |
 | Works where only TCP gets through | ✅ | ✅ | ❌ cannot connect | ✅ connects over TCP in 2.0 s |
-| Client changes IP address | ❌ connection drops | ⚠️ reconnects over a new TCP connection (not within the 8 s watched) | ✅ ~3.1 s | ✅ ~2.0 s (UDP) |
+| Client changes IP address | ❌ connection drops | ⚠️ reconnects over a new TCP connection (not within the 8 s watched) | ✅ ~3.1 s | ✅ ~2.1 s (UDP) |
 | Link down for a few seconds | ⚠️ only while TCP survives its backoff (~5 s after the link) | ⚠️ reconnects (~5 s after the link) | ✅ back ~1.0 s after the link | ✅ back ~0.1 s after the link (UDP) |
 | Client killed, started again | ❌ new shell | ❌ new shell | ❌ new shell | ✅ same shell in 0.5 s (`rsh <host> <name>`) |
 | Local echo prediction | ❌ | ❌ | ✅ adaptive | ✅ adaptive |
@@ -274,11 +269,11 @@ rsh follows published work; it copies no code from it.
 
 ```sh
 scripts/dist.sh && benchmark/harness/run.py build  # the image with sshd, ET, mosh and this rsh (from ~/.rsh/dist)
-python3 benchmark/lab/lab.py run --iterations 3 --duration 8 \
+python3 benchmark/lab/lab.py run --iterations 3 --duration 8 --fps 60 \
     --tests render,switch,echo,flood,outage,roam,reattach,udpblock \
     --nets lan,wan,lowbw,verylow,slow64k,highlat,lossy,mobile,badmobile \
     --switches lan:highlat,lan:lowbw,lowbw:highlat,highlat:lossy,wan:verylow
-                                                    # the README's run; results in benchmark/lab/out/run-<time>.json
+                                                    # the README's run (render and switch twice); results in benchmark/lab/out/run-<time>.json
 python3 benchmark/lab/lab.py run --tools ssh,et,mosh,rsh --tests sessions --sessions 10 --iterations 2
                                                     # memory with 10 sessions at once
 python3 benchmark/lab/lab.py demo                   # the tools side by side in tmux, then a summary
@@ -288,7 +283,7 @@ python3 benchmark/lab/charts.py benchmark/lab/out/run-<a>.json,benchmark/lab/out
 python3 benchmark/lab/charts.py benchmark/lab/out/run-<a>.json docs/bench memory   # only these
 ```
 
-Render runs record frames, their age, every frame gap (for the 1% and 5% lows), the client's bytes and packets a second, and the client's and the server's memory halfway through each scene. `--tests`, `--tools`, `--nets`, `--scenes`, `--switches`, `--fps` and `--duration` pick what runs (without `--tests`, render and switch only); `--rsh <linux binary>` tests another build without rebuilding the image, and `--rsh-b <linux binary>` installs a second build as the tool `rsh-b` (add it to `--tools`), to compare two builds in one run.
+Render runs record frames, their age, every frame gap (for the 1% and 5% lows), the client's bytes and packets a second, the client's and the server's memory halfway through each scene, and their CPU over it. `--tests`, `--tools`, `--nets`, `--scenes`, `--switches`, `--fps` and `--duration` pick what runs (without `--tests`, render and switch only); `--rsh <linux binary>` tests another build without rebuilding the image, and `--rsh-b <linux binary>` installs a second build as the tool `rsh-b` (add it to `--tools`), to compare two builds in one run.
 
 ## Development
 

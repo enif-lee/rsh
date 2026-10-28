@@ -335,6 +335,8 @@ def run_job(k, job):
                 if what[0] == "rss":
                     # The server side's memory, which only the host sees.
                     answer = " %s" % rss_kb(srv(k), SERVER_PROCESS[job["tool"]])
+                elif what[0] == "cpu":
+                    answer = " %s" % cpu_ns(srv(k), SERVER_PROCESS[job["tool"]])
                 proc.stdin.write("OK%s\n" % answer)
                 proc.stdin.flush()
             elif line.startswith("{"):
@@ -422,7 +424,7 @@ def run_on(opts):
 COLUMNS = {
     "render": [("fps", "fps", "%.1f"), ("low1_fps", "1% low", "%.1f"), ("low5_fps", "5% low", "%.1f"), ("age_ms", "age ms", "%.0f"), ("max_gap_ms", "gap ms", "%.0f"), ("stalls", "stalls", "%.0f"),
                ("torn", "torn", "%.0f"), ("blank", "blank", "%.0f"), ("kbit_s", "kbit/s in", "%.0f"), ("pkts_in_s", "pkt/s in", "%.0f"), ("pkts_out_s", "pkt/s out", "%.0f"),
-               ("first_s_fps", "1st s fps", "%.0f")],
+               ("cpu_client", "cpu% client", "%.2f"), ("cpu_server", "cpu% server", "%.2f"), ("first_s_fps", "1st s fps", "%.0f")],
     "switch": [("fps_before", "fps before", "%.1f"), ("fps_after", "fps after", "%.1f"), ("low1_after", "1% low", "%.1f"), ("low5_after", "5% low", "%.1f"), ("age_after_ms", "age after", "%.0f"), ("max_gap_ms", "gap ms", "%.0f"),
                ("stalls", "stalls", "%.0f"), ("torn", "torn", "%.0f"), ("blank", "blank", "%.0f")],
     "echo": [("echo_ms", "echo ms", "%.0f"), ("echo_max_ms", "max ms", "%.0f"), ("lost", "lost", "%.0f"), ("pkts_in_key", "pkt in/key", "%.1f"), ("pkts_out_key", "pkt out/key", "%.1f")],
@@ -508,6 +510,14 @@ def rss_kb(container, names):
     out = dexec(container, "ps", "-o", "rss=", "-C", names, check=False).stdout
     sizes = [int(x) for x in out.split() if x.isdigit()]
     return sum(sizes) if sizes else None
+
+
+def cpu_ns(container, names):
+    """Time the processes so named have run on a CPU, all their threads, ns
+    (None: none runs)."""
+    out = dexec(container, "sh", "-c", 'for p in $(ps -o pid= -C "$1"); do cat /proc/$p/task/*/schedstat; done 2>/dev/null', "_", names, check=False).stdout
+    ns = [int(line.split()[0]) for line in out.splitlines() if line.split()]
+    return sum(ns) if ns else None
 
 
 def rx_total(k):
@@ -1017,7 +1027,7 @@ def demo_summary(tools, windows):
         blocks = [chart_lines("Rendering: frames a second, 1% and 5% low", fps_rows, "%.1f fps", True, False, half - 2),
                   chart_lines("Rendering: age of what is on screen", age_rows, "%.0f ms", False, True, half - 2),
                   chart_lines("Memory: RSS, c(lient) s(erver) MB", rss_rows, "%.1f MB", False, False, half - 2),
-                  chart_lines("Data: received per frame shown", data_rows, "%.1f KB", False, False, half - 2)]
+                  chart_lines("Network: received per frame shown", data_rows, "%.1f KB", False, False, half - 2)]
         if two:
             print("\n".join(side_by_side(blocks[0], blocks[1], half) + side_by_side(blocks[2], blocks[3], half)))
         else:

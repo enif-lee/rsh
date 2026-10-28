@@ -229,6 +229,37 @@ def rss_kb(names):
     return sum(sizes) if sizes else None
 
 
+def cpu_ns(names):
+    """Time this container's processes so named have run on a CPU, all
+    their threads, ns (None: none runs)."""
+    out = subprocess.run(["ps", "-o", "pid=", "-C", names], capture_output=True, text=True).stdout
+    if not out.split():
+        return None
+    ns = 0
+    for pid in out.split():
+        try:
+            for task in os.listdir("/proc/%s/task" % pid):
+                with open("/proc/%s/task/%s/schedstat" % (pid, task)) as f:
+                    ns += int(f.read().split()[0])
+        except (OSError, IndexError, ValueError):
+            pass
+    return ns
+
+
+def cpu_sample(tool):
+    """(time, client ns, server ns); None for a side with no process."""
+    at, client = time.time(), cpu_ns(PROCESS[tool])
+    server = ask("cpu")
+    return at, client, int(server) if server.isdigit() else None
+
+
+def cpu_percent(before, after):
+    """{cpu_client, cpu_server}: % of one core between two `cpu_sample`s."""
+    span = after[0] - before[0]
+    pct = lambda a, b: None if a is None or b is None or span <= 0 else round((b - a) / 1e9 / span * 100, 2)
+    return {"cpu_client": pct(before[1], after[1]), "cpu_server": pct(before[2], after[2])}
+
+
 def block(on, udp_only=False):
     """Cuts (or restores) this container's link to the server."""
     action = "-I" if on else "-D"
@@ -336,7 +367,7 @@ def render_stats(seen, start, end):
 def run_scene(c, scene, seconds, fps, steps=(), tool=None):
     """Runs scene.py for `seconds`; `steps` are (at seconds, request) for
     the host during it. With `tool`, the client's and the server's memory
-    halfway through. Returns the frames' window."""
+    halfway through and their CPU over the scene. Returns the frames' window."""
     # Every tool's screen is rebuilt while a scene runs: what it shows is
     # checked for tearing and flashes (`Client.look`).
     c.emulate = True
@@ -352,6 +383,7 @@ def run_scene(c, scene, seconds, fps, steps=(), tool=None):
     counts = net_counts()
     rx = counts[0]
     marks = {}
+    cpu = cpu_sample(tool) if tool else None
     for at, request in steps:
         time.sleep(max(0.0, start + at - time.time()))
         if request.startswith("block"):
@@ -370,6 +402,9 @@ def run_scene(c, scene, seconds, fps, steps=(), tool=None):
     c.watching = False
     marks["kbit_s"] = round((rx_bytes() - rx) * 8 / 1000 / (stop - start))
     marks.update(packets_since(counts, stop - start))
+    # After the counts: the server's sample is a round trip to the host.
+    if cpu:
+        marks.update(cpu_percent(cpu, cpu_sample(tool)))
     # Frames still on their way (ssh, et on a slow link) are not counted;
     # a clean screen for what follows.
     c.send("\x03")
@@ -493,7 +528,7 @@ def main_run(job):
         start, stop, marks = run_scene(c, job["scene"], job["duration"], job["scene_fps"], tool=job["tool"])
         seen = frames_between(c, job["scene"], start, stop)
         out.update(render_stats(seen, start, stop), kbit_s=marks["kbit_s"], pkts_in_s=marks["pkts_in_s"], pkts_out_s=marks["pkts_out_s"], stalls=stalls(seen), stall_at=stall_times(seen), **screen_stats(c, start, stop, seen),
-                   rss_client_kb=marks["rss_client_kb"], rss_server_kb=marks["rss_server_kb"])
+                   rss_client_kb=marks["rss_client_kb"], rss_server_kb=marks["rss_server_kb"], cpu_client=marks["cpu_client"], cpu_server=marks["cpu_server"])
     elif test == "switch":
         # The link changes during the scene: how fast the tool follows.
         at = job["switch_at"]
