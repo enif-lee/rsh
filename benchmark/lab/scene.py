@@ -21,9 +21,11 @@ parts of two frames at once (tearing), one without them was cleared
              gone and shows how it comes back; it names the shell it runs
              in, so a reattach shows whether it is the same shell
 
-A warm-up (the demo's) first shows the label (the network and the scene)
-and a count down to 0.00 in large digits, centred, at the scene's rate:
-no frame header, so nothing of it counts as a frame.
+A warm-up (the demo's) first draws the scene as it will run, so each
+tool's link is warm when the measured part starts, with a box over its
+middle: the label (the network and the scene) and a count down to 0.00 in
+large digits. Its frames are named `warmup` in the header, so none of them
+counts as the scene's.
 """
 import os, random, sys, time
 
@@ -39,8 +41,12 @@ rng = random.Random(1)
 top = 1 if cols >= 43 else 2
 
 
+# The scene's name in the header: `warmup` while the warm-up runs.
+name = scene
+
+
 def header(n):
-    text = "FRAME %06d T=%d %s" % (n, int(time.time() * 1000), scene)
+    text = "FRAME %06d T=%d %s" % (n, int(time.time() * 1000), name)
     return "\x1b[%d;1H\x1b[7m" % top + text.ljust(cols)[:cols] + "\x1b[0m"
 
 
@@ -106,18 +112,27 @@ GLYPHS = {
 
 
 def big(text):
-    """`text` five rows high, each glyph doubled in width."""
-    return ["  ".join("".join(c * 2 for c in GLYPHS[ch][row]) for ch in text) for row in range(5)]
+    """`text` in large digits: each glyph doubled in width, its five rows
+    halved to three with half blocks."""
+    rows5 = ["  ".join("".join(c * 2 for c in GLYPHS[ch][row]) for ch in text) for row in range(5)]
+    rows5.append(" " * len(rows5[0]))
+    half = {(True, True): "█", (True, False): "▀", (False, True): "▄", (False, False): " "}
+    return ["".join(half[(a != " ", b != " ")] for a, b in zip(rows5[r], rows5[r + 1])) for r in (0, 2, 4)]
 
 
 def warm(left):
-    """The warm-up screen: the label's parts, then the time left, centred."""
-    lines = [("\x1b[1m", part) for part in label.split(" · ") if part] + [("", "")] + [("\x1b[33m", row) for row in big("%.2fs" % left)]
+    """The warm-up's box over the middle of the scene: the label's parts,
+    then the time left."""
+    lines = [("\x1b[1;97m", part) for part in label.split(" · ") if part] + [("", "")] + [("\x1b[1;93m", row) for row in big("%.2fs" % left)]
+    width = min(cols, max(len(text) for _, text in lines) + 6)
+    lines = [("", "")] + lines + [("", "")]
     first = max(1, (rows - len(lines)) // 2 + 1)
+    left_col = max(1, (cols - width) // 2 + 1)
     parts = []
     for i, (style, text) in enumerate(lines):
-        text = text[:cols]
-        parts.append("\x1b[%d;%dH\x1b[2K%s%s\x1b[0m" % (first + i, max(1, (cols - len(text)) // 2 + 1), style, text))
+        text = text[:width]
+        pad = (width - len(text)) // 2
+        parts.append("\x1b[%d;%dH\x1b[48;5;236m%s%s%s\x1b[0m" % (first + i, left_col, " " * pad, style + text + "\x1b[22;39m", " " * (width - pad - len(text))))
     return "".join(parts)
 
 
@@ -128,13 +143,14 @@ out.write(b"\x1b[?25l\x1b[?7l\x1b[2J")
 start = time.time()
 n = 0
 try:
+    name = "warmup"
     while warmup > 0 and time.time() - start < warmup:
-        out.write(warm(max(0.0, warmup - (time.time() - start))).encode())
+        out.write((draw(n) + warm(max(0.0, warmup - (time.time() - start)))).encode())
         out.flush()
         n += 1
         time.sleep(max(0.0, start + n / fps - time.time()))
+    name = scene
     if warmup > 0:
-        out.write(warm(0.0).encode() + b"\x1b[2J")
         start = time.time()
         n = 0
     while time.time() - start < seconds:

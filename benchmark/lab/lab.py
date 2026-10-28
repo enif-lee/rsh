@@ -996,7 +996,7 @@ def main():
     p.add_argument("--event-net", default="wan")
     p.add_argument("--iterations", type=int, default=2)
     p.add_argument("--duration", type=float, default=4, help="seconds of each scene (after the change, for switch)")
-    p.add_argument("--warmup", type=float, default=2, help="demo: seconds of each scene's label and count down before it")
+    p.add_argument("--warmup", type=float, default=3, help="demo: seconds each scene runs unmeasured first, under its label and a count down")
     p.add_argument("--fps", type=float, default=30)
     p.add_argument("--keys", type=int, default=10, help="echo: keys typed")
     p.add_argument("--lines", type=int, default=100000, help="flood: seq length")
