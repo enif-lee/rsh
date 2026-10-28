@@ -368,6 +368,7 @@ impl PathModel {
         // One sample is enough: samples come only from trains the
         // bottleneck was busy with, so a slow link shows from the first
         // burst (the first frames of an animation would queue otherwise).
+        // (A train spread on a fast path makes one too: `rate_samples`.)
         if recent.is_empty() {
             return None;
         }
@@ -378,6 +379,12 @@ impl PathModel {
         // pace output under what the link carries.
         let busy = if self.queue_ms >= 5.0 { self.delivery_rate } else { 0.0 };
         Some(median.max(busy))
+    }
+
+    /// How many trains lately showed the rate (`rate`): one alone can be a
+    /// train spread on a fast path by a busy host or hop.
+    pub fn rate_samples(&self, now: Instant) -> usize {
+        self.rates.iter().filter(|(when, _)| now.duration_since(*when) <= RATE_SPAN).count()
     }
 
     /// Whether the path has room for copies of what goes now: no queue
@@ -582,6 +589,35 @@ mod tests {
         assert_eq!(fast.rate(now), None);
         let rtt = fast.min_rtt().expect("a round trip");
         assert!((rtt - 300.0).abs() < 5.0, "{rtt}");
+    }
+
+    #[test]
+    fn one_train_spread_on_a_fast_path_is_counted_as_one_sample() {
+        // A dashboard's updates, a datagram each, over RTT 100 ms with
+        // nothing in the way; then two sent back to back, the second held
+        // 15 ms on the way (a busy host): spread as on a slow link, with no
+        // queue standing.
+        let start = Instant::now();
+        let mut model = PathModel::new(start);
+        let mut now = run(&mut model, start, 60, 400, 16_667, 10e6, 50);
+        assert_eq!(model.rate(now), None);
+        let pair = |model: &mut PathModel, at: Instant| {
+            let sent = at.duration_since(start).as_micros() as u32;
+            let (a, b) = (model.number(at, 600, false), model.number(at, 600, false));
+            let (first, second) = (sent + 50_000, sent + 65_000);
+            let report = Feedback { sent_us: second + 500, arrivals: vec![(a, first), (b, second)] };
+            let back = start + Duration::from_micros(u64::from(second) + 500 + 50_000);
+            model.feedback(&report, back);
+            back
+        };
+        now = pair(&mut model, now + Duration::from_millis(17));
+        // It shows a rate, from one train, with no queue standing: what
+        // starts screen updates asks for more (`Attachment::bottleneck_shown`).
+        assert!(model.rate(now).is_some_and(|rate| rate < 100_000.0));
+        assert_eq!(model.rate_samples(now), 1);
+        assert!(model.queue_ms() < 5.0, "{}", model.queue_ms());
+        now = pair(&mut model, now + Duration::from_millis(17));
+        assert_eq!(model.rate_samples(now), 2);
     }
 
     #[test]

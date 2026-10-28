@@ -2098,6 +2098,18 @@ impl Attachment {
         self.output.slow_rate().or_else(|| self.output.drain_rate(now).filter(|_| self.animating()))
     }
 
+    /// Whether the path's model shows a bottleneck well enough to start
+    /// screen updates: two trains showed its rate, or a queue stands in
+    /// front of it. One spread train alone (a busy host or hop over a fast
+    /// path) can otherwise start them unnecessarily on a far path.
+    /// Without the model, true.
+    fn bottleneck_shown(&self, now: Instant) -> bool {
+        let Some(path) = self.path.as_ref().filter(|_| self.modelled()) else {
+            return true;
+        };
+        path.rate_samples(now) >= 2 || path.queue_ms() >= 5.0
+    }
+
     /// The queue in front of the path's bottleneck: the model's (from
     /// arrival times), else what the round trips show over their least.
     fn queue_delay(&self) -> Duration {
@@ -2314,7 +2326,7 @@ impl Session {
             let now = Instant::now();
             let rate = attach.drain_guess(now);
             if let Some(rate) = rate.filter(|_| {
-                attach.syncing_until.is_none() && !attach.repaint_due && attach.output.all_sent() && attach.zraw.is_empty()
+                attach.syncing_until.is_none() && !attach.repaint_due && attach.output.all_sent() && attach.zraw.is_empty() && attach.bottleneck_shown(now)
             }) {
                 let incoming = attach.stream_len(bytes.len()) as f64;
                 // Half the limit: the first frames of an animation would
