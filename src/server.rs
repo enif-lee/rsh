@@ -73,6 +73,10 @@ const FRESH_WAIT: Duration = Duration::from_millis(20);
 /// is a repaint, a new generation whose start the ack clock holds back (a
 /// frame split over a round trip, a stall at RTT 300 ms).
 const TAIL_WAIT: Duration = Duration::from_millis(20);
+/// Output this many times smaller deflated is compressed at the smallest
+/// level on any link (`z_level`): a dashboard is 10 to 15, a full screen of
+/// random colours 2 to 3.
+const WELL_COMPRESSED: f64 = 4.0;
 /// Output for the compressor waits while the program is still writing (its
 /// next read this soon), up to `GATHER_MAX` or `GATHER_BYTES`: one flush
 /// and datagram for what came in many small reads (`yes`, a build log), not
@@ -2110,10 +2114,12 @@ impl Attachment {
 
     /// Deflate's level for what goes into the stream now: the smallest
     /// output where the link limits the screen (a slow path, or screen
-    /// updates), the fastest elsewhere. Where the link limits it, it limits
-    /// what there is to compress too.
+    /// updates; it limits what there is to compress too) or where output
+    /// compresses well (level 9 is fast there: a dashboard is 160 MB/s),
+    /// the fastest elsewhere (a full screen of colours is 8 MB/s at 9, for
+    /// a fifth fewer bytes).
     fn z_level(&self) -> u8 {
-        if self.syncing_until.is_some() || self.output.slow_rate().is_some() {
+        if self.syncing_until.is_some() || self.output.slow_rate().is_some() || self.ratio >= WELL_COMPRESSED {
             proto::SMALL_LEVEL
         } else {
             proto::FAST_LEVEL
