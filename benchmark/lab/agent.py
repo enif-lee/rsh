@@ -237,17 +237,33 @@ def block(on, udp_only=False):
         subprocess.run(["iptables", action, *rule, "-j", "DROP"], check=False, capture_output=True)
 
 
-def rx_bytes():
-    """Bytes in on every interface but loopback."""
-    total = 0
+def net_counts():
+    """(bytes in, packets in, packets out) on every interface but loopback."""
+    totals = [0, 0, 0]
     for dev in os.listdir("/sys/class/net"):
         if dev != "lo":
-            try:
-                with open("/sys/class/net/%s/statistics/rx_bytes" % dev) as f:
-                    total += int(f.read())
-            except OSError:
-                pass  # an interface going away as the client moves
-    return total
+            for i, name in enumerate(("rx_bytes", "rx_packets", "tx_packets")):
+                try:
+                    with open("/sys/class/net/%s/statistics/%s" % (dev, name)) as f:
+                        totals[i] += int(f.read())
+                except OSError:
+                    pass  # an interface going away as the client moves
+    return totals
+
+
+def rx_bytes():
+    """Bytes in on every interface but loopback."""
+    return net_counts()[0]
+
+
+def packets_since(before, seconds=None):
+    """Packets in and out since `before` (`net_counts`), a second if
+    `seconds` is given."""
+    now = net_counts()
+    pin, pout = now[1] - before[1], now[2] - before[2]
+    if seconds:
+        return {"pkts_in_s": round(pin / seconds, 1), "pkts_out_s": round(pout / seconds, 1)}
+    return {"pkts_in": pin, "pkts_out": pout}
 
 
 def frames_between(c, scene, start, end):
@@ -333,7 +349,8 @@ def run_scene(c, scene, seconds, fps, steps=(), tool=None):
         time.sleep(0.01)
     start = first or time.time()
     c.watching = True
-    rx = rx_bytes()
+    counts = net_counts()
+    rx = counts[0]
     marks = {}
     for at, request in steps:
         time.sleep(max(0.0, start + at - time.time()))
@@ -352,6 +369,7 @@ def run_scene(c, scene, seconds, fps, steps=(), tool=None):
     stop = time.time()
     c.watching = False
     marks["kbit_s"] = round((rx_bytes() - rx) * 8 / 1000 / (stop - start))
+    marks.update(packets_since(counts, stop - start))
     # Frames still on their way (ssh, et on a slow link) are not counted;
     # a clean screen for what follows.
     c.send("\x03")
@@ -444,7 +462,7 @@ def main_run(job):
     if test == "render":
         start, stop, marks = run_scene(c, job["scene"], job["duration"], job["scene_fps"], tool=job["tool"])
         seen = frames_between(c, job["scene"], start, stop)
-        out.update(render_stats(seen, start, stop), kbit_s=marks["kbit_s"], stalls=stalls(seen), stall_at=stall_times(seen), **screen_stats(c, start, stop, seen),
+        out.update(render_stats(seen, start, stop), kbit_s=marks["kbit_s"], pkts_in_s=marks["pkts_in_s"], pkts_out_s=marks["pkts_out_s"], stalls=stalls(seen), stall_at=stall_times(seen), **screen_stats(c, start, stop, seen),
                    rss_client_kb=marks["rss_client_kb"], rss_server_kb=marks["rss_server_kb"])
     elif test == "switch":
         # The link changes during the scene: how fast the tool follows.
@@ -463,9 +481,16 @@ def main_run(job):
         steady = statistics.median(per[len(per) // 2:]) if per else 0
         out["adapt_s"] = next((k for k, v in enumerate(per) if v >= 0.9 * steady), None) if steady else None
     elif test == "echo":
+        counts = net_counts()
         out.update(echo_test(c, job.get("keys", 20)))
+        # Packets for each key typed (to it and its echo, acks, keepalives).
+        moved = packets_since(counts)
+        keys = job.get("keys", 20)
+        out.update(pkts_in_key=round(moved["pkts_in"] / keys, 1), pkts_out_key=round(moved["pkts_out"] / keys, 1))
     elif test == "flood":
+        counts = net_counts()
         out.update(flood_test(c, job.get("lines", 200000)))
+        out.update(packets_since(counts))
     elif test == "outage":
         def outage():
             block(True)

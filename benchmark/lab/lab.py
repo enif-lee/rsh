@@ -22,13 +22,16 @@ run.py build`); `--rsh` swaps in another rsh build without rebuilding it.
 
 Tests (`run --tests`), each job a fresh connection of one tool:
   render    scene.py (`--scenes`) for `--duration` s on each of `--nets`:
-            frames a second, frame age (median, p95), longest gap
+            frames a second, frame age (median, p95), longest gap, the
+            client's bytes and packets a second in and out
   switch    a scene while the link changes (`--switches a:b`, after
             `--switch-at` s; `--duration` s after it): fps before and
             after, and `adapt_s`, seconds until a second at 90% of the
             rate the tool settles at
-  echo      key to echo on the screen (`--keys`), on each of `--nets`
-  flood     `seq 1 --lines`: seconds until the line after it shows
+  echo      key to echo on the screen (`--keys`), on each of `--nets`;
+            the client's packets in and out for each key
+  flood     `seq 1 --lines`: seconds until the line after it shows, and
+            the client's packets in and out
   outage    the link cut for `--down` s under a ticker: longest freeze,
             seconds from the link's return until the ticker moves (watched
             for `--duration` s after it)
@@ -61,7 +64,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 IMAGE = "rsh-bench"
 # `rsh-tcp` is rsh over TCP: its slot's server drops UDP, so the client
 # goes over TCP as on a network that lets only TCP through.
-TOOLS = ["ssh", "et", "mosh", "rsh", "rsh-tcp"]
+TOOLS = ["ssh", "et", "mosh", "rsh", "rsh-tcp", "rsh-b"]
 LABEL = {"ssh": "OpenSSH", "et": "ET", "mosh": "mosh", "rsh": "rsh (UDP)", "rsh-tcp": "rsh (TCP)", "rsh-b": "rsh (B)"}
 PROCESS = {"ssh": "ssh", "et": "et", "mosh": "mosh-client", "rsh": "rsh", "rsh-tcp": "rsh", "rsh-b": "rsh-b"}
 # Each tool's server side, as `ps -C` names it (sshd: the listener too).
@@ -413,11 +416,12 @@ def run_on(opts):
 # Figures each test reports: (key, column, format).
 COLUMNS = {
     "render": [("fps", "fps", "%.1f"), ("low1_fps", "1% low", "%.1f"), ("low5_fps", "5% low", "%.1f"), ("age_ms", "age ms", "%.0f"), ("max_gap_ms", "gap ms", "%.0f"), ("stalls", "stalls", "%.0f"),
-               ("torn", "torn", "%.0f"), ("blank", "blank", "%.0f"), ("kbit_s", "kbit/s in", "%.0f"), ("first_s_fps", "1st s fps", "%.0f")],
+               ("torn", "torn", "%.0f"), ("blank", "blank", "%.0f"), ("kbit_s", "kbit/s in", "%.0f"), ("pkts_in_s", "pkt/s in", "%.0f"), ("pkts_out_s", "pkt/s out", "%.0f"),
+               ("first_s_fps", "1st s fps", "%.0f")],
     "switch": [("fps_before", "fps before", "%.1f"), ("fps_after", "fps after", "%.1f"), ("low1_after", "1% low", "%.1f"), ("low5_after", "5% low", "%.1f"), ("age_after_ms", "age after", "%.0f"), ("max_gap_ms", "gap ms", "%.0f"),
                ("stalls", "stalls", "%.0f"), ("torn", "torn", "%.0f"), ("blank", "blank", "%.0f")],
-    "echo": [("echo_ms", "echo ms", "%.0f"), ("echo_max_ms", "max ms", "%.0f"), ("lost", "lost", "%.0f")],
-    "flood": [("flood_s", "seconds", "%.2f"), ("bytes_to_terminal", "bytes", "%.0f")],
+    "echo": [("echo_ms", "echo ms", "%.0f"), ("echo_max_ms", "max ms", "%.0f"), ("lost", "lost", "%.0f"), ("pkts_in_key", "pkt in/key", "%.1f"), ("pkts_out_key", "pkt out/key", "%.1f")],
+    "flood": [("flood_s", "seconds", "%.2f"), ("bytes_to_terminal", "bytes", "%.0f"), ("pkts_in", "pkts in", "%.0f"), ("pkts_out", "pkts out", "%.0f")],
     "outage": [("freeze_s", "freeze s", "%.1f"), ("resumed_s", "resumed s", "%.1f")],
     "roam": [("freeze_s", "freeze s", "%.1f"), ("resumed_s", "resumed s", "%.1f")],
     "reattach": [("reconnect_s", "reconnect s", "%.1f"), ("same_shell", "same shell", "%s")],
