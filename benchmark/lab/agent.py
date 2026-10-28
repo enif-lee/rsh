@@ -462,10 +462,12 @@ def echo_test(c, n):
     return {"echo_ms": round(statistics.median(ok), 1) if ok else None, "echo_max_ms": max(ok) if ok else None, "lost": lat.count(None)}
 
 
-def flood_test(c, lines, timeout=30):
+def flood_test(c, lines, timeout=30, tool=None):
     """`seq 1 lines`, until the line after it is shown (None: not within
-    `timeout` s, as ssh and et on a slow link)."""
+    `timeout` s, as ssh and et on a slow link); with `tool`, the client's
+    and the server's CPU meanwhile."""
     c.emulate = False
+    cpu = cpu_sample(tool) if tool else None
     start, before = time.time(), c.bytes
     c.send("seq 1 %d; printf 'FL%%sNE7\\n' XD\r" % lines)
     end = start + timeout
@@ -473,12 +475,13 @@ def flood_test(c, lines, timeout=30):
         time.sleep(0.005)
     took = time.time() - start if b"FLXDNE7" in c.tail else None
     got = c.bytes - before
+    used = cpu_percent(cpu, cpu_sample(tool)) if cpu else {}
     time.sleep(0.2)
     c.emulate = True
     c.fresh()
     c.send("clear\r")
     c.settle()
-    return {"flood_s": None if took is None else round(took, 2), "bytes_to_terminal": got}
+    return dict(used, flood_s=None if took is None else round(took, 2), bytes_to_terminal=got)
 
 
 def ticker_event(c, job, during):
@@ -554,7 +557,7 @@ def main_run(job):
         out.update(pkts_in_key=round(moved["pkts_in"] / keys, 1), pkts_out_key=round(moved["pkts_out"] / keys, 1))
     elif test == "flood":
         counts = net_counts()
-        out.update(flood_test(c, job.get("lines", 200000)))
+        out.update(flood_test(c, job.get("lines", 200000), tool=job["tool"]))
         out.update(packets_since(counts))
     elif test == "outage":
         def outage():

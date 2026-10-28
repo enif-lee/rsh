@@ -1080,7 +1080,9 @@ impl Terminal {
                 run = 0;
             } else {
                 run += 1;
-                if run >= wide_run || col >= to || line[Column(col)].c.is_ascii() {
+                // Near the span's end after each: what follows it is not
+                // redrawn, so a run drawn wider would leave its overlap.
+                if run >= wide_run || col + wide_run > to || line[Column(col)].c.is_ascii() {
                     let _ = write!(out, "\x1b[{}G", col + 1);
                     run = 0;
                 }
@@ -1708,15 +1710,19 @@ mod tests {
     /// never wraps; autowrap is back on at the end.
     #[test]
     fn a_wider_terminal_strays_little_from_a_screen_update() {
-        let mut shadow = Terminal::with_history(30, 3, 0);
-        let mut term = Terminal::with_history(30, 3, 0);
+        let mut shadow = Terminal::with_history(30, 4, 0);
+        let mut term = Terminal::with_history(30, 4, 0);
         let bar = |n: usize| "█".repeat(n);
-        shadow.feed(format!("\x1b[1;1Hcpu {}\x1b[2;1H{}|end\x1b[3;1H{}", bar(3), bar(4), bar(5)).as_bytes());
-        term.feed(format!("\x1b[1;1Hcpu {}\x1b[2;1H{}|end\x1b[3;1H{}", bar(26), bar(20), bar(30)).as_bytes());
+        // Row 4: the change ends in a run, with unchanged text after it.
+        shadow.feed(format!("\x1b[1;1Hcpu {}\x1b[2;1H{}|end\x1b[3;1H{}\x1b[4;21Hkeep", bar(3), bar(4), bar(5)).as_bytes());
+        term.feed(format!("\x1b[1;1Hcpu {}\x1b[2;1H{}|end\x1b[3;1H{}\x1b[4;1H{}keep", bar(26), bar(20), bar(30), bar(20)).as_bytes());
         let update = String::from_utf8(term.diff_from(&shadow).expect("a diff")).expect("utf-8");
         // The wider terminal: a cursor column, no wrap while autowrap is
         // off; how far each cell lands from this terminal's column for it.
         let (mut col, mut ours, mut wrap, mut stray) = (0usize, 0usize, true, 0usize);
+        // Per row, the furthest column drawn here and there: past what this
+        // terminal drew are cells the update does not redraw.
+        let (mut row, mut ends) = (0usize, [(0usize, 0usize); 4]);
         let mut chars = update.chars().peekable();
         while let Some(c) = chars.next() {
             if c == '\x1b' {
@@ -1733,6 +1739,7 @@ mod tests {
                     Some('H') => {
                         col = num(&seq).map_or(0, |n| n - 1);
                         ours = col;
+                        row = seq.trim_start_matches('[').split(';').next().and_then(|n| n.parse::<usize>().ok()).map_or(0, |n| n - 1);
                     }
                     Some('G') => {
                         col = num(&seq).map_or(0, |n| n - 1);
@@ -1751,9 +1758,15 @@ mod tests {
             stray = stray.max(col.saturating_sub(ours));
             col = (col + if c.is_ascii() { 1 } else { 2 }).min(30);
             ours += 1;
+            if let Some(end) = ends.get_mut(row) {
+                *end = (end.0.max(ours), end.1.max(col));
+            }
         }
         assert!(stray > 0, "the test draws wide");
         assert!(stray <= 8, "strayed {stray} columns");
+        for (row, (ours, theirs)) in ends.iter().enumerate() {
+            assert!(*theirs <= ours + 1, "row {row}: drew to column {theirs}, the update to {ours}");
+        }
         assert!(wrap, "autowrap restored");
         shadow.feed(update.as_bytes());
         assert!(term.same_screen(&shadow));

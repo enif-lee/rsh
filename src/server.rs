@@ -2153,10 +2153,12 @@ impl Attachment {
         Some(quiet.min(since + GATHER_MAX))
     }
 
-    /// Deflate's level for what goes into the stream now (`pick_level`).
-    fn z_level(&self, now: Instant) -> u8 {
+    /// Deflate's level for what goes into the stream now (`pick_level`);
+    /// `fresh`: for a new stream, which starts a compressor anyway, so no
+    /// level is held for it (the last one's still decides the hysteresis).
+    fn z_level(&self, now: Instant, fresh: bool) -> u8 {
         let limited = self.syncing_until.is_some() || self.output.slow_rate().is_some();
-        let held = self.z_since.map(|at| now.saturating_duration_since(at));
+        let held = self.z_since.map(|at| now.saturating_duration_since(at)).filter(|_| !fresh);
         pick_level(self.z.as_ref().map(proto::Deflater::level), self.ratio, limited, held)
     }
 
@@ -2188,7 +2190,10 @@ impl Attachment {
             if !drained {
                 return 0;
             }
-            self.z = Some(proto::Deflater::default());
+            // A new stream: its level by the policy, its own since now.
+            let now = Instant::now();
+            self.z = Some(proto::Deflater::new(self.z_level(now, true)));
+            self.z_since = Some(now);
             self.output.reset(&[]);
             // A new generation that is no repaint: a repaint asked for the
             // one before still stands (the client asked with its number).
@@ -2196,7 +2201,7 @@ impl Attachment {
         }
         let raw = std::mem::take(&mut self.zraw);
         let now = Instant::now();
-        let level = self.z_level(now);
+        let level = self.z_level(now, false);
         let z = self.z.as_mut().expect("compressor");
         if z.level() != level {
             z.set_level(level);
@@ -2218,8 +2223,11 @@ impl Attachment {
         self.zraw.clear();
         if self.wants_z() {
             let now = Instant::now();
-            let mut z = proto::Deflater::new(self.z_level(now));
-            self.z_since = Some(now);
+            let level = self.z_level(now, true);
+            if self.z.as_ref().map(proto::Deflater::level) != Some(level) {
+                self.z_since = Some(now);
+            }
+            let mut z = proto::Deflater::new(level);
             self.output.reset(&z.push(bytes));
             self.z = Some(z);
         } else {

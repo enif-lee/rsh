@@ -84,6 +84,9 @@ NETS = {
     "badmobile": (200, 2, "256kbit", "256 kbit/s, RTT 400 ms, 2% loss"),
     "verylow": (50, 0, "256kbit", "256 kbit/s, RTT 100 ms"),
     "slow64k": (50, 0, "64kbit", "64 kbit/s, RTT 100 ms"),
+    # Above the slow-link line (250 KB/s), below what a full screen at 60
+    # fps takes as it is: where compression still decides the frame rate.
+    "mid5": (50, 0, "5mbit", "5 Mbit/s, RTT 100 ms"),
     "highlat": (150, 0, None, "RTT 300 ms"),
     "lossy": (50, 2, None, "2% loss each way, RTT 100 ms"),
 }
@@ -428,7 +431,8 @@ COLUMNS = {
     "switch": [("fps_before", "fps before", "%.1f"), ("fps_after", "fps after", "%.1f"), ("low1_after", "1% low", "%.1f"), ("low5_after", "5% low", "%.1f"), ("age_after_ms", "age after", "%.0f"), ("max_gap_ms", "gap ms", "%.0f"),
                ("stalls", "stalls", "%.0f"), ("torn", "torn", "%.0f"), ("blank", "blank", "%.0f")],
     "echo": [("echo_ms", "echo ms", "%.0f"), ("echo_max_ms", "max ms", "%.0f"), ("lost", "lost", "%.0f"), ("pkts_in_key", "pkt in/key", "%.1f"), ("pkts_out_key", "pkt out/key", "%.1f")],
-    "flood": [("flood_s", "seconds", "%.2f"), ("bytes_to_terminal", "bytes", "%.0f"), ("pkts_in", "pkts in", "%.0f"), ("pkts_out", "pkts out", "%.0f")],
+    "flood": [("flood_s", "seconds", "%.2f"), ("bytes_to_terminal", "bytes", "%.0f"), ("pkts_in", "pkts in", "%.0f"), ("pkts_out", "pkts out", "%.0f"),
+              ("cpu_client", "cpu% client", "%.2f"), ("cpu_server", "cpu% server", "%.2f")],
     "sessions": [("connected", "sessions", "%.0f"), ("client_kb", "client KB", "%.0f"), ("server_kb", "server KB", "%.0f"),
                  ("idle_pkts_in_s", "idle pkt/s in", "%.1f"), ("idle_pkts_out_s", "idle pkt/s out", "%.1f")],
     "outage": [("freeze_s", "freeze s", "%.1f"), ("resumed_s", "resumed s", "%.1f")],
