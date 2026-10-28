@@ -143,28 +143,49 @@ pub fn inflate(bytes: &[u8]) -> Option<Vec<u8>> {
     miniz_oxide::inflate::decompress_to_vec_with_limit(bytes, SQUEEZED).ok()
 }
 
-/// One generation's output as a raw deflate stream (level 9: a tenth
-/// smaller than 6 on a full screen of colours, for little more CPU at
-/// terminal rates): its history
-/// spans everything sent before, so a small screen update costs a few
-/// bytes. Each `push` ends on a sync flush, so the client can show all of
-/// it once it has those bytes.
-pub struct Deflater(Box<miniz_oxide::deflate::core::CompressorOxide>);
+/// One generation's output as a raw deflate stream: its history spans
+/// everything sent before, so a small screen update costs a few bytes.
+/// Each `push` ends on a sync flush, so the client can show all of it once
+/// it has those bytes. The level may change between pushes (`set_level`).
+pub struct Deflater {
+    z: Box<miniz_oxide::deflate::core::CompressorOxide>,
+    level: u8,
+}
+
+/// Deflate where the link limits the screen: a third smaller than
+/// `FAST_LEVEL` on a dashboard, so more frames get through.
+pub const SMALL_LEVEL: u8 = 9;
+/// Deflate elsewhere: 30 times faster than `SMALL_LEVEL` on a full screen
+/// of colours (level 9 took most of the server's CPU there).
+pub const FAST_LEVEL: u8 = 1;
 
 impl Default for Deflater {
     fn default() -> Self {
-        let flags = miniz_oxide::deflate::core::create_comp_flags_from_zip_params(1, -15, 0);
-        Deflater(Box::new(miniz_oxide::deflate::core::CompressorOxide::new(flags)))
+        Deflater::new(FAST_LEVEL)
     }
 }
 
 impl Deflater {
+    pub fn new(level: u8) -> Self {
+        let flags = miniz_oxide::deflate::core::create_comp_flags_from_zip_params(level.into(), -15, 0);
+        Deflater { z: Box::new(miniz_oxide::deflate::core::CompressorOxide::new(flags)), level }
+    }
+
+    /// The level for the pushes from now on; the stream goes on (each push
+    /// ends a block, and deflate's history does not depend on the level).
+    pub fn set_level(&mut self, level: u8) {
+        if level != self.level {
+            self.z.set_compression_level_raw(level);
+            self.level = level;
+        }
+    }
+
     pub fn push(&mut self, bytes: &[u8]) -> Vec<u8> {
         use miniz_oxide::deflate::core::{compress, TDEFLFlush, TDEFLStatus};
         let mut out = vec![0u8; bytes.len() + bytes.len() / 8 + 64];
         let (mut read, mut written) = (0, 0);
         loop {
-            let (status, r, w) = compress(&mut self.0, &bytes[read..], &mut out[written..], TDEFLFlush::Sync);
+            let (status, r, w) = compress(&mut self.z, &bytes[read..], &mut out[written..], TDEFLFlush::Sync);
             read += r;
             written += w;
             if status != TDEFLStatus::Okay || (read == bytes.len() && written < out.len()) {
@@ -2346,7 +2367,15 @@ mod tests {
     fn a_deflate_stream_inflates_in_any_cuts_and_costs_little_per_update() {
         let mut z = Deflater::default();
         let updates: Vec<Vec<u8>> = (0..200).map(|i| format!("\x1b[{};1H\x1b[32mload {:>5} ok\x1b[0m", i % 40 + 1, i * 7).into_bytes()).collect();
-        let packed: Vec<Vec<u8>> = updates.iter().map(|u| z.push(u)).collect();
+        // The level changing on the way, as the link does.
+        let packed: Vec<Vec<u8>> = updates
+            .iter()
+            .enumerate()
+            .map(|(i, u)| {
+                z.set_level(if i / 30 % 2 == 0 { FAST_LEVEL } else { SMALL_LEVEL });
+                z.push(u)
+            })
+            .collect();
         // The stream, cut anywhere (as datagrams arrive), gives back each
         // update once its bytes are in.
         let all: Vec<u8> = packed.concat();

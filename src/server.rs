@@ -2108,6 +2108,18 @@ impl Attachment {
         Some(quiet.min(since + GATHER_MAX))
     }
 
+    /// Deflate's level for what goes into the stream now: the smallest
+    /// output where the link limits the screen (a slow path, or screen
+    /// updates), the fastest elsewhere. Where the link limits it, it limits
+    /// what there is to compress too.
+    fn z_level(&self) -> u8 {
+        if self.syncing_until.is_some() || self.output.slow_rate().is_some() {
+            proto::SMALL_LEVEL
+        } else {
+            proto::FAST_LEVEL
+        }
+    }
+
     /// Bytes `bytes` are expected to take in the stream.
     fn stream_len(&self, bytes: usize) -> usize {
         if self.z.is_some() || self.wants_z() {
@@ -2143,7 +2155,10 @@ impl Attachment {
             self.switched = Some(self.output.gen);
         }
         let raw = std::mem::take(&mut self.zraw);
-        let packed = self.z.as_mut().expect("compressor").push(&raw);
+        let level = self.z_level();
+        let z = self.z.as_mut().expect("compressor");
+        z.set_level(level);
+        let packed = z.push(&raw);
         self.ratio = (raw.len() as f64 / packed.len().max(1) as f64).clamp(1.0, 64.0);
         self.output.push(&packed);
         packed.len()
@@ -2154,7 +2169,7 @@ impl Attachment {
     fn reset_output(&mut self, bytes: &[u8]) {
         self.zraw.clear();
         if self.wants_z() {
-            let mut z = proto::Deflater::default();
+            let mut z = proto::Deflater::new(self.z_level());
             self.output.reset(&z.push(bytes));
             self.z = Some(z);
         } else {

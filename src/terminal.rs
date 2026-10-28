@@ -53,6 +53,18 @@ pub enum Color {
     Rgb(u8, u8, u8),
 }
 
+impl Color {
+    /// The color in one word, distinct for distinct colors.
+    fn key(self) -> u32 {
+        match self {
+            Color::Default => 0,
+            Color::Named(n) => 1 << 24 | u32::from(n),
+            Color::Indexed(n) => 2 << 24 | u32::from(n),
+            Color::Rgb(r, g, b) => 3 << 24 | u32::from(r) << 16 | u32::from(g) << 8 | u32::from(b),
+        }
+    }
+}
+
 pub const BOLD: u16 = 1;
 pub const DIM: u16 = 1 << 1;
 pub const ITALIC: u16 = 1 << 2;
@@ -130,6 +142,42 @@ pub struct Cell {
 }
 
 const SPACER: char = '\0';
+
+/// Multiply-rotate hashing (as rustc's FxHasher): fast, not collision
+/// resistant, for comparing rows that are checked afterwards.
+struct RowHasher(u64);
+
+impl std::hash::Hasher for RowHasher {
+    fn finish(&self) -> u64 {
+        self.0
+    }
+
+    fn write(&mut self, bytes: &[u8]) {
+        for &b in bytes {
+            self.write_u64(u64::from(b));
+        }
+    }
+
+    fn write_u8(&mut self, n: u8) {
+        self.write_u64(u64::from(n));
+    }
+
+    fn write_u16(&mut self, n: u16) {
+        self.write_u64(u64::from(n));
+    }
+
+    fn write_u32(&mut self, n: u32) {
+        self.write_u64(u64::from(n));
+    }
+
+    fn write_u64(&mut self, n: u64) {
+        self.0 = (self.0.rotate_left(5) ^ n).wrapping_mul(0x51_7c_c1_b7_27_22_0a_95);
+    }
+
+    fn write_usize(&mut self, n: usize) {
+        self.write_u64(n as u64);
+    }
+}
 
 impl Cell {
     /// The right half of a wide character.
@@ -767,7 +815,13 @@ impl Terminal {
     fn rows(&self) -> Vec<Vec<Cell>> {
         let term = self.term.borrow();
         let cols = term.columns();
-        (0..term.screen_lines()).map(|row| (0..cols).map(|col| Cell::of(&term.grid()[Line(row as i32)][Column(col)])).collect()).collect()
+        (0..term.screen_lines())
+            .map(|row| {
+                // The row once, not per cell (each lookup goes round the ring).
+                let line = &term.grid()[Line(row as i32)];
+                (0..cols).map(|col| Cell::of(&line[Column(col)])).collect()
+            })
+            .collect()
     }
 
     /// What sets the modes of `prev` to these, other than origin and insert
@@ -840,11 +894,17 @@ impl Terminal {
         let rows = cur.len();
         // Rows compared by hash in the search (a wrong match is caught by
         // the caller's `same_screen`): rows² hashes, not rows² × cols cells.
+        // A cheap hash, two words a cell where there is no more to it.
         let hash = |row: &Vec<Cell>| {
-            use std::hash::{Hash, Hasher};
-            let mut h = std::collections::hash_map::DefaultHasher::new();
+            use std::hash::Hasher;
+            let mut h = RowHasher(0);
             for cell in row {
-                (cell.ch, cell.attr, cell.extra).hash(&mut h);
+                let attr = &cell.attr;
+                h.write_u64(u64::from(cell.ch) | u64::from(attr.flags) << 32);
+                h.write_u64(u64::from(attr.fg.key()) | u64::from(attr.bg.key()) << 32);
+                if attr.underline_color != Color::Default || cell.extra != 0 {
+                    h.write_u64(u64::from(attr.underline_color.key()) ^ cell.extra);
+                }
             }
             h.finish()
         };
@@ -1528,6 +1588,45 @@ fn printable_char(bytes: &[u8]) -> Option<usize> {
 
 #[cfg(test)]
 mod tests {
+    /// What a screen update costs the server, a frame at a time, on output
+    /// captured from a 100x30 terminal (`RSH_SCREEN_BENCH=<file>`; frames
+    /// start at `ESC [1;1H ESC [7m FRAME`, as benchmark/lab/scene.py draws):
+    /// the diff, the shadow fed it, and the check (`RSH_SCREEN_BENCH_REPEAT`
+    /// times over). `cargo test --release screen_update_cost -- --ignored
+    /// --nocapture`.
+    #[test]
+    #[ignore]
+    fn screen_update_cost() {
+        let Ok(path) = std::env::var("RSH_SCREEN_BENCH") else {
+            return;
+        };
+        let raw = std::fs::read(path).expect("capture");
+        let mark = b"\x1b[1;1H\x1b[7mFRAME";
+        let mut starts: Vec<usize> = raw.windows(mark.len()).enumerate().filter(|(_, w)| *w == mark).map(|(i, _)| i).collect();
+        starts.push(raw.len());
+        let mut term = Terminal::with_size(100, 30);
+        let mut shadow = Terminal::with_history(100, 30, 0);
+        use std::time::{Duration, Instant};
+        let (mut diff, mut feed, mut check, mut bytes) = (Duration::ZERO, Duration::ZERO, Duration::ZERO, 0);
+        let repeat: usize = std::env::var("RSH_SCREEN_BENCH_REPEAT").ok().and_then(|n| n.parse().ok()).unwrap_or(1);
+        let frames = (starts.len() - 1) * repeat;
+        for w in starts.windows(2).cycle().take(frames) {
+            term.feed(&raw[w[0]..w[1]]);
+            let t = Instant::now();
+            let update = term.diff_from(&shadow).expect("a diff");
+            diff += t.elapsed();
+            let t = Instant::now();
+            shadow.feed(&update);
+            feed += t.elapsed();
+            let t = Instant::now();
+            assert!(term.same_screen(&shadow));
+            check += t.elapsed();
+            bytes += update.len();
+        }
+        let us = |d: Duration| d.as_secs_f64() * 1e6 / frames as f64;
+        println!("{frames} frames: diff {:.0} us, shadow {:.0} us, check {:.0} us a frame; {} bytes a frame", us(diff), us(feed), us(check), bytes / frames);
+    }
+
     #[test]
     fn quiet_history_is_kept_compact_and_none_of_it_is_lost() {
         let mut t = Terminal::with_history(40, 10, 1000);
