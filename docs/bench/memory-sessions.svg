@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="274" viewBox="0 0 760 274" role="img" aria-label="Memory with 10 sessions at once">
+<style>svg{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif}.bg{fill:#fcfcfb}.t1{fill:#1d1d1b}.t2{fill:#5f5e58}.axis{stroke:#e2e1dc}.s-rsh{fill:#2a78d6}.s-ssh{fill:#1baf7a}.s-et{fill:#eda100}.s-mosh{fill:#e87ba4}@media (prefers-color-scheme:dark){.bg{fill:#1a1a19}.t1{fill:#f0efec}.t2{fill:#c3c2b7}.axis{stroke:#3a3a37}.s-rsh{fill:#3987e5}.s-ssh{fill:#199e70}.s-et{fill:#c98500}.s-mosh{fill:#d55181}}</style>
+<rect class="bg" width="100%" height="100%" rx="8"/>
+<text class="t1" x="16" y="26" font-size="15" font-weight="600">Memory with 10 sessions at once</text>
+<text class="t2" x="16" y="44" font-size="11.5">each shell having printed 3000 lines, then quiet; resident memory, all processes (lower is better)</text>
+<rect class="s-rsh" x="16" y="56" width="10" height="10" rx="2"/>
+<text class="t2" x="30" y="65" font-size="11.5">rsh (UDP)</text>
+<rect class="s-ssh" x="112" y="56" width="10" height="10" rx="2"/>
+<text class="t2" x="126" y="65" font-size="11.5">OpenSSH</text>
+<rect class="s-et" x="195" y="56" width="10" height="10" rx="2"/>
+<text class="t2" x="209" y="65" font-size="11.5">ET</text>
+<rect class="s-mosh" x="241" y="56" width="10" height="10" rx="2"/>
+<text class="t2" x="255" y="65" font-size="11.5">mosh</text>
+<text class="t1" x="16" y="90" font-size="12" font-weight="600">Clients, all of them</text>
+<line class="axis" x1="108" y1="96" x2="108" y2="150" stroke-width="1"/>
+<text class="t2" x="102" y="107" font-size="11" text-anchor="end">rsh (UDP)</text>
+<rect class="s-rsh" x="108" y="98" width="81.6" height="11" rx="2"/>
+<text class="t1" x="195.6" y="107" font-size="11" font-weight="600">24.3 MB</text>
+<text class="t2" x="102" y="120" font-size="11" text-anchor="end">OpenSSH</text>
+<rect class="s-ssh" x="108" y="111" width="247.1" height="11" rx="2"/>
+<text class="t1" x="361.1" y="120" font-size="11">73.7 MB</text>
+<text class="t2" x="102" y="133" font-size="11" text-anchor="end">ET</text>
+<rect class="s-et" x="108" y="124" width="574.0" height="11" rx="2"/>
+<text class="t1" x="688.0" y="133" font-size="11">171.2 MB</text>
+<text class="t2" x="102" y="146" font-size="11" text-anchor="end">mosh</text>
+<rect class="s-mosh" x="108" y="137" width="483.9" height="11" rx="2"/>
+<text class="t1" x="597.9" y="146" font-size="11">144.4 MB</text>
+<text class="t1" x="16" y="178" font-size="12" font-weight="600">Server side, all of it</text>
+<line class="axis" x1="108" y1="184" x2="108" y2="238" stroke-width="1"/>
+<text class="t2" x="102" y="195" font-size="11" text-anchor="end">rsh (UDP)</text>
+<rect class="s-rsh" x="108" y="186" width="37.2" height="11" rx="2"/>
+<text class="t1" x="151.2" y="195" font-size="11" font-weight="600">11.1 MB</text>
+<text class="t2" x="102" y="208" font-size="11" text-anchor="end">OpenSSH</text>
+<rect class="s-ssh" x="108" y="199" width="496.7" height="11" rx="2"/>
+<text class="t1" x="610.7" y="208" font-size="11">148.2 MB</text>
+<text class="t2" x="102" y="221" font-size="11" text-anchor="end">ET</text>
+<rect class="s-et" x="108" y="212" width="121.2" height="11" rx="2"/>
+<text class="t1" x="235.2" y="221" font-size="11">36.2 MB</text>
+<text class="t2" x="102" y="234" font-size="11" text-anchor="end">mosh</text>
+<rect class="s-mosh" x="108" y="225" width="328.9" height="11" rx="2"/>
+<text class="t1" x="442.9" y="234" font-size="11">98.1 MB</text>
+</svg>

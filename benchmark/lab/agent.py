@@ -381,6 +381,33 @@ def run_scene(c, scene, seconds, fps, steps=(), tool=None):
     return start, stop, marks
 
 
+def sessions_test(first, tool, name, count, cols, rows):
+    """`count` sessions at once (this one and more), each shell having
+    printed 3000 lines (some history), then quiet: the clients' memory in
+    all, the server side's (asked of the host), and the packets a second
+    the idle sessions cost."""
+    clients = [first]
+    for i in range(1, count):
+        c, at = connect(tool, "%s-%d" % (name, i), cols, rows)
+        clients.append(c)
+        if at is None:
+            break
+    connected = sum(1 for c in clients if c.alive)
+    for c in clients:
+        c.send("seq 1 3000\r")
+    # Quiet long enough for idle behavior (rsh: 10 s to its idle keepalive).
+    time.sleep(15)
+    client_kb = rss_kb(PROCESS[tool])
+    server = ask("rss")
+    counts = net_counts()
+    time.sleep(20)
+    idle = packets_since(counts, 20)
+    for c in clients:
+        c.finish()
+    return {"count": count, "connected": connected, "client_kb": client_kb, "server_kb": int(server) if server.isdigit() else None,
+            "idle_pkts_in_s": idle["pkts_in_s"], "idle_pkts_out_s": idle["pkts_out_s"]}
+
+
 def echo_test(c, n):
     """Keystroke to its echo on the screen, n times."""
     c.emulate = True
@@ -458,6 +485,9 @@ def main_run(job):
     if out["connect_s"] is None:
         out["error"] = "no prompt"
         c.finish()
+        return out
+    if test == "sessions":
+        out.update(sessions_test(c, tool, name, job.get("count", 10), cols, rows))
         return out
     if test == "render":
         start, stop, marks = run_scene(c, job["scene"], job["duration"], job["scene_fps"], tool=job["tool"])

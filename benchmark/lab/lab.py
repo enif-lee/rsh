@@ -32,6 +32,9 @@ Tests (`run --tests`), each job a fresh connection of one tool:
             the client's packets in and out for each key
   flood     `seq 1 --lines`: seconds until the line after it shows, and
             the client's packets in and out
+  sessions  `--sessions` sessions at once on the LAN, each shell having
+            printed 3000 lines: the clients' and the server side's
+            memory in all, and the packets a second they cost idle
   outage    the link cut for `--down` s under a ticker: longest freeze,
             seconds from the link's return until the ticker moves (watched
             for `--duration` s after it)
@@ -292,6 +295,8 @@ def jobs_of(opts):
             specs.append(dict(test=test, net=opts.event_net, connect_timeout=15))
         elif test in ("outage", "roam", "reattach"):
             specs.append(dict(test=test, net=opts.event_net, down=opts.down))
+        elif test == "sessions":
+            specs.append(dict(test=test, net="lan", count=opts.sessions))
         else:
             sys.exit("lab: no test %s" % test)
     jobs = []
@@ -301,7 +306,7 @@ def jobs_of(opts):
                 jobs.append(dict(base, **spec, tool=tool, iteration=i))
     # The longest first (slow links, tests that wait out a failure), so the
     # last ones running are short and the slots finish together.
-    cost = {"flood": 4, "udpblock": 3, "outage": 3, "switch": 2, "reattach": 2, "echo": 1, "roam": 1, "render": 0}
+    cost = {"sessions": 5, "flood": 4, "udpblock": 3, "outage": 3, "switch": 2, "reattach": 2, "echo": 1, "roam": 1, "render": 0}
     slow = {"slow64k": 2, "verylow": 1, "mobile": 1, "badmobile": 2}
     jobs.sort(key=lambda j: (cost[j["test"]], slow.get(j["net"], 0) + slow.get(j.get("to"), 0)), reverse=True)
     return jobs
@@ -315,7 +320,7 @@ def run_job(k, job):
     proc = subprocess.Popen(["docker", "exec", "-i", cli(k), "python3", "/tmp/agent.py", "run", json.dumps(job)],
                             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     other = []
-    timer = threading.Timer(job["duration"] + job.get("switch_at", 0) + 150, proc.kill)
+    timer = threading.Timer(job["duration"] + job.get("switch_at", 0) + 150 + 10 * job.get("count", 0), proc.kill)
     timer.start()
     result = None
     try:
@@ -422,6 +427,8 @@ COLUMNS = {
                ("stalls", "stalls", "%.0f"), ("torn", "torn", "%.0f"), ("blank", "blank", "%.0f")],
     "echo": [("echo_ms", "echo ms", "%.0f"), ("echo_max_ms", "max ms", "%.0f"), ("lost", "lost", "%.0f"), ("pkts_in_key", "pkt in/key", "%.1f"), ("pkts_out_key", "pkt out/key", "%.1f")],
     "flood": [("flood_s", "seconds", "%.2f"), ("bytes_to_terminal", "bytes", "%.0f"), ("pkts_in", "pkts in", "%.0f"), ("pkts_out", "pkts out", "%.0f")],
+    "sessions": [("connected", "sessions", "%.0f"), ("client_kb", "client KB", "%.0f"), ("server_kb", "server KB", "%.0f"),
+                 ("idle_pkts_in_s", "idle pkt/s in", "%.1f"), ("idle_pkts_out_s", "idle pkt/s out", "%.1f")],
     "outage": [("freeze_s", "freeze s", "%.1f"), ("resumed_s", "resumed s", "%.1f")],
     "roam": [("freeze_s", "freeze s", "%.1f"), ("resumed_s", "resumed s", "%.1f")],
     "reattach": [("reconnect_s", "reconnect s", "%.1f"), ("same_shell", "same shell", "%s")],
@@ -1030,7 +1037,7 @@ def main():
     p.add_argument("--slots", type=int, default=4, help="up: container pairs")
     p.add_argument("--rsh", help="an rsh Linux build to test instead of the image's")
     p.add_argument("--rsh-b", help="a second rsh Linux build, as the tool rsh-b (compare two builds in one run)")
-    p.add_argument("--tools", default=",".join(TOOLS))
+    p.add_argument("--tools", default=",".join(t for t in TOOLS if t != "rsh-b"))
     p.add_argument("--tests", default="render,switch", help="run: " + ",".join(COLUMNS))
     p.add_argument("--nets", default="lowbw,highlat,lossy", help=",".join(NETS))
     p.add_argument("--scenes", default="compress,bandwidth", help=",".join(SCENES) + ' ("" for none in a demo)')
@@ -1044,6 +1051,7 @@ def main():
     p.add_argument("--fps", type=float, default=30)
     p.add_argument("--keys", type=int, default=10, help="echo: keys typed")
     p.add_argument("--lines", type=int, default=100000, help="flood: seq length")
+    p.add_argument("--sessions", type=int, default=10, help="sessions: how many at once")
     p.add_argument("--down", type=float, default=5, help="outage: seconds the link is down")
     p.add_argument("--parallel", type=int, help="run: jobs at once (default: docker's CPUs)")
     p.add_argument("--cols", type=int, default=100)
