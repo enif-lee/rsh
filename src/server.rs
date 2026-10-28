@@ -1718,7 +1718,19 @@ impl State {
                 Some(path) => path.room_for_copies(now),
                 None => attach.output.slow_rate().is_none(),
             };
-            attach.doubling = !is_tcp_addr(attach.addr) && roomy && (resent || loss > DOUBLE_ON || (attach.doubling && loss > DOUBLE_OFF));
+            // With the path model, by the datagrams it saw lost (copies
+            // hide none of those: an original lost counts whether its copy
+            // came or not); without it, by resends, on at the first. A
+            // resend alone (a timeout early in a session, before the round
+            // trip is known) kept copies on for half a minute over a clean
+            // LAN, every datagram twice.
+            let modelled = attach.modelled();
+            let lost = match attach.path.as_ref().filter(|_| modelled) {
+                Some(path) => path.loss().0,
+                None => loss,
+            };
+            let first = resent && !modelled;
+            attach.doubling = !is_tcp_addr(attach.addr) && roomy && (first || lost > DOUBLE_ON || (attach.doubling && lost > DOUBLE_OFF));
             // Nor has a path whose acks show a queue growing (a link that
             // turned slow before its rate is known: copies would take half
             // of it); a passing one, so doubling stays on for after it.
