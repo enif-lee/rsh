@@ -1072,7 +1072,7 @@ fn attach(
         match opts.compress.unwrap_or(config.compress) {
             crate::config::Compress::Adaptive => {}
             crate::config::Compress::Always => hello.features |= crate::proto::FEATURE_COMPRESS,
-            crate::config::Compress::Off => hello.features &= !(crate::proto::FEATURE_DEFLATE | crate::proto::FEATURE_ZSTREAM | crate::proto::FEATURE_ZSTD),
+            crate::config::Compress::Off => hello.features &= !(crate::proto::FEATURE_DEFLATE | crate::proto::FEATURE_ZSTREAM),
         }
         let done = match net::hello(&sock, peer, &key, &hello).map_err(|err| failed(&left, format!("{host}: {err}")))? {
             HelloReply::Ready(done) => *done,

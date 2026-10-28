@@ -780,7 +780,7 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                 // A generation sent as one deflate stream is inflated in order.
                 let new = if stream.flags & proto::FLAG_ZSTREAM != 0 && stream.out_gen == rx.gen && !new.is_empty() {
                     if zgen.as_ref().map(|(gen, _)| *gen) != Some(rx.gen) {
-                        zgen = Some((rx.gen, proto::Inflater::new(stream.flags & proto::FLAG_ZSTD != 0)));
+                        zgen = Some((rx.gen, proto::Inflater::default()));
                     }
                     match zgen.as_mut().and_then(|(_, z)| z.push(&new)) {
                         Some(bytes) => bytes,

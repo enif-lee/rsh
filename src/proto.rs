@@ -125,11 +125,6 @@ pub const FLAG_UPDATES: u8 = 8;
 /// HELLO features: the client reports when each numbered datagram arrived
 /// (`FLAG_NUMBERED`, `FLAG_FEEDBACK`), for the server's path model.
 pub const FEATURE_PATH: u8 = 16;
-/// HELLO features: the client also takes a generation's stream in zstd
-/// (`FLAG_ZSTD`).
-pub const FEATURE_ZSTD: u8 = 32;
-/// Server stream flag, with `FLAG_ZSTREAM`: the stream is zstd, not deflate.
-pub const FLAG_ZSTD: u8 = 32;
 /// Server stream flag: the datagram carries its number (`pn`).
 pub const FLAG_NUMBERED: u8 = 16;
 /// Client stream flag: the packet carries arrival times of numbered
@@ -148,54 +143,28 @@ pub fn inflate(bytes: &[u8]) -> Option<Vec<u8>> {
     miniz_oxide::inflate::decompress_to_vec_with_limit(bytes, SQUEEZED).ok()
 }
 
-/// One generation's output as one compressed stream: zstd when the client
-/// takes it (`FEATURE_ZSTD`), else raw deflate; both at their fastest level
-/// (deflate at 9 took most of the server's CPU on a full screen of colours,
-/// for a fifth fewer bytes). Its history spans everything sent before, so a
-/// small screen update costs a few bytes. Each `push` ends on a flush, so
-/// the client can show all of it once it has those bytes.
-pub enum Deflater {
-    Deflate(Box<miniz_oxide::deflate::core::CompressorOxide>),
-    Zstd(Box<zstd::stream::write::Encoder<'static, Vec<u8>>>),
-}
+/// One generation's output as a raw deflate stream (level 9: a tenth
+/// smaller than 6 on a full screen of colours, for little more CPU at
+/// terminal rates): its history
+/// spans everything sent before, so a small screen update costs a few
+/// bytes. Each `push` ends on a sync flush, so the client can show all of
+/// it once it has those bytes.
+pub struct Deflater(Box<miniz_oxide::deflate::core::CompressorOxide>);
 
 impl Default for Deflater {
     fn default() -> Self {
-        Deflater::new(false)
+        let flags = miniz_oxide::deflate::core::create_comp_flags_from_zip_params(1, -15, 0);
+        Deflater(Box::new(miniz_oxide::deflate::core::CompressorOxide::new(flags)))
     }
 }
 
 impl Deflater {
-    pub fn new(zstd: bool) -> Self {
-        if zstd {
-            let mut z = zstd::stream::write::Encoder::new(Vec::new(), 1).expect("zstd encoder");
-            // 128 KB of history: a full screen's updates many times over.
-            z.set_parameter(zstd::stream::raw::CParameter::WindowLog(17)).expect("zstd window");
-            return Deflater::Zstd(Box::new(z));
-        }
-        let flags = miniz_oxide::deflate::core::create_comp_flags_from_zip_params(1, -15, 0);
-        Deflater::Deflate(Box::new(miniz_oxide::deflate::core::CompressorOxide::new(flags)))
-    }
-
-    pub fn is_zstd(&self) -> bool {
-        matches!(self, Deflater::Zstd(_))
-    }
-
     pub fn push(&mut self, bytes: &[u8]) -> Vec<u8> {
         use miniz_oxide::deflate::core::{compress, TDEFLFlush, TDEFLStatus};
-        use std::io::Write;
-        let z = match self {
-            Deflater::Deflate(z) => z,
-            Deflater::Zstd(z) => {
-                // In memory: nothing to fail on.
-                z.write_all(bytes).and_then(|_| z.flush()).expect("zstd");
-                return std::mem::take(z.get_mut());
-            }
-        };
         let mut out = vec![0u8; bytes.len() + bytes.len() / 8 + 64];
         let (mut read, mut written) = (0, 0);
         loop {
-            let (status, r, w) = compress(z, &bytes[read..], &mut out[written..], TDEFLFlush::Sync);
+            let (status, r, w) = compress(&mut self.0, &bytes[read..], &mut out[written..], TDEFLFlush::Sync);
             read += r;
             written += w;
             if status != TDEFLStatus::Okay || (read == bytes.len() && written < out.len()) {
@@ -209,41 +178,23 @@ impl Deflater {
 }
 
 /// The client's end of a `Deflater`.
-pub enum Inflater {
-    Deflate(Box<miniz_oxide::inflate::stream::InflateState>),
-    Zstd(Box<zstd::stream::write::Decoder<'static, Vec<u8>>>),
-}
+pub struct Inflater(Box<miniz_oxide::inflate::stream::InflateState>);
 
 impl Default for Inflater {
     fn default() -> Self {
-        Inflater::new(false)
+        Inflater(miniz_oxide::inflate::stream::InflateState::new_boxed(miniz_oxide::DataFormat::Raw))
     }
 }
 
 impl Inflater {
-    pub fn new(zstd: bool) -> Self {
-        match zstd::stream::write::Decoder::new(Vec::new()) {
-            Ok(z) if zstd => Inflater::Zstd(Box::new(z)),
-            _ => Inflater::Deflate(miniz_oxide::inflate::stream::InflateState::new_boxed(miniz_oxide::DataFormat::Raw)),
-        }
-    }
-
     /// The output for the next bytes of the stream; None if it is broken.
     pub fn push(&mut self, mut bytes: &[u8]) -> Option<Vec<u8>> {
         use miniz_oxide::inflate::stream::inflate;
         use miniz_oxide::{MZError, MZFlush, MZStatus};
-        use std::io::Write;
-        let state = match self {
-            Inflater::Deflate(state) => state,
-            Inflater::Zstd(z) => {
-                z.write_all(bytes).and_then(|_| z.flush()).ok()?;
-                return Some(std::mem::take(z.get_mut()));
-            }
-        };
         let mut out = Vec::new();
         let mut buf = vec![0u8; 64 * 1024];
         loop {
-            let result = inflate(state, bytes, &mut buf, MZFlush::None);
+            let result = inflate(&mut self.0, bytes, &mut buf, MZFlush::None);
             out.extend_from_slice(&buf[..result.bytes_written]);
             bytes = &bytes[result.bytes_consumed..];
             match result.status {
@@ -2392,32 +2343,29 @@ mod tests {
     }
 
     #[test]
-    fn a_compressed_stream_inflates_in_any_cuts_and_costs_little_per_update() {
-        for zstd in [false, true] {
-            let mut z = Deflater::new(zstd);
-            let updates: Vec<Vec<u8>> = (0..200).map(|i| format!("\x1b[{};1H\x1b[32mload {:>5} ok\x1b[0m", i % 40 + 1, i * 7).into_bytes()).collect();
-            let packed: Vec<Vec<u8>> = updates.iter().map(|u| z.push(u)).collect();
-            // The stream, cut anywhere (as datagrams arrive), gives back each
-            // update once its bytes are in.
-            let all: Vec<u8> = packed.concat();
-            let mut back = Vec::new();
-            let mut inflater = Inflater::new(zstd);
-            for piece in all.chunks(7) {
-                back.extend(inflater.push(piece).unwrap());
-            }
-            assert_eq!(back, updates.concat(), "zstd {zstd}");
-            // Each push ends on a flush: its own bytes show all of it.
-            let mut inflater = Inflater::new(zstd);
-            for (piece, update) in packed.iter().zip(&updates) {
-                assert_eq!(&inflater.push(piece).unwrap(), update, "zstd {zstd}");
-            }
-            // History across updates: later ones cost a fraction of their
-            // size (zstd's flush costs some 6 bytes more than deflate's).
-            let late: usize = packed[100..].iter().map(Vec::len).sum();
-            let raw: usize = updates[100..].iter().map(Vec::len).sum();
-            assert!(late * if zstd { 4 } else { 2 } < raw * if zstd { 3 } else { 1 }, "zstd {zstd}: {late} of {raw}");
-            assert!(Inflater::new(zstd).push(b"\xff\xff\xff\xff").is_none(), "zstd {zstd}: a broken stream is told");
+    fn a_deflate_stream_inflates_in_any_cuts_and_costs_little_per_update() {
+        let mut z = Deflater::default();
+        let updates: Vec<Vec<u8>> = (0..200).map(|i| format!("\x1b[{};1H\x1b[32mload {:>5} ok\x1b[0m", i % 40 + 1, i * 7).into_bytes()).collect();
+        let packed: Vec<Vec<u8>> = updates.iter().map(|u| z.push(u)).collect();
+        // The stream, cut anywhere (as datagrams arrive), gives back each
+        // update once its bytes are in.
+        let all: Vec<u8> = packed.concat();
+        let mut back = Vec::new();
+        let mut inflater = Inflater::default();
+        for piece in all.chunks(7) {
+            back.extend(inflater.push(piece).unwrap());
         }
+        assert_eq!(back, updates.concat());
+        // Each push ends on a flush: its own bytes show all of it.
+        let mut inflater = Inflater::default();
+        for (piece, update) in packed.iter().zip(&updates) {
+            assert_eq!(&inflater.push(piece).unwrap(), update);
+        }
+        // History across updates: later ones cost a fraction of their size.
+        let late: usize = packed[100..].iter().map(Vec::len).sum();
+        let raw: usize = updates[100..].iter().map(Vec::len).sum();
+        assert!(late * 2 < raw, "{late} of {raw}");
+        assert!(Inflater::default().push(b"\xff\xff\xff\xff").is_none(), "a broken stream is told");
     }
 
     #[test]

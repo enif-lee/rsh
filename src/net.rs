@@ -559,6 +559,6 @@ pub fn new_hello_forwarding(
         command: command.to_vec(),
         forwards: forwards.to_vec(),
         client_pub: [0; 32],
-        features: proto::FEATURE_DEFLATE | proto::FEATURE_ZSTREAM | proto::FEATURE_ZSTD,
+        features: proto::FEATURE_DEFLATE | proto::FEATURE_ZSTREAM,
     }
 }

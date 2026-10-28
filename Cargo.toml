@@ -17,7 +17,6 @@ ratatui = "0.30.2"
 sha2 = "0.10.9"
 unicode-width = "0.2.2"
 x25519-dalek = { version = "2.0.1", features = ["static_secrets"] }
-zstd = { version = "0.13", default-features = false }
 
 [[bin]]
 name = "rsh"

@@ -238,9 +238,7 @@ struct Attachment {
     /// whether it asked for that on any link (HELLO features).
     zstream: bool,
     compress: bool,
-    /// The client takes that stream in zstd (`FEATURE_ZSTD`).
-    zstd: bool,
-    /// The generation under way is one compressed stream: its compressor.
+    /// The generation under way is one deflate stream: its compressor.
     z: Option<proto::Deflater>,
     /// Output not yet in the stream: for the compressor (one flush per
     /// pump), or until the plain generation before is all acked.
@@ -775,7 +773,6 @@ fn import(bytes: &[u8]) -> Option<Handoff> {
                 path: None,
                 zstream: false,
                 compress: false,
-                zstd: false,
                 z: None,
                 zraw: Vec::new(),
                 gathering: None,
@@ -1211,7 +1208,6 @@ impl State {
             path: (hello.features & proto::FEATURE_PATH != 0).then(|| PathModel::new(now)),
             zstream: hello.features & proto::FEATURE_ZSTREAM != 0,
             compress: hello.features & proto::FEATURE_COMPRESS != 0,
-            zstd: hello.features & proto::FEATURE_ZSTD != 0,
             z: None,
             zraw: Vec::new(),
             gathering: None,
@@ -1668,8 +1664,8 @@ impl State {
             }
             let (offset, mut data) = chunk.unwrap_or((attach.output.end(), Vec::new()));
             let mut flags = if exit_code.is_some() { FLAG_EXITED } else { 0 };
-            if let Some(z) = &attach.z {
-                flags |= proto::FLAG_ZSTREAM | if z.is_zstd() { proto::FLAG_ZSTD } else { 0 };
+            if attach.z.is_some() {
+                flags |= proto::FLAG_ZSTREAM;
             }
             if attach.syncing_until.is_some() {
                 flags |= proto::FLAG_UPDATES;
@@ -2140,7 +2136,7 @@ impl Attachment {
             if !drained {
                 return 0;
             }
-            self.z = Some(proto::Deflater::new(self.zstd));
+            self.z = Some(proto::Deflater::default());
             self.output.reset(&[]);
             // A new generation that is no repaint: a repaint asked for the
             // one before still stands (the client asked with its number).
@@ -2158,7 +2154,7 @@ impl Attachment {
     fn reset_output(&mut self, bytes: &[u8]) {
         self.zraw.clear();
         if self.wants_z() {
-            let mut z = proto::Deflater::new(self.zstd);
+            let mut z = proto::Deflater::default();
             self.output.reset(&z.push(bytes));
             self.z = Some(z);
         } else {
