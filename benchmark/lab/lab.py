@@ -618,8 +618,10 @@ class Demo:
             time.sleep(0.5)
         return [k in seen for k in range(len(self.tools))]
 
-    def render(self, windows, nets, scenes, seconds, fps):
-        """The render scenes, each window added to `windows` as it ends."""
+    def render(self, windows, nets, scenes, seconds, fps, warmup):
+        """The render scenes, each window added to `windows` as it ends;
+        each after `warmup` seconds of its label and a count down (not
+        measured), so every tool starts the scene with its link warm."""
         for net in nets:
             self.shape(net)
             for scene in scenes:
@@ -631,7 +633,8 @@ class Demo:
                 # only the shell's output, not the echoed command, matches.
                 mark = len(windows) + 1
                 rx = self.each(rx_total)
-                self.everyone("clear; python3 /tmp/scene.py %s %g %g; echo DEMO-$((%d+1))-DONE" % (scene, seconds, fps, mark - 1))
+                self.everyone("clear; python3 /tmp/scene.py %s %g %g %g %s; echo DEMO-$((%d+1))-DONE" % (scene, seconds, fps, warmup, shlex.quote(self.label), mark - 1))
+                time.sleep(warmup)
                 start = self.now()
                 # Memory twice, halfway and at the end, the larger kept.
                 time.sleep(seconds / 2)
@@ -802,7 +805,7 @@ def control(opts):
                 d.watch(k)
             threading.Thread(target=d.status_loop, daemon=True).start()
             if opts.scenes:
-                d.render(windows, [n for n in opts.nets.split(",") if n], [s for s in opts.scenes.split(",") if s], opts.duration, opts.fps)
+                d.render(windows, [n for n in opts.nets.split(",") if n], [s for s in opts.scenes.split(",") if s], opts.duration, opts.fps, opts.warmup)
             for name in [e for e in opts.events.split(",") if e]:
                 windows.append(d.event(name, opts.event_net, opts.down))
         except KeyboardInterrupt:
@@ -993,6 +996,7 @@ def main():
     p.add_argument("--event-net", default="wan")
     p.add_argument("--iterations", type=int, default=2)
     p.add_argument("--duration", type=float, default=4, help="seconds of each scene (after the change, for switch)")
+    p.add_argument("--warmup", type=float, default=2, help="demo: seconds of each scene's label and count down before it")
     p.add_argument("--fps", type=float, default=30)
     p.add_argument("--keys", type=int, default=10, help="echo: keys typed")
     p.add_argument("--lines", type=int, default=100000, help="flood: seq length")

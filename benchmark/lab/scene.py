@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The lab's scenes (lab.py), run on the server in each tool's shell.
 
-  scene.py <compress|bandwidth|ticker> <seconds> [fps]
+  scene.py <compress|bandwidth|ticker> <seconds> [fps] [warm-up seconds] [label]
 
 Each keeps row 0 as `FRAME nnnnnn T=<ms since epoch> <name>` (row 1 in a
 pane under 43 columns, where rsh's badge covers the end of row 0), so the
@@ -20,11 +20,17 @@ parts of two frames at once (tearing), one without them was cleared
              connection scenarios: it stops on screen while the link is
              gone and shows how it comes back; it names the shell it runs
              in, so a reattach shows whether it is the same shell
+
+A warm-up (the demo's) first shows the label (the network and the scene)
+and a count down to 0.00 in large digits, centred, at the scene's rate:
+no frame header, so nothing of it counts as a frame.
 """
 import os, random, sys, time
 
 scene, seconds = sys.argv[1], float(sys.argv[2])
 fps = float(sys.argv[3]) if len(sys.argv) > 3 else 30.0
+warmup = float(sys.argv[4]) if len(sys.argv) > 4 else 0.0
+label = sys.argv[5] if len(sys.argv) > 5 else ""
 cols, rows = os.get_terminal_size()
 out = sys.stdout.buffer
 rng = random.Random(1)
@@ -82,6 +88,39 @@ def ticker(n):
     return header(n) + "".join("\x1b[%d;3H\x1b[K%s" % (r + top + 2, l) for r, l in enumerate(lines))
 
 
+# Digits five rows high, for the warm-up's count down.
+GLYPHS = {
+    "0": ["███", "█ █", "█ █", "█ █", "███"],
+    "1": [" █ ", "██ ", " █ ", " █ ", "███"],
+    "2": ["███", "  █", "███", "█  ", "███"],
+    "3": ["███", "  █", "███", "  █", "███"],
+    "4": ["█ █", "█ █", "███", "  █", "  █"],
+    "5": ["███", "█  ", "███", "  █", "███"],
+    "6": ["███", "█  ", "███", "█ █", "███"],
+    "7": ["███", "  █", "  █", "  █", "  █"],
+    "8": ["███", "█ █", "███", "█ █", "███"],
+    "9": ["███", "█ █", "███", "  █", "███"],
+    ".": ["   ", "   ", "   ", "   ", " █ "],
+    "s": ["   ", "███", "█  ", "  █", "███"],
+}
+
+
+def big(text):
+    """`text` five rows high, each glyph doubled in width."""
+    return ["  ".join("".join(c * 2 for c in GLYPHS[ch][row]) for ch in text) for row in range(5)]
+
+
+def warm(left):
+    """The warm-up screen: the label's parts, then the time left, centred."""
+    lines = [("\x1b[1m", part) for part in label.split(" · ") if part] + [("", "")] + [("\x1b[33m", row) for row in big("%.2fs" % left)]
+    first = max(1, (rows - len(lines)) // 2 + 1)
+    parts = []
+    for i, (style, text) in enumerate(lines):
+        text = text[:cols]
+        parts.append("\x1b[%d;%dH\x1b[2K%s%s\x1b[0m" % (first + i, max(1, (cols - len(text)) // 2 + 1), style, text))
+    return "".join(parts)
+
+
 draw = {"compress": compress, "bandwidth": bandwidth, "ticker": ticker}[scene]
 # No autowrap: in a pane narrower than a row the row is cut at the edge
 # instead of wrapping and scrolling the header away.
@@ -89,6 +128,15 @@ out.write(b"\x1b[?25l\x1b[?7l\x1b[2J")
 start = time.time()
 n = 0
 try:
+    while warmup > 0 and time.time() - start < warmup:
+        out.write(warm(max(0.0, warmup - (time.time() - start))).encode())
+        out.flush()
+        n += 1
+        time.sleep(max(0.0, start + n / fps - time.time()))
+    if warmup > 0:
+        out.write(warm(0.0).encode() + b"\x1b[2J")
+        start = time.time()
+        n = 0
     while time.time() - start < seconds:
         out.write(draw(n).encode())
         out.flush()
