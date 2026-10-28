@@ -158,6 +158,9 @@ pub const SMALL_LEVEL: u8 = 9;
 /// Deflate elsewhere: 30 times faster than `SMALL_LEVEL` on a full screen
 /// of colours (level 9 took most of the server's CPU there).
 pub const FAST_LEVEL: u8 = 1;
+/// Between them: on a full screen of colours 4 times faster than
+/// `SMALL_LEVEL` for 7% more bytes.
+pub const MIDDLE_LEVEL: u8 = 6;
 
 impl Default for Deflater {
     fn default() -> Self {
