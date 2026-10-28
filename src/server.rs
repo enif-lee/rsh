@@ -1854,6 +1854,13 @@ impl State {
                 if attach.zraw.capacity() > 64 * 1024 && attach.zraw.is_empty() {
                     attach.zraw.shrink_to(0);
                 }
+                // Quiet output only: a compressor started again each frame
+                // would cost more than it saves.
+                if attach.zraw.is_empty() && now.duration_since(session.output_seen) >= TRIM_AFTER {
+                    if let Some(z) = attach.z.as_mut() {
+                        z.park();
+                    }
+                }
             }
             if let Some(attach) = session.attach.as_mut() {
                 // Nobody to forward to while the client is away; reopened

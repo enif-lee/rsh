@@ -150,7 +150,8 @@ pub fn inflate(bytes: &[u8]) -> Option<Vec<u8>> {
 /// zlib-rs, not miniz_oxide: its SIMD level 9 is 4 to 5 times faster on a
 /// full screen of colours (39 MB/s against 8), for the same bytes.
 pub struct Deflater {
-    z: flate2::Compress,
+    /// None while parked (`park`).
+    z: Option<flate2::Compress>,
     level: u8,
     /// The last `WINDOW_BYTES` of input: a compressor at another level
     /// starts from them.
@@ -175,7 +176,20 @@ impl Default for Deflater {
 
 impl Deflater {
     pub fn new(level: u8) -> Self {
-        Deflater { z: flate2::Compress::new(flate2::Compression::new(level.into()), false), level, history: Vec::new() }
+        Deflater { z: Some(flate2::Compress::new(flate2::Compression::new(level.into()), false)), level, history: Vec::new() }
+    }
+
+    /// Lets the compressor go while output is quiet (its state is a few
+    /// hundred KB a session); the next push starts one from the history,
+    /// as a level change does.
+    pub fn park(&mut self) {
+        self.z = None;
+    }
+
+    /// A compressor at `level` that goes on from the history.
+    fn start(level: u8, history: &[u8]) -> Option<flate2::Compress> {
+        let mut z = flate2::Compress::new(flate2::Compression::new(level.into()), false);
+        z.set_dictionary(history).ok().map(|_| z)
     }
 
     /// The level for the pushes from now on. A new compressor with the last
@@ -191,22 +205,25 @@ impl Deflater {
         if level == self.level {
             return;
         }
-        let mut z = flate2::Compress::new(flate2::Compression::new(level.into()), false);
-        if z.set_dictionary(&self.history).is_ok() {
-            self.z = z;
+        if let Some(z) = Self::start(level, &self.history) {
+            self.z = Some(z);
             self.level = level;
         }
     }
 
     pub fn push(&mut self, bytes: &[u8]) -> Vec<u8> {
         let mut out = Vec::with_capacity(bytes.len() + bytes.len() / 8 + 64);
-        let start = self.z.total_in();
+        if self.z.is_none() {
+            self.z = Self::start(self.level, &self.history);
+        }
+        let z = self.z.as_mut().expect("deflate dictionary");
+        let start = z.total_in();
         loop {
-            let read = (self.z.total_in() - start) as usize;
+            let read = (z.total_in() - start) as usize;
             // In memory, raw deflate: nothing to fail on.
-            self.z.compress_vec(&bytes[read..], &mut out, flate2::FlushCompress::Sync).expect("deflate");
+            z.compress_vec(&bytes[read..], &mut out, flate2::FlushCompress::Sync).expect("deflate");
             // Done once all is in and the flush had room to end.
-            if (self.z.total_in() - start) as usize == bytes.len() && out.len() < out.capacity() {
+            if (z.total_in() - start) as usize == bytes.len() && out.len() < out.capacity() {
                 break;
             }
             out.reserve(out.capacity().max(64));
@@ -2411,6 +2428,11 @@ mod tests {
         for (piece, update) in packed.iter().zip(&updates) {
             assert_eq!(&inflater.push(piece).unwrap(), update);
         }
+        // Parked and taken up again: the stream goes on.
+        z.park();
+        let after = z.push(b"\x1b[1;1Hafter a quiet while");
+        let mut inflater = Inflater::default();
+        assert_eq!(inflater.push(&[all.as_slice(), after.as_slice()].concat()).unwrap(), [updates.concat(), b"\x1b[1;1Hafter a quiet while".to_vec()].concat());
         // History across updates: later ones (at a compressing level) cost
         // a fraction of their size.
         let late: usize = packed[120..150].iter().map(Vec::len).sum();
