@@ -1894,11 +1894,17 @@ impl Attachment {
             // while the link was busy waits for the next step if that is
             // due soon after; output that stopped goes at once.
             let idle = last + gap.max(self.screen_gap());
+            // With the path model's reckoning, not past a quarter of the
+            // link's time: the wait adds to the gap between updates (a
+            // 38 ms update and 20 ms of it made gaps of 58 ms, the slowest
+            // frames shown; 1 Mbit/s random screens 1% low 8.4 to 11.4,
+            // 5% low 16.6 to 19.7, for 8 ms of age).
+            let wait = if self.modelled() { FRESH_WAIT.min(gap / 4) } else { FRESH_WAIT };
             return Some(match self.output_at {
                 Some(at) if at >= idle => at,
                 Some(at) => {
                     let next = at + self.output_gap;
-                    if next > idle && next <= idle + FRESH_WAIT { next } else { idle }
+                    if next > idle && next <= idle + wait { next } else { idle }
                 }
                 None => idle,
             });
