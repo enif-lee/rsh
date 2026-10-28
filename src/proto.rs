@@ -166,9 +166,6 @@ pub const SMALL_LEVEL: u8 = 9;
 /// Deflate elsewhere: 4 to 5 times faster than `SMALL_LEVEL` on a full
 /// screen of colours (177 MB/s) for a sixth more bytes.
 pub const FAST_LEVEL: u8 = 2;
-/// Stored blocks: output that compresses poorly on a link that carries it
-/// anyway goes as it is, as ssh sends it.
-pub const STORED_LEVEL: u8 = 0;
 
 impl Default for Deflater {
     fn default() -> Self {
@@ -2396,7 +2393,7 @@ mod tests {
             .iter()
             .enumerate()
             .map(|(i, u)| {
-                z.set_level([FAST_LEVEL, SMALL_LEVEL, STORED_LEVEL][i / 30 % 3]);
+                z.set_level(if i / 30 % 2 == 0 { FAST_LEVEL } else { SMALL_LEVEL });
                 z.push(u)
             })
             .collect();

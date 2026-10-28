@@ -79,9 +79,13 @@ const TAIL_WAIT: Duration = Duration::from_millis(20);
 const WELL_COMPRESSED: f64 = 4.0;
 /// Pushes this large or larger say how well output compresses.
 const RATIO_MIN: usize = 256;
-/// One push in this many is compressed while output goes stored, to see
-/// how well it compresses.
-const RATIO_PROBE: u32 = 16;
+/// Once at level 9 for output that compresses well, it stays there until
+/// output compresses less than this (`pick_level`): output near the line
+/// does not swap compressors back and forth.
+const STILL_COMPRESSED: f64 = 3.0;
+/// A level holds at least this long, but for the link limiting the screen,
+/// which takes level 9 at once (`pick_level`).
+const LEVEL_DWELL: Duration = Duration::from_secs(1);
 /// Output for the compressor waits while the program is still writing (its
 /// next read this soon), up to `GATHER_MAX` or `GATHER_BYTES`: one flush
 /// and datagram for what came in many small reads (`yes`, a build log), not
@@ -276,8 +280,8 @@ struct Attachment {
     made: (Instant, usize, usize),
     /// Stream bytes per deflated byte lately: the first slice to try.
     ratio: f64,
-    /// Pushes into the compressed stream (`RATIO_PROBE`).
-    z_pushes: u32,
+    /// When the compressor took its level (`LEVEL_DWELL`).
+    z_since: Option<Instant>,
     /// Output goes twice (see `DOUBLE_ON`); from the start, until the
     /// path shows it need not.
     doubling: bool,
@@ -661,6 +665,27 @@ fn serve(shared: Arc<Shared>) {
     }
 }
 
+/// Deflate's level for the next push into a compressed stream at `current`
+/// (None: a new one): the smallest output where the link limits the screen
+/// (a slow path, or screen updates; it limits what there is to compress
+/// too) or where output compresses well (level 9 is fast there: a
+/// dashboard is 180 MB/s); the fastest elsewhere (a full screen of colours:
+/// 177 MB/s at 2, 39 at 9, for 0.43 and 0.36 of its size). Each change
+/// starts a compressor, so a level is held `LEVEL_DWELL` (`held`: since it
+/// was taken) and output compressing between `STILL_COMPRESSED` and
+/// `WELL_COMPRESSED` keeps the one it has.
+fn pick_level(current: Option<u8>, ratio: f64, limited: bool, held: Option<Duration>) -> u8 {
+    if limited {
+        return proto::SMALL_LEVEL;
+    }
+    let well = if current == Some(proto::SMALL_LEVEL) { ratio >= STILL_COMPRESSED } else { ratio >= WELL_COMPRESSED };
+    let want = if well { proto::SMALL_LEVEL } else { proto::FAST_LEVEL };
+    match current {
+        Some(level) if level != want && held.is_some_and(|held| held < LEVEL_DWELL) => level,
+        _ => want,
+    }
+}
+
 /// Version of the state `export` writes; a binary that reads another one
 /// is refused before exec (`rsh --handoff-format`).
 pub const HANDOFF_FORMAT: u32 = 3;
@@ -797,7 +822,7 @@ fn import(bytes: &[u8]) -> Option<Handoff> {
                 step_bytes: 0,
                 made: (now, 0, 0),
                 ratio: 4.0,
-                z_pushes: 0,
+                z_since: None,
                 doubling: true,
                 end_offset: None,
                 forward,
@@ -1233,7 +1258,7 @@ impl State {
             step_bytes: 0,
             made: (now, 0, 0),
             ratio: 4.0,
-            z_pushes: 0,
+            z_since: None,
             doubling: true,
             end_offset: None,
             forward,
@@ -2121,21 +2146,11 @@ impl Attachment {
         Some(quiet.min(since + GATHER_MAX))
     }
 
-    /// Deflate's level for what goes into the stream now: the smallest
-    /// output where the link limits the screen (a slow path, or screen
-    /// updates; it limits what there is to compress too) or where output
-    /// compresses well (level 9 is fast there: a dashboard is 180 MB/s);
-    /// the fastest elsewhere (a full screen of colours: 177 MB/s at 2, 39
-    /// at 9, for 0.43 and 0.36 of its size).
-    fn z_level(&self) -> u8 {
-        if self.ratio >= WELL_COMPRESSED || self.syncing_until.is_some() || self.output.slow_rate().is_some() {
-            proto::SMALL_LEVEL
-        } else if self.z_pushes % RATIO_PROBE == 0 {
-            // Now and then compressed, to see whether it still does poorly.
-            proto::FAST_LEVEL
-        } else {
-            proto::STORED_LEVEL
-        }
+    /// Deflate's level for what goes into the stream now (`pick_level`).
+    fn z_level(&self, now: Instant) -> u8 {
+        let limited = self.syncing_until.is_some() || self.output.slow_rate().is_some();
+        let held = self.z_since.map(|at| now.saturating_duration_since(at));
+        pick_level(self.z.as_ref().map(proto::Deflater::level), self.ratio, limited, held)
     }
 
     /// Bytes `bytes` are expected to take in the stream.
@@ -2173,15 +2188,17 @@ impl Attachment {
             self.switched = Some(self.output.gen);
         }
         let raw = std::mem::take(&mut self.zraw);
-        let level = self.z_level();
-        self.z_pushes = self.z_pushes.wrapping_add(1);
+        let now = Instant::now();
+        let level = self.z_level(now);
         let z = self.z.as_mut().expect("compressor");
-        z.set_level(level);
+        if z.level() != level {
+            z.set_level(level);
+            self.z_since = Some(now);
+        }
         let packed = z.push(&raw);
-        let stored = z.level() == proto::STORED_LEVEL;
         // Not from a few bytes (a key's echo): a flush's own bytes would
         // make anything look incompressible, and hold `z_level` low.
-        if raw.len() >= RATIO_MIN && !stored {
+        if raw.len() >= RATIO_MIN {
             self.ratio = (raw.len() as f64 / packed.len().max(1) as f64).clamp(1.0, 64.0);
         }
         self.output.push(&packed);
@@ -2193,7 +2210,9 @@ impl Attachment {
     fn reset_output(&mut self, bytes: &[u8]) {
         self.zraw.clear();
         if self.wants_z() {
-            let mut z = proto::Deflater::new(self.z_level());
+            let now = Instant::now();
+            let mut z = proto::Deflater::new(self.z_level(now));
+            self.z_since = Some(now);
             self.output.reset(&z.push(bytes));
             self.z = Some(z);
         } else {
@@ -2414,4 +2433,29 @@ fn sanitize_name(name: &str) -> Option<String> {
         .take(64)
         .collect();
     (!clean.is_empty()).then_some(clean)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_level_follows_the_link_at_once_and_the_output_with_a_lag() {
+        let (small, fast) = (proto::SMALL_LEVEL, proto::FAST_LEVEL);
+        let long = Some(LEVEL_DWELL * 2);
+        let short = Some(LEVEL_DWELL / 4);
+        // A new stream: by how well output compressed.
+        assert_eq!(pick_level(None, 10.0, false, None), small);
+        assert_eq!(pick_level(None, 2.3, false, None), fast);
+        // The link limiting the screen: level 9 at once, held or not.
+        assert_eq!(pick_level(Some(fast), 2.3, true, short), small);
+        // Between the lines the level stays: up at 4, down below 3.
+        assert_eq!(pick_level(Some(fast), 3.5, false, long), fast);
+        assert_eq!(pick_level(Some(small), 3.5, false, long), small);
+        assert_eq!(pick_level(Some(small), 2.9, false, long), fast);
+        assert_eq!(pick_level(Some(fast), 4.0, false, long), small);
+        // Not within the dwell of the last change.
+        assert_eq!(pick_level(Some(small), 2.0, false, short), small);
+        assert_eq!(pick_level(Some(fast), 10.0, false, short), fast);
+    }
 }

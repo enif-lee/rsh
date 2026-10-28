@@ -143,6 +143,10 @@ pub struct Cell {
 
 const SPACER: char = '\0';
 
+/// Screen updates set the column again after at most this many non-ASCII
+/// cells in a row (`span`).
+const WIDE_RUN: usize = 8;
+
 /// The length of a CSI's parameters and final byte at the start of `bytes`
 /// when it has only digits and separators: None for anything else, or one
 /// not all there.
@@ -942,7 +946,10 @@ impl Terminal {
         };
         let (hc, ho): (Vec<u64>, Vec<u64>) = (cur.iter().map(hash).collect(), old.iter().map(hash).collect());
         let blank = Cell::of(&GridCell::default());
-        let mut out = String::from("\x1b[?2026h\x1b[0m\x1b(B\x0f\x1b[?6l\x1b[4l");
+        // Autowrap off too while drawing: a terminal that draws a run of
+        // non-ASCII cells wider than here (`WIDE_RUN`) must not wrap or
+        // scroll with it at the right edge.
+        let mut out = String::from("\x1b[?2026h\x1b[0m\x1b(B\x0f\x1b[?6l\x1b[4l\x1b[?7l");
         // The longest run of rows that moved together by k (up when k > 0).
         let mut best: Option<(isize, usize, usize)> = None;
         for k in (1..rows as isize).flat_map(|k| [k, -k]) {
@@ -983,7 +990,7 @@ impl Terminal {
                 return None;
             }
             let last = (0..cur[row].len()).rev().find(|&col| cur[row][col] != old[row][col]).unwrap_or(first);
-            out.push_str(&String::from_utf8_lossy(&self.span(row, first, last + 1, false, true)));
+            out.push_str(&String::from_utf8_lossy(&self.span(row, first, last + 1, false, true, WIDE_RUN)));
         }
         let (top, bottom) = self.extra.region;
         if top != 0 || bottom != rows {
@@ -991,10 +998,13 @@ impl Terminal {
         } else {
             out.push_str("\x1b[r");
         }
-        // Origin and insert mode were turned off to draw; the rest only
-        // where they changed (`CSI > u` pushes a kitty stack entry: never
-        // sent again for the same flags).
+        // Origin, insert mode and autowrap were turned off to draw; the
+        // rest only where they changed (`CSI > u` pushes a kitty stack
+        // entry: never sent again for the same flags).
         let mode = self.mode();
+        if mode.contains(TermMode::LINE_WRAP) {
+            out.push_str("\x1b[?7h");
+        }
         if mode.contains(TermMode::ORIGIN) {
             out.push_str("\x1b[?6h");
         }
@@ -1014,17 +1024,19 @@ impl Terminal {
     /// Repaints columns `from..to` of one row as the program left them,
     /// without moving anything else; the caller restores the cursor.
     pub fn render_span(&self, row: usize, from: usize, to: usize) -> Vec<u8> {
-        self.span(row, from, to, false, false)
+        self.span(row, from, to, false, false, 1)
     }
 
     /// The same span drawn faint, to show the screen is not live.
     pub fn render_span_dimmed(&self, row: usize, from: usize, to: usize) -> Vec<u8> {
-        self.span(row, from, to, true, false)
+        self.span(row, from, to, true, false, 1)
     }
 
     /// `delta`: a change of pen sets only what changed when nothing needs
     /// turning off (a screen update's run of colours costs a colour each).
-    fn span(&self, row: usize, from: usize, to: usize, dim: bool, delta: bool) -> Vec<u8> {
+    /// `wide_run`: the column is set again after at most this many
+    /// non-ASCII cells in a row, and where such a run ends.
+    fn span(&self, row: usize, from: usize, to: usize, dim: bool, delta: bool, wide_run: usize) -> Vec<u8> {
         let term = self.term.borrow();
         let cols = term.columns();
         if row >= term.screen_lines() {
@@ -1040,6 +1052,7 @@ impl Terminal {
         let _ = write!(out, "\x1b[{};{}H", row + 1, from + 1);
         let mut attr = None;
         let mut col = from;
+        let mut run = 0;
         while col < to {
             let cell = &line[Column(col)];
             let mut ours = Attr::of(cell);
@@ -1058,12 +1071,19 @@ impl Terminal {
             }
             push_cell(&mut out, cell);
             col += if cell.flags.contains(Flags::WIDE_CHAR) { 2 } else { 1 };
-            // The column set again where a run of non-ASCII cells ends (a
-            // terminal that draws one of them at another width puts what
-            // follows right), not after each: a bar of blocks was twice
+            // The column set again where a run of non-ASCII cells ends, or
+            // every `wide_run` of them (a terminal that draws them at
+            // another width puts what follows right, and strays at most
+            // that many columns): after each, a bar of blocks was twice
             // its bytes in column moves.
-            if !cell.c.is_ascii() && (col >= to || line[Column(col)].c.is_ascii()) {
-                let _ = write!(out, "\x1b[{}G", col + 1);
+            if cell.c.is_ascii() {
+                run = 0;
+            } else {
+                run += 1;
+                if run >= wide_run || col >= to || line[Column(col)].c.is_ascii() {
+                    let _ = write!(out, "\x1b[{}G", col + 1);
+                    run = 0;
+                }
             }
         }
         out.push_str("\x1b[0m");
@@ -1646,6 +1666,97 @@ mod tests {
         assert_eq!(whole.synchronized(), bytes.synchronized());
         assert_eq!(whole.render(0), bytes.render(0));
         assert!(whole.same_screen(&bytes));
+    }
+
+    /// Random output of the pieces the probe cares about, fed at once
+    /// (simple CSIs skip the probe) and a byte at a time (they never can):
+    /// the same screen, ground and synchronized output.
+    #[test]
+    fn simple_csis_skip_the_probe_without_changing_anything_on_random_output() {
+        const PIECES: &[&str] = &[
+            "\x1b[", "\x1b", "1", "38", ";", ":", "5", "m", "H", "J", "K", "?", "2026", "h", "l", "!", "p", " q", "\x07", "\x18", "\r\n", "x", "한", "█",
+            "\x1b]2;t\x07", "\x1bk", "\x1b\\", "\x1b(0", "\x1b[?1049h", "\x1b[?1049l", "\x1b[3;7r", "\x1b[2;4H",
+        ];
+        let mut seed = 0x9e37_79b9_7f4a_7c15u64;
+        let mut next = move || {
+            seed ^= seed << 13;
+            seed ^= seed >> 7;
+            seed ^= seed << 17;
+            seed
+        };
+        for case in 0..2000 {
+            let text: String = (0..40 + next() % 80).map(|_| PIECES[(next() % PIECES.len() as u64) as usize]).collect();
+            let mut whole = Terminal::with_size(12, 6);
+            let mut bytes = Terminal::with_size(12, 6);
+            let cut = whole.feed_to_ground(text.as_bytes());
+            let mut last = 0;
+            for (i, b) in text.bytes().enumerate() {
+                if bytes.feed_to_ground(&[b]) == 1 {
+                    last = i + 1;
+                }
+            }
+            assert_eq!(cut, last, "case {case}: {text:?}");
+            assert_eq!(whole.at_ground(), bytes.at_ground(), "case {case}: {text:?}");
+            assert_eq!(whole.synchronized(), bytes.synchronized(), "case {case}: {text:?}");
+            assert_eq!(whole.render(0), bytes.render(0), "case {case}: {text:?}");
+        }
+    }
+
+    /// A screen update drawn by a terminal that takes every non-ASCII cell
+    /// as two columns (an ambiguous-width setting): it never strays more
+    /// than `WIDE_RUN` columns from where this terminal has each cell, and
+    /// never wraps; autowrap is back on at the end.
+    #[test]
+    fn a_wider_terminal_strays_little_from_a_screen_update() {
+        let mut shadow = Terminal::with_history(30, 3, 0);
+        let mut term = Terminal::with_history(30, 3, 0);
+        let bar = |n: usize| "█".repeat(n);
+        shadow.feed(format!("\x1b[1;1Hcpu {}\x1b[2;1H{}|end\x1b[3;1H{}", bar(3), bar(4), bar(5)).as_bytes());
+        term.feed(format!("\x1b[1;1Hcpu {}\x1b[2;1H{}|end\x1b[3;1H{}", bar(26), bar(20), bar(30)).as_bytes());
+        let update = String::from_utf8(term.diff_from(&shadow).expect("a diff")).expect("utf-8");
+        // The wider terminal: a cursor column, no wrap while autowrap is
+        // off; how far each cell lands from this terminal's column for it.
+        let (mut col, mut ours, mut wrap, mut stray) = (0usize, 0usize, true, 0usize);
+        let mut chars = update.chars().peekable();
+        while let Some(c) = chars.next() {
+            if c == '\x1b' {
+                let mut seq = String::new();
+                while let Some(&n) = chars.peek() {
+                    seq.push(n);
+                    chars.next();
+                    if seq.len() > 1 && n.is_ascii_alphabetic() || seq == "(B" {
+                        break;
+                    }
+                }
+                let num = |s: &str| s.trim_start_matches('[').trim_end_matches(|c: char| c.is_ascii_alphabetic()).split(';').last().and_then(|n| n.parse::<usize>().ok());
+                match seq.chars().last() {
+                    Some('H') => {
+                        col = num(&seq).map_or(0, |n| n - 1);
+                        ours = col;
+                    }
+                    Some('G') => {
+                        col = num(&seq).map_or(0, |n| n - 1);
+                        ours = col;
+                    }
+                    Some('l') if seq == "[?7l" => wrap = false,
+                    Some('h') if seq == "[?7h" => wrap = true,
+                    _ => {}
+                }
+                continue;
+            }
+            if c.is_control() {
+                continue;
+            }
+            assert!(!wrap || col < 30, "drew at column {col} with autowrap on");
+            stray = stray.max(col.saturating_sub(ours));
+            col = (col + if c.is_ascii() { 1 } else { 2 }).min(30);
+            ours += 1;
+        }
+        assert!(stray > 0, "the test draws wide");
+        assert!(stray <= 8, "strayed {stray} columns");
+        assert!(wrap, "autowrap restored");
+        shadow.feed(update.as_bytes());
+        assert!(term.same_screen(&shadow));
     }
 
     /// What a screen update costs the server, a frame at a time, on output
