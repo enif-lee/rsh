@@ -153,7 +153,7 @@ pub struct Deflater(Box<miniz_oxide::deflate::core::CompressorOxide>);
 
 impl Default for Deflater {
     fn default() -> Self {
-        let flags = miniz_oxide::deflate::core::create_comp_flags_from_zip_params(9, -15, 0);
+        let flags = miniz_oxide::deflate::core::create_comp_flags_from_zip_params(1, -15, 0);
         Deflater(Box::new(miniz_oxide::deflate::core::CompressorOxide::new(flags)))
     }
 }
