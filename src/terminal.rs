@@ -143,6 +143,22 @@ pub struct Cell {
 
 const SPACER: char = '\0';
 
+/// The length of a CSI's parameters and final byte at the start of `bytes`
+/// when it has only digits and separators: None for anything else, or one
+/// not all there.
+fn simple_csi(bytes: &[u8]) -> Option<usize> {
+    for (i, &b) in bytes.iter().enumerate().take(MAX_SIMPLE_CSI) {
+        match b {
+            b'0'..=b'9' | b';' | b':' => {}
+            0x40..=0x7e => return Some(i + 1),
+            _ => return None,
+        }
+    }
+    None
+}
+
+const MAX_SIMPLE_CSI: usize = 64;
+
 /// Multiply-rotate hashing (as rustc's FxHasher): fast, not collision
 /// resistant, for comparing rows that are checked afterwards.
 struct RowHasher(u64);
@@ -474,6 +490,22 @@ impl Terminal {
                 // ESC ESC: the second restarts the sequence and the first
                 // does nothing, so only the second is held.
                 Skip::Esc if byte == 0x1b => continue,
+                // A whole CSI of digits and separators (colours, cursor
+                // moves: most of a full-screen program's sequences) ends at
+                // ground with nothing the probe looks for (no `!`, `?`, C0):
+                // passed on without stepping the probe a byte at a time.
+                Skip::Esc if byte == b'[' && simple_csi(&bytes[index + 1..]).is_some() => {
+                    let end = index + 1 + simple_csi(&bytes[index + 1..]).expect("simple csi");
+                    pass.push(0x1b);
+                    pass.extend_from_slice(&bytes[index..end]);
+                    self.skip = Skip::Off;
+                    self.ground = true;
+                    self.in_sequence = false;
+                    self.run = 0;
+                    cut = end;
+                    skip_to = end;
+                    continue;
+                }
                 Skip::Esc => {
                     self.skip = Skip::Off;
                     self.step(0x1b, &mut pass);
@@ -1026,7 +1058,11 @@ impl Terminal {
             }
             push_cell(&mut out, cell);
             col += if cell.flags.contains(Flags::WIDE_CHAR) { 2 } else { 1 };
-            if !cell.c.is_ascii() {
+            // The column set again where a run of non-ASCII cells ends (a
+            // terminal that draws one of them at another width puts what
+            // follows right), not after each: a bar of blocks was twice
+            // its bytes in column moves.
+            if !cell.c.is_ascii() && (col >= to || line[Column(col)].c.is_ascii()) {
                 let _ = write!(out, "\x1b[{}G", col + 1);
             }
         }
@@ -1588,6 +1624,30 @@ fn printable_char(bytes: &[u8]) -> Option<usize> {
 
 #[cfg(test)]
 mod tests {
+    /// A CSI of digits and separators skips the probe (`simple_csi`) only
+    /// when it is all there: fed at once and a byte at a time (where it
+    /// never is), output leaves the same screen, ground, synchronized
+    /// output and soft reset.
+    #[test]
+    fn simple_csis_end_where_the_probe_would_end_them() {
+        let text = "a\x1b[1;31mred\x1b[0m\x1b[2;5H\x1b[?2026h\x1b[3;1Hsync\x1b[1;2\x07X\x1b[38:5:200mb\x1b[4mu\x1b[!p\x1b[5;1Hafter\x1b[?2026l\x1b[6;1H\x1b[10";
+        let mut whole = Terminal::with_size(20, 8);
+        let mut bytes = Terminal::with_size(20, 8);
+        let cut = whole.feed_to_ground(text.as_bytes());
+        let mut last = 0;
+        for (i, b) in text.bytes().enumerate() {
+            if bytes.feed_to_ground(&[b]) == 1 {
+                last = i + 1;
+            }
+        }
+        assert_eq!(cut, last, "the same last ground point");
+        assert_eq!(whole.at_ground(), bytes.at_ground());
+        assert!(!whole.at_ground(), "the unfinished CSI at the end holds it");
+        assert_eq!(whole.synchronized(), bytes.synchronized());
+        assert_eq!(whole.render(0), bytes.render(0));
+        assert!(whole.same_screen(&bytes));
+    }
+
     /// What a screen update costs the server, a frame at a time, on output
     /// captured from a 100x30 terminal (`RSH_SCREEN_BENCH=<file>`; frames
     /// start at `ESC [1;1H ESC [7m FRAME`, as benchmark/lab/scene.py draws):

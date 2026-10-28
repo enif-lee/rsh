@@ -166,6 +166,9 @@ pub const SMALL_LEVEL: u8 = 9;
 /// Deflate elsewhere: 4 to 5 times faster than `SMALL_LEVEL` on a full
 /// screen of colours (177 MB/s) for a sixth more bytes.
 pub const FAST_LEVEL: u8 = 2;
+/// Stored blocks: output that compresses poorly on a link that carries it
+/// anyway goes as it is, as ssh sends it.
+pub const STORED_LEVEL: u8 = 0;
 
 impl Default for Deflater {
     fn default() -> Self {
@@ -183,6 +186,10 @@ impl Deflater {
     /// so its blocks go on the same raw stream, and the client's history
     /// holds the same window. (flate2's set_level fails on zlib-rs between
     /// levels of different kinds: its flush gets no output buffer.)
+    pub fn level(&self) -> u8 {
+        self.level
+    }
+
     pub fn set_level(&mut self, level: u8) {
         if level == self.level {
             return;
@@ -2389,7 +2396,7 @@ mod tests {
             .iter()
             .enumerate()
             .map(|(i, u)| {
-                z.set_level(if i / 30 % 2 == 0 { FAST_LEVEL } else { SMALL_LEVEL });
+                z.set_level([FAST_LEVEL, SMALL_LEVEL, STORED_LEVEL][i / 30 % 3]);
                 z.push(u)
             })
             .collect();
@@ -2407,9 +2414,10 @@ mod tests {
         for (piece, update) in packed.iter().zip(&updates) {
             assert_eq!(&inflater.push(piece).unwrap(), update);
         }
-        // History across updates: later ones cost a fraction of their size.
-        let late: usize = packed[100..].iter().map(Vec::len).sum();
-        let raw: usize = updates[100..].iter().map(Vec::len).sum();
+        // History across updates: later ones (at a compressing level) cost
+        // a fraction of their size.
+        let late: usize = packed[120..150].iter().map(Vec::len).sum();
+        let raw: usize = updates[120..150].iter().map(Vec::len).sum();
         assert!(late * 2 < raw, "{late} of {raw}");
         assert!(Inflater::default().push(b"\xff\xff\xff\xff").is_none(), "a broken stream is told");
     }

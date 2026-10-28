@@ -79,6 +79,9 @@ const TAIL_WAIT: Duration = Duration::from_millis(20);
 const WELL_COMPRESSED: f64 = 4.0;
 /// Pushes this large or larger say how well output compresses.
 const RATIO_MIN: usize = 256;
+/// One push in this many is compressed while output goes stored, to see
+/// how well it compresses.
+const RATIO_PROBE: u32 = 16;
 /// Output for the compressor waits while the program is still writing (its
 /// next read this soon), up to `GATHER_MAX` or `GATHER_BYTES`: one flush
 /// and datagram for what came in many small reads (`yes`, a build log), not
@@ -273,6 +276,8 @@ struct Attachment {
     made: (Instant, usize, usize),
     /// Stream bytes per deflated byte lately: the first slice to try.
     ratio: f64,
+    /// Pushes into the compressed stream (`RATIO_PROBE`).
+    z_pushes: u32,
     /// Output goes twice (see `DOUBLE_ON`); from the start, until the
     /// path shows it need not.
     doubling: bool,
@@ -792,6 +797,7 @@ fn import(bytes: &[u8]) -> Option<Handoff> {
                 step_bytes: 0,
                 made: (now, 0, 0),
                 ratio: 4.0,
+                z_pushes: 0,
                 doubling: true,
                 end_offset: None,
                 forward,
@@ -1227,6 +1233,7 @@ impl State {
             step_bytes: 0,
             made: (now, 0, 0),
             ratio: 4.0,
+            z_pushes: 0,
             doubling: true,
             end_offset: None,
             forward,
@@ -2123,8 +2130,11 @@ impl Attachment {
     fn z_level(&self) -> u8 {
         if self.ratio >= WELL_COMPRESSED || self.syncing_until.is_some() || self.output.slow_rate().is_some() {
             proto::SMALL_LEVEL
-        } else {
+        } else if self.z_pushes % RATIO_PROBE == 0 {
+            // Now and then compressed, to see whether it still does poorly.
             proto::FAST_LEVEL
+        } else {
+            proto::STORED_LEVEL
         }
     }
 
@@ -2164,12 +2174,14 @@ impl Attachment {
         }
         let raw = std::mem::take(&mut self.zraw);
         let level = self.z_level();
+        self.z_pushes = self.z_pushes.wrapping_add(1);
         let z = self.z.as_mut().expect("compressor");
         z.set_level(level);
         let packed = z.push(&raw);
+        let stored = z.level() == proto::STORED_LEVEL;
         // Not from a few bytes (a key's echo): a flush's own bytes would
         // make anything look incompressible, and hold `z_level` low.
-        if raw.len() >= RATIO_MIN {
+        if raw.len() >= RATIO_MIN && !stored {
             self.ratio = (raw.len() as f64 / packed.len().max(1) as f64).clamp(1.0, 64.0);
         }
         self.output.push(&packed);
