@@ -2114,18 +2114,15 @@ impl Attachment {
         Some(quiet.min(since + GATHER_MAX))
     }
 
-    /// Deflate's level for what goes into the stream now. Output that
-    /// compresses well, the smallest (level 9 is fast there: a dashboard
-    /// is 160 MB/s). Other output, which costs more the harder it is
-    /// compressed (a full screen of colours: 245 MB/s at 1, 34 at 6, 8 at
-    /// 9, for 0.45, 0.39 and 0.37 of its size): where the link limits the
-    /// screen (a slow path, or screen updates) a middle level, as most of
-    /// the saving goes to it; elsewhere the fastest.
+    /// Deflate's level for what goes into the stream now: the smallest
+    /// output where the link limits the screen (a slow path, or screen
+    /// updates; it limits what there is to compress too) or where output
+    /// compresses well (level 9 is fast there: a dashboard is 180 MB/s);
+    /// the fastest elsewhere (a full screen of colours: 177 MB/s at 2, 39
+    /// at 9, for 0.43 and 0.36 of its size).
     fn z_level(&self) -> u8 {
-        if self.ratio >= WELL_COMPRESSED {
+        if self.ratio >= WELL_COMPRESSED || self.syncing_until.is_some() || self.output.slow_rate().is_some() {
             proto::SMALL_LEVEL
-        } else if self.syncing_until.is_some() || self.output.slow_rate().is_some() {
-            proto::MIDDLE_LEVEL
         } else {
             proto::FAST_LEVEL
         }

@@ -147,20 +147,25 @@ pub fn inflate(bytes: &[u8]) -> Option<Vec<u8>> {
 /// everything sent before, so a small screen update costs a few bytes.
 /// Each `push` ends on a sync flush, so the client can show all of it once
 /// it has those bytes. The level may change between pushes (`set_level`).
+/// zlib-rs, not miniz_oxide: its SIMD level 9 is 4 to 5 times faster on a
+/// full screen of colours (39 MB/s against 8), for the same bytes.
 pub struct Deflater {
-    z: Box<miniz_oxide::deflate::core::CompressorOxide>,
+    z: flate2::Compress,
     level: u8,
+    /// The last `WINDOW_BYTES` of input: a compressor at another level
+    /// starts from them.
+    history: Vec<u8>,
 }
 
-/// Deflate where the link limits the screen: a third smaller than
-/// `FAST_LEVEL` on a dashboard, so more frames get through.
+/// Deflate's window: as far back as a match can reach.
+const WINDOW_BYTES: usize = 32 * 1024;
+
+/// Deflate where the link limits the screen or output compresses well: a
+/// third smaller than `FAST_LEVEL` on a dashboard.
 pub const SMALL_LEVEL: u8 = 9;
-/// Deflate elsewhere: 30 times faster than `SMALL_LEVEL` on a full screen
-/// of colours (level 9 took most of the server's CPU there).
-pub const FAST_LEVEL: u8 = 1;
-/// Between them: on a full screen of colours 4 times faster than
-/// `SMALL_LEVEL` for 7% more bytes.
-pub const MIDDLE_LEVEL: u8 = 6;
+/// Deflate elsewhere: 4 to 5 times faster than `SMALL_LEVEL` on a full
+/// screen of colours (177 MB/s) for a sixth more bytes.
+pub const FAST_LEVEL: u8 = 2;
 
 impl Default for Deflater {
     fn default() -> Self {
@@ -170,33 +175,42 @@ impl Default for Deflater {
 
 impl Deflater {
     pub fn new(level: u8) -> Self {
-        let flags = miniz_oxide::deflate::core::create_comp_flags_from_zip_params(level.into(), -15, 0);
-        Deflater { z: Box::new(miniz_oxide::deflate::core::CompressorOxide::new(flags)), level }
+        Deflater { z: flate2::Compress::new(flate2::Compression::new(level.into()), false), level, history: Vec::new() }
     }
 
-    /// The level for the pushes from now on; the stream goes on (each push
-    /// ends a block, and deflate's history does not depend on the level).
+    /// The level for the pushes from now on. A new compressor with the last
+    /// window of input as its dictionary: each push ended on a sync flush,
+    /// so its blocks go on the same raw stream, and the client's history
+    /// holds the same window. (flate2's set_level fails on zlib-rs between
+    /// levels of different kinds: its flush gets no output buffer.)
     pub fn set_level(&mut self, level: u8) {
-        if level != self.level {
-            self.z.set_compression_level_raw(level);
+        if level == self.level {
+            return;
+        }
+        let mut z = flate2::Compress::new(flate2::Compression::new(level.into()), false);
+        if z.set_dictionary(&self.history).is_ok() {
+            self.z = z;
             self.level = level;
         }
     }
 
     pub fn push(&mut self, bytes: &[u8]) -> Vec<u8> {
-        use miniz_oxide::deflate::core::{compress, TDEFLFlush, TDEFLStatus};
-        let mut out = vec![0u8; bytes.len() + bytes.len() / 8 + 64];
-        let (mut read, mut written) = (0, 0);
+        let mut out = Vec::with_capacity(bytes.len() + bytes.len() / 8 + 64);
+        let start = self.z.total_in();
         loop {
-            let (status, r, w) = compress(&mut self.z, &bytes[read..], &mut out[written..], TDEFLFlush::Sync);
-            read += r;
-            written += w;
-            if status != TDEFLStatus::Okay || (read == bytes.len() && written < out.len()) {
+            let read = (self.z.total_in() - start) as usize;
+            // In memory, raw deflate: nothing to fail on.
+            self.z.compress_vec(&bytes[read..], &mut out, flate2::FlushCompress::Sync).expect("deflate");
+            // Done once all is in and the flush had room to end.
+            if (self.z.total_in() - start) as usize == bytes.len() && out.len() < out.capacity() {
                 break;
             }
-            out.resize(out.len() * 2, 0);
+            out.reserve(out.capacity().max(64));
         }
-        out.truncate(written);
+        let keep = bytes.len().min(WINDOW_BYTES);
+        let drop = (self.history.len() + keep).saturating_sub(WINDOW_BYTES);
+        self.history.drain(..drop);
+        self.history.extend_from_slice(&bytes[bytes.len() - keep..]);
         out
     }
 }
