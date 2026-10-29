@@ -296,6 +296,18 @@ python3 benchmark/lab/lab.py demo --tools ssh,mosh,rsh --events '' \
   --nets moving --scenes compress,bandwidth --fps 60 --duration 60
 ```
 
+To compare two Linux builds, pass `--rsh /path/to/baseline` and
+`--rsh-b /path/to/candidate`. Select `rsh,rsh-b` for UDP or
+`rsh-tcp,rsh-b-tcp` for TCP. Both `run` and `demo` install the requested
+builds; the second uses port 2223. For example, a four-pane moving demo:
+
+```sh
+python3 benchmark/lab/lab.py demo \
+  --rsh /path/to/baseline --rsh-b /path/to/candidate \
+  --tools ssh,mosh,rsh-tcp,rsh-b-tcp --events '' \
+  --nets moving --scenes compress,bandwidth --fps 60
+```
+
 The moving profile repeats a 30-second sequence of congestion, weak
 signal, a one-second handover outage and recovery. All sessions use the
 same intended delay/rate/outage schedule on the Docker VM clock. Each

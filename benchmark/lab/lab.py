@@ -72,13 +72,14 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 IMAGE = "rsh-bench"
 # `rsh-tcp` is rsh over TCP: its slot's server drops UDP, so the client
 # goes over TCP as on a network that lets only TCP through.
-TOOLS = ["ssh", "et", "mosh", "rsh", "rsh-tcp", "rsh-b"]
-LABEL = {"ssh": "OpenSSH", "et": "ET", "mosh": "mosh", "rsh": "rsh (UDP)", "rsh-tcp": "rsh (TCP)", "rsh-b": "rsh (B)"}
-PROCESS = {"ssh": "ssh", "et": "et", "mosh": "mosh-client", "rsh": "rsh", "rsh-tcp": "rsh", "rsh-b": "rsh-b"}
+TOOLS = ["ssh", "et", "mosh", "rsh", "rsh-tcp", "rsh-b", "rsh-b-tcp"]
+LABEL = {"ssh": "OpenSSH", "et": "ET", "mosh": "mosh", "rsh": "rsh (UDP)", "rsh-tcp": "rsh (TCP)", "rsh-b": "rsh (B UDP)", "rsh-b-tcp": "rsh (B TCP)"}
+PROCESS = {"ssh": "ssh", "et": "et", "mosh": "mosh-client", "rsh": "rsh", "rsh-tcp": "rsh", "rsh-b": "rsh-b", "rsh-b-tcp": "rsh-b"}
 # Each tool's server side, as `ps -C` names it (sshd: the listener too).
-SERVER_PROCESS = {"ssh": "sshd", "et": "etserver,etterminal", "mosh": "mosh-server", "rsh": "rsh", "rsh-tcp": "rsh", "rsh-b": "rsh-b"}
+SERVER_PROCESS = {"ssh": "sshd", "et": "etserver,etterminal", "mosh": "mosh-server", "rsh": "rsh", "rsh-tcp": "rsh", "rsh-b": "rsh-b", "rsh-b-tcp": "rsh-b"}
 CLIENT = {"ssh": "ssh -tt dev@server", "et": "et dev@server:2022", "mosh": "mosh dev@server", "rsh": "rsh server demo", "rsh-tcp": "rsh server demo",
-          "rsh-b": "env RSH_PEER=server:2223 rsh-b server demo"}
+          "rsh-b": "env RSH_PEER=server:2223 rsh-b server demo",
+          "rsh-b-tcp": "env RSH_PEER=server:2223 rsh-b server demo"}
 # One-way delay (ms, both ways), loss (%, both ways), server-to-client rate.
 NETS = {
     "lan": (0, 0, None, "LAN"),
@@ -351,7 +352,7 @@ def run_job(k, job):
     began = time.time()
     # What the job leaves behind the next one's `prepare` (or the end of
     # the run) takes away.
-    prepare(k, job["net"], job["test"] == "udpblock" or job["tool"] == "rsh-tcp")
+    prepare(k, job["net"], job["test"] == "udpblock" or job["tool"] in ("rsh-tcp", "rsh-b-tcp"))
     proc = subprocess.Popen(["docker", "exec", "-i", cli(k), "python3", "/tmp/agent.py", "run", json.dumps(job)],
                             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     other = []
@@ -906,6 +907,8 @@ def demo(opts):
         sys.exit("lab: the demo needs slots 0-%d; `lab.py down`, or `lab.py up --slots %d`" % (len(tools) - 1, len(tools)))
     if opts.rsh:
         install_rsh(opts.rsh, range(len(tools)))
+    if opts.rsh_b:
+        install_rsh_b(opts.rsh_b, range(len(tools)))
     # Retained slots may predate the scheduled-start argument used below.
     for k in range(len(tools)):
         sh("docker", "cp", os.path.join(HERE, "scene.py"), "%s:/tmp/scene.py" % srv(k))
@@ -915,7 +918,7 @@ def demo(opts):
         dexec(srv(k), "sh", "-c", "pkill -f '[s]cene.py'; true", check=False)
         dexec(cli(k), "iptables", "-F", check=False)
         dexec(srv(k), "iptables", "-F", check=False)
-        if tool == "rsh-tcp":
+        if tool in ("rsh-tcp", "rsh-b-tcp"):
             dexec(srv(k), "iptables", "-I", "INPUT", "-p", "udp", "-j", "DROP")
         # A slot kept from an earlier run may still have its last network
         # (over RTT 300 ms ET takes 5 s to connect): every client starts
@@ -1006,7 +1009,7 @@ def control(opts):
 
 # The demo's results leave out each scene's first second.
 DEMO_SKIP = 1.0
-COLOR = {"ssh": 245, "et": 214, "mosh": 39, "rsh": 42, "rsh-tcp": 141, "rsh-b": 208}
+COLOR = {"ssh": 245, "et": 214, "mosh": 39, "rsh": 42, "rsh-tcp": 141, "rsh-b": 208, "rsh-b-tcp": 208}
 
 
 def bar(value, most, width):
@@ -1181,8 +1184,8 @@ def main():
     p.add_argument("path", nargs="?", help="rsh build (action rsh)")
     p.add_argument("--slots", type=int, default=4, help="up: container pairs")
     p.add_argument("--rsh", help="an rsh Linux build to test instead of the image's")
-    p.add_argument("--rsh-b", help="a second rsh Linux build, as the tool rsh-b (compare two builds in one run)")
-    p.add_argument("--tools", default=",".join(t for t in TOOLS if t != "rsh-b"))
+    p.add_argument("--rsh-b", help="a second rsh Linux build, as rsh-b (UDP) or rsh-b-tcp (TCP)")
+    p.add_argument("--tools", default=",".join(t for t in TOOLS if t not in ("rsh-b", "rsh-b-tcp")))
     p.add_argument("--tests", default="render,switch", help="run: " + ",".join(COLUMNS))
     p.add_argument("--nets", default="lowbw,highlat,lossy", help=",".join(NETS))
     p.add_argument("--scenes", default="compress,bandwidth", help=",".join(SCENES) + ' ("" for none in a demo)')
