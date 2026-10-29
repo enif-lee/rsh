@@ -282,6 +282,11 @@ python3 benchmark/lab/lab.py run --tools ssh,mosh,rsh \
 The run defaults are twelve parallel jobs and three repeats per case.
 The `sessions` test defaults to one repeat; `--session-iterations` overrides it.
 
+The [twelve-worker validation](docs/bench/parallel12-20261029.md) shortened
+the matched 750-job batch from 33.17 to 11.02 minutes. It compares the same
+three repeats per case: mean FPS is close on lossless rsh UDP links, while
+frame-gap lows, lossy-link results and RSS vary between runs.
+
 Run the moving-network demo:
 
 ```sh

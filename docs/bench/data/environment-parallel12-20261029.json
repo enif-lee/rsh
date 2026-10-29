@@ -1,0 +1,348 @@
+{
+  "build": "6729d398d4f1",
+  "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+  "host": {
+    "os": "ProductName:\t\tmacOS\nProductVersion:\t\t27.0.1\nBuildVersion:\t\t26A434",
+    "cpu": "Apple M5",
+    "memory": "34359738368",
+    "cpus": "10"
+  },
+  "docker": {
+    "ServerVersion": "29.8.2",
+    "NCPU": 10,
+    "MemTotal": 16818925568,
+    "KernelVersion": "7.2.9-orbstack-00391-g2b298d05fbd4",
+    "OperatingSystem": "OrbStack",
+    "Architecture": "aarch64"
+  },
+  "packages": "et\t7.0.0-noble1\nmosh\t1.4.0-1ubuntu3\nopenssh-client\t1:9.6p1-3ubuntu13.20\nopenssh-server\t1:9.6p1-3ubuntu13.20\npython3-pyte\t0.8.0-2\n",
+  "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b",
+  "timezone": "Asia/Seoul",
+  "date": "2026-10-29T17:31:20.078996",
+  "commit": "296e0a6e8c8d750f71a4702f249b502be3c481f6",
+  "binary": "/Users/ed/personal/rsh/benchmark/lab/out/parallel12-20261029-173120/rsh-linux-aarch64",
+  "lab": "/Users/ed/personal/rsh/benchmark/lab/out/parallel12-20261029-173120/lab/lab.py",
+  "parallel": 12,
+  "iterations": 3,
+  "session_iterations": 1,
+  "baseline": "docs/bench/data/static-20261029.json",
+  "baseline_moving": "docs/bench/data/moving-20261029-release.json",
+  "isolation": {
+    "container_prefix": "rp12-",
+    "network_prefix": "rshp12-",
+    "subnet_prefix": "10.90.100+",
+    "tmux_socket": "rshp12"
+  },
+  "source_hashes": {
+    "lab.py": "4e9395bcd3ec76e5763185e979ea86af017d2c9f7b03d45d1a33f8cd46971716",
+    "agent.py": "661fccbfe9290fa3455c3d10f2c3fc3c737c58dc09001989b0d5511cc3ae53c5",
+    "moving.py": "135041be66607bf14492079eea1efdb7eb488fc140df5ed5b28203961da7ee3a",
+    "scene.py": "7f71bad68dac9ea3879f7833253545a1d9dcfcc9818f12570025cddf180676b7",
+    "charts.py": "6ccf132fc5cfa9ef1713c0da5b2f7e09698ff7c6a9faec76070afb368972fee5"
+  },
+  "executed_source_hashes": {
+    "lab.py": "086127e4176c043f8f6d8d4d6ccbc9e2a4447c79986d7870d1e19a38a37ec86f",
+    "agent.py": "661fccbfe9290fa3455c3d10f2c3fc3c737c58dc09001989b0d5511cc3ae53c5",
+    "moving.py": "135041be66607bf14492079eea1efdb7eb488fc140df5ed5b28203961da7ee3a",
+    "scene.py": "7f71bad68dac9ea3879f7833253545a1d9dcfcc9818f12570025cddf180676b7",
+    "charts.py": "6ccf132fc5cfa9ef1713c0da5b2f7e09698ff7c6a9faec76070afb368972fee5"
+  },
+  "preflight": {
+    "rp12-0-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-0-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-1-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-1-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-2-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-2-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-3-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-3-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-4-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-4-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-5-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-5-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-6-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-6-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-7-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-7-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-8-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-8-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-9-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-9-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-10-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-10-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-11-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-11-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    }
+  },
+  "static_suite_started_at": "2026-10-29T17:31:37.929741+09:00",
+  "collector_unchanged_from_baseline": true,
+  "comparison_protocol": "Primary static baseline is the first 4-worker batch: three attempts per render/switch/other case, matched to the 12-worker batch. Six-attempt pooled baseline is secondary only. Memory compares one attempt per tool. Random losses and separate run times do not establish identical realized conditions.",
+  "comparison_scopes": {
+    "static": "4 versus 12 active workers, matched three repeats",
+    "memory": "Four jobs at most in both batches; one iteration per tool used for comparison",
+    "moving": "Three links in both runs, executed after static jobs; not a twelve-worker load test"
+  },
+  "comparison_tolerances": {
+    "mean_fps": "Descriptive closeness only: absolute difference <= max(1 FPS, 5% of baseline), restricted to complete three-run pairs",
+    "lows": "Report raw values and ratios; no statistical-equivalence claim"
+  },
+  "static_postflight": {
+    "rp12-0-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-0-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-1-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-1-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-2-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-2-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-3-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-3-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-4-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-4-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-5-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-5-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-6-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-6-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-7-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-7-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-8-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-8-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-9-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-9-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-10-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-10-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-11-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-11-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    }
+  },
+  "runtimes": {
+    "host_python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.3.34.2)]",
+    "container_python": "Python 3.12.3",
+    "tmux": "tmux 3.7c"
+  },
+  "moving_postflight": {
+    "rp12-0-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-0-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-1-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-1-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-2-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rp12-2-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    }
+  },
+  "completed_at": "2026-10-29T17:47:15.529905",
+  "runner_hashes": {
+    "run-suite.py": "319fc24b360d993acbd9c60b8b5da0679eac570f918c565637d86242003828c8",
+    "run-moving.py": "93f035b8a2c7d817474f15719c04ff77631c0c7b24adacf7b838f4c7e49d1e71"
+  }
+}

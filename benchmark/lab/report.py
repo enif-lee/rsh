@@ -368,10 +368,16 @@ with `--session-iterations 1 --parallel 12`. This retains all five static
 transports, nine links, both scenes and the same observation durations:
 750 static jobs plus four memory jobs, rather than 1,178 jobs.
 
-Replaying the recorded per-job durations over twelve workers estimates
-approximately **11.8 minutes static + 2.5 minutes moving = 14.3 minutes**,
-excluding preparation and review. Actual timing with twelve workers has not
-been measured; CPU contention can change elapsed time and frame-gap lows.
+The [twelve-worker validation](docs/bench/parallel12-20261029.md) completed
+the same 750-job, three-repeat static batch in **11.02 minutes**, versus
+**33.17 minutes** with four workers. The whole run through moving postflight
+took **15.63 minutes**, versus **59.60 minutes** for the earlier 1,178-job
+suite; this also includes fewer screen/memory repeats and stage gaps.
+The earlier 14–15 minute estimate excluded preparation and review.
+Mean FPS was close in all twelve lossless rsh UDP pairs under the report's
+descriptive rule, but lows, lossy-path results and RSS were not identical.
+The comparison uses the first three-repeat baseline batch, and moving
+remains a separate three-link test rather than a twelve-worker load test.
 
 Use a freshly built image or pass `--rsh /path/to/verified/rsh-linux-aarch64`
 to replace an older embedded binary. The committed snapshot records the
