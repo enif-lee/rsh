@@ -1,0 +1,21 @@
+Frozen source SHA256 identity verified
+test_tcp_aliases_keep_their_binary_port_session_and_screen_observer (test_agent.ClientCommandTests.test_tcp_aliases_keep_their_binary_port_session_and_screen_observer) ... ok
+test_default_duration_contains_a_full_cycle_for_each_scene (test_lab.MovingDemoTests.test_default_duration_contains_a_full_cycle_for_each_scene) ... ok
+test_ending_during_handover_restores_a_working_link (test_lab.MovingDemoTests.test_ending_during_handover_restores_a_working_link) ... ok
+test_interrupt_restores_the_link_before_propagating (test_lab.MovingDemoTests.test_interrupt_restores_the_link_before_propagating) ... ok
+test_phase_changes_keep_the_qdisc_and_set_both_rates (test_lab.MovingDemoTests.test_phase_changes_keep_the_qdisc_and_set_both_rates) ... ok
+test_static_run_cannot_silently_use_only_the_first_phase (test_lab.MovingDemoTests.test_static_run_cannot_silently_use_only_the_first_phase) ... ok
+test_trace_repeats_identically_and_loss_is_a_common_time_interval (test_lab.MovingDemoTests.test_trace_repeats_identically_and_loss_is_a_common_time_interval) ... ok
+test_two_cycles_share_a_clock_without_accumulating_apply_time (test_lab.MovingDemoTests.test_two_cycles_share_a_clock_without_accumulating_apply_time) ... ok
+test_late_scene_start_keeps_the_scheduled_end (test_lab.MovingSummaryTests.test_late_scene_start_keeps_the_scheduled_end) ... ok
+test_stalled_tool_does_not_shift_its_window_into_the_drain (test_lab.MovingSummaryTests.test_stalled_tool_does_not_shift_its_window_into_the_drain) ... ok
+test_disconnect_stops_worker_and_restores_link (test_lab.MovingWorkerTests.test_disconnect_stops_worker_and_restores_link) ... ok
+test_default_full_matrix_has_three_repeats_and_one_memory_sample (test_lab.RunScheduleTests.test_default_full_matrix_has_three_repeats_and_one_memory_sample) ... ok
+test_memory_repeats_can_exceed_the_other_repeats (test_lab.RunScheduleTests.test_memory_repeats_can_exceed_the_other_repeats) ... ok
+test_demo_installs_both_builds_and_forces_second_tcp_before_launch (test_lab.SecondBuildTests.test_demo_installs_both_builds_and_forces_second_tcp_before_launch) ... ok
+test_run_forces_tcp_for_both_builds_only_when_requested (test_lab.SecondBuildTests.test_run_forces_tcp_for_both_builds_only_when_requested) ... ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 0.058s
+
+OK

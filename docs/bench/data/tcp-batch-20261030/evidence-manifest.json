@@ -7,6 +7,12 @@
     "baseline-linux-alpine-tmux.log": "94cc1fa29b2c6ebd930a9f16c6f9f3d9ed75058f18ee85846b98fa4ce4e6af91",
     "baseline-linux-benchmark-image-lossy.log": "fda0efa365f31db4ee752279059c049b728b679af041a9991c7bfe176544c0d1",
     "baseline-macos-badge.log": "edb858e86d9a7bcf4c6fc8c057fb4032710b5c989970a771bbf10f515ee61f45",
+    "fallback-diagnostic/baseline-source-manifest.json": "4f7bbf7e845709f76667f170e5e343659c9c3cc241ad7648e18ced9dcba65e22",
+    "fallback-diagnostic/baseline-summary.log": "8e3a07c2802665dc7d71037c6eb1c3157a20f865e84b2d1d24fdf429e09e5c5d",
+    "fallback-diagnostic/candidate-source-manifest.json": "2d0e7a4494d6ff13c8491ee8a6a4103dfb0bed4a6c99ab77d9fa9488ea1823a0",
+    "fallback-diagnostic/candidate-summary.log": "40fd8007b6bdf3cb0c34135f38f506abd61b85c66a6d8ddef9e8fd84189d2f32",
+    "fallback-diagnostic/diagnostic.patch": "ae0faa5762cc162dfddcaa382c6f2023a5d57bbf35f59e145aad36afbd289987",
+    "fallback-diagnostic/summary.json": "ed64f10b38d5a2468ebe4b9c07168018efe95178886a9d863edef1babfbca389",
     "linux-alpine-parallel.log": "e78db88b35fab5c8da28f358ad07a24b22b610e0664837515a2804215cb14b09",
     "linux-alpine-serial.log": "e3b10e2f68394f19e5a02c190c8475cb2c7b51b4108c5ccfea4d23d4a0604590",
     "linux-alpine-sessions-serial.log": "c09fd21bc76cb784f813adffbf96b64b338f9749d7f152760cd8fd2e56fb5ed8",
@@ -30,8 +36,15 @@
     "lossy-followup/output-analysis.json": "630894c0e09a5ed3101c28f283581efbc86e4dbf84028be1b1acec407482d84b",
     "macos-test-manifest.json": "6879a73f60f4fbb7cfcfa5e550324f167ee000a2e38efa5772b0d9df0d5bd7d5",
     "macos-tests.log": "0ca3a1af20835a9b48f9e7ee947c5a43c2ff83e9af584142e911465bff8bc0f0",
+    "optimization-source-oracle-audit.json": "a329ad2de3b0635ca780911acd1b2ed786e77f1bc13be8e2925b0517f29ba1c1",
+    "paired-harness/check.py": "e2585eeb9963d506137e1bdbc77f72f306bb2483084de4f75171c1887d4d050a",
+    "paired-harness/functional.log": "f4937da0d3e926f1ebca4fa6eec7b5a0d13c6aa3efa2b5a0d7c256c1c2519207",
+    "paired-harness/harness-source-manifest.json": "0c54c1450fcb662e98f660bea91b3813d1ab19f1aa1b4b34c3b403f6e4195248",
+    "paired-harness/python-tests.log": "719b34b7d4c3f60a170ad85bcf64a38591f4930e931b0511e3ccf60868377cd4",
+    "paired-harness/run.sh": "ed71780a4518d094e052258865b3e989d16e8bb7e137feb3fe3302cefed9a40e",
     "python-schedule-tests.log": "7f132638942b64a7afb4294b4d53a5b0b7f5e8593c7470c733f7a13e6329e5b5",
     "source-manifest.json": "665a9362f572ecb7b5b0a9a9ef6387a204caa75e170a7e3faf482485ad104955"
   },
-  "log_normalization": "Trailing whitespace and blank lines at EOF removed; test content unchanged."
+  "log_normalization": "Trailing whitespace and blank lines at EOF removed; test content unchanged.",
+  "selected_log_normalization": "Fallback summaries retain DIAG delayed state/timing and test totals only; full terminal output omitted. Raw-log SHA256 values are in fallback-diagnostic/summary.json."
 }

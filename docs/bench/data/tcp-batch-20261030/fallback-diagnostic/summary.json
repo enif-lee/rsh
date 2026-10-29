@@ -1,0 +1,28 @@
+{
+  "baseline_commit": "24248bd60ec6998e1dc27d0baf84db4a4e5cb8ed",
+  "candidate_commit": "b257a22c9c1972c22838a5aae3ae23806b7b64b8",
+  "original_immediate_seq_failure_reproduced": false,
+  "candidate_diagnostic_tests": 26,
+  "candidate_diagnostic_passed": 26,
+  "delayed_fixture_contract": "delivered OR later visible in server screen, not successful client delivery",
+  "performance_measurements": 0,
+  "candidate": {
+    "raw_log_sha256": "bbf8f3bd9f27ab30923205bc9c859748a3418d5d68d97da61f2b774aba78b4d8",
+    "summary": [
+      "DIAG delayed elapsed=4.89105025s outcome=Detached delivered=false bytes=936",
+      "DIAG delayed late_output_after=1.515376667s",
+      "DIAG delayed late=true",
+      "test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.81s"
+    ]
+  },
+  "baseline": {
+    "raw_log_sha256": "69af1f4cf61cef35d1008ea1cc159708c6727e747712c812074bab802b64164a",
+    "summary": [
+      "DIAG delayed elapsed=4.805385083s outcome=Detached delivered=false bytes=936",
+      "DIAG delayed late_output_after=1.511093917s",
+      "DIAG delayed late=true",
+      "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 25 filtered out; finished in 6.36s"
+    ]
+  },
+  "interpretation": "Both sources exhibit the existing script quiet-detach path with deliberate sleep3. This does not establish the cause of the earlier immediate-seq macOS failure."
+}
