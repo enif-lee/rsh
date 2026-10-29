@@ -23,22 +23,23 @@ with TCP fallback on the same port.
 <!-- benchmark-summary:start -->
 ### Performance at a glance
 
-Recorded five-tool lab snapshot, **2026-10-28, before 0.2.0**. The table
-uses a 256 kbit/s link at RTT 100 ms, except the ten-session memory row.
-Rendering requests 60 FPS in a 100×30 terminal. Exact historical rsh build
-ID was not saved; these are observations, not release-wide guarantees.
+Freshly measured **2026-10-29**, using **rsh 0.2.0**
+(build `6729d398d4f1`). The table uses a 256 kbit/s link at RTT 100 ms,
+except the ten-session memory row. Rendering requests 60 FPS in a
+100×30 terminal; four jobs run in parallel on the shared host.
 
 | Measurement | rsh (UDP) | mosh | OpenSSH | Eternal Terminal |
 | --- | --- | --- | --- | --- |
-| Dashboard displayed FPS (median) | 54.3 | 15.9 | 6.0 | 6.1 |
-| 1% / 5% low FPS | 36.1 / 41.8 | 14.7 / 15.0 | 1.9 / 4.9 | 4.2 / 4.3 |
-| Frame age, ms | 76 | 82 | 3782 | 3754 |
-| Received network, kbit/s | 220 | 88 | 250 | 249 |
-| Key echo, ms | 4 | 4 | 120 | 108 |
-| Bulk output to prompt, s | 0.16 | 0.24 | 23.18 | 22.89 |
-| Ten idle LAN sessions, client + server MiB | 35.4 | 242.5 | 221.9 | 207.4 |
+| Dashboard displayed FPS (average) | 57.8 | 15.7 | 6.0 | 6.1 |
+| Dashboard displayed FPS (median) | 59.9 | 15.7 | 6.0 | 6.1 |
+| 1% / 5% low FPS | 39.4 / 45.0 | 14.1 / 14.9 | 2.6 / 4.9 | 3.5 / 4.2 |
+| Frame age, ms | 70 | 82 | 3783 | 3762 |
+| Received network, kbit/s | 218 | 87 | 248 | 249 |
+| Key echo, ms | 7 | 8 | 120 | 111 |
+| Bulk output to prompt, s | 0.16 | 0.22 | 23.11 | 22.74 |
+| Ten idle LAN sessions, client + server MiB | 33.2 | 242.5 | 221.9 | 210.2 |
 
-Six render runs; pooled frame-gap lows; three echo/bulk runs; two memory
+Six render attempts; pooled frame-gap lows; three echo/bulk attempts; two memory
 runs. The [full report](BENCHMARK.md) includes rsh TCP fallback, all links,
 raw measurements, aggregation rules and collection failures.
 <!-- benchmark-summary:end -->
@@ -176,7 +177,8 @@ The implementation is in [`src/server.rs`](src/server.rs),
 <!-- benchmark-details:start -->
 ## Performance
 
-The following static-link comparisons restore the **2026-10-28 snapshot**.
+These comparisons were freshly measured on **2026-10-29** with the
+published **0.2.0** binary, build `6729d398d4f1`.
 Avg FPS is the mean of six per-run frame rates; 1%/5% lows are reciprocals
 of pooled p99/p95 frame gaps. Network is client RX including protocol
 overhead; RSS is a sampled resident size, not a peak. See
@@ -188,21 +190,21 @@ overhead; RSS is a sampled resident size, not a peak. See
 
 | Link | Tool | Avg FPS | 1% low | 5% low | Age ms | RX kbit/s | Client RSS MiB | Server RSS MiB |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 Mbit/s · RTT 100 ms | rsh (UDP) | 60.0 | 43.9 | 47.8 | 59 | 217 | 2.44 | 5.55 |
-| 1 Mbit/s · RTT 100 ms | OpenSSH | 23.7 | 6.9 | 7.0 | 2546 | 978 | 7.55 | 19.25 |
-| 1 Mbit/s · RTT 100 ms | mosh | 18.1 | 16.9 | 17.3 | 66 | 100 | 14.53 | 10.54 |
-| 256 kbit/s · RTT 100 ms | rsh (UDP) | 53.2 | 36.1 | 41.8 | 76 | 220 | 2.45 | 5.77 |
-| 256 kbit/s · RTT 100 ms | OpenSSH | 6.0 | 1.9 | 4.9 | 3782 | 250 | 7.37 | 19.43 |
-| 256 kbit/s · RTT 100 ms | mosh | 15.9 | 14.7 | 15.0 | 82 | 88 | 14.54 | 10.43 |
-| RTT 300 ms | rsh (UDP) | 57.3 | 35.2 | 42.4 | 156 | 217 | 2.42 | 5.60 |
-| RTT 300 ms | OpenSSH | 60.0 | 23.3 | 48.3 | 152 | 2507 | 7.45 | 18.40 |
-| RTT 300 ms | mosh | 6.6 | 6.4 | 6.4 | 160 | 37 | 14.54 | 10.30 |
-| 2% loss · RTT 100 ms | rsh (UDP) | 58.8 | 42.6 | 48.3 | 56 | 424 | 2.43 | 5.60 |
-| 2% loss · RTT 100 ms | OpenSSH | 33.0 | 4.9 | 7.5 | 1111 | 1246 | 7.64 | 19.16 |
-| 2% loss · RTT 100 ms | mosh | 17.1 | 3.7 | 17.6 | 60 | 100 | 14.54 | 10.87 |
-| 256 kbit/s · RTT 400 ms · 2% loss | rsh (UDP) | 26.3 | 1.7 | 31.2 | 228 | 182 | 3.09 | 5.74 |
-| 256 kbit/s · RTT 400 ms · 2% loss | OpenSSH | 5.1 | 0.9 | 1.4 | 4160 | 222 | 7.57 | 19.53 |
-| 256 kbit/s · RTT 400 ms · 2% loss | mosh | 4.5 | 2.4 | 4.6 | 232 | 26 | 14.54 | 10.32 |
+| 1 Mbit/s · RTT 100 ms | rsh (UDP) | 60.0 | 41.8 | 46.7 | 60 | 218 | 2.45 | 5.21 |
+| 1 Mbit/s · RTT 100 ms | OpenSSH | 23.7 | 6.8 | 7.1 | 2542 | 976 | 7.51 | 19.22 |
+| 1 Mbit/s · RTT 100 ms | mosh | 17.9 | 16.8 | 17.1 | 66 | 98 | 14.36 | 10.48 |
+| 256 kbit/s · RTT 100 ms | rsh (UDP) | 57.8 | 39.4 | 45.0 | 70 | 218 | 2.45 | 5.30 |
+| 256 kbit/s · RTT 100 ms | OpenSSH | 6.0 | 2.6 | 4.9 | 3783 | 248 | 7.39 | 19.36 |
+| 256 kbit/s · RTT 100 ms | mosh | 15.7 | 14.1 | 14.9 | 82 | 87 | 14.37 | 10.43 |
+| RTT 300 ms | rsh (UDP) | 59.9 | 42.7 | 47.2 | 155 | 217 | 2.44 | 5.24 |
+| RTT 300 ms | OpenSSH | 60.0 | 23.4 | 47.8 | 152 | 2502 | 7.44 | 18.49 |
+| RTT 300 ms | mosh | 6.6 | 6.3 | 6.4 | 159 | 37 | 14.48 | 10.28 |
+| 2% loss · RTT 100 ms | rsh (UDP) | 59.6 | 42.4 | 47.2 | 55 | 420 | 2.45 | 5.21 |
+| 2% loss · RTT 100 ms | OpenSSH | 32.0 | 4.9 | 7.3 | 1782 | 1297 | 7.51 | 19.39 |
+| 2% loss · RTT 100 ms | mosh | 17.2 | 3.7 | 17.6 | 60 | 102 | 14.53 | 10.66 |
+| 256 kbit/s · RTT 400 ms · 2% loss | rsh (UDP) | 32.1 | 1.8 | 36.8 | 226 | 174 | 2.93 | 5.49 |
+| 256 kbit/s · RTT 400 ms · 2% loss | OpenSSH | 5.2 | 1.7 | 1.8 | 3882 | 249 | 7.52 | 19.33 |
+| 256 kbit/s · RTT 400 ms · 2% loss | mosh | 4.3 | 1.2 | 4.6 | 233 | 25 | 14.34 | 10.36 |
 
 ### Random full screen
 
@@ -213,18 +215,18 @@ limits that a compressible dashboard can hide.
 
 | Link | Tool | Avg FPS | 1% low | 5% low | Age ms | RX kbit/s | Client RSS MiB | Server RSS MiB |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 Mbit/s · RTT 100 ms | rsh (UDP) | 23.9 | 13.0 | 20.6 | 101 | 928 | 2.46 | 5.99 |
-| 1 Mbit/s · RTT 100 ms | OpenSSH | 10.0 | 6.2 | 6.7 | 3432 | 978 | 7.41 | 19.95 |
-| 1 Mbit/s · RTT 100 ms | mosh | 16.4 | 15.1 | 15.5 | 106 | 707 | 14.76 | 10.44 |
-| RTT 300 ms | rsh (UDP) | 56.7 | 27.6 | 44.4 | 160 | 2308 | 2.62 | 5.71 |
-| RTT 300 ms | OpenSSH | 60.0 | 14.5 | 47.2 | 152 | 5798 | 7.82 | 18.66 |
-| RTT 300 ms | mosh | 6.6 | 6.4 | 6.4 | 162 | 282 | 14.89 | 10.21 |
-| 2% loss · RTT 100 ms | rsh (UDP) | 56.1 | 19.3 | 44.2 | 60 | 4370 | 2.62 | 5.89 |
-| 2% loss · RTT 100 ms | OpenSSH | 15.3 | 4.3 | 5.0 | 2607 | 1413 | 7.57 | 19.99 |
-| 2% loss · RTT 100 ms | mosh | 15.2 | 3.7 | 6.3 | 61 | 802 | 14.40 | 10.90 |
-| 256 kbit/s · RTT 400 ms · 2% loss | rsh (UDP) | 3.6 | 0.5 | 1.4 | 373 | 196 | 2.54 | 5.76 |
-| 256 kbit/s · RTT 400 ms · 2% loss | OpenSSH | 2.2 | 0.4 | 1.1 | 4310 | 216 | 7.41 | 19.60 |
-| 256 kbit/s · RTT 400 ms · 2% loss | mosh | 4.2 | 1.1 | 2.3 | 383 | 192 | 14.45 | 10.38 |
+| 1 Mbit/s · RTT 100 ms | rsh (UDP) | 24.1 | 13.2 | 20.4 | 100 | 931 | 2.46 | 5.44 |
+| 1 Mbit/s · RTT 100 ms | OpenSSH | 10.1 | 6.2 | 6.7 | 3460 | 978 | 7.40 | 19.58 |
+| 1 Mbit/s · RTT 100 ms | mosh | 16.2 | 15.1 | 15.4 | 106 | 701 | 14.59 | 10.47 |
+| RTT 300 ms | rsh (UDP) | 56.1 | 26.5 | 42.9 | 156 | 2709 | 2.57 | 5.46 |
+| RTT 300 ms | OpenSSH | 60.0 | 14.3 | 46.9 | 153 | 5795 | 7.82 | 18.63 |
+| RTT 300 ms | mosh | 6.6 | 6.3 | 6.4 | 161 | 282 | 14.32 | 10.19 |
+| 2% loss · RTT 100 ms | rsh (UDP) | 57.1 | 24.1 | 44.8 | 56 | 5240 | 2.69 | 5.56 |
+| 2% loss · RTT 100 ms | OpenSSH | 13.6 | 3.3 | 4.9 | 3205 | 1095 | 7.50 | 19.82 |
+| 2% loss · RTT 100 ms | mosh | 14.9 | 3.7 | 6.1 | 62 | 794 | 14.45 | 10.90 |
+| 256 kbit/s · RTT 400 ms · 2% loss | rsh (UDP) | 4.2 | 1.0 | 1.6 | 370 | 196 | 2.69 | 5.74 |
+| 256 kbit/s · RTT 400 ms · 2% loss | OpenSSH | 2.3 | 0.6 | 1.0 | 4146 | 250 | 7.47 | 19.51 |
+| 256 kbit/s · RTT 400 ms · 2% loss | mosh | 4.1 | 1.6 | 2.3 | 385 | 188 | 14.42 | 10.42 |
 
 ### Network and memory
 
@@ -239,23 +241,22 @@ comparison tables and charts. Raw job results are committed with the report.
 
 ### Moving network
 
-The later `7a1d9454d5b1` development build, with the transport implementation
-shipped in 0.2.0, was measured at 158×43 for 60 s per scene, two shared
-30 s impairment cycles. These results are separate from the static snapshot.
+The same **0.2.0** binary was measured with a **158×43 viewer**, for
+60 s per scene and two shared 30 s impairment cycles. The three workload
+panes are narrower than the viewer. These results are separate from the
+static tests.
 
 ![Moving-link average FPS with 1% and 5% lows](docs/bench/moving.svg)
 
-rsh displayed **37.72 FPS** across the dashboard trace and **30.22 FPS**
-across the random-screen trace. The dashboard reached **58.0 / 57.6 FPS**
+rsh displayed **35.73 FPS** across the dashboard trace and **30.88 FPS**
+across the random-screen trace. The dashboard reached **58.4 / 58.6 FPS**
 in the final five seconds of the two clear phases. The
 [moving comparison](BENCHMARK.md#10-moving-network) includes SSH/mosh,
 lows, scene traffic and RSS. Shared scheduling still recorded up to
-32.91 ms of application skew between containers.
+27.47 ms of application skew between containers.
 
-Performance varies by workload and loss sequence. In the static snapshot,
-mosh has better random-screen tails on some slow/lossy links, while SSH
-has steadier near-link frame timing. No uniform FPS or 1%/5% low advantage
-is claimed. These synthetic tests do not establish fairness with competing
+Performance varies by workload, host scheduling and loss sequence.
+No uniform FPS or 1%/5% low advantage is claimed. These synthetic tests do not establish fairness with competing
 flows or performance on every real radio network.
 <!-- benchmark-details:end -->
 

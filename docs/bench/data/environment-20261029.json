@@ -1,0 +1,169 @@
+{
+  "date": "2026-10-29T15:39:16.977643",
+  "commit": "fd9031cb576e2156a5907a49f572b8c01f622dab",
+  "binary": "/Users/ed/personal/rsh/benchmark/lab/out/remeasure-20261029-153916/rsh-linux-aarch64",
+  "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+  "build": "6729d398d4f1",
+  "lab": "/Users/ed/personal/rsh/benchmark/lab/out/remeasure-20261029-153916/lab/lab.py",
+  "isolation": {
+    "container_prefix": "rr29-",
+    "network_prefix": "rshfresh29-",
+    "subnet_prefix": "10.89.100+",
+    "tmux_socket": "rshfresh29"
+  },
+  "parallel": 4,
+  "source_hashes": {
+    "lab.py": "639d907f4909f964eabe9fa9e19fd9bea0a614b9d45ff7e32ea0fd03e8a8630b",
+    "agent.py": "661fccbfe9290fa3455c3d10f2c3fc3c737c58dc09001989b0d5511cc3ae53c5",
+    "moving.py": "135041be66607bf14492079eea1efdb7eb488fc140df5ed5b28203961da7ee3a",
+    "scene.py": "7f71bad68dac9ea3879f7833253545a1d9dcfcc9818f12570025cddf180676b7",
+    "charts.py": "6ccf132fc5cfa9ef1713c0da5b2f7e09698ff7c6a9faec76070afb368972fee5"
+  },
+  "release_backup_binary": "/Users/ed/.rsh-history-backups/20261029-150527-2v5gsf5q/v0.2.0/rsh-linux-aarch64",
+  "preflight": {
+    "rr29-0-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23"
+    },
+    "rr29-0-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23"
+    },
+    "rr29-1-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23"
+    },
+    "rr29-1-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23"
+    },
+    "rr29-2-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23"
+    },
+    "rr29-2-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23"
+    },
+    "rr29-3-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23"
+    },
+    "rr29-3-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23"
+    }
+  },
+  "docker": {
+    "ServerVersion": "29.8.2",
+    "NCPU": 10,
+    "MemTotal": 16818925568,
+    "KernelVersion": "7.2.9-orbstack-00391-g2b298d05fbd4",
+    "OperatingSystem": "OrbStack",
+    "Architecture": "aarch64"
+  },
+  "host": {
+    "os": "ProductName:\t\tmacOS\nProductVersion:\t\t27.0.1\nBuildVersion:\t\t26A434",
+    "cpu": "Apple M5",
+    "memory": "34359738368",
+    "cpus": "10"
+  },
+  "packages": "et\t7.0.0-noble1\nmosh\t1.4.0-1ubuntu3\nopenssh-client\t1:9.6p1-3ubuntu13.20\nopenssh-server\t1:9.6p1-3ubuntu13.20\npython3-pyte\t0.8.0-2\n",
+  "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b",
+  "executed_source_hashes": {
+    "lab.py": "3ccc85cb23d7939b54c3cc6459bdc466c5fbb3d10497dbd4da723564f4dd9c39",
+    "agent.py": "661fccbfe9290fa3455c3d10f2c3fc3c737c58dc09001989b0d5511cc3ae53c5",
+    "moving.py": "135041be66607bf14492079eea1efdb7eb488fc140df5ed5b28203961da7ee3a",
+    "scene.py": "7f71bad68dac9ea3879f7833253545a1d9dcfcc9818f12570025cddf180676b7",
+    "charts.py": "6ccf132fc5cfa9ef1713c0da5b2f7e09698ff7c6a9faec76070afb368972fee5"
+  },
+  "source_hashes_scope": "Repository files before isolation-only container/network/socket/subnet substitutions",
+  "timezone": "Asia/Seoul",
+  "static_suite_started_at": "2026-10-29T15:42:56.410130+09:00",
+  "parallel_comparison_note": "Current static batches use four jobs in parallel; the former static snapshot used ten. This is not a controlled estimate of code-only improvement.",
+  "static_postflight": {
+    "rr29-0-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rr29-0-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rr29-1-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rr29-1-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rr29-2-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rr29-2-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rr29-3-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rr29-3-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    }
+  },
+  "runtimes": {
+    "host_python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.3.34.2)]",
+    "container_python": "Python 3.12.3",
+    "tmux": "tmux 3.7c"
+  },
+  "moving_postflight": {
+    "rr29-0-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rr29-0-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rr29-1-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rr29-1-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rr29-2-srv": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    },
+    "rr29-2-cli": {
+      "version": "rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64",
+      "binary_sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23",
+      "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b"
+    }
+  },
+  "completed_at": "2026-10-29T16:42:32.588063",
+  "excluded_setup_attempt": "An initial preflight found downloaded binary lacked execute permission. The incomplete setup attempt was aborted and isolated; the valid full suite started after chmod and eight matching version/hash checks.",
+  "runner_hashes": {
+    "run-suite.py": "090042f899da0b1ee5d781888d404e3f02e42e7cbf8028b974f0d147bd798a08",
+    "run-moving.py": "fafb63f7e63e6f2d074c2520966b25a6085d46b5ef2fd97ed7be8fbba581dc8d"
+  }
+}

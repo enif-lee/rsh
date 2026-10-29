@@ -15,8 +15,8 @@ import charts
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "docs/bench/data"
-STATIC = json.loads((DATA / "static-20261028.json").read_text())
-MOVING = json.loads((DATA / "moving-20261029.json").read_text())
+STATIC = json.loads((DATA / "static-20261029.json").read_text())
+MOVING = json.loads((DATA / "moving-20261029-release.json").read_text())
 RESULTS = [r for b in STATIC["batches"] for r in b["results"]]
 TOOLS = charts.ORDER
 NETS = dict(charts.NETS)
@@ -32,6 +32,10 @@ def runs(test, tool, net=None, scene=None, to=None):
 def median(rs, key):
     values = [r[key] for r in rs if r.get(key) is not None]
     return statistics.median(values) if values else None
+
+
+def mib(value):
+    return value / 1024 if value is not None else None
 
 
 def fmt(value, digits=1):
@@ -62,8 +66,8 @@ def render_row(net, tool, scene):
     return [NETS[net], charts.NAME[tool], len(ok), fmt(avg), fmt(median(rs, "fps")),
             fmt(low(ok)), fmt(low(ok, quantile=.95)), fmt(median(rs, "age_ms"), 0),
             fmt(median(rs, "kbit_s"), 0),
-            fmt(median(rs, "rss_client_kb") / 1024, 2),
-            fmt(median(rs, "rss_server_kb") / 1024, 2)]
+            fmt(mib(median(rs, "rss_client_kb")), 2),
+            fmt(mib(median(rs, "rss_server_kb")), 2)]
 
 
 RENDER_HEADERS = ["Link", "Tool", "Runs", "Avg FPS", "Median FPS", "1% low", "5% low",
@@ -80,6 +84,20 @@ def save_chart(name, title, note, groups, formatter, higher, **kwargs):
     (ROOT / f"docs/bench/{name}.svg").write_text(text)
 
 
+def moving_clear_fps(scene):
+    window = next(w for w in MOVING["windows"] if w.get("scene") == scene)
+    frames = [f for f in MOVING["frames"]["rsh"]
+              if f[3] == scene and f[2] >= window["start"]]
+    return [sum(window["start"] + begin <= f[0] < window["start"] + begin + 5
+                for f in frames) / 5 for begin in (25, 55)]
+
+
+def moving_skew(scene):
+    window = next(w for w in MOVING["windows"] if w.get("scene") == scene)
+    return max(max(p["applied_at"].values()) - min(p["applied_at"].values())
+               for p in window["network_trace"]) * 1000
+
+
 def write_report():
     blocks = ["""# Benchmark report
 
@@ -91,37 +109,45 @@ generated from the [committed measurement snapshots](docs/bench/data).
 
 | Dataset | Conditions | Samples | Version provenance |
 | --- | --- | --- | --- |
-| Static links, 2026-10-28 | Five transports; 100×30 terminal; requested 60 FPS; 8 s render window | Six render/switch runs per case; three other tests; two ten-session runs | Predates 0.2.0. Original run JSON does not embed an rsh build ID; exact binary cannot be certified. |
-| Moving link, 2026-10-29 | SSH/mosh/rsh; 158×43 terminal; requested 60 FPS; 60 s per scene | One run, two 30 s cycles per scene | Development build `7a1d9454d5b1`, with the transport implementation subsequently shipped in 0.2.0. |
+| Static links, 2026-10-29 | Five transports; 100×30 terminal; requested 60 FPS; 8 s render window | Six render/switch attempts per case; three attempts per other case; two ten-session runs | Published 0.2.0, build `6729d398d4f1`; binary hash and versions recorded for all containers. |
+| Moving link, 2026-10-29 | SSH/mosh/rsh; 158×43 viewer; requested 60 FPS; 60 s per scene | One run, two 30 s cycles per scene | Published 0.2.0, build `6729d398d4f1`. |
 
-The static snapshot restores the original README comparison. It is not a
-new benchmark of release build `6729d398d4f1`. The moving measurement is
-reported separately because its window, screen size and impairment
-semantics differ. No measurements were rerun to produce this report.
+Both datasets were freshly measured on **2026-10-29**, using the published
+**rsh 0.2.0** Linux arm64 binary, build `6729d398d4f1`. Its SHA-256 and
+source build hash were verified before testing. The moving measurement
+is reported separately because its window, screen size and impairment
+semantics differ from the static tests.
 
 ### Environment and workloads
 
-The recorded environment was an Apple M5 (10 cores, 32 GB), macOS 27.0.1,
-OrbStack/Docker, and Ubuntu 24.04 Linux arm64 containers. The lab image
-installs OpenSSH, mosh and ET from Ubuntu/PPA packages
-([Dockerfile](benchmark/harness/Dockerfile)). The contemporaneous environment
-record lists OpenSSH 9.6p1, mosh 1.4.0 and ET 7.0.0; the saved run JSON does
-not independently pin the image digest or package versions.
+Apple M5 (10 cores, 32 GiB), macOS 27.0.1 (26A434), OrbStack Docker
+29.8.2 with ten vCPUs and approximately 16 GiB assigned to the VM;
+Linux `7.2.9-orbstack-00391-g2b298d05fbd4`, Ubuntu 24.04 arm64.
+Measured packages: OpenSSH client/server `1:9.6p1-3ubuntu13.20`,
+mosh `1.4.0-1ubuntu3`, ET `7.0.0-noble1`. The
+[Dockerfile](benchmark/harness/Dockerfile) supplies the test environment;
+the base image's older rsh was explicitly replaced on both ends of every
+slot with the checksum-verified 0.2.0 binary.
 
 Each job has a server/client container pair and an isolated shaped link;
-jobs share host CPUs. Static batches used ten parallel jobs. This can
-affect frame timing. `compress` is a compressible full-screen dashboard;
+jobs share host CPUs. Static batches used **four parallel jobs**, reduced from the old
+snapshot's ten to limit host contention. This changes the historical host
+load, so old/new differences alone cannot establish a code regression.
+Other local containers remained running; host timing can still vary. `compress` is a compressible full-screen dashboard;
 `bandwidth` changes every cell with random content. Both request 60 FPS.
-The client reconstructs terminal output and observes frame headers; this
+SSH/ET frame headers are observed in the raw-output reader thread;
+mosh/rsh headers are observed after pyte reconstructs screen differences
+on another thread. Header arrival can precede the remaining cells, and
+emulator scheduling contributes to the latter tools' measurements. This
 does not measure GPU presentation or prove that every cell was repainted.
 
 ### Metrics and aggregation
 
 - **Avg FPS** is the arithmetic mean of each run's displayed frames divided
   by its observation duration. **Median FPS** is the median of those run
-  averages; the original opening table and FPS charts use this median.
+  averages. The opening table shows both; FPS charts use the median.
 - **1% / 5% low** are `1000 / p99(gap_ms)` and `1000 / p95(gap_ms)` using
-  nearest-rank percentiles over all six runs' inter-frame gaps pooled
+  nearest-rank percentiles over available runs' inter-frame gaps pooled
   together. They are percentile reciprocals, not averages of the slowest
   one/five percent. Startup/end boundary gaps are excluded from lows.
 - **Age** is the median of each run's median generation-to-observation
@@ -139,7 +165,7 @@ does not measure GPU presentation or prove that every cell was repainted.
   counts, timeouts and collection failures are preserved below. A missing
   observation is never a zero or proof of successful recovery.
 - CPU is percent of one core over a render window, not total machine load.
-  The original collector's `torn` counter can double-count observations;
+  The collector's `torn` counter can double-count observations;
   it is not used as a count of visible defects in this report.
 
 Metric implementations: [agent.py](benchmark/lab/agent.py),
@@ -156,7 +182,7 @@ before queueing. No bandwidth cap means no configured rate limit.
               """## 1. Dashboard rendering
 
 Light bars show median FPS, medium bars 5% low and solid bars 1% low.
-All five transports, all nine network profiles and all six runs are included.
+All five transports and all nine network profiles are included; six runs per case were attempted.
 """, image("fps-dashboard", "Dashboard FPS, 1% low and 5% low by link and transport"),
               table(RENDER_HEADERS, [render_row(n, t, "compress") for n in NETS for t in TOOLS]),
               """## 2. Random full-screen rendering
@@ -190,8 +216,8 @@ and exposes a different bandwidth and frame-gap tradeoff than the dashboard.
         rs = runs("sessions", t)
         if not rs:
             continue
-        rows.append([charts.NAME[t], len(rs), fmt(median(rs, "client_kb") / 1024, 2),
-                     fmt(median(rs, "server_kb") / 1024, 2),
+        rows.append([charts.NAME[t], len(rs), fmt(mib(median(rs, "client_kb")), 2),
+                     fmt(mib(median(rs, "server_kb")), 2),
                      fmt(median(rs, "idle_pkts_in_s"), 2), fmt(median(rs, "idle_pkts_out_s"), 2)])
     blocks += [table(["Tool", "Runs", "All clients MiB", "Server MiB", "Idle packets in/s", "Idle packets out/s"], rows),
                "Each shell prints 3,000 lines, then becomes quiet. Packet rates are totals for the container's ten sessions. No rsh-TCP ten-session result was recorded.",
@@ -257,7 +283,10 @@ and exposes a different bandwidth and frame-gap tradeoff than the dashboard.
     blocks += [image("events", "Recovery and connection times for connectivity events"),
                table(["Event", "Tool", "Observed", "Time s", "Same shell", "Errors"], rows),
                "Restart time alone does not establish session continuity: see Same shell. A missing roaming response within eight seconds is a censored observation, not a measured infinite recovery time. All three UDP-block mosh jobs reported no prompt, consistent with its UDP-only transport.",
-               "## 10. Moving network", "This is the later development-build dataset, not pooled into the static comparison. Three independent links replay a common delay/rate/outage schedule on the Docker VM clock. Each 60 s scene contains two 30 s cycles. Nominal loss fractions are shared intervals of complete outage, unlike static independent per-packet random loss."]
+               "## 10. Moving network", "This is a fresh 0.2.0 measurement, not pooled into the static comparison. Three independent links replay a common delay/rate/outage schedule on the Docker VM clock. Each 60 s scene contains two 30 s cycles. Nominal loss fractions are shared intervals of complete outage, unlike static independent per-packet random loss. A controlled 158×43 PTY attaches to tmux and continuously drains its output to a file; there is no on-screen GPU presentation measurement."]
+    blocks += [table(["Moving tool", "Workload columns", "Workload rows"],
+                     [(charts.NAME[MOVING["tools"][int(i)]], cols, rows)
+                      for i, cols, rows in (line.split() for line in MOVING["pane_sizes"].splitlines())])]
     phases = [p for p in MOVING["windows"][1]["network_changes"]
               if not p.get("after_measurement") and p["scheduled_s"] < 30]
     phase_rows = []
@@ -279,14 +308,14 @@ and exposes a different bandwidth and frame-gap tradeoff than the dashboard.
             values[t] = (r["fps"], r["low1_fps"], r["low5_fps"])
             rows.append([label, charts.NAME[t], fmt(r["fps"], 2), fmt(r["low1_fps"], 2), fmt(r["low5_fps"], 2),
                          fmt(r["age_ms"], 0), fmt(w["rx_bytes"][i] / 1024**2, 2), fmt(r["kb_per_frame"], 2),
-                         fmt(w["rss_kb"][i][0] / 1024, 2), fmt(w["rss_kb"][i][1] / 1024, 2)])
+                         fmt(mib(w["rss_kb"][i][0]), 2), fmt(mib(w["rss_kb"][i][1]), 2)])
         groups.append((label, values))
     save_chart("moving", "Moving link: two 30-second cycles", "one 60 s run per scene; light: FPS, mid: 5% low, solid: 1% low", groups,
                lambda v: f"{v[0]:.2f} / {v[1]:.2f} / {v[2]:.2f}", True, pair="lows", value_w=175)
     blocks += [image("moving", "Moving-link displayed FPS and frame-gap lows"),
                table(["Scene", "Tool", "Avg FPS", "1% low", "5% low", "Age ms", "Scene RX MiB", "Reported KiB/frame", "Client RSS MiB", "Server RSS MiB"], rows),
                "The demo's scene RX counters include warmup/drain outside the common FPS window; reported KiB/frame also uses the collector's broader frame count. They are preserved as recorded and must not be read as 60-second RX rates or compared directly with static KiB/frame. RSS uses the demo's recorded samples rather than a peak-memory trace.",
-               "Dashboard rsh averaged 58.0 / 57.6 FPS in the final five seconds of each clear phase. Its first full one-second window at ≥54 frames completed 1.2 / 2.45 s after those phases began. Random screens averaged 56.2 / 56.4 FPS in those final windows. Maximum application skew between containers was 26.75 / 32.91 ms (dashboard/random). See the [measurement record](docs/bench/moving-recovery.md#measurement) for timing limits.",
+               f"Dashboard rsh averaged {' / '.join(fmt(v) for v in moving_clear_fps('compress'))} FPS in the final five seconds of the two clear phases. Random screens averaged {' / '.join(fmt(v) for v in moving_clear_fps('bandwidth'))} FPS in those final windows. Maximum application skew between containers was {moving_skew('compress'):.2f} / {moving_skew('bandwidth'):.2f} ms (dashboard/random). All figures in this paragraph are computed from the newly committed frame observations and replay timestamps.",
                "## Collection failures and limitations"]
     rows = []
     for batch in STATIC["batches"]:
@@ -295,21 +324,24 @@ and exposes a different bandwidth and frame-gap tradeoff than the dashboard.
                 rows.append([Path(batch["source"]).stem, r["test"], r["net"] + (" → " + r["to"] if r.get("to") else ""),
                              r.get("scene", "—"), charts.NAME[r["tool"]], r["iteration"], r["error"]])
     blocks += [table(["Source", "Test", "Link", "Scene", "Tool", "Iteration", "Error"], rows),
-               "All 540 static render jobs completed. Two of 300 switch jobs lacked a prompt; their groups contain five measured runs rather than six. Other tests use the first main batch only. Of seven collection failures, three are the expected mosh UDP-block no-prompt cases. No failed job was silently converted to a numeric result.",
-               "Results cover synthetic isolated paths on one shared host, not fairness with cross traffic, real radio traces, independent hardware replications or statistical confidence intervals. Static nominal loss percentages do not guarantee equal realized drops across protocols. High average FPS can coexist with worse tails: for example, the static random-screen `badmobile` case favors mosh over rsh in both average delivery and 1% low. No universal win or non-regression claim is made.",
+               f"Static render jobs: {sum(r.get('fps') is not None for r in RESULTS if r['test'] == 'render')}/{sum(r['test'] == 'render' for r in RESULTS)} measured; switch jobs: {sum(r.get('fps_after') is not None for r in RESULTS if r['test'] == 'switch')}/{sum(r['test'] == 'switch' for r in RESULTS)} measured. Other tests use the first main batch only, except the separate sessions batch. Collection failures: {len(rows)}; expected mosh UDP-block no-prompt cases: {sum(r.get('error') is not None and r['tool'] == 'mosh' and r['test'] == 'udpblock' for r in RESULTS)}. No failed job was silently converted to a numeric result.",
+               "Results cover synthetic isolated paths on one shared host, not fairness with cross traffic, real radio traces, independent hardware replications or statistical confidence intervals. Static nominal loss percentages do not guarantee equal realized drops across protocols. High average FPS can coexist with worse tails; compare the average and percentile columns separately. No universal win or non-regression claim is made.",
                "## Data and reproduction",
                table(["Source run", "Jobs", "Used for", "Original SHA-256"],
                      [(Path(b["source"]).name, len(b["results"]),
-                       "render, switch + other tests" if i == 0 else "render, switch" if i == 1 else "ten sessions", b["sha256"])
-                      for i, b in enumerate(STATIC["batches"])]),
-               "The [static snapshot](docs/bench/data/static-20261028.json) contains all three batches, original options, per-job results, frame gaps and errors. The [moving snapshot](docs/bench/data/moving-20261029.json) includes all six results, window timestamps, RSS/byte counters and the complete replay trace. SHA-256 fields identify the original local files; JSON is repackaged without changing measurement values.",
+                       ", ".join(sorted({r['test'] for r in b['results']})), b["sha256"])
+                      for b in STATIC["batches"]]),
+               table(["Provenance", "Value"], [("rsh release", STATIC["version"]), ("Build ID", STATIC["build"]),
+                     ("Binary SHA-256", STATIC["binary_sha256"]), ("Source commit", STATIC["commit"]),
+                     ("Docker image ID", STATIC["image_id"])]),
+               "The [static snapshot](docs/bench/data/static-20261029.json) contains all three batches, original options, per-job results, frame gaps and errors. The [moving snapshot](docs/bench/data/moving-20261029-release.json) includes all six results, raw frame observations, window timestamps, RSS/byte counters and the complete replay trace. SHA-256 fields identify the original local files; JSON is repackaged without changing measurement values. The [environment manifest](docs/bench/data/environment-20261029.json) records host/VM resources, image and package versions, original/executed harness hashes and the binary checks on both ends of every slot. The former [static](docs/bench/data/static-20261028.json) and [development moving](docs/bench/data/moving-20261029.json) snapshots remain available as historical data; they are not pooled into today's results.",
                r"""Regenerate this report, the README tables and all charts from committed data:
 
 ```sh
 python3 benchmark/lab/report.py
 ```
 
-Run a new static comparison with the original workload settings:
+Run a new static comparison with these workload settings:
 
 ```sh
 scripts/dist.sh
@@ -319,16 +351,17 @@ python3 benchmark/lab/lab.py run --tools ssh,et,mosh,rsh,rsh-tcp \
   --nets lan,wan,lowbw,verylow,slow64k,highlat,lossy,mobile,badmobile \
   --switches lan:highlat,lan:lowbw,lowbw:highlat,highlat:lossy,wan:verylow \
   --scenes compress,bandwidth --fps 60 --duration 8 --iterations 3 \
-  --cols 100 --rows 30 --parallel 10
+  --cols 100 --rows 30 --parallel 4
 # Repeat render,switch only with the same options for six screen samples.
 python3 benchmark/lab/lab.py run --tools ssh,et,mosh,rsh \
-  --tests sessions --sessions 10 --iterations 2 --nets lan
+  --tests sessions --sessions 10 --iterations 2 --nets lan --parallel 4
 ```
 
-These commands run the current installed lab image, not the unidentified
-historical binary. For cleaner host-timing experiments reduce `--parallel`;
-that changes the original conditions. Moving demos need a 158×43 terminal
-to reproduce the recorded viewer size:
+Use a freshly built image or pass `--rsh /path/to/verified/rsh-linux-aarch64`
+to replace an older embedded binary. The committed snapshot records the
+actual image ID, binary SHA-256, package versions, source commit and harness
+checksums. Moving demos need a 158×43 viewer to reproduce the recorded
+layout; the three workload panes are narrower than the viewer:
 
 ```sh
 python3 benchmark/lab/lab.py demo --tools ssh,mosh,rsh --events '' \
@@ -350,6 +383,7 @@ def readme_sections():
     order = ["rsh", "mosh", "ssh", "et"]
     rs = {t: runs("render", t, "verylow", "compress") for t in order}
     rows = [
+        ["Dashboard displayed FPS (average)"] + [fmt(statistics.mean(r["fps"] for r in rs[t] if r.get("fps") is not None)) for t in order],
         ["Dashboard displayed FPS (median)"] + [fmt(median(rs[t], "fps")) for t in order],
         ["1% / 5% low FPS"] + [f"{fmt(low(rs[t]))} / {fmt(low(rs[t], quantile=.95))}" for t in order],
         ["Frame age, ms"] + [fmt(median(rs[t], "age_ms"), 0) for t in order],
@@ -360,14 +394,14 @@ def readme_sections():
     ]
     opening = """### Performance at a glance
 
-Recorded five-tool lab snapshot, **2026-10-28, before 0.2.0**. The table
-uses a 256 kbit/s link at RTT 100 ms, except the ten-session memory row.
-Rendering requests 60 FPS in a 100×30 terminal. Exact historical rsh build
-ID was not saved; these are observations, not release-wide guarantees.
+Freshly measured **2026-10-29**, using **rsh 0.2.0**
+(build `6729d398d4f1`). The table uses a 256 kbit/s link at RTT 100 ms,
+except the ten-session memory row. Rendering requests 60 FPS in a
+100×30 terminal; four jobs run in parallel on the shared host.
 
 """ + table(["Measurement", "rsh (UDP)", "mosh", "OpenSSH", "Eternal Terminal"], rows) + """
 
-Six render runs; pooled frame-gap lows; three echo/bulk runs; two memory
+Six render attempts; pooled frame-gap lows; three echo/bulk attempts; two memory
 runs. The [full report](BENCHMARK.md) includes rsh TCP fallback, all links,
 raw measurements, aggregation rules and collection failures.
 """
@@ -377,7 +411,8 @@ raw measurements, aggregation rules and collection failures.
     headers = ["Link", "Tool", "Avg FPS", "1% low", "5% low", "Age ms", "RX kbit/s", "Client RSS MiB", "Server RSS MiB"]
     detail = """## Performance
 
-The following static-link comparisons restore the **2026-10-28 snapshot**.
+These comparisons were freshly measured on **2026-10-29** with the
+published **0.2.0** binary, build `6729d398d4f1`.
 Avg FPS is the mean of six per-run frame rates; 1%/5% lows are reciprocals
 of pooled p99/p95 frame gaps. Network is client RX including protocol
 overhead; RSS is a sampled resident size, not a peak. See
@@ -405,23 +440,22 @@ comparison tables and charts. Raw job results are committed with the report.
 
 ### Moving network
 
-The later `7a1d9454d5b1` development build, with the transport implementation
-shipped in 0.2.0, was measured at 158×43 for 60 s per scene, two shared
-30 s impairment cycles. These results are separate from the static snapshot.
+The same **0.2.0** binary was measured with a **158×43 viewer**, for
+60 s per scene and two shared 30 s impairment cycles. The three workload
+panes are narrower than the viewer. These results are separate from the
+static tests.
 
-""" + image("moving", "Moving-link average FPS with 1% and 5% lows") + """
+""" + image("moving", "Moving-link average FPS with 1% and 5% lows") + f"""
 
-rsh displayed **37.72 FPS** across the dashboard trace and **30.22 FPS**
-across the random-screen trace. The dashboard reached **58.0 / 57.6 FPS**
+rsh displayed **{next(r['fps'] for r in MOVING['results'] if r['tool'] == 'rsh' and r['scene'] == 'compress'):.2f} FPS** across the dashboard trace and **{next(r['fps'] for r in MOVING['results'] if r['tool'] == 'rsh' and r['scene'] == 'bandwidth'):.2f} FPS**
+across the random-screen trace. The dashboard reached **{' / '.join(fmt(v) for v in moving_clear_fps('compress'))} FPS**
 in the final five seconds of the two clear phases. The
 [moving comparison](BENCHMARK.md#10-moving-network) includes SSH/mosh,
 lows, scene traffic and RSS. Shared scheduling still recorded up to
-32.91 ms of application skew between containers.
+{max(moving_skew('compress'), moving_skew('bandwidth')):.2f} ms of application skew between containers.
 
-Performance varies by workload and loss sequence. In the static snapshot,
-mosh has better random-screen tails on some slow/lossy links, while SSH
-has steadier near-link frame timing. No uniform FPS or 1%/5% low advantage
-is claimed. These synthetic tests do not establish fairness with competing
+Performance varies by workload, host scheduling and loss sequence.
+No uniform FPS or 1%/5% low advantage is claimed. These synthetic tests do not establish fairness with competing
 flows or performance on every real radio network.
 """
     path = ROOT / "README.md"
