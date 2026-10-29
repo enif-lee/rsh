@@ -1,0 +1,6 @@
+{"built": "candidate", "sha256": "2d6b1c38ce105e8520b6d90f4567c5172fbed5547a0e8ea51c0ed5a4068bfb9f"}
+{"built": "baseline", "sha256": "2d6b1c38ce105e8520b6d90f4567c5172fbed5547a0e8ea51c0ed5a4068bfb9f"}
+{"run": 0, "variant": "candidate", "exit_code": 0, "totals": ["test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.89s"], "fallback": ["DIAG fallback_result session=768297 marked=true tail_numbers=true output_bytes=200093"]}
+{"run": 1, "variant": "baseline", "exit_code": 0, "totals": ["test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.97s"], "fallback": ["DIAG fallback_result session=330029 marked=true tail_numbers=true output_bytes=200093"]}
+{"run": 2, "variant": "candidate", "exit_code": 0, "totals": ["test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.75s"], "fallback": ["DIAG fallback_result session=253194 marked=true tail_numbers=true output_bytes=200093"]}
+{"run": 3, "variant": "baseline", "exit_code": 0, "totals": ["test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.88s"], "fallback": ["DIAG fallback_result session=238018 marked=true tail_numbers=true output_bytes=200093"]}

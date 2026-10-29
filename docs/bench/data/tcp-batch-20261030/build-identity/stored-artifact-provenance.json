@@ -1,0 +1,57 @@
+[
+  {
+    "study": "transport-opt-20261030",
+    "expected": "9db8967b1eb8",
+    "embedded": [
+      "9db8967b1eb8"
+    ],
+    "match": true,
+    "binary_sha256": "ca142ef990756fe9de346ae9b88a92585c992294eb7e0a68071f99fb2d61fa47",
+    "independent_guard_exit_code": 0,
+    "independent_guard_output": "verified build 9db8967b1eb8: /Users/ed/personal/rsh/benchmark/lab/out/transport-opt-20261030/rsh-probe"
+  },
+  {
+    "study": "screen-opt-bounded-20261030",
+    "expected": "48b69e59262d",
+    "embedded": [
+      "48b69e59262d"
+    ],
+    "match": true,
+    "binary_sha256": "46f062ed026ad10c92ba71ad13a1773f579e0a5b130318b05e32bfa3ec017866",
+    "independent_guard_exit_code": 0,
+    "independent_guard_output": "verified build 48b69e59262d: /Users/ed/personal/rsh/benchmark/lab/out/screen-opt-bounded-20261030/rsh-probe"
+  },
+  {
+    "study": "capacity-opt-20261030",
+    "expected": "cc40829b14b1",
+    "embedded": [
+      "cc40829b14b1"
+    ],
+    "match": true,
+    "binary_sha256": "21a7ba8e70f9308b862871edecbbfc58909c11c50cfc9e4a9bdada22c595a323",
+    "independent_guard_exit_code": 0,
+    "independent_guard_output": "verified build cc40829b14b1: /Users/ed/personal/rsh/benchmark/lab/out/capacity-opt-20261030/rsh-probe"
+  },
+  {
+    "study": "tcp-batch-opt-20261030",
+    "expected": "dbb251ca0c55",
+    "embedded": [
+      "dbb251ca0c55"
+    ],
+    "match": true,
+    "binary_sha256": "76a835b785187dcace384bd69dca52c8339425bf1d4aa954c0aa757f502d67b4",
+    "independent_guard_exit_code": 0,
+    "independent_guard_output": "verified build dbb251ca0c55: /Users/ed/personal/rsh/benchmark/lab/out/tcp-batch-opt-20261030/rsh-probe"
+  },
+  {
+    "study": "parity-product-20261030/build-03",
+    "expected": "cdb1e168767c",
+    "embedded": [
+      "cdb1e168767c"
+    ],
+    "match": true,
+    "binary_sha256": "a7e669e1eb8632a70e46594cc55d73f7d76de3840abf0d1fc2d24ee989e73121",
+    "independent_guard_exit_code": 0,
+    "independent_guard_output": "verified build cdb1e168767c: /Users/ed/personal/rsh/benchmark/lab/out/parity-product-20261030/build-03/rsh-linux-aarch64"
+  }
+]

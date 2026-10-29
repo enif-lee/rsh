@@ -1,0 +1,16 @@
+[
+  {
+    "label": "candidate",
+    "exit_code": 0,
+    "stdout": "verified build 2886152b78a2: benchmark/lab/out/parity-fallback-bounded-20261030/candidate-tests\n",
+    "stderr": "",
+    "executable_sha256": "2d6b1c38ce105e8520b6d90f4567c5172fbed5547a0e8ea51c0ed5a4068bfb9f"
+  },
+  {
+    "label": "baseline",
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "build mismatch: benchmark/lab/out/parity-fallback-bounded-20261030/baseline-tests (expected 05bc993b2e40 from /Users/ed/personal/rsh/benchmark/lab/out/parity-fallback-bounded-20261030/baseline)\n",
+    "executable_sha256": "2d6b1c38ce105e8520b6d90f4567c5172fbed5547a0e8ea51c0ed5a4068bfb9f"
+  }
+]
