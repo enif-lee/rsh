@@ -89,7 +89,22 @@ NETS = {
     "mid5": (50, 0, "5mbit", "5 Mbit/s, RTT 100 ms"),
     "highlat": (150, 0, None, "RTT 300 ms"),
     "lossy": (50, 2, None, "2% loss each way, RTT 100 ms"),
+    "moving": (35, 0.1, "8mbit", "Moving network (30 s cycle)"),
 }
+# A synthetic drive through congestion, weak signal and a handover, then
+# recovery. Seconds, one-way delay/jitter (ms), loss (% each way), downlink
+# (kbit/s), label. Uplink is a quarter of downlink. The phase order repeats;
+# individual packet jitter/loss draws are independent between tool slots.
+MOVING = (
+    (6, 35, 5, 0.1, 8000, "clear signal"),
+    (4, 70, 20, 0.8, 2000, "congestion"),
+    (4, 160, 60, 3, 512, "weak signal"),
+    (3, 300, 120, 8, 128, "deep fade"),
+    (1, 180, 60, 100, 128, "handover: link down"),
+    (5, 90, 30, 1, 1000, "recovering"),
+    (7, 40, 8, 0.1, 5000, "clear again"),
+)
+MOVING_PERIOD = sum(phase[0] for phase in MOVING)
 SCENES = {
     "compress": "compressible: full-screen dashboard",
     "bandwidth": "incompressible: random full screen",
@@ -234,15 +249,25 @@ def iface(container, k):
     return next(line.split()[1] for line in out.splitlines() if " %s." % prefix(k) in line)
 
 
-def netem(k, c, net):
+def netem(k, c, net, phase=0, change=False):
     """Shell lines that give container `c` of slot `k` the link of `net`.
 
     A new qdisc each time: what an earlier job left queued (a flood on a
     slow link takes minutes) goes, and `replace` would keep the options
     left out and, changing a rate under a queue, stalled mosh and rsh
-    alike for seconds. A change mid-scene so drops what is queued, as a
-    handover may."""
+    alike for seconds. A static-link switch mid-scene so drops what is
+    queued, as a handover may. The moving profile instead changes the
+    existing qdisc and supplies every varying option at each step."""
     delay, loss, rate, _ = NETS[net]
+    if net == "moving":
+        _, delay, jitter, loss, down, _ = MOVING[phase]
+        rate = down if c == srv(k) else down // 4
+        args = ["delay", "%dms" % delay, "%dms" % jitter, "25%", "distribution", "normal",
+                "loss", "random", "%g%%" % loss, "25%", "rate", "%dkbit" % rate]
+        device = "dev=$(ip -o -4 addr show | awk '/ %s\\./ {print $2; exit}')" % prefix(k)
+        if change:
+            return [device, 'tc qdisc change dev "$dev" root netem ' + " ".join(args)]
+        return [device, 'tc qdisc del dev "$dev" root 2>/dev/null', 'tc qdisc add dev "$dev" root netem ' + " ".join(args)]
     args = (["delay", "%dms" % delay] if delay else []) + (["loss", "%g%%" % loss] if loss else []) + (["rate", rate] if rate and c == srv(k) else [])
     lines = ["dev=$(ip -o -4 addr show | awk '/ %s\\./ {print $2; exit}')" % prefix(k), 'tc qdisc del dev "$dev" root 2>/dev/null']
     if args:
@@ -250,9 +275,9 @@ def netem(k, c, net):
     return lines
 
 
-def shape(k, net, only=None):
+def shape(k, net, only=None, phase=0, change=False):
     for c in only or (srv(k), cli(k)):
-        dexec(c, "sh", "-c", "; ".join(netem(k, c, net)), check=False)
+        dexec(c, "sh", "-c", "; ".join(netem(k, c, net, phase, change)), check=net == "moving")
 
 
 def prepare(k, net, udp_dropped=False):
@@ -562,9 +587,46 @@ class Demo:
             tmux("copy-mode", "-q", "-t", pane(i), check=False)
             tmux("send-keys", "-t", pane(i), "C-c", check=False)
 
-    def shape(self, net):
-        for k in range(len(self.tools)):
-            shape(k, net)
+    def shape(self, net, phase=0, change=False):
+        self.each(lambda k: shape(k, net, phase=phase, change=change))
+
+    def moving(self, seconds, scene):
+        """One shared phase clock for all slots, with midpoint RSS.
+
+        Updates run in the controller, so an interrupt cannot leave a
+        background shaper changing the next scene's link. Restore a usable
+        link for the scene's final marker/backlog, even if it ends in a fade.
+        """
+        began = time.monotonic()
+        until, sample = began + seconds, began + seconds / 2
+        due, phase, rss, changes = began, 0, None, []
+        try:
+            while time.monotonic() < until:
+                now = time.monotonic()
+                if now >= due:
+                    duration, delay, jitter, loss, down, label = MOVING[phase]
+                    self.shape("moving", phase, change=True)
+                    applied = self.now()
+                    self.label = "moving: %s · RTT ~%d ms, jitter %d ms/way, loss %g%%, ↓%gM ↑%gM · %s" % (
+                        label, 2 * delay, jitter, loss, down / 1000, down / 4000, SCENES[scene])
+                    self.status(self.label)
+                    changes.append(dict(at=applied, scheduled_s=due - began, phase=label,
+                                        delay_ms=delay, jitter_ms=jitter, loss_pct=loss,
+                                        down_kbit=down, up_kbit=down // 4))
+                    due += duration
+                    phase = (phase + 1) % len(MOVING)
+                if rss is None and time.monotonic() >= sample:
+                    rss = self.each(self.rss)
+                wake = min(due, sample if rss is None else until, until)
+                time.sleep(max(0, wake - time.monotonic()))
+        finally:
+            self.shape("moving", 0, change=True)
+            _, delay, jitter, loss, down, _ = MOVING[0]
+            changes.append(dict(at=self.now(), phase="drain: clear signal", after_measurement=True,
+                                delay_ms=delay, jitter_ms=jitter, loss_pct=loss,
+                                down_kbit=down, up_kbit=down // 4))
+            self.label = "moving: clear signal (draining) · %s" % SCENES[scene]
+        return rss, changes
 
     def watch(self, k):
         log = "/tmp/demo-%d.out" % self.attempt
@@ -666,22 +728,29 @@ class Demo:
         the scene itself."""
         for net in nets:
             self.shape(net)
-            for scene in scenes:
+            for index, scene in enumerate(scenes):
+                duration = max(seconds, MOVING_PERIOD) if net == "moving" else seconds
+                if net == "moving" and index:
+                    self.shape(net)
                 self.label = "%s · %s" % (NETS[net][3], SCENES[scene])
-                self.status("network: %s │ render: %s (%d s, %g fps)" % (NETS[net][3], SCENES[scene], seconds, fps))
+                self.status("network: %s │ render: %s (%g s, %g fps)" % (NETS[net][3], SCENES[scene], duration, fps))
                 # The next scene (and network) waits until every client has
                 # shown this one to its end: over a slow link a client can be
                 # seconds behind the program. The mark is typed as a sum, so
                 # only the shell's output, not the echoed command, matches.
                 mark = len(windows) + 1
                 rx = self.each(rx_total)
-                self.everyone("clear; python3 /tmp/scene.py %s %g %g %g %s; echo DEMO-$((%d+1))-DONE" % (scene, seconds + DEMO_SKIP, fps, warmup, shlex.quote(self.label), mark - 1))
+                self.everyone("clear; python3 /tmp/scene.py %s %g %g %g %s; echo DEMO-$((%d+1))-DONE" % (scene, duration + DEMO_SKIP, fps, warmup, shlex.quote(self.label), mark - 1))
                 time.sleep(warmup + DEMO_SKIP)
                 start = self.now()
                 # Memory twice, halfway and at the end, the larger kept.
-                time.sleep(seconds / 2)
-                rss = self.each(self.rss)
-                time.sleep(seconds / 2)
+                changes = None
+                if net == "moving":
+                    rss, changes = self.moving(duration, scene)
+                else:
+                    time.sleep(duration / 2)
+                    rss = self.each(self.rss)
+                    time.sleep(duration / 2)
                 rss = [tuple(max(x, y, key=lambda v: -1 if v is None else v) for x, y in zip(a, b)) for a, b in zip(rss, self.each(self.rss))]
                 self.status("network: %s │ render: %s │ waiting for every client to show the end" % (NETS[net][3], SCENES[scene]))
                 done = self.shown("DEMO-%d-DONE" % mark, RENDER_LAG)
@@ -689,8 +758,11 @@ class Demo:
                     self.interrupt()
                     time.sleep(1)
                 rx = [b - a for a, b in zip(rx, self.each(rx_total))]
-                windows.append({"kind": "render", "net": net, "scene": scene, "start": start, "end": start + seconds, "seconds": seconds,
-                                "until": self.now(), "done": done, "rx_bytes": rx, "rss_kb": rss})
+                window = {"kind": "render", "net": net, "scene": scene, "start": start, "end": start + duration, "seconds": duration,
+                          "until": self.now(), "done": done, "rx_bytes": rx, "rss_kb": rss}
+                if changes is not None:
+                    window["network_changes"] = changes
+                windows.append(window)
 
     def each(self, measure):
         """`measure(k)` for every slot at once."""
@@ -1060,7 +1132,7 @@ def main():
     p.add_argument("--events", default="outage,roam,reattach,udpblock", help="demo: " + ",".join(EVENTS) + ' ("" for none)')
     p.add_argument("--event-net", default="wan")
     p.add_argument("--iterations", type=int, default=2)
-    p.add_argument("--duration", type=float, default=4, help="seconds of each scene (after the change, for switch)")
+    p.add_argument("--duration", type=float, default=4, help="seconds of each scene (after the change, for switch); moving demo: at least 30 s")
     p.add_argument("--warmup", type=float, default=3, help="demo: seconds each scene runs unmeasured first, under its label and a count down")
     p.add_argument("--fps", type=float, default=30)
     p.add_argument("--keys", type=int, default=10, help="echo: keys typed")
@@ -1074,6 +1146,10 @@ def main():
     p.add_argument("--keep", action="store_true", help="run, demo: keep the slots they made (for the next run)")
     p.add_argument("--teardown", action="store_true", help=argparse.SUPPRESS)
     opts = p.parse_args()
+    if ("moving" in opts.nets.split(",") and opts.action not in ("demo", "control")) or opts.event_net == "moving" or any(
+        "moving" in pair.replace(">", ":").split(":") for pair in opts.switches.split(",")
+    ):
+        p.error("moving is supported only by demo --nets (not run, --event-net or --switches)")
     for net in [n for n in opts.nets.split(",") if n] + [opts.event_net] + [x for s in opts.switches.split(",") for x in s.replace(">", ":").split(":")]:
         if net not in NETS:
             sys.exit("lab: no network %s (%s)" % (net, ", ".join(NETS)))

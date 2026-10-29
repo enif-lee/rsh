@@ -277,6 +277,8 @@ python3 benchmark/lab/lab.py run --iterations 3 --duration 8 --fps 60 \
 python3 benchmark/lab/lab.py run --tools ssh,et,mosh,rsh --tests sessions --sessions 10 --iterations 2
                                                     # memory with 10 sessions at once
 python3 benchmark/lab/lab.py demo                   # the tools side by side in tmux, then a summary
+python3 benchmark/lab/lab.py demo --nets moving --fps 60 --events ''
+                                                    # a changing mobile link; at least 30 s per scene
 python3 benchmark/lab/lab.py stop                   # stop a run or demo from another shell
 python3 benchmark/lab/charts.py benchmark/lab/out/run-<a>.json,benchmark/lab/out/run-<b>.json docs/bench
                                                     # every chart the runs have data for
@@ -284,6 +286,35 @@ python3 benchmark/lab/charts.py benchmark/lab/out/run-<a>.json docs/bench memory
 ```
 
 Render runs record frames, their age, every frame gap (for the 1% and 5% lows), the client's bytes and packets a second, the client's and the server's memory halfway through each scene, and their CPU over it. `--tests`, `--tools`, `--nets`, `--scenes`, `--switches`, `--fps` and `--duration` pick what runs (without `--tests`, render and switch only); `--rsh <linux binary>` tests another build without rebuilding the image, and `--rsh-b <linux binary>` installs a second build as the tool `rsh-b` (add it to `--tools`), to compare two builds in one run.
+
+The demo-only `moving` profile is a synthetic commute, not a captured
+mobile-network trace. Each scene runs at least one 30-second cycle
+(`--duration 60` runs two), starting over for the next scene:
+
+| Seconds | Conditions | Nominal RTT / one-way jitter | Loss each way | Down / up |
+| --- | --- | --- | --- | --- |
+| 0–6 | Clear signal | 70 / 5 ms | 0.1% | 8 / 2 Mbit/s |
+| 6–10 | Congestion | 140 / 20 ms | 0.8% | 2 / 0.5 Mbit/s |
+| 10–14 | Weak signal | 320 / 60 ms | 3% | 512 / 128 kbit/s |
+| 14–17 | Deep fade | 600 / 120 ms | 8% | 128 / 32 kbit/s |
+| 17–18 | Handover | 360 / 60 ms | 100% (one second) | 128 / 32 kbit/s |
+| 18–23 | Recovering | 180 / 30 ms | 1% | 1 / 0.25 Mbit/s |
+| 23–30 | Clear again | 80 / 8 ms | 0.1% | 5 / 1.25 Mbit/s |
+
+Delay varies with a normal distribution; delay and random loss use netem's
+25% correlation setting to model runs of similar conditions. RTT values
+exclude queueing and jitter. All tools follow the same phase schedule,
+with independent packet-level random draws. The pane/status labels show
+the current phase and its conditions; each render window in the result
+JSON includes `network_changes` with scheduled offsets and timestamps
+after the changes have been applied. Transitions use `tc qdisc change`
+instead of deleting the queue.
+The existing FPS summary still starts its window at each tool's first
+displayed frame; `network_changes` records the common network-control times.
+At the end (including interruption), the link returns to the first phase
+so queued output can drain. The profile
+is supported by `demo --nets`, rather than the static `run` tests or
+connection events. See [netem's delay and loss options](https://man7.org/linux/man-pages/man8/tc-netem.8.html).
 
 ## Development
 
