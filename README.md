@@ -14,11 +14,14 @@
 <h3 align="center">The remote shell for bad networks.</h3>
 
 <p align="center">
-  <em>54 fps over 256 kbit/s, keys that echo in 4 to 7 ms at any distance, and a session that outlives every dropped link.<br>
-  Built for 3G, ADSL, trains, planes and hotel Wi-Fi, and just as quick on a LAN.</em>
+  <em>Local key prediction, persistent sessions, and a current screen when the link cannot carry every byte.<br>
+  Built for 3G, ADSL, trains, planes and hotel Wi-Fi, and everyday work on a LAN.</em>
 </p>
 
 rsh opens a shell on a host the way `ssh` does, but the session lives on the server: close the laptop, change networks, or kill the client, and `rsh <host>` brings you back to the same shell. Over UDP it echoes your keys at once, measures the link as it goes, and when the link cannot carry every byte it sends the latest screen instead of a backlog. Where only TCP gets through, it falls back to TCP on the same port.
+
+The table below is an [earlier five-tool snapshot](#earlier-five-tool-comparison).
+[Latest branch measurements](#latest-branch-measurements-2026-10-29) cover recovery on a changing link.
 
 | On a 256 kbit/s link (RTT 100 ms) | rsh | mosh | OpenSSH | Eternal Terminal |
 | --- | --- | --- | --- | --- |
@@ -93,6 +96,55 @@ Keys, typed at the start of a line as in ssh:
 
 ## Benchmarks
 
+### Latest branch measurements (2026-10-29)
+
+These development-build comparisons cover changing-link recovery:
+checkpoint `a5bb6cae5bf0` versus `7a1d9454d5b1` (Linux arm64).
+The moving demo ran OpenSSH, mosh and rsh at a requested 60 FPS in a
+158×43 terminal, for 60 seconds per scene: two cycles through congestion,
+weak signal, a one-second handover outage and recovery. All tools use the
+same scheduled observation window and time-based impairment trace on
+independent links.
+
+| rsh workload / observation window | Checkpoint | Updated build |
+| --- | ---: | ---: |
+| Dashboard, whole 60 seconds | 29.23 FPS | 37.72 FPS |
+| Dashboard, first clear phase, last 5 seconds (25–30) | 8.6 FPS | 58.0 FPS |
+| Dashboard, second clear phase, last 5 seconds (55–60) | 58.8 FPS | 57.6 FPS |
+| Random full screen, whole 60 seconds | 30.47 FPS | 30.22 FPS |
+
+The dashboard's first clear phase previously never completed a full
+one-second window with at least 54 displayed frames; the updated build
+completed one 1.2 seconds after the phase began. In the second cycle the
+checkpoint was already recovering faster: 1.0 versus 2.45 seconds.
+Random-screen recovery was 1.2/1.8 seconds before and 1.75/1.9 after.
+Recovery is therefore not uniformly faster across scenes or cycles.
+The fix addresses sparse output paced at an old, low capacity estimate.
+It measures actual packet pairs separately from later frames and keeps
+later frame jitter from cancelling the pair's recovery evidence.
+
+Some static loss tests also showed lower FPS. At 256 kbit/s, RTT 400 ms
+and nominal 2% random loss, two 20-second dashboard checks were 26.4/35.4
+FPS before and 22.8/25.4 after. The qdisc counters showed different
+realized losses, so the cause of this decrease is unconfirmed; these
+results do not establish non-regression on every lossy link. The lossless
+variant was 47.4/56.7 versus 51.4/59.9 FPS.
+
+The common schedule does not make actual packet outcomes or application
+times identical: the moving run recorded up to 32.91 ms of application
+skew between containers. These are two cycles per build on one shared host.
+[Measurement details, run IDs and limitations](docs/bench/moving-recovery.md)
+include the full results, timing errors and regression checks.
+The [long-RTT investigation](docs/bench/backlog-fix.md) records the backlog
+and coalescing fixes and the 1%/5% low comparisons; it does not establish
+a consistent percentile advantage over SSH.
+
+### Earlier five-tool comparison
+
+The opening comparison table and the charts and numerical comparisons
+below are the earlier static-link snapshot, not measurements of build
+`7a1d9454d5b1`.
+
 Same machine, same simulated links, five clients: rsh over UDP, rsh over TCP (UDP blocked), OpenSSH, Eternal Terminal (ET) and mosh. Each scene draws 60 frames a second for 8 s; values are the median of six runs for the screen tests and three for the others. The frame-rate charts carry each tool's 1% and 5% lows (the frame rate its slowest 1% and 5% of frames would give), taken over all six runs' frame gaps together: light is the frame rate, mid the 5% low, solid the 1% low.
 
 <p align="center">
@@ -108,7 +160,7 @@ Same machine, same simulated links, five clients: rsh over UDP, rsh over TCP (UD
 - **Big output does not block you.** `seq 1 100000` returns the prompt in 0.05 to 0.46 s on every link. OpenSSH and ET take 6 to 24 s on slow links, and more than 30 s at 64 kbit/s.
 - **Sessions survive.** After a 5 s outage rsh is back 0.1 s after the link returns (mosh 1.0 s, OpenSSH and ET about 5 s). After the client moves to another IP address it carries on in 2.1 s (mosh 3.1 s; OpenSSH and ET not within the 8 s watched). A client killed and started again is back in the same shell in 0.5 s.
 
-### Memory
+#### Memory
 
 <p align="center">
   <img src="docs/bench/memory-sessions.svg" alt="Resident memory with 10 sessions at once, clients and server side, per tool" width="760">
@@ -121,7 +173,7 @@ Same machine, same simulated links, five clients: rsh over UDP, rsh over TCP (UD
 - **Ten sessions at once** (each shell having printed 3000 lines, then quiet): the ten rsh clients hold 24 MB and the server 11 MB, all ten sessions in one `rsh serve`. OpenSSH: 74 MB of clients and 148 MB of `sshd`; mosh 144 and 98 MB (a `mosh-server` per session); ET 171 and 36 MB. Idle, the ten rsh sessions cost 2 packets a second each way (mosh 3.4 to 3.6, ET 7.5 to 7.9; OpenSSH sends none).
 - **One session.** While drawing at 60 fps the rsh client holds 2.4 MB (OpenSSH 7.4, mosh 14.5, ET 18.0 MB) and `rsh serve` 5.7 MB (`mosh-server` 10.4, ET 14.2, `sshd` 19.4 MB with its listener).
 
-### Network
+#### Network
 
 <p align="center">
   <img src="docs/bench/network.svg" alt="Network data received per frame shown for a full-screen dashboard, per network and tool" width="760">
@@ -155,7 +207,7 @@ Same machine, same simulated links, five clients: rsh over UDP, rsh over TCP (UD
 > - On a LAN OpenSSH's and ET's screen is 1 to 2 ms old, rsh's 5 to 9 ms; at RTT 100 ms 51 to 52 ms against 56 to 60 ms. On a LAN ET echoes a key in 5 ms, rsh in 7 ms. On clean links the rsh client sends a packet for every frame it takes, mosh's one for every one to five.
 > - rsh over TCP is back about 5 s after an outage, as OpenSSH is, and does not follow a move within the 8 s watched. Where UDP is blocked rsh connects in 2.0 s (it tries UDP first), OpenSSH in 1.4 s and ET in 1.9 s.
 >
-> The screen tests (render, switch) come from two `lab.py run --fps 60`s of three iterations each, the other tests from the first of them; memory with 10 sessions from a separate run of the `sessions` test (two runs, median).
+> The earlier screen tests (render, switch) come from two `lab.py run --fps 60`s of three iterations each, the other tests from the first of them; memory with 10 sessions from a separate run of the `sessions` test (two runs, median).
 
 ## Feature matrix
 
@@ -179,7 +231,7 @@ Same machine, same simulated links, five clients: rsh over UDP, rsh over TCP (UD
 | Upgrade the server without dropping sessions | n/a | not checked | n/a | ✅ hands sessions to the new binary |
 | Authentication | SSH keys, passwords | via SSH | via SSH | per-client token issued over SSH; X25519 per attach, XChaCha20-Poly1305 |
 
-Times and memory come from the lab runs above. The OSC counts come from an earlier run of [`benchmark/harness`](benchmark/harness); the other cells from each project's documentation and source.
+Times and memory in this matrix come from the earlier five-tool lab runs above. The OSC counts come from an earlier run of [`benchmark/harness`](benchmark/harness); the other cells from each project's documentation and source.
 
 ## Architecture
 
@@ -239,9 +291,9 @@ flowchart LR
 
 - **Wire.** Every datagram is sealed with XChaCha20-Poly1305 under keys from an X25519 handshake on each attach, which a token issued over SSH authorizes. Without UDP the same packets go over a TCP connection to the same port, each with a 2-byte length.
 - **A reliable stream with its own congestion control** (`src/proto.rs`): cumulative acks by byte offset; fast retransmit after duplicate acks, early retransmit when few datagrams are in flight, a retransmission timer with an Eifel-style undo of spurious timeouts, and a window that grows while round trips show no queue.
-- **Path model** (`src/path.rs`): the client stamps each numbered datagram with the time its kernel received it (`SO_TIMESTAMP`) and reports those times in its acks. From them the server measures the bottleneck's rate from trains of datagrams sent back to back (packet-train dispersion), the queue in front of it as one-way delay over its least, the round trip less the client's hold, and loss. A path that turns longer, slower or faster (a LAN that became a 300 ms link, a slow link that went away) is learned within a few round trips.
+- **Path model** (`src/path.rs`): the client stamps each numbered datagram with the time its kernel received it (`SO_TIMESTAMP`) and reports those times in its acks. From them the server measures the bottleneck's rate from trains of datagrams sent back to back (packet-train dispersion), the queue in front of it as one-way delay over its least, the round trip less the client's hold, and loss. It tracks changes in delay and capacity; sparse output can send a short packet-pair probe when no recent useful serialization sample exists. Recovery evidence is reset when its estimate is invalidated. With UDP arrival reports, rate-based screen-mode entry requires corroborating samples or a queue.
 - **Pacing to the link.** On a slow link the next screen update goes when the previous one is reckoned off the link, so updates never queue there and what you see stays young. On a fast path the window opens to the program's own pace.
-- **Copies for loss.** On a path that loses datagrams, each goes twice while the link has room, so a frame rarely waits a round trip for a resend. A clean path sends none.
+- **Loss protection and probes.** Observed loss and retransmissions enable duplicate datagrams while capacity permits. Separate measurement probes can send one short copy per second when a slow capacity estimate lacks recent useful packet-pair samples.
 
 ### Client and rendering
 
@@ -273,12 +325,13 @@ python3 benchmark/lab/lab.py run --iterations 3 --duration 8 --fps 60 \
     --tests render,switch,echo,flood,outage,roam,reattach,udpblock \
     --nets lan,wan,lowbw,verylow,slow64k,highlat,lossy,mobile,badmobile \
     --switches lan:highlat,lan:lowbw,lowbw:highlat,highlat:lossy,wan:verylow
-                                                    # the README's run (render and switch twice); results in benchmark/lab/out/run-<time>.json
+                                                    # earlier five-tool survey (render and switch twice); results in benchmark/lab/out/run-<time>.json
 python3 benchmark/lab/lab.py run --tools ssh,et,mosh,rsh --tests sessions --sessions 10 --iterations 2
                                                     # memory with 10 sessions at once
 python3 benchmark/lab/lab.py demo                   # the tools side by side in tmux, then a summary
-python3 benchmark/lab/lab.py demo --nets moving --fps 60 --events ''
-                                                    # a changing mobile link; at least 30 s per scene
+python3 benchmark/lab/lab.py demo --tools ssh,mosh,rsh --events '' \
+    --nets moving --scenes compress,bandwidth --fps 60 --duration 60
+                                                    # latest recovery comparison: two shared 30 s cycles per scene
 python3 benchmark/lab/lab.py stop                   # stop a run or demo from another shell
 python3 benchmark/lab/charts.py benchmark/lab/out/run-<a>.json,benchmark/lab/out/run-<b>.json docs/bench
                                                     # every chart the runs have data for
