@@ -201,15 +201,15 @@ def main():
         "flood.svg": svg("Time to finish `seq 1 100000`", "until the prompt is back",
                          groups(medians(results, "flood", "flood_s")), lambda v: "%.2f s" % v, False, log=True, missing="> 30 s (not done)"),
         "network.svg": svg("Network: data received per frame shown, a full-screen dashboard at %d fps" % rate, "bytes into the client, median of runs",
-                           groups(per_frame(results, "compress")), lambda v: "%.2f KB" % v, False, log=True),
+                           groups(per_frame(results, "compress")), lambda v: "%.2f KiB" % v, False, log=True),
         "packets.svg": svg("Network: packets for each frame shown, a full-screen dashboard at %d fps" % rate, "the client's, solid: in, light: out",
                            groups(packets(results, "compress")), lambda v: "%.1f in / %.1f out" % v, False, pair="stack"),
         "memory.svg": svg("Memory while drawing at %d fps" % rate, "resident memory halfway through each render, median of all of them",
-                          memory(results), lambda v: "%.1f MB" % v, False),
+                          memory(results), lambda v: "%.1f MiB" % v, False),
     }
     sides, count = sessions(results)
     charts["memory-sessions.svg"] = svg("Memory with %s sessions at once" % count, "each shell having printed 3000 lines, then quiet; resident memory, all processes",
-                                        sides, lambda v: "%.1f MB" % v, False) if sides else None
+                                        sides, lambda v: "%.1f MiB" % v, False) if sides else None
     unknown = only - {name[:-4] for name in charts}
     if unknown:
         sys.exit("charts.py: no chart %s; there are %s" % (", ".join(sorted(unknown)), ", ".join(name[:-4] for name in charts)))

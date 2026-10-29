@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="248" viewBox="0 0 760 248" role="img" aria-label="Moving link: two 30-second cycles">
+<style>svg{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif}.bg{fill:#fcfcfb}.t1{fill:#1d1d1b}.t2{fill:#5f5e58}.axis{stroke:#e2e1dc}.s-rsh{fill:#2a78d6}.s-ssh{fill:#1baf7a}.s-mosh{fill:#e87ba4}@media (prefers-color-scheme:dark){.bg{fill:#1a1a19}.t1{fill:#f0efec}.t2{fill:#c3c2b7}.axis{stroke:#3a3a37}.s-rsh{fill:#3987e5}.s-ssh{fill:#199e70}.s-mosh{fill:#d55181}}</style>
+<rect class="bg" width="100%" height="100%" rx="8"/>
+<text class="t1" x="16" y="26" font-size="15" font-weight="600">Moving link: two 30-second cycles</text>
+<text class="t2" x="16" y="44" font-size="11.5">one 60 s run per scene; light: FPS, mid: 5% low, solid: 1% low (higher is better)</text>
+<rect class="s-rsh" x="16" y="56" width="10" height="10" rx="2"/>
+<text class="t2" x="30" y="65" font-size="11.5">rsh (UDP)</text>
+<rect class="s-ssh" x="112" y="56" width="10" height="10" rx="2"/>
+<text class="t2" x="126" y="65" font-size="11.5">OpenSSH</text>
+<rect class="s-mosh" x="195" y="56" width="10" height="10" rx="2"/>
+<text class="t2" x="209" y="65" font-size="11.5">mosh</text>
+<text class="t1" x="16" y="90" font-size="12" font-weight="600">Dashboard</text>
+<line class="axis" x1="108" y1="96" x2="108" y2="137" stroke-width="1"/>
+<text class="t2" x="102" y="107" font-size="11" text-anchor="end">rsh (UDP)</text>
+<rect class="s-rsh" x="108" y="98" width="477.0" height="11" rx="2" opacity="0.3"/>
+<rect class="s-rsh" x="108" y="98" width="243.2" height="11" rx="2" opacity="0.6"/>
+<rect class="s-rsh" x="108" y="98" width="59.9" height="11" rx="2"/>
+<text class="t1" x="591.0" y="107" font-size="11" font-weight="600">37.72 / 4.74 / 19.23</text>
+<text class="t2" x="102" y="120" font-size="11" text-anchor="end">OpenSSH</text>
+<rect class="s-ssh" x="108" y="111" width="367.4" height="11" rx="2" opacity="0.3"/>
+<rect class="s-ssh" x="108" y="111" width="168.6" height="11" rx="2" opacity="0.6"/>
+<rect class="s-ssh" x="108" y="111" width="33.9" height="11" rx="2"/>
+<text class="t1" x="481.4" y="120" font-size="11">29.05 / 2.68 / 13.33</text>
+<text class="t2" x="102" y="133" font-size="11" text-anchor="end">mosh</text>
+<rect class="s-mosh" x="108" y="124" width="183.2" height="11" rx="2" opacity="0.3"/>
+<rect class="s-mosh" x="108" y="124" width="72.7" height="11" rx="2" opacity="0.6"/>
+<rect class="s-mosh" x="108" y="124" width="32.3" height="11" rx="2"/>
+<text class="t1" x="297.2" y="133" font-size="11">14.48 / 2.55 / 5.75</text>
+<text class="t1" x="16" y="165" font-size="12" font-weight="600">Random screen</text>
+<line class="axis" x1="108" y1="171" x2="108" y2="212" stroke-width="1"/>
+<text class="t2" x="102" y="182" font-size="11" text-anchor="end">rsh (UDP)</text>
+<rect class="s-rsh" x="108" y="173" width="382.1" height="11" rx="2" opacity="0.3"/>
+<rect class="s-rsh" x="108" y="173" width="133.1" height="11" rx="2" opacity="0.6"/>
+<rect class="s-rsh" x="108" y="173" width="40.4" height="11" rx="2"/>
+<text class="t1" x="496.1" y="182" font-size="11" font-weight="600">30.22 / 3.19 / 10.53</text>
+<text class="t2" x="102" y="195" font-size="11" text-anchor="end">OpenSSH</text>
+<rect class="s-ssh" x="108" y="186" width="193.1" height="11" rx="2" opacity="0.3"/>
+<rect class="s-ssh" x="108" y="186" width="55.0" height="11" rx="2" opacity="0.6"/>
+<rect class="s-ssh" x="108" y="186" width="11.5" height="11" rx="2"/>
+<text class="t1" x="307.1" y="195" font-size="11">15.27 / 0.91 / 4.35</text>
+<text class="t2" x="102" y="208" font-size="11" text-anchor="end">mosh</text>
+<rect class="s-mosh" x="108" y="199" width="171.8" height="11" rx="2" opacity="0.3"/>
+<rect class="s-mosh" x="108" y="199" width="52.7" height="11" rx="2" opacity="0.6"/>
+<rect class="s-mosh" x="108" y="199" width="40.9" height="11" rx="2"/>
+<text class="t1" x="285.8" y="208" font-size="11">13.58 / 3.24 / 4.17</text>
+</svg>
