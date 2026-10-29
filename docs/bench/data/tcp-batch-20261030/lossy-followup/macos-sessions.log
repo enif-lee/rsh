@@ -1,0 +1,46 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.26s
+     Running tests/session.rs (target/debug/deps/session-371236ec8408b706)
+
+running 25 tests
+test command_session_reports_exit_code_and_is_removed ... ok
+test end_offset_follows_a_repaint_after_exit ... ok
+test ipv6_peer_works ... ok
+test ctrl_c_drops_a_large_unacked_backlog ... ok
+test one_udp_socket_per_host ... ok
+test attach_in_the_middle_of_an_escape_sequence ... ok
+test backlog_is_bounded_for_silent_client_and_dropped_when_detached ... ok
+test disconnect_timeout_hangs_up_abandoned_sessions ... ok
+test compression_asked_for_works_on_a_fast_link_too ... ok
+test reflected_server_packets_are_not_input ... ok
+test output_is_exact_through_loss_duplication_and_reordering ... ok
+test second_client_takes_over_and_first_is_kicked ... ok
+test server_adopts_new_client_address ... ok
+test output_over_a_slow_round_trip_is_compressed_and_exact ... ok
+test idle_tcp_connections_do_not_shut_out_clients ... ok
+test input_past_the_pty_backlog_arrives_whole_over_tcp ... ok
+test reattach_after_server_moves_port ... ok
+test wrong_token_gets_no_reply_and_replayed_hello_does_nothing ... ok
+test local_and_remote_port_forwarding ... ok
+test shell_output_and_resume_redraws_screen ... ok
+test where_udp_is_blocked_the_session_goes_over_tcp ... FAILED
+test stale_attachment_is_told_after_server_restart ... ok
+test revoked_token_ends_its_attachment_and_bad_permissions_fail_closed ... ok
+test kill_by_name_and_list ... ok
+test a_broken_tcp_connection_is_made_again ... ok
+
+failures:
+
+---- where_udp_is_blocked_the_session_goes_over_tcp stdout ----
+
+thread 'where_udp_is_blocked_the_session_goes_over_tcp' (82106981) panicked at tests/session.rs:258:5:
+tail: [12;1H[0m[0m[K[13;1H[0m[0m[K[14;1H[0m[0m[K[15;1H[0m[0m[K[16;1H[0m[0m[K[17;1H[0m[0m[K[18;1H[0m[0m[K[19;1H[0m[0m[K[20;1H[0m[0m[K[21;1H[0m[0m[K[22;1H[0m[0m[K[23;1H[0m[0m[K[24;1H[0m[0m[K(B[1;1H[0m(B)B[?2026lseq 1 30000; echo MARK:$RSH_SESSION
+
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    where_udp_is_blocked_the_session_goes_over_tcp
+
+test result: FAILED. 24 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.97s
+
+error: test failed, to rerun pass `--test session`

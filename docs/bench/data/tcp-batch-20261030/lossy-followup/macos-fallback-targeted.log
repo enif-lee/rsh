@@ -1,0 +1,7 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.14s
+     Running tests/session.rs (target/debug/deps/session-371236ec8408b706)
+
+running 1 test
+test where_udp_is_blocked_the_session_goes_over_tcp ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 24 filtered out; finished in 5.31s
