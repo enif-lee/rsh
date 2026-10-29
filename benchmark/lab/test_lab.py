@@ -32,7 +32,7 @@ class RunScheduleTests(unittest.TestCase):
             "--tests", "render,switch,echo,flood,outage,roam,reattach,udpblock,sessions",
             "--nets", "lan,wan,lowbw,verylow,slow64k,highlat,lossy,mobile,badmobile",
             "--switches", "lan:highlat,lan:lowbw,lowbw:highlat,highlat:lossy,wan:verylow")
-        self.assertEqual(opts.parallel, 12)
+        self.assertEqual(opts.parallel, 4)
         jobs = lab.jobs_of(opts)
         self.assertEqual(len(jobs), 755)
         self.assertEqual(sum(j["test"] == "render" for j in jobs), 270)

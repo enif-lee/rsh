@@ -16,8 +16,9 @@ remove them when they end (`--keep` keeps them); slots brought up with
 Each slot is a server and a client container on a network of their own
 (`rl-<k>-srv`, `rl-<k>-cli`, `rshlab-<k>`), shaped with `tc netem` (delay
 and loss both ways, the rate from the server), so jobs in different slots
-do not share a link; they share the machine's CPUs. The default is twelve
-parallel jobs; reduce `--parallel` if host contention affects frame timing.
+do not share a link; they share the machine's CPUs. Published measurements
+use four parallel jobs (the default). Development checks use
+`--iterations 1 --parallel 8` and are not pooled into published results.
 The image is the harness's (`benchmark/harness/
 run.py build`); `--rsh` swaps in another rsh build without rebuilding it.
 
@@ -1198,7 +1199,7 @@ def main():
     p.add_argument("--lines", type=int, default=100000, help="flood: seq length")
     p.add_argument("--sessions", type=int, default=10, help="sessions: how many at once")
     p.add_argument("--down", type=float, default=5, help="outage: seconds the link is down")
-    p.add_argument("--parallel", type=int, default=12, help="run: jobs at once (default: 12)")
+    p.add_argument("--parallel", type=int, default=4, help="run: jobs at once (default: 4; development: 8)")
     p.add_argument("--cols", type=int, default=100)
     p.add_argument("--rows", type=int, default=30)
     p.add_argument("--no-attach", action="store_true")

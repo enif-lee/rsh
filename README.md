@@ -276,10 +276,12 @@ Run render and link-switch tests:
 python3 benchmark/lab/lab.py run --tools ssh,mosh,rsh \
   --tests render,switch --nets lan,wan,lowbw,highlat \
   --switches lan:lowbw,lowbw:highlat \
-  --scenes compress,bandwidth --fps 60 --duration 8 --iterations 3 --parallel 12
+  --scenes compress,bandwidth --fps 60 --duration 8 --iterations 3 --parallel 4
 ```
 
-The run defaults are twelve parallel jobs and three repeats per case.
+Published benchmarks always use four parallel jobs (the default), with
+three repeats per case. Development checks use `--iterations 1 --parallel 8`;
+their results are kept separate from published comparisons.
 The `sessions` test defaults to one repeat; `--session-iterations` overrides it.
 
 The [twelve-worker validation](docs/bench/parallel12-20261029.md) shortened
