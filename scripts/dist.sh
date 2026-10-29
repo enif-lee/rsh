@@ -10,6 +10,7 @@ ROOT=$(cd "$(dirname "$0")/.." && pwd)
 umask 022
 OUT=${1:-$HOME/.rsh/dist}
 mkdir -p "$OUT"
+OUT=$(cd "$OUT" && pwd)
 # What this run builds: only these go in SHA256SUMS (not a binary left in
 # $OUT by an earlier build).
 built=""
@@ -24,13 +25,13 @@ for arch in x86_64 aarch64; do
         -v "rsh-cargo-$arch":/usr/local/cargo/registry \
         -v "rsh-target-$arch":/target \
         -v "$OUT":/out \
-        -w /src -e CARGO_TARGET_DIR=/target \
+        -w /src -e CARGO_TARGET_DIR=/target -e RSH_BUILD_SALT="${RSH_BUILD_SALT:-}" \
         rust:1-alpine \
-        sh -c "apk add --no-cache musl-dev >/dev/null && cargo build --release --locked && cp /target/release/rsh /out/rsh-linux-$arch.new && mv -f /out/rsh-linux-$arch.new /out/rsh-linux-$arch"
+        sh -c "apk add --no-cache musl-dev >/dev/null && cargo clean --release --locked -p rsh && cargo build --release --locked && cp /target/release/rsh /out/rsh-linux-$arch.new && mv -f /out/rsh-linux-$arch.new /out/rsh-linux-$arch"
     built="$built rsh-linux-$arch"
 done
 echo "building the local binary"
-(cd "$ROOT" && cargo build --release --locked)
+(cd "$ROOT" && cargo clean --release --locked -p rsh --target-dir "$ROOT/target" && cargo build --release --locked --target-dir "$ROOT/target")
 local_platform=$("$ROOT/target/release/rsh" --version >/dev/null && uname -sm | awk '{ os = tolower($1); arch = $2; if (arch == "arm64") arch = "aarch64"; if (arch == "amd64") arch = "x86_64"; print os "-" arch }')
 cp "$ROOT/target/release/rsh" "$OUT/rsh-$local_platform.new" && mv -f "$OUT/rsh-$local_platform.new" "$OUT/rsh-$local_platform"
 built="$built rsh-$local_platform"
@@ -41,7 +42,7 @@ if [ "$(uname -s)" = Darwin ]; then
         [ "darwin-$arch" = "$local_platform" ] && continue
         if rustup target list --installed 2>/dev/null | grep -qx "$target"; then
             echo "building rsh-darwin-$arch"
-            (cd "$ROOT" && cargo build --release --locked --target "$target")
+            (cd "$ROOT" && cargo clean --release --locked -p rsh --target "$target" --target-dir "$ROOT/target" && cargo build --release --locked --target "$target" --target-dir "$ROOT/target")
             cp "$ROOT/target/$target/release/rsh" "$OUT/rsh-darwin-$arch.new" && mv -f "$OUT/rsh-darwin-$arch.new" "$OUT/rsh-darwin-$arch"
             built="$built rsh-darwin-$arch"
         else
@@ -50,6 +51,10 @@ if [ "$(uname -s)" = Darwin ]; then
     done
 fi
 # The sums a release carries (install.sh and rsh check downloads with them).
-(cd "$OUT" && for f in $built; do shasum -a 256 "$f" 2>/dev/null || sha256sum "$f"; done) > "$OUT/SHA256SUMS"
+set --
+for f in $built; do set -- "$@" "$OUT/$f"; done
+"$ROOT/scripts/check-build.sh" "$ROOT" "$@"
+(cd "$OUT" && for f in $built; do shasum -a 256 "$f" 2>/dev/null || sha256sum "$f"; done) > "$OUT/SHA256SUMS.new"
+mv -f "$OUT/SHA256SUMS.new" "$OUT/SHA256SUMS"
 "$ROOT/target/release/rsh" --version
 ls -l "$OUT"

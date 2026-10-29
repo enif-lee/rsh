@@ -83,6 +83,11 @@ Rebuild them after changing the source so the client can install a matching
 build on remote hosts. Binaries stored outside `~/.rsh/bin` do not
 auto-update themselves.
 
+Distribution builds rebuild the `rsh` release package and verify each binary's
+source build ID before writing checksums. Check an externally built binary
+against its source tree with `scripts/check-build.sh /path/to/source /path/to/binary`.
+The check reads the embedded ID, so the binary can target another platform.
+
 ## Usage
 
 ```sh
