@@ -341,7 +341,7 @@ and exposes a different bandwidth and frame-gap tradeoff than the dashboard.
 python3 benchmark/lab/report.py
 ```
 
-Run a new static comparison with these workload settings:
+To reproduce the recorded workload and its four-job concurrency:
 
 ```sh
 scripts/dist.sh
@@ -354,8 +354,24 @@ python3 benchmark/lab/lab.py run --tools ssh,et,mosh,rsh,rsh-tcp \
   --cols 100 --rows 30 --parallel 4
 # Repeat render,switch only with the same options for six screen samples.
 python3 benchmark/lab/lab.py run --tools ssh,et,mosh,rsh \
-  --tests sessions --sessions 10 --iterations 2 --nets lan --parallel 4
+  --tests sessions --sessions 10 --session-iterations 2 --nets lan --parallel 4
 ```
+
+### Next full measurement
+
+The current run defaults are **twelve parallel jobs**, **three repeats per
+case**, and **one sessions repeat** (`--session-iterations`). The recorded
+tables above retain their actual four-job, six-screen-repeat conditions.
+For the next measurement, run the static command above once with
+`--parallel 12`; omit the extra screen-only repeat. Run the sessions command
+with `--session-iterations 1 --parallel 12`. This retains all five static
+transports, nine links, both scenes and the same observation durations:
+750 static jobs plus four memory jobs, rather than 1,178 jobs.
+
+Replaying the recorded per-job durations over twelve workers estimates
+approximately **11.8 minutes static + 2.5 minutes moving = 14.3 minutes**,
+excluding preparation and review. Actual timing with twelve workers has not
+been measured; CPU contention can change elapsed time and frame-gap lows.
 
 Use a freshly built image or pass `--rsh /path/to/verified/rsh-linux-aarch64`
 to replace an older embedded binary. The committed snapshot records the

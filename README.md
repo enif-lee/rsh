@@ -276,8 +276,11 @@ Run render and link-switch tests:
 python3 benchmark/lab/lab.py run --tools ssh,mosh,rsh \
   --tests render,switch --nets lan,wan,lowbw,highlat \
   --switches lan:lowbw,lowbw:highlat \
-  --scenes compress,bandwidth --fps 60 --duration 8 --iterations 3
+  --scenes compress,bandwidth --fps 60 --duration 8 --iterations 3 --parallel 12
 ```
+
+The run defaults are twelve parallel jobs and three repeats per case.
+The `sessions` test defaults to one repeat; `--session-iterations` overrides it.
 
 Run the moving-network demo:
 

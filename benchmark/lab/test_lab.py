@@ -16,6 +16,39 @@ from unittest.mock import Mock, patch
 import lab
 
 
+class RunScheduleTests(unittest.TestCase):
+    def options(self, *args):
+        with tempfile.TemporaryDirectory() as directory, \
+             open(Path(directory) / "lock", "a+") as lock, \
+             patch.object(lab, "HERE", directory), \
+             patch.object(lab, "open", return_value=lock, create=True), \
+             patch.object(lab.sys, "argv", ["lab.py", "run", *args]), \
+             patch.object(lab, "guard"), patch.object(lab, "run") as run:
+            lab.main()
+            return run.call_args.args[0]
+
+    def test_default_full_matrix_has_three_repeats_and_one_memory_sample(self):
+        opts = self.options(
+            "--tests", "render,switch,echo,flood,outage,roam,reattach,udpblock,sessions",
+            "--nets", "lan,wan,lowbw,verylow,slow64k,highlat,lossy,mobile,badmobile",
+            "--switches", "lan:highlat,lan:lowbw,lowbw:highlat,highlat:lossy,wan:verylow")
+        self.assertEqual(opts.parallel, 12)
+        jobs = lab.jobs_of(opts)
+        self.assertEqual(len(jobs), 755)
+        self.assertEqual(sum(j["test"] == "render" for j in jobs), 270)
+        self.assertEqual(sum(j["test"] == "switch" for j in jobs), 150)
+        self.assertEqual([j["iteration"] for j in jobs if j["test"] == "sessions"], [0] * 5)
+        self.assertEqual({j["iteration"] for j in jobs if j["test"] != "sessions"}, {0, 1, 2})
+
+    def test_memory_repeats_can_exceed_the_other_repeats(self):
+        opts = self.options("--tools", "ssh,rsh", "--tests", "echo,sessions", "--nets", "lan",
+                            "--iterations", "1", "--session-iterations", "2", "--parallel", "4")
+        jobs = lab.jobs_of(opts)
+        self.assertEqual(opts.parallel, 4)
+        self.assertEqual(sum(j["test"] == "echo" for j in jobs), 2)
+        self.assertEqual(sum(j["test"] == "sessions" for j in jobs), 4)
+
+
 class Clock:
     def __init__(self):
         self.at = 0.0

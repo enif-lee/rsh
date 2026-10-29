@@ -16,8 +16,9 @@ remove them when they end (`--keep` keeps them); slots brought up with
 Each slot is a server and a client container on a network of their own
 (`rl-<k>-srv`, `rl-<k>-cli`, `rshlab-<k>`), shaped with `tc netem` (delay
 and loss both ways, the rate from the server), so jobs in different slots
-do not share a link; they share the machine's CPUs, so keep `--parallel`
-below about half of them. The image is the harness's (`benchmark/harness/
+do not share a link; they share the machine's CPUs. The default is twelve
+parallel jobs; reduce `--parallel` if host contention affects frame timing.
+The image is the harness's (`benchmark/harness/
 run.py build`); `--rsh` swaps in another rsh build without rebuilding it.
 
 Tests (`run --tests`), each job a fresh connection of one tool:
@@ -42,7 +43,8 @@ Tests (`run --tests`), each job a fresh connection of one tool:
   reattach  the client killed and started again: same shell or not
   udpblock  the server drops UDP silently: connect time
 The connect time of every job is kept too. Each test runs `--iterations`
-times; the summary shows the median (and the range of the main figure).
+times, except sessions, which uses `--session-iterations` (one by default);
+the summary shows the median (and the range of the main figure).
 The events run on `--event-net`. Results go to `out/run-<time>.json`.
 
 The demo (`demo`) runs the tools' clients in tmux panes of one size
@@ -329,8 +331,11 @@ def jobs_of(opts):
         else:
             sys.exit("lab: no test %s" % test)
     jobs = []
-    for i in range(opts.iterations):
+    for i in range(max(opts.iterations, opts.session_iterations)):
         for spec in specs:
+            iterations = opts.session_iterations if spec["test"] == "sessions" else opts.iterations
+            if i >= iterations:
+                continue
             for tool in tools:
                 jobs.append(dict(base, **spec, tool=tool, iteration=i))
     # The longest first (slow links, tests that wait out a failure), so the
@@ -1184,7 +1189,8 @@ def main():
     p.add_argument("--switch-at", type=float, default=2, help="run switch: seconds before the change")
     p.add_argument("--events", default="outage,roam,reattach,udpblock", help="demo: " + ",".join(EVENTS) + ' ("" for none)')
     p.add_argument("--event-net", default="wan")
-    p.add_argument("--iterations", type=int, default=2)
+    p.add_argument("--iterations", type=int, default=3, help="run: repeats per case except sessions (default: 3)")
+    p.add_argument("--session-iterations", type=int, default=1, help="run: repeats of the sessions test (default: 1)")
     p.add_argument("--duration", type=float, default=4, help="seconds of each scene (after the change, for switch); moving demo: at least 30 s")
     p.add_argument("--warmup", type=float, default=3, help="demo: seconds each scene runs unmeasured first, under its label and a count down")
     p.add_argument("--fps", type=float, default=30)
@@ -1192,7 +1198,7 @@ def main():
     p.add_argument("--lines", type=int, default=100000, help="flood: seq length")
     p.add_argument("--sessions", type=int, default=10, help="sessions: how many at once")
     p.add_argument("--down", type=float, default=5, help="outage: seconds the link is down")
-    p.add_argument("--parallel", type=int, help="run: jobs at once (default: docker's CPUs)")
+    p.add_argument("--parallel", type=int, default=12, help="run: jobs at once (default: 12)")
     p.add_argument("--cols", type=int, default=100)
     p.add_argument("--rows", type=int, default=30)
     p.add_argument("--no-attach", action="store_true")
