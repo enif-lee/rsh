@@ -92,6 +92,9 @@ const LEVEL_DWELL: Duration = Duration::from_secs(1);
 /// a datagram of headers around a few bytes each. Output that stops (a
 /// key's echo) goes after `GATHER_GAP`.
 const GATHER_GAP: Duration = Duration::from_millis(2);
+/// Frames on a path without a measured bottleneck use a shorter quiet
+/// gap. Slow paths retain coalescing to avoid extra packets/flushes.
+const FRAME_GATHER_GAP: Duration = Duration::from_millis(1);
 const GATHER_MAX: Duration = Duration::from_millis(10);
 const GATHER_BYTES: usize = 16 * 1024;
 /// On a slow link, how much later than the link is through with the last
@@ -2166,7 +2169,8 @@ impl Attachment {
     }
 
     /// When what `zraw` gathered may go into the stream (see
-    /// `GATHER_GAP`); None when nothing waits.
+    /// `GATHER_GAP`); None when nothing waits. Frames use a shorter quiet
+    /// gap to join their PTY pieces with less delay and scheduling jitter.
     fn gathered_at(&self) -> Option<Instant> {
         let since = self.gathering.filter(|_| !self.zraw.is_empty())?;
         // Waiting for the plain generation's acks before compressing
@@ -2177,7 +2181,8 @@ impl Attachment {
         if self.zraw.len() >= GATHER_BYTES {
             return Some(since);
         }
-        let quiet = self.output_at.map_or(since, |at| at + GATHER_GAP);
+        let gap = if self.animating() && self.output.slow_rate().is_none() { FRAME_GATHER_GAP } else { GATHER_GAP };
+        let quiet = self.output_at.map_or(since, |at| at + gap);
         Some(quiet.min(since + GATHER_MAX))
     }
 
@@ -2483,6 +2488,52 @@ fn sanitize_name(name: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn stepped_output_gathers_briefly_without_skipping_generation_waits() {
+        let server = Server::spawn();
+        let mut state = server.state();
+        let start = Instant::now();
+        let key = Key::from_token("test");
+        let command = vec!["sleep".into(), "30".into()];
+        let hello = crate::net::new_hello("test", Action::Default, (80, 24), &command);
+        let packet = Packet { kind: KIND_CONFIRM, session: 1, counter: 0, nonce: [0; 24], payload: Vec::new() };
+        let attached = state.carry_out(1, &key, 0, &hello, &packet, "127.0.0.1:12345".parse().unwrap(), start);
+        let attach = state.sessions.get_mut(&attached.session).unwrap().attach.as_mut().unwrap();
+        attach.output = Sender::new(0);
+        attach.zstream = true;
+        attach.compress = true;
+        attach.z = Some(proto::Deflater::new(proto::FAST_LEVEL));
+        attach.zraw = b"echo".to_vec();
+        attach.gathering = Some(start);
+        attach.output_at = Some(start);
+        attach.frames = 0;
+        assert_eq!(attach.gathered_at(), Some(start + GATHER_GAP), "a small echo still coalesces");
+
+        // Pieces of the same frame still join, using the latest piece's
+        // quiet gap; flushing at once can send a partial frame.
+        attach.frames = ANIMATION_FRAMES;
+        attach.output_at = Some(start + Duration::from_micros(400));
+        assert_eq!(attach.gathered_at(), Some(start + Duration::from_micros(400) + FRAME_GATHER_GAP));
+
+        attach.output.set_path(Some(32_000.0), Some(100.0));
+        assert_eq!(attach.gathered_at(), Some(start + Duration::from_micros(400) + GATHER_GAP), "a measured bottleneck retains coalescing");
+        attach.output.set_path(None, Some(100.0));
+
+        // Even a frame cannot start the compressed generation before the
+        // preceding plain generation reaches the peer.
+        attach.z = None;
+        attach.output.push(b"plain");
+        assert_eq!(attach.gathered_at(), None);
+        assert!(attach.output.next_chunk(start).is_some());
+        attach.output.on_ack(0, 5, start + Duration::from_millis(1), false);
+        assert_eq!(attach.gathered_at(), Some(start + Duration::from_micros(400) + FRAME_GATHER_GAP));
+
+        attach.z = Some(proto::Deflater::new(proto::FAST_LEVEL));
+        attach.frames = 0;
+        attach.zraw.resize(GATHER_BYTES, b'x');
+        assert_eq!(attach.gathered_at(), Some(start), "large unstepped output still flushes at the byte limit");
+    }
 
     #[test]
     fn bytes_in_transit_do_not_start_screen_updates_but_a_backlog_does() {
