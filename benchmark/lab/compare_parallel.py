@@ -75,6 +75,89 @@ def image(name):
     return f"![{name} comparison]({name}.svg)"
 
 
+def focused_report(data):
+    blocks = data["blocks"]
+    groups, rows, block_rows, counters = [], [], [], []
+    summary = []
+    for net, scene in [("wan", "bandwidth"), ("badmobile", "compress")]:
+        values = {}
+        for parallel in (4, 12):
+            bs = [b for b in blocks if b["net"] == net and b["parallel"] == parallel]
+            rs = [r for b in bs for r in b["results"]]
+            f = fps(rs)
+            values["baseline" if parallel == 4 else "parallel12"] = f
+            means = [fps(b["results"])[0] for b in bs]
+            rows.append([net, scene, parallel, f"{sum(r.get('fps') is not None for r in rs)}/{len(rs)}",
+                         fmt(f[0], 2), fmt(f[1], 2), fmt(f[2], 2),
+                         f"{min(means):.2f}–{max(means):.2f}", fmt(median(rs, "kbit_s"), 0)])
+            summary.append(dict(net=net, scene=scene, parallel=parallel, runs=len(rs),
+                                mean_fps=f[0], low1_fps=f[1], low5_fps=f[2], block_mean_fps=means))
+            for side in ("srv", "cli"):
+                qs = [q for r in rs for c, entry in r["qdisc_after_job"].items() if c.endswith("-" + side)
+                      for q in entry["qdiscs"] if q.get("kind") == "netem"]
+                sent, dropped = sum(q["packets"] for q in qs), sum(q["drops"] for q in qs)
+                shares = [100 * q["drops"] / (q["packets"] + q["drops"]) for q in qs]
+                counters.append([net, parallel, side, len(qs), sent, dropped,
+                                 fmt(100 * dropped / (sent + dropped), 2),
+                                 f"{min(shares):.2f}–{max(shares):.2f}", max(q["qlen"] for q in qs)])
+        groups.append((NETS[net] + " · " + scene, values))
+    for b in blocks:
+        f = fps(b["results"])
+        block_rows.append([b["tag"], b["parallel"], ",".join(map(str, b["active_slots"])),
+                           fmt(f[0], 2), fmt(f[1], 2), fmt(f[2], 2)])
+    svg = charts.svg("Focused rsh UDP repeat: 4 versus 12 workers",
+                     "36 attempts / 3 blocks per group; light: mean FPS, mid: 5% low, solid: 1% low", groups,
+                     lambda v: f"{fmt(v[0], 2)} / {fmt(v[1], 2)} / {fmt(v[2], 2)}", True, pair="lows", value_w=175)
+    (OUT / "focused-20261029.svg").write_text(svg)
+    get = lambda net, p: next(r for r in summary if r["net"] == net and r["parallel"] == p)
+    wa, wb, ba, bb = get("wan", 4), get("wan", 12), get("badmobile", 4), get("badmobile", 12)
+    content = ["""# Focused repeat of the two differing rsh UDP cases
+
+Only RTT 100 ms random-screen rendering and the 256 kbit/s, RTT 400 ms,
+nominal 2%-loss dashboard were repeated. Same official 0.2.0 binary,
+collector, 100×30 terminal, requested 60 FPS and eight-second windows.
+
+Each case/concurrency has three blocks of twelve attempts: **36 attempts
+per group, 144 total**. WAN block order is 4/12/12/4/4/12; the lossy case
+uses 12/4/4/12/12/4. Cases are interleaved. Each four-worker case rotates
+through slots 0–3, 4–7 and 8–11; twelve-worker blocks use all slots.
+This balances temporal and slot assignment effects without replaying the
+earlier mixed-tool workload. All workers in a block run the same case.
+
+The application's binary and its version/SHA/image are checked on all 24
+containers before and after. This is a focused homogeneous-rsh diagnostic,
+not an exact replication of the full suite's mix of protocols and profiles.
+
+## Findings
+
+""", f"WAN random-screen mean FPS was **{wa['mean_fps']:.2f} → {wb['mean_fps']:.2f}** ({change(wa['mean_fps'], wb['mean_fps']):.1f}%), while its 1% low was **{wa['low1_fps']:.2f} → {wb['low1_fps']:.2f}** ({change(wa['low1_fps'], wb['low1_fps']):.1f}%). Its 5% low was **{wa['low5_fps']:.2f} → {wb['low5_fps']:.2f}**. The twelve-worker tail remained lower in this focused repeat, although the deficit differs from the earlier 26.0 → 19.0 observation.",
+               f"The lossy dashboard mean was **{ba['mean_fps']:.2f} → {bb['mean_fps']:.2f} FPS** ({change(ba['mean_fps'], bb['mean_fps']):.1f}%). The earlier approximately 20% drop was not reproduced in this repeat; the three block-mean ranges overlap. This does not prove identical behavior for every loss sequence.",
+               """The practical distinction remains: average FPS can be close while frame-gap
+tails differ. This diagnostic does not identify the precise cause of the
+tail difference or isolate it from host/collector scheduling and the extra
+counter-reading overhead. The configured twelve-worker default is unchanged.
+
+## Results
+
+Mean FPS averages all available runs. 1%/5% lows pool inter-frame gaps
+within each group. The block mean range shows the three block averages;
+concurrent samples share host load and are not independent replications.
+No statistical-equivalence claim is made.
+""", image("focused-20261029"), table(["Link", "Scene", "Workers", "Measured", "Avg FPS", "1% low", "5% low", "Block mean FPS range", "Median RX kbit/s"], rows),
+               "## Each block", table(["Execution block", "Workers", "Active slots", "Avg FPS", "1% low", "5% low"], block_rows),
+               "## Actual qdisc drops", "The counters below cover the whole job, including connection and teardown, not only its eight-second render window. Each job recreates its qdisc. Drop share is drops / (sent + dropped); still-queued packets are excluded. Drops may include queue-limit drops as well as configured random loss, so these are not exact measurements of the random-loss parameter.",
+               table(["Link", "Workers", "Side", "Counters", "Sent packets", "Drops", "Aggregate drop %", "Per-job drop % range", "Max final qlen"], counters),
+               "`srv` is server egress and `cli` is client egress. Counter reads happen after the original collector returns and do not alter its saved FPS window or job_s. They can overlap other slots' observation windows and delay worker reuse, adding some host work; both focused concurrency settings include this instrumentation.",
+               "## Relation to the earlier comparison",
+               "The [earlier matched three-attempt comparison](parallel12-20261029.md) observed WAN random-screen 1% lows of 26.0 → 19.0 FPS and lossy dashboard mean FPS of 29.9 → 23.7. Compare the new group values and block ranges above rather than treating those earlier individual estimates as fixed performance. Different realized drops, order, workload mix and host scheduling prevent attributing every change to concurrency alone.",
+               "## Failures and source data"]
+    errors = [[b["tag"], r["iteration"], r["error"]] for b in blocks for r in b["results"] if r.get("error")]
+    content += [table(["Block", "Iteration", "Error"], errors) if errors else "All 144 attempts produced render measurements; none were discarded.",
+                "[Complete blocks, per-run metrics/gaps, qdisc counters, environment and pre/postflight checks](data/focused-20261029.json). Original options/results and source-file hashes are retained. Rebuild with `python3 benchmark/lab/compare_parallel.py`."]
+    (OUT / "focused-20261029.md").write_text("\n\n".join(content).rstrip() + "\n")
+    (OUT / "data/focused-summary-20261029.json").write_text(json.dumps(summary, indent=2) + "\n")
+
+
 def main():
     rows, stats = [], []
     for scene in ("compress", "bandwidth"):
@@ -239,6 +322,10 @@ equivalence; percentile lows and individual cases must also be inspected.
     blocks += [table(["Run", "Test", "Link", "Scene", "Tool", "Iteration", "Error"], rows),
                "## Data and reproducibility",
                "[Four-worker baseline](data/static-20261029.json), [twelve-worker results](data/parallel12-20261029.json), [environment/preflight/postflight](data/environment-parallel12-20261029.json), [earlier moving frames](data/moving-20261029-release.json), [new moving frames](data/moving-20261029-followup.json). Original-file hashes, complete job results and raw frame observations are included. Rebuild with `python3 benchmark/lab/compare_parallel.py`."]
+    focus = OUT / "data/focused-20261029.json"
+    if focus.exists():
+        blocks += ["## Focused follow-up", "The [focused remeasurement](focused-20261029.md) repeats only the two highlighted rsh UDP cases, with 36 attempts per case/concurrency, interleaved block order and observed qdisc drop counters. Its homogeneous workload differs from this mixed-suite comparison."]
+        focused_report(json.loads(focus.read_text()))
     (OUT / "parallel12-20261029.md").write_text("\n\n".join(blocks).rstrip() + "\n")
     (OUT / "data/parallel12-comparison-summary.json").write_text(json.dumps(dict(timings=times, render=stats), indent=2) + "\n")
     print("Rebuilt parallel12 comparison report, summary and four charts")
