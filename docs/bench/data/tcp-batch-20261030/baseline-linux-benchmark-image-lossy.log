@@ -1,0 +1,14 @@
+
+running 1 test
+test output_is_exact_through_loss_duplication_and_reordering ...
+thread 'output_is_exact_through_loss_duplication_and_reordering' (7) panicked at tests/session.rs:408:54:
+called `Option::unwrap()` on a `None` value
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+FAILED
+
+failures:
+
+failures:
+    output_is_exact_through_loss_duplication_and_reordering
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 24 filtered out; finished in 2.42s

@@ -1,0 +1,19 @@
+   Compiling rsh v0.2.0 (/src)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.10s
+     Running tests/binary_cli.rs (/target/debug/deps/binary_cli-499ca979f2f3fc6b)
+
+running 1 test
+
+thread 'tmux_sessions_are_joined_listed_and_left' (100) panicked at tests/binary_cli.rs:323:68:
+the tmux session made outside rsh is listed
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test tmux_sessions_are_joined_listed_and_left ... FAILED
+
+failures:
+
+failures:
+    tmux_sessions_are_joined_listed_and_left
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.22s
+
+error: test failed, to rerun pass `--test binary_cli`

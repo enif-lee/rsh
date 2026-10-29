@@ -1,0 +1,14 @@
+(1/6) Installing openssh-keygen (10.3_p1-r1)
+(2/6) Installing ncurses-terminfo-base (6.6_p20260516-r0)
+(3/6) Installing libncursesw (6.6_p20260516-r0)
+(4/6) Installing libedit (20260508.3.1-r1)
+(5/6) Installing openssh-client-common (10.3_p1-r1)
+(6/6) Installing openssh-client-default (10.3_p1-r1)
+Executing busybox-1.37.0-r31.trigger
+OK: 178.4 MiB in 37 packages
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+cargo 1.99.1 (5f94df478 2026-08-27)
+   Compiling rsh v0.2.0 (/src)
+    Finished `release` profile [optimized] target(s) in 12.27s
+a7e669e1eb8632a70e46594cc55d73f7d76de3840abf0d1fc2d24ee989e73121  /out/rsh-linux-aarch64
+rsh 0.2.0 build cdb1e168767c protocol 3 handoff 3 platform linux-aarch64

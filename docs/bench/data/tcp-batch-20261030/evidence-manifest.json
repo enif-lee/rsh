@@ -1,0 +1,21 @@
+{
+  "base_commit": "24248bd60ec6998e1dc27d0baf84db4a4e5cb8ed",
+  "performance_jobs": 0,
+  "status": "functional-only; performance acceptance pending",
+  "files": {
+    "baseline-linux-alpine-sessions.log": "36c5952500433fc876b992cba89e29489dca116166f59f7838bed809084c42d0",
+    "baseline-linux-alpine-tmux.log": "94cc1fa29b2c6ebd930a9f16c6f9f3d9ed75058f18ee85846b98fa4ce4e6af91",
+    "baseline-linux-benchmark-image-lossy.log": "fda0efa365f31db4ee752279059c049b728b679af041a9991c7bfe176544c0d1",
+    "baseline-macos-badge.log": "edb858e86d9a7bcf4c6fc8c057fb4032710b5c989970a771bbf10f515ee61f45",
+    "linux-alpine-parallel.log": "e78db88b35fab5c8da28f358ad07a24b22b610e0664837515a2804215cb14b09",
+    "linux-alpine-serial.log": "e3b10e2f68394f19e5a02c190c8475cb2c7b51b4108c5ccfea4d23d4a0604590",
+    "linux-alpine-sessions-serial.log": "c09fd21bc76cb784f813adffbf96b64b338f9749d7f152760cd8fd2e56fb5ed8",
+    "linux-benchmark-image.log": "1060a3ae36ae0951aba982439fd16107acf6eb09180beb7a190dcf78473717f7",
+    "linux-release-build.log": "061e6351c2845b94f32fc02afeac12311a899047501f72c7169689ca906b5eae",
+    "macos-test-manifest.json": "6879a73f60f4fbb7cfcfa5e550324f167ee000a2e38efa5772b0d9df0d5bd7d5",
+    "macos-tests.log": "0ca3a1af20835a9b48f9e7ee947c5a43c2ff83e9af584142e911465bff8bc0f0",
+    "python-schedule-tests.log": "7f132638942b64a7afb4294b4d53a5b0b7f5e8593c7470c733f7a13e6329e5b5",
+    "source-manifest.json": "665a9362f572ecb7b5b0a9a9ef6387a204caa75e170a7e3faf482485ad104955"
+  },
+  "log_normalization": "Trailing whitespace and blank lines at EOF removed; test content unchanged."
+}
