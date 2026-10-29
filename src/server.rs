@@ -1786,8 +1786,16 @@ impl State {
             // The copy after the original: numbers go out in order, which
             // the path model reads trains by.
             batch.push(sealed);
-            if !stream.data.is_empty() && attach.doubling && room {
-                let copy = ServerStream { pn: number(&mut attach.path, stream.encode().len(), true), ..stream.clone() };
+            // An independently deflated datagram cannot be cut to a prefix.
+            let small = stream.data.len() < proto::CHUNK && (attach.syncing_until.is_none() || attach.update_len <= proto::CHUNK);
+            let probe = udp && small && flags & proto::FLAG_DEFLATE == 0 && !stream.data.is_empty() && attach.path.as_mut().is_some_and(|path| path.probe_due(now));
+            if !stream.data.is_empty() && (attach.doubling && room || probe) {
+                // A capacity probe needs only a short second datagram. Its
+                // prefix is ordinary duplicate stream data; it changes no
+                // protocol or receive state and costs at most 64 data bytes.
+                let data = if probe && !(attach.doubling && room) { &stream.data[..stream.data.len().min(64)] } else { stream.data };
+                let mut copy = ServerStream { data, pn: None, ..stream.clone() };
+                copy.pn = number(&mut attach.path, copy.encode().len(), true);
                 batch.push(proto::seal(&attach.key, Dir::ToClient, KIND_STREAM, attach.id, &copy.encode()));
             }
             sent = true;
@@ -2452,7 +2460,7 @@ impl Session {
         let slow = output.first_acked()
             && ((lag > 2 * output.window() as usize && output.srtt().is_some_and(|srtt| srtt.mul_f64(lag as f64 / window) > LAG_LIMIT))
                 || (output.pending() > 0 && attach.queue_delay() > LAG_LIMIT)
-                || (attach.screens && output.slow_rate().is_some_and(|rate| backlog > 512 && backlog as f64 / rate > LAG_LIMIT.as_secs_f64()))
+                || (attach.screens && attach.bottleneck_shown(now) && output.slow_rate().is_some_and(|rate| backlog > 512 && backlog as f64 / rate > LAG_LIMIT.as_secs_f64()))
                 || (attach.screens && stepped && output.drain_rate(now).is_some_and(|rate| lag > 512 && lag as f64 / rate > LAG_LIMIT.as_secs_f64())));
         // Memory: what is held, staged bytes as they are.
         let held = output.pending() + attach.zraw.len() + bytes.len();
@@ -2553,6 +2561,7 @@ mod tests {
             (55_000.0, 0, false, false),
             (55_000.0, 14_000, true, true),
             (8_000.0, 0, true, true),
+            (8_000.0, 0, false, false),
         ] {
             let attach = session.attach.as_mut().unwrap();
             // A few spread datagrams can show a low rate on a fast path.

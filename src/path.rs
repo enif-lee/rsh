@@ -70,6 +70,9 @@ struct Train {
     bytes: u64,
     /// When its first datagram was sent.
     sent: Instant,
+    /// All its datagrams were sent together, not joined just because a
+    /// later frame's arrival was delayed (which may be propagation jitter).
+    back_to_back: bool,
 }
 
 pub struct PathModel {
@@ -105,6 +108,9 @@ pub struct PathModel {
     /// Such trains in a row, each far over the rate measured (see
     /// `end_train`).
     fast_trains: u32,
+    /// A useful back-to-back train lately observed, and the last probe.
+    train_seen: Option<Instant>,
+    probed: Option<Instant>,
     /// (when, wire bytes) of datagrams sent over the last second.
     sent_log: VecDeque<(Instant, u32)>,
     /// Lost datagrams over all reported or aged out, as a moving share,
@@ -138,6 +144,8 @@ impl PathModel {
             fast_sent: None,
             steady: None,
             fast_trains: 0,
+            train_seen: None,
+            probed: None,
             sent_log: VecDeque::new(),
             loss: 0.0,
             random_loss: 0.0,
@@ -193,6 +201,8 @@ impl PathModel {
         self.rates.clear();
         self.fast_seen = None;
         self.fast_trains = 0;
+        self.train_seen = None;
+        self.probed = None;
         self.far_since = None;
         self.fast_sent = None;
         self.steady = None;
@@ -258,22 +268,28 @@ impl PathModel {
             let joins = self.last.is_some_and(|last| {
                 let send_gap = at.saturating_duration_since(last.sent).as_micros() as i64;
                 let busy = (at_us - last.at_us) as f64 > SPREAD_SHARE * send_gap as f64 + SPREAD_MARGIN_US;
-                last.pn.wrapping_add(1) == pn && (send_gap < TRAIN_GAP_US || busy)
+                // Finish an actual packet pair before a later frame, even
+                // when jitter delayed that frame. Merging it would hide
+                // the pair's serialization behind the inter-frame delay.
+                let pair = self.train.is_some_and(|train| train.back_to_back && train.bytes > 0);
+                last.pn.wrapping_add(1) == pn && (send_gap < TRAIN_GAP_US || busy && !pair)
             });
+            let together = self.last.is_some_and(|last| at.saturating_duration_since(last.sent).as_micros() < TRAIN_GAP_US as u128);
             match self.train.as_mut().filter(|_| joins) {
                 Some(train) if at_us >= train.last_us => {
+                    train.back_to_back &= together;
                     train.last_us = at_us;
                     train.bytes += u64::from(wire);
                     // A long train gives a sample now and then, not one at
                     // its end only.
                     if at_us - train.first_us >= 4 * SPREAD_US {
                         self.end_train(now);
-                        self.train = Some(Train { first_us: at_us, last_us: at_us, bytes: 0, sent: at });
+                        self.train = Some(Train { first_us: at_us, last_us: at_us, bytes: 0, sent: at, back_to_back: true });
                     }
                 }
                 _ => {
                     self.end_train(now);
-                    self.train = Some(Train { first_us: at_us, last_us: at_us, bytes: 0, sent: at });
+                    self.train = Some(Train { first_us: at_us, last_us: at_us, bytes: 0, sent: at, back_to_back: true });
                 }
             }
             self.last = Some(Arrival { pn, at_us, sent: at });
@@ -324,6 +340,7 @@ impl PathModel {
             self.delivery_rate = delivered;
             if self.queue_ms < 5.0 && self.rate(now).is_some_and(|rate| delivered > 1.25 * rate) {
                 self.rates.clear();
+                self.fast_trains = 0;
             }
             self.delivered = (now, 0);
         }
@@ -331,24 +348,33 @@ impl PathModel {
 
     /// A train that ended: its rate, when it spread clearly.
     fn end_train(&mut self, now: Instant) {
+        if self.rate(now).is_none() {
+            self.fast_trains = 0;
+        }
         if let Some(train) = self.train.take() {
             let spread = train.last_us - train.first_us;
-            // 600 bytes in under `SPREAD_US`: over `SLOW_RATE`. Two in a
-            // row well over the rate measured (one can be two datagrams
-            // let through together): the bottleneck is gone (the client
-            // moved off a slow link), and pacing at the old rate would only
-            // ever deliver that rate, never showing the link got faster.
+            if train.back_to_back && train.bytes > 0 && (spread >= SPREAD_US || train.bytes >= 600) {
+                self.train_seen = Some(now);
+            }
+            // 600 bytes in under `SPREAD_US`: over `SLOW_RATE`.
             if spread < SPREAD_US && train.bytes >= 600 {
                 self.fast_seen = Some(now);
                 self.fast_sent = Some(train.sent);
             }
             let shown = train.bytes as f64 * 1_000_000.0 / SPREAD_US as f64;
-            if spread < SPREAD_US && train.bytes >= 600 && self.rate(now).is_some_and(|rate| shown > 2.0 * rate) {
+            // Even a short probe can disprove a much lower estimate. Two
+            // in a row (one may have been let through together) relearn it;
+            // only a full-size train above declares the path `fast`.
+            if spread < SPREAD_US && train.bytes > 0 && self.rate(now).is_some_and(|rate| shown > 2.0 * rate) {
                 self.fast_trains += 1;
                 if self.fast_trains >= 2 {
                     self.rates.clear();
+                    self.fast_trains = 0;
                 }
-            } else if train.bytes > 0 {
+            } else if train.bytes > 0 && train.back_to_back {
+                // A spread back-to-back pair disproves recovery. A frame
+                // that was sent later and delayed by jitter does not undo
+                // the serialization evidence of an actual packet pair.
                 self.fast_trains = 0;
             }
             if spread >= SPREAD_US && train.bytes > 0 {
@@ -385,6 +411,19 @@ impl PathModel {
     /// train spread on a fast path by a busy host or hop.
     pub fn rate_samples(&self, now: Instant) -> usize {
         self.rates.iter().filter(|(when, _)| now.duration_since(*when) <= RATE_SPAN).count()
+    }
+
+    /// Small, paced updates may never form a packet train: jitter then
+    /// looks like a slow link, and sending at that rate cannot disprove it.
+    /// One short copy a second measures serialization without the frame
+    /// spacing. Bulk output already supplies trains and needs no probe.
+    pub fn probe_due(&mut self, now: Instant) -> bool {
+        let recent = |at: Option<Instant>| at.is_some_and(|at| now.duration_since(at) < Duration::from_secs(1));
+        if self.rate(now).is_none_or(|rate| rate >= crate::proto::SLOW_RATE) || recent(self.train_seen) || recent(self.probed) {
+            return false;
+        }
+        self.probed = Some(now);
+        true
     }
 
     /// Whether the path has room for copies of what goes now: no queue
@@ -492,6 +531,7 @@ impl PathModel {
             // as a spread) is no bottleneck's; what the program writes may
             // go at once.
             self.rates.clear();
+            self.fast_trains = 0;
         } else {
             self.fast_seen = None;
         }
@@ -702,6 +742,97 @@ mod tests {
         // (A train is told when what follows it arrives.)
         let now = run(&mut model, now + Duration::from_millis(200), 4, 1000, 10, 10e6, 50);
         assert_eq!(model.rate(now), None);
+    }
+
+    #[test]
+    fn small_capacity_probes_recover_without_mistaking_a_slow_link_for_a_fast_one() {
+        let start = Instant::now();
+        for link in [8_000.0, 1_000_000.0] {
+            let mut model = PathModel::new(start);
+            assert!(!model.probe_due(start));
+            run(&mut model, start, 32, 1000, 10, 8_000.0, 50);
+            let rate = model.rate(start).expect("a slow link");
+            assert!((rate - 8_000.0).abs() < 100.0);
+            for second in [6, 8, 10, 12] {
+                let at = start + Duration::from_secs(second);
+                assert!(model.probe_due(at));
+                assert!(!model.probe_due(at + Duration::from_millis(100)));
+                // The second datagram is a short duplicate of the first.
+                // A single spaced frame closes the pair's train.
+                let mut arrivals = Vec::new();
+                let mut free = at.duration_since(start).as_micros() as f64;
+                for size in [400, 178] {
+                    let pn = model.number(at, size, size == 178);
+                    free += size as f64 / link * 1e6;
+                    arrivals.push((pn, (free + 50_000.0) as u32));
+                }
+                let later = at + Duration::from_millis(100);
+                let pn = model.number(later, 400, false);
+                let last = later.duration_since(start).as_micros() as u32 + 80_000;
+                arrivals.push((pn, last));
+                model.feedback(&Feedback { sent_us: last, arrivals }, later + Duration::from_millis(130));
+                if model.rate(later).is_none() {
+                    assert!(link > 8_000.0);
+                    break;
+                }
+                // Between probes a later frame may pick up 15 ms of
+                // propagation jitter. It is not a failed packet-pair probe.
+                let mut arrivals = Vec::new();
+                for (offset, delay) in [(250_000, 50_000), (267_000, 65_000)] {
+                    let sent = at + Duration::from_micros(offset);
+                    let pn = model.number(sent, 400, false);
+                    let arrival = sent.duration_since(start).as_micros() as u32 + delay;
+                    arrivals.push((pn, arrival));
+                }
+                let raw = arrivals[1].1;
+                model.feedback(&Feedback { sent_us: raw, arrivals }, at + Duration::from_millis(400));
+            }
+            if link == 8_000.0 {
+                assert!(model.rate(start + Duration::from_secs(14)).is_some_and(|r| (r - link).abs() < 100.0));
+            } else {
+                assert_eq!(model.rate(start + Duration::from_secs(14)), None);
+            }
+        }
+    }
+
+    #[test]
+    fn a_relearned_rate_needs_fresh_recovery_evidence() {
+        let start = Instant::now();
+        let mut model = PathModel::new(start);
+        let pair = |model: &mut PathModel, at_ms: u64| {
+            let at = start + Duration::from_millis(at_ms);
+            let a = model.number(at, 400, false);
+            let b = model.number(at, 178, true);
+            let c = model.number(at + Duration::from_millis(100), 400, false);
+            let t = (at_ms * 1000) as u32;
+            model.feedback(&Feedback {
+                sent_us: t + 150_000,
+                arrivals: vec![(a, t + 50_000), (b, t + 50_178), (c, t + 150_000)],
+            }, at + Duration::from_millis(200));
+        };
+        model.rates.push_back((start, 8_000.0));
+        pair(&mut model, 0);
+        pair(&mut model, 250);
+        assert_eq!(model.rate(start + Duration::from_millis(450)), None);
+        // A later spaced frame acquires jitter and supplies a new estimate.
+        let a = model.number(start + Duration::from_millis(600), 400, false);
+        let b = model.number(start + Duration::from_millis(617), 400, false);
+        model.feedback(&Feedback { sent_us: 682_000, arrivals: vec![(a, 650_000), (b, 682_000)] }, start + Duration::from_millis(750));
+        assert_eq!(model.rate(start + Duration::from_millis(750)), Some(12_500.0));
+        pair(&mut model, 900);
+        assert!(model.rate(start + Duration::from_millis(1100)).is_some(), "one pair must not clear a newly learned estimate");
+        pair(&mut model, 1150);
+        assert_eq!(model.rate(start + Duration::from_millis(1350)), None);
+    }
+
+    #[test]
+    fn recent_short_serialization_samples_need_no_extra_probe() {
+        let start = Instant::now();
+        let mut model = PathModel::new(start);
+        run(&mut model, start, 4, 178, 10, 8_000.0, 50);
+        assert!(model.rate(start + Duration::from_millis(200)).is_some());
+        assert!(!model.probe_due(start + Duration::from_millis(700)), "small packet pairs already measured the link");
+        assert!(model.probe_due(start + Duration::from_millis(1300)), "sparse output may probe again after the measurement ages");
     }
 
     #[test]
