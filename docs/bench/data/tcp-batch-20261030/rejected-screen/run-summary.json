@@ -1,0 +1,21 @@
+{
+  "planned_jobs": 32,
+  "completed_jobs": 8,
+  "accepted_performance_jobs": 0,
+  "valid_variant_comparison": false,
+  "rejection": {
+    "accepted": false,
+    "reasons": [
+      "a competing host process >=100% CPU in two consecutive samples"
+    ],
+    "samples": 4,
+    "phase_start": 1793308193.286033,
+    "phase_end": 1793308210.755875,
+    "monotonic_elapsed": 17.46970708295703,
+    "rules": "5s sampling; phase includes setup/drain; guards are heuristic and do not establish CPU-core isolation"
+  },
+  "remaining_phases_started": false,
+  "cleanup_verified": "docker ps --filter name=rl- returned no rows; no run.py driver remained",
+  "raw_results_local_only": "/Users/ed/personal/rsh/benchmark/lab/out/paired-batch-screen-20261030/00-udp-highlat/batch.json",
+  "note": "No FPS, latency or resource conclusion is drawn from this rejected phase. User workloads were left running."
+}

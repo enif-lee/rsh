@@ -1,0 +1,7 @@
+
+running 1 test
+test diagnostic_identity ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 25 filtered out; finished in 0.00s
+
+DIAG identity build=2886152b78a2 fixture_sha256=16c0d3154ddab541495538f3a4fe35960bfcf30263992c54b500a06aaae1ea0e
