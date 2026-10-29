@@ -49,8 +49,8 @@ The demo (`demo`) runs the tools' clients in tmux panes of one size
 (stacked, or side by side in a terminal wider than tall) on slots 0 to n-1
 (`tmux -L rshlab`): the render scenes on each network, each until every
 client has shown its end (a slow link's backlog; `RENDER_LAG` at most),
-then the connection scenarios (`--events`). Over each pane: frames a second, frame
-age, how long the screen stood still, download rate. At the end the
+then the connection scenarios (`--events`). The top header shows the test
+profile; over each pane: program, frames a second, frame age, download rate. At the end the
 control window sums it up in bar charts (frames a second, frame age,
 client and server memory and data received per frame for each network
 and scene, two by two when the window is wide; the clock's longest freeze
@@ -62,6 +62,8 @@ To stop early: Ctrl-C stops a run, Ctrl-b X the demo (in its tmux), and
 and saved, and the slots they made go as at the end.
 """
 import argparse, concurrent.futures, fcntl, json, math, os, queue, re, shlex, shutil, signal, statistics, subprocess, sys, threading, time
+
+from moving import timeline
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 IMAGE = "rsh-bench"
@@ -94,7 +96,7 @@ NETS = {
 # A synthetic drive through congestion, weak signal and a handover, then
 # recovery. Seconds, one-way delay/jitter (ms), loss (% each way), downlink
 # (kbit/s), label. Uplink is a quarter of downlink. The phase order repeats;
-# individual packet jitter/loss draws are independent between tool slots.
+# all slots replay the same time-based jitter and outage trace (moving.py).
 MOVING = (
     (6, 35, 5, 0.1, 8000, "clear signal"),
     (4, 70, 20, 0.8, 2000, "congestion"),
@@ -262,8 +264,7 @@ def netem(k, c, net, phase=0, change=False):
     if net == "moving":
         _, delay, jitter, loss, down, _ = MOVING[phase]
         rate = down if c == srv(k) else down // 4
-        args = ["delay", "%dms" % delay, "%dms" % jitter, "25%", "distribution", "normal",
-                "loss", "random", "%g%%" % loss, "25%", "rate", "%dkbit" % rate]
+        args = ["delay", "%dms" % delay, "loss", "100%" if loss == 100 else "0%", "rate", "%dkbit" % rate]
         device = "dev=$(ip -o -4 addr show | awk '/ %s\\./ {print $2; exit}')" % prefix(k)
         if change:
             return [device, 'tc qdisc change dev "$dev" root netem ' + " ".join(args)]
@@ -590,42 +591,83 @@ class Demo:
     def shape(self, net, phase=0, change=False):
         self.each(lambda k: shape(k, net, phase=phase, change=change))
 
-    def moving(self, seconds, scene):
-        """One shared phase clock for all slots, with midpoint RSS.
-
-        Updates run in the controller, so an interrupt cannot leave a
-        background shaper changing the next scene's link. Restore a usable
-        link for the scene's final marker/backlog, even if it ends in a fade.
-        """
-        began = time.monotonic()
-        until, sample = began + seconds, began + seconds / 2
-        due, phase, rss, changes = began, 0, None, []
+    def moving(self, seconds, scene, launch=None, warmup=0):
+        """Preload every link, then replay against the Docker VM's clock."""
+        trace = timeline(MOVING, seconds)
+        restore = dict(delay_ms=MOVING[0][1], loss_pct=0,
+                       down_kbit=MOVING[0][4], up_kbit=MOVING[0][4] // 4)
+        workers, changes, rss = [], [], None
+        self.network_trace = trace
         try:
-            while time.monotonic() < until:
-                now = time.monotonic()
-                if now >= due:
-                    duration, delay, jitter, loss, down, label = MOVING[phase]
-                    self.shape("moving", phase, change=True)
-                    applied = self.now()
-                    self.label = "moving: %s · RTT ~%d ms, jitter %d ms/way, loss %g%%, ↓%gM ↑%gM · %s" % (
-                        label, 2 * delay, jitter, loss, down / 1000, down / 4000, SCENES[scene])
-                    self.status(self.label)
-                    changes.append(dict(at=applied, scheduled_s=due - began, phase=label,
-                                        delay_ms=delay, jitter_ms=jitter, loss_pct=loss,
+            with open(os.path.join(HERE, "moving.py")) as source:
+                code = source.read()
+            for k in range(len(self.tools)):
+                for container, direction in ((srv(k), "down"), (cli(k), "up")):
+                    device = netem(k, container, "moving")[0]
+                    command = device + '; exec python3 -u -c ' + shlex.quote(code) + ' "$dev" ' + direction
+                    proc = subprocess.Popen(["docker", "exec", "-i", container, "sh", "-c", command],
+                                            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                    workers.append((container, proc))
+                    if proc.stdout.readline().strip() != "ready":
+                        raise RuntimeError("moving worker failed: " + container + " " + proc.stderr.read())
+            # Every worker is ready before the common start is chosen.
+            start = self.now() + 0.25 + (warmup + DEMO_SKIP if launch else 0)
+            if launch:
+                launch(start - DEMO_SKIP)
+            job = json.dumps(dict(start=start, seconds=seconds, trace=trace, restore=restore)) + "\n"
+            for _, proc in workers:
+                proc.stdin.write(job)
+                proc.stdin.flush()
+            began = time.monotonic() + start - self.now()
+            until, sample = began + seconds, began + seconds / 2
+            previous = None
+            for point in trace:
+                due = began + point["offset_s"]
+                time.sleep(max(0, due - time.monotonic()))
+                if any(proc.poll() is not None for _, proc in workers):
+                    raise RuntimeError("moving worker ended before the trace finished")
+                phase = point["phase"]
+                _, delay, jitter, loss, down, label = MOVING[phase]
+                self.label = "moving: %s · RTT ~%d ms · ↓%gM ↑%gM · %s" % (
+                    label, 2 * point["delay_ms"], down / 1000, down / 4000, SCENES[scene])
+                if point["loss_pct"]:
+                    self.label = "moving: %s · LINK DOWN · %s" % (label, SCENES[scene])
+                self.status(self.label)
+                if phase != previous:
+                    changes.append(dict(at=start + point["offset_s"], scheduled_s=point["offset_s"], phase=label,
+                                        delay_ms=delay, jitter_ms=jitter, outage_time_pct=loss,
                                         down_kbit=down, up_kbit=down // 4))
-                    due += duration
-                    phase = (phase + 1) % len(MOVING)
+                previous = phase
                 if rss is None and time.monotonic() >= sample:
                     rss = self.each(self.rss)
-                wake = min(due, sample if rss is None else until, until)
-                time.sleep(max(0, wake - time.monotonic()))
+            time.sleep(max(0, until - time.monotonic()))
         finally:
+            errors = []
+            for _, proc in workers:
+                try:
+                    proc.stdin.close()
+                except BrokenPipeError:
+                    pass
+                proc.stdin = None
+            for container, proc in workers:
+                try:
+                    output, error = proc.communicate(timeout=5)
+                    if proc.returncode:
+                        errors.append(container + " " + error)
+                    for point, applied in zip(trace, json.loads(output or "[]")):
+                        point.setdefault("applied_at", {})[container] = applied
+                except (subprocess.TimeoutExpired, ValueError) as error:
+                    errors.append(container + " " + str(error))
+                finally:
+                    if proc.poll() is None:
+                        proc.kill()
+                        proc.communicate()
             self.shape("moving", 0, change=True)
-            _, delay, jitter, loss, down, _ = MOVING[0]
             changes.append(dict(at=self.now(), phase="drain: clear signal", after_measurement=True,
-                                delay_ms=delay, jitter_ms=jitter, loss_pct=loss,
-                                down_kbit=down, up_kbit=down // 4))
+                                **restore))
             self.label = "moving: clear signal (draining) · %s" % SCENES[scene]
+            if errors and sys.exc_info()[0] is None:
+                raise RuntimeError("moving worker failed: " + "; ".join(errors))
         return rss, changes
 
     def watch(self, k):
@@ -695,14 +737,11 @@ class Demo:
                 except ValueError:
                     continue
                 age = "%4.0f ms" % s["age_ms"] if s.get("age_ms") is not None else "   - ms"
-                still = s.get("still_s")
-                frozen = " │ ■ frozen %4.1f s" % still if self.ticking and still is not None and still >= 1.0 else ""
-                text = "%-*s │ %4.1f fps │ age %s │ ↓ %6.0f kbit/s%s │ %s" % (name, LABEL[tool], s["fps"], age, s["kbit_s"], frozen, self.label)
+                text = "%-*s │ %4.1f fps │ age %s │ ↓ %6.0f kbit/s" % (name, LABEL[tool], s["fps"], age, s["kbit_s"])
                 if len(text) > getattr(self, "pane_cols", 1000) - 4:
-                    # A narrow pane: the figures first, the label after.
+                    # Keep the same four fields in a narrow pane.
                     age = "%.0fms" % s["age_ms"] if s.get("age_ms") is not None else "-ms"
-                    frozen = " ■%.1fs" % still if frozen else ""
-                    text = "%s %.1ffps %s ↓%.0fk%s │ %s" % (LABEL[tool], s["fps"], age, s["kbit_s"], frozen, self.label)
+                    text = "%s %.1ffps %s ↓%.0fk" % (LABEL[tool], s["fps"], age, s["kbit_s"])
                 tmux("set", "-p", "-t", pane(k), "@status", text.replace("%", "%%"), check=False)
             time.sleep(0.25)
 
@@ -740,14 +779,18 @@ class Demo:
                 # only the shell's output, not the echoed command, matches.
                 mark = len(windows) + 1
                 rx = self.each(rx_total)
-                self.everyone("clear; python3 /tmp/scene.py %s %g %g %g %s; echo DEMO-$((%d+1))-DONE" % (scene, duration + DEMO_SKIP, fps, warmup, shlex.quote(self.label), mark - 1))
-                time.sleep(warmup + DEMO_SKIP)
-                start = self.now()
+                command = "clear; python3 /tmp/scene.py %s %g %g %g %s" % (scene, duration + DEMO_SKIP, fps, warmup, shlex.quote(self.label))
+                done_command = "; echo DEMO-$((%d+1))-DONE" % (mark - 1)
                 # Memory twice, halfway and at the end, the larger kept.
                 changes = None
                 if net == "moving":
-                    rss, changes = self.moving(duration, scene)
+                    rss, changes = self.moving(duration, scene,
+                                               launch=lambda at: self.everyone(command + " %.6f" % at + done_command), warmup=warmup)
+                    start = changes[0]["at"]
                 else:
+                    self.everyone(command + done_command)
+                    time.sleep(warmup + DEMO_SKIP)
+                    start = self.now()
                     time.sleep(duration / 2)
                     rss = self.each(self.rss)
                     time.sleep(duration / 2)
@@ -762,6 +805,9 @@ class Demo:
                           "until": self.now(), "done": done, "rx_bytes": rx, "rss_kb": rss}
                 if changes is not None:
                     window["network_changes"] = changes
+                    window["network_trace"] = self.network_trace
+                    window["start"] = changes[0]["at"]
+                    window["end"] = window["start"] + duration
                 windows.append(window)
 
     def each(self, measure):
@@ -854,6 +900,9 @@ def demo(opts):
         sys.exit("lab: the demo needs slots 0-%d; `lab.py down`, or `lab.py up --slots %d`" % (len(tools) - 1, len(tools)))
     if opts.rsh:
         install_rsh(opts.rsh, range(len(tools)))
+    # Retained slots may predate the scheduled-start argument used below.
+    for k in range(len(tools)):
+        sh("docker", "cp", os.path.join(HERE, "scene.py"), "%s:/tmp/scene.py" % srv(k))
     tmux("kill-server", check=False)
     for k, tool in enumerate(tools):
         dexec(cli(k), "sh", "-c", "pkill -9 -x %s; pkill -9 -x script; pkill -f '[a]gent.py'; rm -f /tmp/demo*; true" % PROCESS[tool], check=False)
@@ -875,6 +924,7 @@ def demo(opts):
         # grid is uneven for 3 or 5); `Demo.layout` picks the direction.
         tmux("select-layout", "-t", "%s:panes" % SESSION, "even-vertical")
     for option, value in (("pane-border-status", "top"), ("pane-border-format", " #[bold]#{@status} "),
+                          ("status-position", "top"), ("status-format[0]", "#{T:status-left}#[align=right]#{T:status-right}"),
                           ("status-style", "bg=colour236,fg=colour250"), ("status-left-length", "200"),
                           ("status-right", " Ctrl-b X: stop "), ("status-left", " demo: waiting for a viewer to attach"),
                           # The summary is longer than a screen: the wheel
@@ -1042,8 +1092,11 @@ def demo_summary(tools, windows):
                 else:
                     rss[tool] = None
                     rss_notes[tool] = "(no %s)" % ("client" if client is None else "server")
-            # From the first frame shown, for the scene's length.
-            first = seen[0][0] if seen else w["start"]
+            # A changing link must use the same observation interval for
+            # every tool; moving a stalled tool's window includes recovery
+            # or drain time in place of the fade. Static links retain the
+            # original first-displayed-frame convention.
+            first = w["start"] if w["net"] == "moving" else seen[0][0] if seen else w["start"]
             seen = [f for f in seen if f[0] <= first + w["seconds"]]
             times = [first] + [f[0] for f in seen] + [first + w["seconds"]]
             fps[tool] = len(seen) / w["seconds"]

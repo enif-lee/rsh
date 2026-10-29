@@ -291,7 +291,7 @@ The demo-only `moving` profile is a synthetic commute, not a captured
 mobile-network trace. Each scene runs at least one 30-second cycle
 (`--duration 60` runs two), starting over for the next scene:
 
-| Seconds | Conditions | Nominal RTT / one-way jitter | Loss each way | Down / up |
+| Seconds | Conditions | Nominal RTT / one-way jitter | Outage time each way | Down / up |
 | --- | --- | --- | --- | --- |
 | 0–6 | Clear signal | 70 / 5 ms | 0.1% | 8 / 2 Mbit/s |
 | 6–10 | Congestion | 140 / 20 ms | 0.8% | 2 / 0.5 Mbit/s |
@@ -301,20 +301,32 @@ mobile-network trace. Each scene runs at least one 30-second cycle
 | 18–23 | Recovering | 180 / 30 ms | 1% | 1 / 0.25 Mbit/s |
 | 23–30 | Clear again | 80 / 8 ms | 0.1% | 5 / 1.25 Mbit/s |
 
-Delay varies with a normal distribution; delay and random loss use netem's
-25% correlation setting to model runs of similar conditions. RTT values
-exclude queueing and jitter. All tools follow the same phase schedule,
-with independent packet-level random draws. The pane/status labels show
-the current phase and its conditions; each render window in the result
-JSON includes `network_changes` with scheduled offsets and timestamps
-after the changes have been applied. Transitions use `tc qdisc change`
-instead of deleting the queue.
-The existing FPS summary still starts its window at each tool's first
-displayed frame; `network_changes` records the common network-control times.
+All tools replay the same deterministic time-based trace on separate links,
+with a common Docker VM clock. Every 250 ms a seeded, correlated normal
+sample changes the delay (the jitter column is its standard deviation).
+Each phase's outage-time percentage becomes one shared interval of 100%
+packet loss; outside it, packet loss is zero. The one-second handover is a
+shared full outage. These are time fractions, **not random per-packet loss
+probabilities**: protocols with different packet counts experience the same
+conditions rather than consuming independent random sequences. The 30-second
+trace repeats identically and restarts for each scene.
+
+Workers are loaded before choosing the common start. Transitions keep the
+queue with `tc qdisc change`. OS scheduling and qdisc application take time:
+result JSON preserves both the scheduled `network_trace.offset_s` and each
+container's actual `applied_at`, alongside the phase-level `network_changes`.
+The top demo header shows the current profile, phase and conditions. Each
+session header shows only program, FPS, displayed-frame age in ms (not a
+network RTT measurement), and received network kbit/s.
+For `moving`, the FPS summary uses the common scheduled start and end for
+every tool, excluding the drain. Static profiles retain their window from
+each tool's first displayed frame.
 At the end (including interruption), the link returns to the first phase
 so queued output can drain. The profile
 is supported by `demo --nets`, rather than the static `run` tests or
 connection events. See [netem's delay and loss options](https://man7.org/linux/man-pages/man8/tc-netem.8.html).
+The [recovery investigation](docs/bench/moving-recovery.md) records the
+capacity-estimator fix, before/after measurements and timing limits.
 
 ## Development
 

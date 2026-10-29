@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The lab's scenes (lab.py), run on the server in each tool's shell.
 
-  scene.py <compress|bandwidth|ticker> <seconds> [fps] [warm-up seconds] [label]
+  scene.py <compress|bandwidth|ticker> <seconds> [fps] [warm-up seconds] [label] [start epoch]
 
 Each keeps row 0 as `FRAME nnnnnn T=<ms since epoch> <name>` (row 1 in a
 pane under 43 columns, where rsh's badge covers the end of row 0), so the
@@ -32,6 +32,7 @@ scene, seconds = sys.argv[1], float(sys.argv[2])
 fps = float(sys.argv[3]) if len(sys.argv) > 3 else 30.0
 warmup = float(sys.argv[4]) if len(sys.argv) > 4 else 0.0
 label = sys.argv[5] if len(sys.argv) > 5 else ""
+start_at = float(sys.argv[6]) if len(sys.argv) > 6 else None
 cols, rows = os.get_terminal_size()
 out = sys.stdout.buffer
 rng = random.Random(1)
@@ -135,6 +136,8 @@ draw = {"compress": compress, "bandwidth": bandwidth, "ticker": ticker}[scene]
 # instead of wrapping and scrolling the header away.
 out.write(b"\x1b[?25l\x1b[?7l\x1b[2J")
 start = time.time()
+if start_at is not None:
+    warmup = max(0, start_at - start)
 n = 0
 try:
     # Ten steps a second: the count down shows tenths.
@@ -147,6 +150,9 @@ try:
         out.write(countdown(0.0).encode() + b"\x1b[2J")
         start = time.time()
         n = 0
+    if start_at is not None:
+        start = start_at
+        n = max(0, int((time.time() - start) * fps))
     while time.time() - start < seconds:
         out.write(draw(n).encode())
         out.flush()
