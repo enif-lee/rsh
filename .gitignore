@@ -1,0 +1,19 @@
+/target/
+__pycache__/
+.DS_Store
+
+# Working notes, not part of the repository.
+/PLAN.md
+/tasks/
+
+# Other projects' sources and specs read for comparison, and raw measurements.
+/benchmark/mosh/
+/benchmark/EternalTerminal/
+/benchmark/wezterm/
+/benchmark/spec.md
+/benchmark/benchmark.md
+/benchmark/results/
+/benchmark/lab/out/
+
+# Release binaries (scripts/dist.sh dist).
+/dist/

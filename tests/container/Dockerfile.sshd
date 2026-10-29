@@ -1,0 +1,15 @@
+# A plain ssh host without rsh, to check onboarding from a client:
+#   ssh-keygen -t ed25519 -N '' -f key
+#   docker build -f tests/container/Dockerfile.sshd --build-arg KEY="$(cat key.pub)" -t rsh-sshd .
+#   docker run -d --name rsh-sshd -p 127.0.0.1:2201:22 -p 127.0.0.1:2222:2222/udp rsh-sshd
+#   rsh --ssh "ssh -p 2201 -i key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" dev@127.0.0.1
+FROM debian:bookworm-slim
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends openssh-server procps socat ncurses-term \
+ && rm -rf /var/lib/apt/lists/* && mkdir -p /run/sshd
+ARG KEY
+RUN useradd -m -s /bin/bash dev \
+ && mkdir -p /home/dev/.ssh && echo "$KEY" > /home/dev/.ssh/authorized_keys \
+ && chown -R dev:dev /home/dev/.ssh && chmod 700 /home/dev/.ssh && chmod 600 /home/dev/.ssh/authorized_keys
+EXPOSE 22 2222/udp
+CMD ["/usr/sbin/sshd", "-D", "-e"]
