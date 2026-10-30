@@ -1,0 +1,35 @@
+Waiting for 60 seconds of sampled headroom
+Headroom preflight passed
+lab: 8 slots up
+00-udp-highlat 2 rsh highlat compress 57.2
+00-udp-highlat 3 rsh-b highlat compress 55.9
+00-udp-highlat 6 rsh highlat bandwidth 55.0
+00-udp-highlat 7 rsh-b highlat bandwidth 56.5
+00-udp-highlat 0 ssh highlat compress 60.0
+00-udp-highlat 4 ssh highlat bandwidth 60.0
+00-udp-highlat 5 mosh highlat bandwidth 6.4
+00-udp-highlat 1 mosh highlat compress 6.6
+01-tcp-highlat 5 rsh-tcp highlat compress 53.9
+01-tcp-highlat 7 ssh highlat compress 60.0
+01-tcp-highlat 0 rsh-b-tcp highlat bandwidth 49.9
+01-tcp-highlat 1 rsh-tcp highlat bandwidth 49.0
+01-tcp-highlat 4 rsh-b-tcp highlat compress 53.9
+01-tcp-highlat 3 ssh highlat bandwidth 60.0
+01-tcp-highlat 6 mosh highlat compress 6.6
+01-tcp-highlat 2 mosh highlat bandwidth 6.5
+02-udp-guards 1 rsh lowbw bandwidth 23.9
+02-udp-guards 0 rsh-b lowbw bandwidth 24.0
+02-udp-guards 2 mosh lowbw bandwidth 16.4
+02-udp-guards 6 mosh wan bandwidth 19.0
+02-udp-guards 4 rsh-b wan bandwidth 57.8
+02-udp-guards 7 ssh wan bandwidth 60.0
+02-udp-guards 5 rsh wan bandwidth 57.9
+02-udp-guards 3 ssh lowbw bandwidth 10.1
+03-tcp-guards 6 rsh-tcp lowbw bandwidth 19.7
+03-tcp-guards 7 rsh-b-tcp lowbw bandwidth 22.4
+03-tcp-guards 1 mosh wan bandwidth 18.6
+03-tcp-guards 2 rsh-tcp wan bandwidth 54.9
+03-tcp-guards 0 ssh wan bandwidth 60.0
+03-tcp-guards 5 mosh lowbw bandwidth 16.4
+03-tcp-guards 3 rsh-b-tcp wan bandwidth 54.5
+03-tcp-guards 4 ssh lowbw bandwidth 10.0

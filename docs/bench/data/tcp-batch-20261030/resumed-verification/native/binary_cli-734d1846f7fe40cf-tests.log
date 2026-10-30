@@ -1,0 +1,9 @@
+
+running 4 tests
+test piped_stdin_streams_into_the_session ... ok
+test tmux_sessions_are_joined_listed_and_left ... ok
+test binary_host_and_ls_repeat_same_session ... ok
+test live_upgrade_keeps_sessions_and_attached_clients ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.24s
+
