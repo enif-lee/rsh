@@ -315,9 +315,12 @@ python3 benchmark/lab/lab.py stop
 ## Development
 
 ```sh
-NO_COLOR= cargo test --release --locked
+(ulimit -n 4096 && env -u NO_COLOR cargo test --locked --all-targets)
 python3 -m unittest discover -s benchmark/lab -p 'test_*.py' -v
 ```
+
+The Rust suite opens 300 idle TCP connections. The subshell sets its file
+descriptor limit and enables the color-dependent UI assertions for this run.
 
 Container integration tests are available in
 [`tests/container`](tests/container); read each script's setup requirements
