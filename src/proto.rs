@@ -1248,6 +1248,17 @@ impl Sender {
         Some(delivered.max(MIN_WINDOW) as f64 / (2.0 * floor / 1000.0))
     }
 
+    /// A bounded transit allowance for TCP backlog accounting. With a
+    /// measured slow rate, its BDP; otherwise half the recent two-floor
+    /// delivery credit (including the existing MIN_WINDOW restart floor).
+    /// This is a queue-accounting estimate, not new send credit/capacity.
+    pub fn drain_bdp(&self, now: Instant) -> Option<u64> {
+        if !self.floor_rtt.is_some_and(|floor| floor >= 20.0) {
+            return None;
+        }
+        self.slow_bdp().or_else(|| self.recent_delivery(now).map(|(delivered, _)| delivered.max(MIN_WINDOW) / 2))
+    }
+
     /// Wire bytes in flight as they went (a datagram compressed on its
     /// own carries more stream bytes than wire): up to `sent`, as after a
     /// go-back what lies past it is to go again, not on its way.
@@ -1633,7 +1644,7 @@ impl Sender {
                 None => Some((now, self.delivered_wire)),
                 Some((from, count)) if now.duration_since(from).as_secs_f64() * 1000.0 >= floor => {
                     let took = (self.delivered_wire - count) as f64 / now.duration_since(from).as_secs_f64();
-                    if took >= 0.8 * rate {
+                    if took >= (if self.lossless { 0.6 } else { 0.8 }) * rate {
                         self.capacity = Some(rate * PROBE_GAIN);
                         for (_, sample) in self.rates.iter_mut() {
                             *sample *= PROBE_GAIN;
@@ -2807,5 +2818,119 @@ mod tests {
         assert!(tx.on_ack(1, 4 * chunk, later + Duration::from_millis(100), false));
         assert!(tx.by_size.iter().all(Option::is_none));
         assert_eq!(tx.above_floor.0, 0);
+    }
+}
+
+#[cfg(test)]
+mod tcp_transit_estimate_tests {
+    use super::*;
+    #[test]
+    fn transit_estimate_uses_measured_rate_or_half_recent_credit() {
+        let mut tx = Sender::new(0);
+        let now = Instant::now();
+        assert_eq!(tx.drain_bdp(now), None);
+        tx.floor_rtt = Some(300.0);
+        assert_eq!(tx.drain_bdp(now), None, "RTT without delivery history grants nothing");
+        tx.acked_at.push_back((now - Duration::from_millis(600), 0, 1));
+        tx.acked_at.push_back((now - Duration::from_millis(300), 6000, 1));
+        tx.acked_at.push_back((now, 12000, 0));
+        assert_eq!(tx.slow_bdp(), None, "no claimed bottleneck capacity");
+        assert_eq!(tx.drain_bdp(now), Some(6000));
+        tx.acked_at.back_mut().unwrap().1 = 6000;
+        assert_eq!(tx.drain_bdp(now), Some(MIN_WINDOW / 2), "existing delivery-credit restart floor");
+        tx.set_path(Some(32_000.0), Some(100.0));
+        assert_eq!(tx.drain_bdp(now), Some(3200), "measured slow BDP takes precedence");
+    }
+}
+
+#[cfg(test)]
+mod tcp_transit_floor_tests {
+    use super::*;
+
+    #[test]
+    fn transit_floor_requires_a_sample_even_with_a_modelled_rate() {
+        let now = Instant::now();
+        for floor in [None, Some(0.0), Some(19.999)] {
+            let mut tx = Sender::new(0);
+            tx.floor_rtt = floor;
+            // A synthetic modelled rate must not bypass this TCP allowance gate.
+            tx.set_path(Some(32_000.0), Some(300.0));
+            assert_eq!(tx.drain_bdp(now), None, "floor {floor:?}");
+        }
+    }
+
+    #[test]
+    fn transit_floor_includes_twenty_and_retains_far_measured_bdp() {
+        let now = Instant::now();
+        for (floor, expected) in [(20.0, 640), (300.0, 9_600)] {
+            let mut tx = Sender::new(0);
+            tx.floor_rtt = Some(floor);
+            tx.capacity = Some(32_000.0);
+            assert_eq!(tx.drain_bdp(now), Some(expected), "floor {floor}");
+        }
+    }
+
+    #[test]
+    fn transit_floor_still_needs_delivery_or_capacity_after_the_gate() {
+        let now = Instant::now();
+        for floor in [20.0, 300.0] {
+            let mut tx = Sender::new(0);
+            tx.floor_rtt = Some(floor);
+            assert_eq!(tx.drain_bdp(now), None, "floor alone is not transit credit");
+        }
+    }
+}
+
+#[cfg(test)]
+mod tcp_transit_floor_probe60_tests {
+    use super::*;
+
+    // The delivery interval and ACK are processed by the production Sender.
+    fn tcp_probe60_fixture(lossless: bool, delivered: u64, queued: bool, elapsed_ms: u64) -> Sender {
+        let now = Instant::now();
+        let sent = now - Duration::from_millis(if queued { 300 } else { 100 });
+        let mut tx = Sender::new(1);
+        tx.set_lossless(lossless);
+        tx.floor_rtt = Some(100.0);
+        tx.capacity = Some(100_000.0);
+        tx.push(&vec![0u8; 1000]);
+        assert_eq!(tx.next_chunk(sent).unwrap().1.len(), 1000);
+        let wire = tx.flight.front().unwrap().2;
+        tx.delivered_wire = delivered - wire;
+        tx.probe_from = Some((now - Duration::from_millis(elapsed_ms), 0));
+        assert!(tx.on_ack(1, 1000, now, false));
+        tx
+    }
+
+    #[test]
+    fn tcp_probe60_grows_at_seventy_percent_only_on_tcp() {
+        assert_eq!(tcp_probe60_fixture(true, 7000, false, 100).capacity, Some(125_000.0));
+        assert_eq!(tcp_probe60_fixture(false, 7000, false, 100).capacity, Some(100_000.0));
+    }
+
+    #[test]
+    fn tcp_probe60_preserves_low_offered_load_and_subthreshold_guards() {
+        for delivered in [1600, 5900] {
+            for tcp in [false, true] {
+                assert_eq!(tcp_probe60_fixture(tcp, delivered, false, 100).capacity, Some(100_000.0));
+            }
+        }
+    }
+
+    #[test]
+    fn tcp_probe60_preserves_queue_and_short_interval_guards() {
+        for tcp in [false, true] {
+            let queued = tcp_probe60_fixture(tcp, 7000, true, 100);
+            assert_eq!(queued.capacity, Some(100_000.0));
+            assert!(queued.probe_from.is_none());
+            assert_eq!(tcp_probe60_fixture(tcp, 7000, false, 90).capacity, Some(100_000.0));
+        }
+    }
+
+    #[test]
+    fn tcp_probe60_preserves_existing_high_utilization_growth() {
+        for tcp in [false, true] {
+            assert_eq!(tcp_probe60_fixture(tcp, 8100, false, 100).capacity, Some(125_000.0));
+        }
     }
 }
