@@ -640,14 +640,16 @@ python3 benchmark/lab/lab.py run --tools ssh,et,mosh,rsh \
 
 ### Next full measurement
 
-The current run defaults are **twelve parallel jobs**, **three repeats per
-case**, and **one sessions repeat** (`--session-iterations`). The recorded
-tables above retain their actual four-job, six-screen-repeat conditions.
+New performance measurements use **four parallel jobs** and **two evaluations
+per case**, including sessions, for both development and publication. These
+defaults reflect the host's four performance cores, without claiming physical
+core affinity. Historical datasets remain separate. The recorded tables above
+retain their actual four-job, six-screen-repeat conditions.
 For the next measurement, run the static command above once with
-`--parallel 12`; omit the extra screen-only repeat. Run the sessions command
-with `--session-iterations 1 --parallel 12`. This retains all five static
+`--iterations 2 --parallel 4`; omit the extra screen-only repeat. Run the sessions command
+with `--session-iterations 2 --parallel 4`. This retains all five static
 transports, nine links, both scenes and the same observation durations:
-750 static jobs plus four memory jobs, rather than 1,178 jobs.
+500 static jobs plus eight memory jobs, rather than 1,178 jobs.
 
 The [twelve-worker validation](docs/bench/parallel12-20261029.md) completed
 the same 750-job, three-repeat static batch in **11.02 minutes**, versus
@@ -670,6 +672,37 @@ layout; the three workload panes are narrower than the viewer:
 python3 benchmark/lab/lab.py demo --tools ssh,mosh,rsh --events '' \
   --nets moving --scenes compress,bandwidth --fps 60 --duration 60
 ```
+
+## Development investigations
+
+The [TCP low-tail investigation](docs/bench/lowtail-20261031.md), begun
+2026-10-31 with November 1 follow-ups, reports separate four-worker,
+two-evaluation core, static low-bandwidth and ThinLTO screens. Per-repetition
+FPS/lows, received traffic, CPU, age and sampled client/server RSS remain
+visible. All three candidates remain unselected: transit improved dashboards
+but retained tail deficits, freshness-quarter had an adverse core repeat, and
+ThinLTO did not establish a runtime improvement. November 1 uses CPU<30% at
+admission with runtime load recorded as context. These experiments are separate
+from the [TCP batch candidate](docs/bench/tcp-batch-20261030.md) and do not
+replace the published full-suite measurements above.
+
+The separate [live observer comparison](docs/bench/observer-20261101.md)
+keeps the product fixed across 96 observations. Disabling post-anchor live
+emulation had mixed effects and left slow replicas; it does not establish a
+product gain or universal SSH parity. Both modes use offline complete-body
+metrics, with two evaluations retained separately.
+
+The [probe60 investigation](docs/bench/probe60-20261101.md) retains separate
+core and slow-network screens. Some FPS gains accompany mixed lows and older
+received frames at 1 Mbit/s; the candidate remains unselected. Functional
+trace clues are separate from these performance comparisons.
+
+The subsequent [near-floor probe study](docs/bench/probe60-near-20261101.md)
+reports another separate core/slow comparison. FPS/lows are primary and
+CPU/RSS secondary; dashboard deficits and freshness costs remain visible.
+Overall gains may justify individual metric costs; the candidate is currently
+unselected while that tradeoff is evaluated. Cross-run observations are not a
+causal proof of a fix.
 
 ## References
 

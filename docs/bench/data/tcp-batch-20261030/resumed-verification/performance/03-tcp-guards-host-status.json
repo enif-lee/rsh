@@ -1,0 +1,9 @@
+{
+ "accepted": true,
+ "reasons": [],
+ "samples": 3,
+ "phase_start": 1793320418.839371,
+ "phase_end": 1793320433.381245,
+ "monotonic_elapsed": 14.541783874854445,
+ "rules": "5s sampling; phase includes setup/drain; guards are heuristic and do not establish CPU-core isolation"
+}

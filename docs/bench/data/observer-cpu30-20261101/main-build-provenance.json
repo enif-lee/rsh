@@ -1,0 +1,15 @@
+{
+  "scope": "Selected fixed-main artifact from existing paired build evidence; other parent artifacts are not deployed by26",
+  "parent": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/transit-v2env-release-pair.json",
+  "parent_sha256": "5070212788477a345a394b533c916c99d2eebc59c94efffd59418558ff3f9046",
+  "artifact": {
+    "variant": "baseline",
+    "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-transit-pair-main",
+    "sha256": "9ab79c22ebd289047ffa616a5e8aef3c7d9f2498756b5974ae5a74b2d0ecb463",
+    "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/main-source",
+    "source_build_id": "6729d398d4f1",
+    "source_build_verified": true,
+    "source_manifest_unchanged": true,
+    "guard_output": "verified build 6729d398d4f1: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-transit-pair-main"
+  }
+}

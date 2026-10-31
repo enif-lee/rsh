@@ -1,0 +1,75 @@
+{
+  "at": 1793306606.713304,
+  "began": 1793306605.637944,
+  "user_pct": 13.0,
+  "system_pct": 6.0,
+  "idle_pct": 81.0,
+  "load_average": [
+    3.73,
+    3.7,
+    3.39
+  ],
+  "processes": [
+    {
+      "pid": 41505,
+      "cpu_pct": 76.8,
+      "program": "mediaanalysisd"
+    },
+    {
+      "pid": 606,
+      "cpu_pct": 20.7,
+      "program": "WindowServer"
+    },
+    {
+      "pid": 68558,
+      "cpu_pct": 11.3,
+      "program": "codex"
+    },
+    {
+      "pid": 62927,
+      "cpu_pct": 11.2,
+      "program": "WallpaperAerialsExtension"
+    },
+    {
+      "pid": 67045,
+      "cpu_pct": 6.3,
+      "program": "codex"
+    },
+    {
+      "pid": 63118,
+      "cpu_pct": 5.6,
+      "program": "OrbStack Helper"
+    },
+    {
+      "pid": 64147,
+      "cpu_pct": 5.4,
+      "program": "Stats"
+    },
+    {
+      "pid": 71297,
+      "cpu_pct": 4.3,
+      "program": "VTDecoderXPCService"
+    },
+    {
+      "pid": 68556,
+      "cpu_pct": 3.6,
+      "program": "Codex (Renderer)"
+    },
+    {
+      "pid": 814,
+      "cpu_pct": 2.5,
+      "program": "AppleCentauriAlpha"
+    },
+    {
+      "pid": 77189,
+      "cpu_pct": 2.2,
+      "program": "VTEncoderXPCService"
+    },
+    {
+      "pid": 68465,
+      "cpu_pct": 2.0,
+      "program": "ChatGPT"
+    }
+  ],
+  "max_external_process_cpu_pct": 76.8
+}

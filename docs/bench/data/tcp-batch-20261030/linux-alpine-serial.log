@@ -1,0 +1,142 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.19s
+     Running unittests src/lib.rs (/target/debug/deps/rsh-a4e873949d566604)
+
+running 106 tests
+test bench::tests::emulator_benchmark_prints_every_workload ... ok
+test bench::tests::frames_cover_the_screen_with_the_banner ... ok
+test cli::tests::bootstrap_links_rsh_into_local_bin ... ok
+test cli::tests::bootstrap_prints_token_and_starts_server ... ok
+test cli::tests::cli_host_banner_has_no_auth_prompt ... ok
+test cli::tests::cli_ls_selects_second_session ... ok
+test cli::tests::command_exit_status_is_returned ... ok
+test cli::tests::help_and_parse ... ok
+test cli::tests::ls_rows_are_grouped_and_numbered_by_host ... ok
+test cli::tests::serve_launch_agent_runs_at_load ... ok
+test cli::tests::shell_survives_loss_and_server_rebind ... ok
+test client::tests::an_idle_session_keeps_alive_slower_and_wakes_on_a_key ... ok
+test client::tests::badge_and_window_come_off_cleanly ... ok
+test client::tests::escape_filter_commands_and_literals ... ok
+test client::tests::escape_review_cases ... ok
+test client::tests::escape_survives_reports_and_encoded_keys ... ok
+test client::tests::queries_are_stripped ... ok
+test client::tests::writes_are_synchronized_and_paced ... ok
+test client::tests::writes_follow_the_frames_the_program_draws ... ok
+test config::tests::settings_parse_and_mistakes_are_errors ... ok
+test crypto::tests::seal_open_and_reject_tamper ... ok
+test forward::tests::channel_round_trip_with_half_close ... ok
+test forward::tests::refused_target_resets_channel ... ok
+test forward::tests::spec_parse ... ok
+test path::tests::a_lan_that_turned_far_is_learned_at_once ... ok
+test path::tests::a_longer_path_after_a_slow_link_is_learned_from_small_updates ... ok
+test path::tests::a_longer_path_is_rebased_and_a_queue_of_ones_own_is_not ... ok
+test path::tests::a_queue_over_a_fast_bottleneck_stays_a_queue ... ok
+test path::tests::a_queue_shows_as_the_rise_over_the_least_delay ... ok
+test path::tests::a_relearned_rate_needs_fresh_recovery_evidence ... ok
+test path::tests::a_slow_link_gone_is_unlearned_after_two_fast_trains ... ok
+test path::tests::a_slow_link_shows_its_rate_and_a_fast_one_none ... ok
+test path::tests::one_train_spread_on_a_fast_path_is_counted_as_one_sample ... ok
+test path::tests::recent_short_serialization_samples_need_no_extra_probe ... ok
+test path::tests::sends_spaced_out_still_show_a_busy_link_and_not_an_idle_one ... ok
+test path::tests::small_capacity_probes_recover_without_mistaking_a_slow_link_for_a_fast_one ... ok
+test predict::tests::guesses_show_after_first_echo_and_hide_after_enter ... ok
+test predict::tests::wrong_guesses_are_dropped_and_controls_skip ... ok
+test proto::tests::a_deflate_stream_inflates_in_any_cuts_and_costs_little_per_update ... ok
+test proto::tests::a_lan_that_turned_far_is_learned_from_late_round_trips ... ok
+test proto::tests::a_lossless_link_never_resends_until_rewound ... ok
+test proto::tests::a_misjudged_timeout_still_repairs_on_every_ack ... ok
+test proto::tests::a_path_that_gets_slower_is_learned_again ... ok
+test proto::tests::a_path_that_got_far_is_learned_again ... ok
+test proto::tests::a_repair_goes_back_only_over_a_run_of_losses_and_times_nothing ... ok
+test proto::tests::a_reset_does_not_double_what_is_in_flight ... ok
+test proto::tests::a_slow_link_gives_an_update_its_time_on_the_wire_before_a_timeout ... ok
+test proto::tests::a_slow_link_is_measured_and_held_to_two_round_trips ... ok
+test proto::tests::a_taken_back_tail_goes_out_again ... ok
+test proto::tests::acks_that_waited_on_the_path_say_it_has_no_room ... ok
+test proto::tests::late_acks_apart_do_not_make_a_fast_link_slow ... ok
+test proto::tests::packet_seal_open_and_codecs ... ok
+test proto::tests::round_trip_spikes_while_typing_keep_the_window ... ok
+test proto::tests::sender_windows_acks_and_retransmits ... ok
+test proto::tests::the_rate_by_size_ignores_close_sizes ... ok
+test proto::tests::the_timeout_is_no_shorter_than_the_path_models_round_trip ... ok
+test proto::tests::timeout_resends_one_chunk_then_what_the_ack_shows_lost ... ok
+test proto::tests::window_grows_without_queueing_and_shrinks_with_it ... ok
+test pty::tests::command_exit_code_and_sigpipe_default ... ok
+test pty::tests::pty_runs_login_shell_in_home ... ok
+test release::tests::a_failed_download_is_tried_again_sooner_than_another_build ... ok
+test release::tests::this_release_carries_this_build ... ignored
+test release::tests::versions_compare_as_numbers ... ok
+test remote::tests::probe_plan_and_quoting ... ok
+test server::tests::bytes_in_transit_do_not_start_screen_updates_but_a_backlog_does ... ok
+test server::tests::stepped_output_gathers_briefly_without_skipping_generation_waits ... ok
+test server::tests::the_level_follows_the_link_at_once_and_the_output_with_a_lag ... ok
+test terminal::tests::a_diff_reproduces_rows_drawn_to_the_edge_with_autowrap_off ... ok
+test terminal::tests::a_wider_terminal_strays_little_from_a_screen_update ... ok
+test terminal::tests::alternate_screen_keeps_the_primary_underneath ... ok
+test terminal::tests::click_mode_alone_is_restored ... ok
+test terminal::tests::cursor_sequence_restores_pen_charset_and_pending_wrap ... ok
+test terminal::tests::diff_turns_the_old_screen_into_the_new ... ok
+test terminal::tests::ground_points ... ok
+test terminal::tests::history_round_trips ... ok
+test terminal::tests::hostile_output_is_bounded ... ok
+test terminal::tests::keyboard_modes_and_reset_sequence ... ok
+test terminal::tests::older_alternate_screen_keeps_its_text_and_the_cursor ... ok
+test terminal::tests::older_alternate_screen_modes ... ok
+test terminal::tests::quiet_history_is_kept_compact_and_none_of_it_is_lost ... ok
+test terminal::tests::render_keeps_kitty_flags_set_in_the_alternate_screen ... ok
+test terminal::tests::render_round_trips_screen_colors_and_modes ... ok
+test terminal::tests::resize_keeps_cursor_line_and_resets_region ... ok
+test terminal::tests::screen_title_string_is_not_text ... ok
+test terminal::tests::screen_update_cost ... ignored
+test terminal::tests::sequences_and_strings_end_where_they_should ... ok
+test terminal::tests::simple_csis_end_where_the_probe_would_end_them ... ok
+test terminal::tests::simple_csis_skip_the_probe_without_changing_anything_on_random_output ... ok
+test terminal::tests::soft_reset_column_mode_origin_moves_and_1048 ... ok
+test terminal::tests::spans_repaint_in_place ... ok
+test terminal::tests::synchronized_output_applies_at_once ... ok
+test terminal::tests::tabs_repaint_as_spaces ... ok
+test tmux::tests::list_lines_parse ... ok
+test tmux::tests::wrapper_command_quotes_and_is_recognised ... ok
+test upgrade::tests::serve_command_lines ... ok
+test version::tests::describe_parse_and_need ... ok
+test width::tests::widths ... ok
+test wire::batch_tests::batch_backpressure_drains_through_the_tcp_service_loop ... ok
+test wire::batch_tests::batch_does_not_allocate_a_backlog_on_a_writable_connection ... ok
+test wire::batch_tests::batch_empty_and_largest_frames_keep_their_boundaries ... ok
+test wire::batch_tests::batch_empty_batch_does_not_service_old_backpressure ... ok
+test wire::batch_tests::batch_keeps_old_partial_frames_ahead_of_new_data ... ok
+test wire::batch_tests::batch_preserves_the_existing_backlog_and_length_bounds ... ok
+test wire::batch_tests::batch_repeated_backpressure_and_payload_short_writes_are_resumable ... ok
+test wire::batch_tests::batch_short_writes_interrupts_and_backpressure_keep_every_frame ... ok
+test wire::tests::frames_that_arrive_together_are_each_received ... ok
+
+test result: ok. 104 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 40.89s
+
+     Running unittests src/main.rs (/target/debug/deps/rsh-ffba42ccfca42a15)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/binary_cli.rs (/target/debug/deps/binary_cli-499ca979f2f3fc6b)
+
+running 4 tests
+test binary_host_and_ls_repeat_same_session ... ok
+test live_upgrade_keeps_sessions_and_attached_clients ... ok
+test piped_stdin_streams_into_the_session ... ok
+test tmux_sessions_are_joined_listed_and_left ... FAILED
+
+failures:
+
+---- tmux_sessions_are_joined_listed_and_left stdout ----
+
+thread 'tmux_sessions_are_joined_listed_and_left' (226) panicked at tests/binary_cli.rs:323:68:
+the tmux session made outside rsh is listed
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    tmux_sessions_are_joined_listed_and_left
+
+test result: FAILED. 3 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 21.99s
+
+error: test failed, to rerun pass `--test binary_cli`

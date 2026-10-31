@@ -1,0 +1,44 @@
+{
+  "event": "Derived audit JSON read/parse exceeded the agreed lightweight scope during31/32 runtime blackout",
+  "record_created_at_utc": "2026-10-31T17:31:47.018521+00:00",
+  "operation_start_utc": null,
+  "operation_end_utc": null,
+  "elapsed_duration_range_seconds": null,
+  "timing_scope": "No start/end/CPU timing was instrumented. Exact operation timing and duration remain unknown; creation time is not operation time.",
+  "relative_order": "After root reported31 actual session54084 and following32; before sender message beginning Scope correction.",
+  "command": "sed -n '1,240p' 'research_notes/LAN 원거리 low 성능 연구/probe30-actual-audit.md'; python3 - <<'PY'\nfrom pathlib import Path\nimport json\nbase=Path('research_notes/LAN 원거리 low 성능 연구')\nfor name in ['probe30-actual-audit.json','probe30-rate-timeline.json']:\n p=base/name;print(name,p.stat().st_size);d=json.loads(p.read_text());print('keys',list(d));print({k:v for k,v in d.items() if isinstance(v,(str,bool,int,float))})\nPY",
+  "files": [
+    {
+      "path": "research_notes/LAN 원거리 low 성능 연구/probe30-actual-audit.json",
+      "reported_size_bytes": 13152134,
+      "action": "read_text plus json.loads once"
+    },
+    {
+      "path": "research_notes/LAN 원거리 low 성능 연구/probe30-rate-timeline.json",
+      "reported_size_bytes": 99908,
+      "action": "read_text plus json.loads once"
+    }
+  ],
+  "tool_evidence": {
+    "functions_display_walltime_seconds": 0.1,
+    "exec_command_reported_wall_time_seconds": 6.333e-06,
+    "exit_code": 0,
+    "note": "These are tool-reported wall-time fields, not independently measured parse time or a verified duration bound."
+  },
+  "resource_measurements": {
+    "CPU": null,
+    "RSS": null,
+    "disk_read_actual": null
+  },
+  "actions_not_performed": [
+    "raw source/capture/trace parsing",
+    "tests",
+    "replay",
+    "Docker",
+    "build",
+    "export",
+    "benchmark launch"
+  ],
+  "response": "Root informed immediately after size/scope issue was noticed; no further reading/parsing of the large audit; only small text work afterward.",
+  "interpretation": "Retain as host-load context under user runtime-CPU policy. No automatic rejection and no claim of no effect or an effect magnitude."
+}

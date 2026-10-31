@@ -1,0 +1,52 @@
+{
+  "performance_jobs": 0,
+  "product_instrumented": false,
+  "source_unchanged": true,
+  "root_test_artifacts_fresh": false,
+  "results": [
+    {
+      "target": "rsh",
+      "kind": [
+        "bin"
+      ],
+      "exit_code": 0,
+      "summary": [
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      ],
+      "elapsed_seconds": 0.24339908314868808
+    },
+    {
+      "target": "binary_cli",
+      "kind": [
+        "test"
+      ],
+      "exit_code": 0,
+      "summary": [
+        "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.24s"
+      ],
+      "elapsed_seconds": 11.5625057911966
+    },
+    {
+      "target": "session",
+      "kind": [
+        "test"
+      ],
+      "exit_code": 0,
+      "summary": [
+        "test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.47s"
+      ],
+      "elapsed_seconds": 13.770060667069629
+    },
+    {
+      "target": "rsh",
+      "kind": [
+        "lib"
+      ],
+      "exit_code": 0,
+      "summary": [
+        "test result: ok. 104 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 8.45s"
+      ],
+      "elapsed_seconds": 8.785526292165741
+    }
+  ]
+}

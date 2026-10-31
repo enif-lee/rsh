@@ -1,0 +1,7 @@
+test_shared_cache_foreign_source_and_salt_are_rejected (test_check_build.BuildIdentityTests.test_shared_cache_foreign_source_and_salt_are_rejected) ... shared target reused foreign source: True
+ok
+
+----------------------------------------------------------------------
+Ran 1 test in 4.653s
+
+OK

@@ -83,7 +83,7 @@ fn frame(wbuf: &mut Vec<u8>, packet: &[u8]) -> bool {
 }
 
 /// Writes what the kernel takes; false once the connection is broken.
-fn flush(stream: &mut TcpStream, wbuf: &mut Vec<u8>) -> bool {
+fn flush(stream: &mut impl Write, wbuf: &mut Vec<u8>) -> bool {
     while !wbuf.is_empty() {
         match stream.write(wbuf) {
             Ok(0) => return false,
@@ -465,6 +465,21 @@ impl TcpSide {
         }
     }
 
+    /// Sends a prepared batch with vectored writes; partial frames stay queued.
+    pub fn send_batch(&self, packets: &[Vec<u8>], addr: SocketAddr) {
+        match packets {
+            [] => return,
+            [packet] => {
+                self.send(packet, addr);
+                return;
+            }
+            _ => {}
+        }
+        if let Some(conn) = self.conns.borrow_mut().get_mut(&addr) {
+            conn.broken |= !write_batch(&mut conn.stream, &mut conn.wbuf, packets);
+        }
+    }
+
     /// Sends one packet to the connection `addr` stands for, if it is still there.
     pub fn send(&self, packet: &[u8], addr: SocketAddr) {
         if let Some(conn) = self.conns.borrow_mut().get_mut(&addr) {
@@ -553,4 +568,227 @@ mod tests {
         wait_readable(&wire, Duration::from_secs(1));
         assert_eq!(wire.recv(&mut buf).map(|(n, _)| buf[..n].to_vec()), Some(b"four".to_vec()));
     }
+}
+
+/// Writes already prepared frames together without allocating a second batch.
+/// Eight packets use sixteen vectors, within POSIX's minimum IOV_MAX.
+/// A short write queues only its remainder, keeping the existing backlog bound.
+fn write_batch(stream: &mut impl Write, wbuf: &mut Vec<u8>, packets: &[Vec<u8>]) -> bool {
+    if packets.is_empty() {
+        return true;
+    }
+    if !wbuf.is_empty() {
+        if !flush(stream, wbuf) {
+            return false;
+        }
+        if !wbuf.is_empty() {
+            return packets.iter().all(|packet| frame(wbuf, packet));
+        }
+    }
+    for (batch, chunk) in packets.chunks(8).enumerate() {
+        if chunk.iter().any(|packet| packet.len() > u16::MAX as usize) {
+            return false;
+        }
+        let mut headers = [[0u8; 2]; 8];
+        for (i, packet) in chunk.iter().enumerate() {
+            headers[i] = (packet.len() as u16).to_be_bytes();
+        }
+        let mut vectors: [io::IoSlice<'_>; 16] = std::array::from_fn(|_| io::IoSlice::new(&[]));
+        for (i, packet) in chunk.iter().enumerate() {
+            vectors[2 * i] = io::IoSlice::new(&headers[i]);
+            vectors[2 * i + 1] = io::IoSlice::new(packet);
+        }
+        let mut pending = &mut vectors[..2 * chunk.len()];
+        while !pending.is_empty() {
+            match stream.write_vectored(pending) {
+                Ok(0) => return false,
+                Ok(n) => io::IoSlice::advance_slices(&mut pending, n),
+                Err(err) if err.kind() == ErrorKind::Interrupted => {}
+                Err(err) if err.kind() == ErrorKind::WouldBlock => {
+                    for part in pending.iter() {
+                        if wbuf.len() + part.len() > TCP_BACKLOG {
+                            return false;
+                        }
+                        wbuf.extend_from_slice(part);
+                    }
+                    return packets[batch * 8 + chunk.len()..].iter().all(|packet| frame(wbuf, packet));
+                }
+                Err(_) => return false,
+            }
+        }
+    }
+    true
+}
+
+#[cfg(test)]
+mod batch_tests {
+    use super::*;
+    use std::collections::VecDeque;
+
+    struct Scripted {
+        output: Vec<u8>,
+        steps: VecDeque<io::Result<usize>>,
+        writes: usize,
+    }
+
+    impl Scripted {
+        fn new(steps: Vec<io::Result<usize>>) -> Self {
+            Self { output: Vec::new(), steps: steps.into(), writes: 0 }
+        }
+    }
+
+    impl Write for Scripted {
+        fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+            self.write_vectored(&[io::IoSlice::new(bytes)])
+        }
+        fn write_vectored(&mut self, bufs: &[io::IoSlice<'_>]) -> io::Result<usize> {
+            self.writes += 1;
+            let room = self.steps.pop_front().unwrap_or(Ok(usize::MAX))?;
+            let mut wrote = 0;
+            for buf in bufs {
+                let n = buf.len().min(room - wrote);
+                self.output.extend_from_slice(&buf[..n]);
+                wrote += n;
+                if wrote == room { break; }
+            }
+            Ok(wrote)
+        }
+        fn flush(&mut self) -> io::Result<()> { Ok(()) }
+    }
+
+    fn packets() -> Vec<Vec<u8>> {
+        (0..19).map(|i| vec![i; i as usize + 1]).collect()
+    }
+
+    fn framed(packets: &[Vec<u8>]) -> Vec<u8> {
+        let mut bytes = Vec::new();
+        for packet in packets { assert!(frame(&mut bytes, packet)); }
+        bytes
+    }
+
+    #[test]
+    fn batch_short_writes_interrupts_and_backpressure_keep_every_frame() {
+        let packets = packets();
+        let mut stream = Scripted::new(vec![Ok(1), Err(ErrorKind::Interrupted.into()), Ok(4), Err(ErrorKind::WouldBlock.into())]);
+        let mut pending = Vec::new();
+        assert!(write_batch(&mut stream, &mut pending, &packets));
+        assert!(!pending.is_empty());
+        assert!(flush(&mut stream, &mut pending));
+        assert_eq!(stream.output, framed(&packets));
+        let mut decoded = Vec::new();
+        while let Some(packet) = unframe(&mut stream.output) { decoded.push(packet); }
+        assert_eq!(decoded, packets);
+    }
+
+    #[test]
+    fn batch_does_not_allocate_a_backlog_on_a_writable_connection() {
+        let mut stream = Scripted::new(vec![]);
+        let mut pending = Vec::new();
+        let packets = packets();
+        assert!(write_batch(&mut stream, &mut pending, &packets));
+        assert_eq!(stream.output, framed(&packets));
+        assert!(stream.writes < packets.len());
+        assert_eq!(pending.capacity(), 0);
+    }
+
+    #[test]
+    fn batch_keeps_old_partial_frames_ahead_of_new_data() {
+        let mut stream = Scripted::new(vec![Err(ErrorKind::WouldBlock.into())]);
+        stream.output.push(0);
+        let mut pending = vec![3, b'o', b'l', b'd'];
+        let packets = packets();
+        assert!(write_batch(&mut stream, &mut pending, &packets));
+        assert!(flush(&mut stream, &mut pending));
+        let mut expected = framed(&[b"old".to_vec()]);
+        expected.extend(framed(&packets));
+        assert_eq!(stream.output, expected);
+    }
+
+    #[test]
+    fn batch_preserves_the_existing_backlog_and_length_bounds() {
+        let mut stream = Scripted::new(vec![Err(ErrorKind::WouldBlock.into())]);
+        let mut pending = vec![0; TCP_BACKLOG - 1];
+        assert!(!write_batch(&mut stream, &mut pending, &[vec![1]]));
+        assert!(pending.len() <= TCP_BACKLOG);
+        let mut pending = Vec::new();
+        assert!(!write_batch(&mut stream, &mut pending, &[vec![0; u16::MAX as usize + 1]]));
+        assert!(!write_batch(&mut Scripted::new(vec![Ok(0)]), &mut pending, &[vec![1]]));
+    }
+
+    #[test]
+    fn batch_empty_and_largest_frames_keep_their_boundaries() {
+        let packets = vec![Vec::new(), vec![b'x'; u16::MAX as usize], Vec::new()];
+        let mut stream = Scripted::new(vec![]);
+        let mut pending = Vec::new();
+        assert!(write_batch(&mut stream, &mut pending, &packets));
+        assert_eq!(stream.output, framed(&packets));
+        for packet in packets { assert_eq!(unframe(&mut stream.output), Some(packet)); }
+        assert!(stream.output.is_empty());
+    }
+
+    #[test]
+    fn batch_repeated_backpressure_and_payload_short_writes_are_resumable() {
+        let packets = vec![vec![b'a'; 50], Vec::new(), vec![b'b'; 30]];
+        let mut stream = Scripted::new(vec![Ok(7), Err(ErrorKind::WouldBlock.into()),
+            Err(ErrorKind::WouldBlock.into()), Ok(3), Err(ErrorKind::Interrupted.into()),
+            Ok(2), Err(ErrorKind::WouldBlock.into())]);
+        let mut pending = Vec::new();
+        assert!(write_batch(&mut stream, &mut pending, &packets));
+        for _ in 0..8 {
+            if pending.is_empty() { break; }
+            assert!(flush(&mut stream, &mut pending));
+        }
+        assert!(pending.is_empty());
+        assert_eq!(stream.output, framed(&packets));
+    }
+
+    #[test]
+    fn batch_empty_batch_does_not_service_old_backpressure() {
+        let mut stream = Scripted::new(vec![Err(ErrorKind::WouldBlock.into())]);
+        let mut pending = framed(&[b"waiting".to_vec()]);
+        let before = pending.clone();
+        assert!(write_batch(&mut stream, &mut pending, &[]));
+        assert_eq!(stream.writes, 0);
+        assert_eq!(pending, before);
+    }
+    #[test]
+    fn batch_backpressure_drains_through_the_tcp_service_loop() {
+        let mut server = TcpSide::bind("127.0.0.1:0".parse().unwrap()).unwrap();
+        let peer = server.listener.as_ref().unwrap().local_addr().unwrap();
+        let mut client = Wire::tcp(peer).unwrap();
+        server.receive(Instant::now());
+        let addr = *server.conns.borrow().keys().next().unwrap();
+        server.known(addr, Instant::now());
+        let set_buffer = |fd, option| {
+            let bytes: libc::c_int = 4096;
+            assert_eq!(unsafe { libc::setsockopt(fd, libc::SOL_SOCKET, option,
+                (&bytes as *const libc::c_int).cast(), std::mem::size_of_val(&bytes) as libc::socklen_t) }, 0);
+        };
+        set_buffer(server.conns.borrow().get(&addr).unwrap().stream.as_raw_fd(), libc::SO_SNDBUF);
+        let Wire::Tcp(tcp) = &client else { unreachable!() };
+        set_buffer(tcp.stream.as_ref().unwrap().as_raw_fd(), libc::SO_RCVBUF);
+        let packets: Vec<Vec<u8>> = (0..256u32).map(|n| {
+            let mut bytes = vec![(n % 251) as u8; 2048];
+            bytes[..4].copy_from_slice(&n.to_be_bytes());
+            bytes
+        }).collect();
+        server.send_batch(&packets, addr);
+        assert!(!server.conns.borrow().get(&addr).unwrap().wbuf.is_empty(), "exercise actual socket backpressure");
+        let mut received = 0;
+        let mut buf = [0u8; 4096];
+        let deadline = Instant::now() + Duration::from_secs(20);
+        while received < packets.len() && Instant::now() < deadline {
+            server.receive(Instant::now());
+            while let Some((n, _)) = client.recv(&mut buf) {
+                assert!(received < packets.len(), "no duplicate frame");
+                assert_eq!(&buf[..n], packets[received].as_slice());
+                received += 1;
+            }
+            if received < packets.len() { wait_readable(&client, Duration::from_millis(1)); }
+        }
+        assert_eq!(received, packets.len());
+        assert!(server.conns.borrow().get(&addr).unwrap().wbuf.is_empty());
+        drop(server);
+    }
+
 }

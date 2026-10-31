@@ -83,6 +83,11 @@ Rebuild them after changing the source so the client can install a matching
 build on remote hosts. Binaries stored outside `~/.rsh/bin` do not
 auto-update themselves.
 
+Distribution builds rebuild the `rsh` release package and verify each binary's
+source build ID before writing checksums. Check an externally built binary
+against its source tree with `scripts/check-build.sh /path/to/source /path/to/binary`.
+The check reads the embedded ID, so the binary can target another platform.
+
 ## Usage
 
 ```sh
@@ -276,11 +281,15 @@ Run render and link-switch tests:
 python3 benchmark/lab/lab.py run --tools ssh,mosh,rsh \
   --tests render,switch --nets lan,wan,lowbw,highlat \
   --switches lan:lowbw,lowbw:highlat \
-  --scenes compress,bandwidth --fps 60 --duration 8 --iterations 3 --parallel 12
+  --scenes compress,bandwidth --fps 60 --duration 8 --iterations 2 --parallel 4
 ```
 
-The run defaults are twelve parallel jobs and three repeats per case.
-The `sessions` test defaults to one repeat; `--session-iterations` overrides it.
+Performance measurements use four parallel jobs and two evaluations per case,
+including session memory, in both development and published comparisons.
+These defaults reflect the measurement host's four performance cores; they do
+not pin processes to physical cores. Historical measurements retain their
+recorded concurrency and repeat counts and are kept separate from new runs.
+`--session-iterations` overrides the session-memory repeat count.
 
 The [twelve-worker validation](docs/bench/parallel12-20261029.md) shortened
 the matched 750-job batch from 33.17 to 11.02 minutes. It compares the same
@@ -292,6 +301,18 @@ Run the moving-network demo:
 ```sh
 python3 benchmark/lab/lab.py demo --tools ssh,mosh,rsh --events '' \
   --nets moving --scenes compress,bandwidth --fps 60 --duration 60
+```
+
+To compare two Linux builds, pass `--rsh /path/to/baseline` and
+`--rsh-b /path/to/candidate`. Select `rsh,rsh-b` for UDP or
+`rsh-tcp,rsh-b-tcp` for TCP. Both `run` and `demo` install the requested
+builds; the second uses port 2223. For example, a four-pane moving demo:
+
+```sh
+python3 benchmark/lab/lab.py demo \
+  --rsh /path/to/baseline --rsh-b /path/to/candidate \
+  --tools ssh,mosh,rsh-tcp,rsh-b-tcp --events '' \
+  --nets moving --scenes compress,bandwidth --fps 60
 ```
 
 The moving profile repeats a 30-second sequence of congestion, weak

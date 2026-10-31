@@ -1,0 +1,4 @@
+{
+  "matplotlib": "3.11.2",
+  "backend": "Agg"
+}

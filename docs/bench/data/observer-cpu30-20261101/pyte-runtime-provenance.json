@@ -1,0 +1,8 @@
+{
+  "version": "0.8.0",
+  "module_file": "/usr/lib/python3/dist-packages/pyte/screens.py",
+  "source_sha256": "b3316cd3a5140ef5e4fe3eaa3d88a9769d8a4c482405595411f542979b561658",
+  "at": 1793461714.383404,
+  "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b",
+  "scope": "Read-only isolated container inspection of exact image used by study25; no benchmark traffic/performance run"
+}

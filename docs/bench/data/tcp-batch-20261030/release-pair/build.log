@@ -1,0 +1,27 @@
+rustc 1.99.1 (58cf8f9c3 2026-10-13)
+binary: rustc
+commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67
+commit-date: 2026-10-13
+host: aarch64-unknown-linux-musl
+release: 1.99.1
+LLVM version: 23.1.1
+cargo 1.99.1 (5f94df478 2026-08-27)
+musl: the musl c library (libc) implementation
+musl: https://musl.libc.org/
+musl: 706 KiB
+musl-dev: the musl c library (libc) implementation (development files)
+musl-dev: https://musl.libc.org/
+musl-dev: 11 MiB
+RUSTFLAGS=
+CARGO_ENCODED_RUSTFLAGS=
+RSH_BUILD_SALT=
+     Removed 223 files, 102.9MiB total
+   Compiling rsh v0.2.0 (/src)
+    Finished `release` profile [optimized] target(s) in 12.73s
+rsh 0.2.0 build 6729d398d4f1 protocol 3 handoff 3 platform linux-aarch64
+b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23  /out/rsh-baseline-linux-aarch64
+     Removed 30 files, 20.7MiB total
+   Compiling rsh v0.2.0 (/src)
+    Finished `release` profile [optimized] target(s) in 13.57s
+rsh 0.2.0 build cdb1e168767c protocol 3 handoff 3 platform linux-aarch64
+a7e669e1eb8632a70e46594cc55d73f7d76de3840abf0d1fc2d24ee989e73121  /out/rsh-candidate-linux-aarch64

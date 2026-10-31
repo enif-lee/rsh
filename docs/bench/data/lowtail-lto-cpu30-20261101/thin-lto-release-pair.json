@@ -1,0 +1,83 @@
+{
+  "at": 1793457981.601056,
+  "artifacts": [
+    {
+      "variant": "baseline",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-thin-lto-pair-main",
+      "sha256": "9ab79c22ebd289047ffa616a5e8aef3c7d9f2498756b5974ae5a74b2d0ecb463",
+      "bytes": 3695752,
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/main-source",
+      "source_build_id": "6729d398d4f1",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "guard_output": "verified build 6729d398d4f1: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-thin-lto-pair-main"
+    },
+    {
+      "variant": "candidate",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-thin-lto",
+      "sha256": "3892767a01eaa7e21b79cd7287e220bfc3cf3e74c691a6ed8ebfd739b507946e",
+      "bytes": 3114232,
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/thin-lto-source",
+      "source_build_id": "459976ee4637",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "guard_output": "verified build 459976ee4637: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-thin-lto\nverified build 459976ee4637: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/thin-lto-release-tests"
+    }
+  ],
+  "same_container_sequential_build": true,
+  "compiler_image": "sha256:b1d5dd5a22a09404d3e798c0cf051b689077360374eb505fa5bb93c479693d87",
+  "CARGO_HOME": "/cargo",
+  "build_path": "/src",
+  "CARGO_BUILD_JOBS": 4,
+  "apk_manifest_sha256": "d99b2de6a1a883172b2f814cd7ca03534ae3c72bbd1111ca3604ebc3914ca185",
+  "cargo_artifacts": {
+    "thin-lto-pair-main-release-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "executable": "/target/release/rsh",
+      "verbose_build_script_stdout_lines": 5
+    },
+    "thin-lto-release-tests-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": true
+      },
+      "executable": "/target/release/deps/rsh-36b7e25eb0bc9439",
+      "verbose_build_script_stdout_lines": 92
+    },
+    "thin-lto-release-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "executable": "/target/release/rsh",
+      "verbose_build_script_stdout_lines": 0
+    }
+  },
+  "tests": {
+    "release_library_passed": 96,
+    "ignored": 2
+  },
+  "candidate_explicit_rustc_flags": {
+    "lto": "thin",
+    "codegen_units": 1,
+    "root_command_sha256": "f74df403e12f9d1c16043ff45798e053d59a71b90c70ed39dae21425e694d8b4"
+  },
+  "build_log_sha256": "8c0d1e6b258180b2d537e4248f8df128cd93833c749f37f493741a2ccc866575",
+  "only_changed_source_file": "Cargo.toml",
+  "performance_status": "not_measured"
+}

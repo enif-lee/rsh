@@ -1,0 +1,32 @@
+   Compiling rsh v0.2.0 (/Users/ed/personal/rsh)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.43s
+     Running tests/session.rs (target/debug/deps/session-371236ec8408b706)
+
+running 25 tests
+test command_session_reports_exit_code_and_is_removed ... ok
+test end_offset_follows_a_repaint_after_exit ... ok
+test ipv6_peer_works ... ok
+test attach_in_the_middle_of_an_escape_sequence ... ok
+test one_udp_socket_per_host ... ok
+test ctrl_c_drops_a_large_unacked_backlog ... ok
+test backlog_is_bounded_for_silent_client_and_dropped_when_detached ... ok
+test disconnect_timeout_hangs_up_abandoned_sessions ... ok
+test compression_asked_for_works_on_a_fast_link_too ... ok
+test reflected_server_packets_are_not_input ... ok
+test second_client_takes_over_and_first_is_kicked ... ok
+test server_adopts_new_client_address ... ok
+test output_over_a_slow_round_trip_is_compressed_and_exact ... ok
+test idle_tcp_connections_do_not_shut_out_clients ... ok
+test reattach_after_server_moves_port ... ok
+test input_past_the_pty_backlog_arrives_whole_over_tcp ... ok
+test wrong_token_gets_no_reply_and_replayed_hello_does_nothing ... ok
+test local_and_remote_port_forwarding ... ok
+test output_is_exact_through_loss_duplication_and_reordering ... ok
+test shell_output_and_resume_redraws_screen ... ok
+test where_udp_is_blocked_the_session_goes_over_tcp ... ok
+test stale_attachment_is_told_after_server_restart ... ok
+test revoked_token_ends_its_attachment_and_bad_permissions_fail_closed ... ok
+test kill_by_name_and_list ... ok
+test a_broken_tcp_connection_is_made_again ... ok
+
+test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.78s

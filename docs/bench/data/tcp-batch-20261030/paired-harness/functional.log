@@ -1,0 +1,4 @@
+eace2426f77764fe82f45c0f18129dfca501ed738f6f4597b4cb5584db624078  /usr/local/bin/rsh
+a7e669e1eb8632a70e46594cc55d73f7d76de3840abf0d1fc2d24ee989e73121  /usr/local/bin/rsh-b
+Frozen harness SHA256 identity verified
+{"functional_only": true, "performance_metrics_collected": false, "udp_dropped": true, "results": [{"tool": "rsh-tcp", "port": 2222, "connected": true, "remote_output": true, "tcp_established": true}, {"tool": "rsh-b-tcp", "port": 2223, "connected": true, "remote_output": true, "tcp_established": true}]}

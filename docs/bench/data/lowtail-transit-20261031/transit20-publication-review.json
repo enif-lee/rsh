@@ -1,0 +1,18 @@
+{
+  "verdict": "PASS_read_only_publication",
+  "csv_rows": 48,
+  "markdown_context_rows": 12,
+  "compact_rows": 48,
+  "compact_body_count": 21925,
+  "compact_frames_and_body_exact_to_original": true,
+  "header_audit_jobs": 48,
+  "header_audit_count": 21925,
+  "header_audit_valid": true,
+  "summary_sha256": "3efae38ffdc25e867171e0fbcb0f978ae9703b22a2f19bf9c4b5e052ab3acdd5",
+  "new_docker_tests_or_plotting": 0,
+  "limitations": [
+    "SVG data/XML/source checked; no raster rerender",
+    "All-header raw decode is original audit evidence, not independently rerun here",
+    "No product/policy acceptance or SSH parity"
+  ]
+}
