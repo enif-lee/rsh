@@ -704,6 +704,13 @@ Overall gains may justify individual metric costs; the candidate is currently
 unselected while that tradeoff is evaluated. Cross-run observations are not a
 causal proof of a fix.
 
+The [sampled-floor transit study](docs/bench/transit-floor-20261101.md)
+adds separate core/slow evidence, retaining dashboard FPS gains and a
+parser-sensitive 64k body/header disagreement. Its long unmatched tail is
+shown beside adjacent-gap lows. CAN interoperability controls and focused
+follow-ups are separate from adaptive-policy promotion; no global parity or
+resource-only veto is inferred.
+
 ## References
 
 The [README references](README.md#references) identify the papers and

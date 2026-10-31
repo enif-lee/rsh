@@ -1,0 +1,113 @@
+{
+  "scope": "Frozen captured output parsed directly with pyte0.8.0, independent of replay boundary splitting; plus minimal nested-ESC-in-CSI controls",
+  "controls": {
+    "per-read": {
+      "first_residue": {
+        "chunk": 35,
+        "relative_s": 0.8971278667449951,
+        "header": "FRAME 000020 T=1793470672684 compress                  ",
+        "row24": "000013 server-023  cpu  38%  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588                                 OK   req    244[0m   "
+      },
+      "selected": [
+        {
+          "chunk": 31,
+          "relative_s": 0.6564247608184814,
+          "header": "FRAME 000011 T=1793470672535 compress                  ",
+          "row24": "000011 server-023  cpu  32%  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588                                   OK   req    210      ",
+          "cells": "   "
+        },
+        {
+          "chunk": 34,
+          "relative_s": 0.7807233333587646,
+          "header": "FRAME 000013 T=1793470672567 compress                  ",
+          "row24": "000013 server-023  cpu  38%  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588                                 OK   req    244      ",
+          "cells": "   "
+        },
+        {
+          "chunk": 36,
+          "relative_s": 0.9009864330291748,
+          "header": "FRAME 000020 T=1793470672684 compress                  ",
+          "row24": "000020 server-023  cpu  59%  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588                       OK   req    363[0m   ",
+          "cells": "[0m"
+        },
+        {
+          "chunk": 38,
+          "relative_s": 1.171910285949707,
+          "header": "FRAME 000066 T=1793470673451 compress                  ",
+          "row24": "000066 server-023  cpu  97%  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588    BUSY  req   1145[0m   ",
+          "cells": "[0m"
+        }
+      ]
+    },
+    "whole-prefix": {
+      "first_residue": null,
+      "selected": [
+        {
+          "chunk": 36,
+          "header": "FRAME 000020 T=1793470672684 compress                  ",
+          "row24": "000020 server-023  cpu  59%  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588                       OK   req    363[0m   ",
+          "cells": "[0m"
+        }
+      ]
+    },
+    "bytewise-prefix": {
+      "first_residue": null,
+      "selected": [
+        {
+          "chunk": 36,
+          "header": "FRAME 000020 T=1793470672684 compress                  ",
+          "row24": "000020 server-023  cpu  59%  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588                       OK   req    363[0m   ",
+          "cells": "[0m"
+        }
+      ]
+    }
+  },
+  "minimal": {
+    "whole": {
+      "bytes_hex": [
+        "1b5b32353b3935481b5b1b5b306d"
+      ],
+      "row24": "                                                                                              [0m   ",
+      "cells": "[0m",
+      "cursor": [
+        97,
+        24
+      ]
+    },
+    "segmented": {
+      "bytes_hex": [
+        "1b5b32353b393548",
+        "1b5b",
+        "1b5b306d"
+      ],
+      "row24": "                                                                                              [0m   ",
+      "cells": "[0m",
+      "cursor": [
+        97,
+        24
+      ]
+    },
+    "explicit-cancel": {
+      "bytes_hex": [
+        "1b5b32353b3935481b5b181b5b306d"
+      ],
+      "row24": "                                                                                                    ",
+      "cells": "   ",
+      "cursor": [
+        94,
+        24
+      ]
+    },
+    "plain-reset": {
+      "bytes_hex": [
+        "1b5b32353b3935481b5b306d"
+      ],
+      "row24": "                                                                                                    ",
+      "cells": "   ",
+      "cursor": [
+        94,
+        24
+      ]
+    }
+  }
+}

@@ -1,0 +1,50 @@
+--- 34/harness/agent.py
++++ 36/harness/agent.py
+@@ -58,8 +58,10 @@
+         env = dict(os.environ, TERM="xterm-256color", LANG="C.UTF-8", RSH_PEER="server:2223" if tool in ("rsh-b", "rsh-b-tcp") else "server:2222")
+         pid, fd = pty.fork()
+         if pid == 0:
++            fcntl.ioctl(0, termios.TIOCSWINSZ, struct.pack("HHHH", rows, cols, 0, 0))
++            actual = struct.unpack("HHHH", fcntl.ioctl(0, termios.TIOCGWINSZ, bytes(8)))
++            assert actual[:2] == (rows, cols), ("pre-exec PTY geometry mismatch", actual, rows, cols)
+             os.execvpe(argv[0], argv, env)
+-        fcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack("HHHH", rows, cols, 0, 0))
+         self.pid, self.fd = pid, fd
+         self.alive = True
+         self.bytes = 0
+--- 34/harness/probe_report.py
++++ 36/harness/probe_report.py
+@@ -237,6 +237,8 @@
+             problems.append("block requires SSH, main-A, main-B and candidate roles: "+str(batch.get("tag")))
+         if any(r.get("comparison_protocol")!="tcp" or r.get("topology")!="endpoint-egress" or r.get("observer_mode")!="legacy" for r in found):
+             problems.append("block changes TCP/egress/legacy development context: "+str(batch.get("tag")))
++    if len(results)!=8 or len(batches)!=2 or {(r.get("net"),r.get("scene")) for r in results}!={("slow64k","compress")}:
++        problems.append("focused compatibility requires exactly eight slow64k/compress jobs/two blocks")
+     artifacts=environment.get("binaries",{})
+     if set(artifacts)!={"main-A","main-B","candidate"} or not artifacts.get("main-A",{}).get("sha256") or artifacts.get("main-A",{}).get("sha256")!=artifacts.get("main-B",{}).get("sha256"):
+         problems.append("local A/A requires identical main-A/main-B artifact identities")
+@@ -532,8 +534,8 @@
+     invalid.extend(topology_errors(root, batches, results))
+     invalid.extend(deployment_errors(root, batches, results))
+     invalid.extend(platform_errors(root, results))
+-    if environment.get("performance_eligible") is not True or environment.get("measurement_pipeline")!="source-ram-signal-schema2":
+-        invalid.append("missing signal-source performance-screen context")
++    if environment.get("performance_eligible") is not False or environment.get("compatibility_validation_only") is not True or environment.get("measurement_pipeline")!="source-ram-signal-schema2":
++        invalid.append("missing focused signal-source compatibility context")
+     tokens=[job.get("source_token") for job in results]
+     if any(not isinstance(token,str) or len(token)!=32 for token in tokens) or len({str(token) for token in tokens})!=len(tokens):
+         invalid.append("source job nonce must be present and unique for every job")
+@@ -567,10 +569,10 @@
+             if meta.get("dump_realtime_ns", 0)/1e9 < block["all_windows_closed_epoch"]:
+                 invalid.append(f"trace completion before barrier {job['batch']}/{job['slot']}/{side}")
+     output = dict(environment=environment,
+-        valid=not invalid,data_integrity_valid=not invalid,performance_eligible=not invalid,
+-        measurement_pipeline="source-ram-signal-schema2",source_pipeline_note="All four roles share new21 source pipeline; no absolute pooling with legacy-producer20/19",invalid_reasons=invalid,host_statuses=statuses,batches=batches,results=results,
++        valid=not invalid,data_integrity_valid=not invalid,performance_eligible=False,compatibility_validation_only=True,final_selection=None,
++        measurement_pipeline="source-ram-signal-schema2",source_pipeline_note="All four roles share34 RAM source plusnewchildpreexecgeometry; do notpoolabsolute34values",invalid_reasons=invalid,host_statuses=statuses,batches=batches,results=results,
+         acceptance=dict(evaluated=False,observed_delivery_failures=[dict(batch=j["batch"],slot=j["slot"],variant=j.get("variant"),iteration=j.get("iteration")) for j in results if j.get("delivery_outcome",{}).get("target_failure")],
+-            note="Data validity does not imply acceptance. Local A/A defines no automatic tolerance; SSH parity and all-path/public regression decisions are pending."))
++            note="Input validity does not imply compatibility acceptance or promotion. main-A/B are duplicateoldfar, notactualmain. Focused8jobs do notestablishfullperformance. PreserveallrawFPS/low/age/body/header observations, nofixedtolerance/samplefilter."))
+     if (root / "analysis-manifest.json").exists():
+         output["analysis_manifest"] = json.loads((root / "analysis-manifest.json").read_text())
+     table=per_rep_acceptance(results,not invalid)

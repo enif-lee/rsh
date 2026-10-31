@@ -1,0 +1,13 @@
+{
+  "run.py": "3bb015de8c351393fd4e6a5efdcc3366b37861d575373781eb54a75fff4cd5c2",
+  "schedule.json": "c87e622bdc980dccacc38cd4dd10ef57878eeca94f23379fbb70fe2c52a37d5b",
+  "artifact-identities.json": "3231897d6c189891800bff019f8e66f04d00518b1790a2af6c6930b686029955",
+  "paired-build-provenance.json": "ea7b3b5a931c9fd137ca9bd138b0c3aafb1ec6ba9a095045b2e6beb2bde67d50",
+  "plan.json": "7104345254d6ee5ec68f9ad54e1c9b7a8478826b37daeac0d4cc0fb16fd71af8",
+  "harness/manifest.json": "cb95d45b5c55a0811913b1e41f3cb05d3d527d4b2911b6c6a1d30f5089f92f80",
+  "parent-input-identities.json": "d60a4b1c707a036be65a0c9e603f8572f64b6a3763bb3a18e4dd586e8c8f0963",
+  "harness-adaptation.patch": "1f31d75ee27fdbd4ef2edc1abd6227eead87385259bfc0a658f43ac9b917b1c8",
+  "verification-summary.json": "026dfbbbf43e43f33a067096d542290e333b837d158b06926f810f94e035b05d",
+  "harness-tests.log": "8e7579df52e49435bd2a7ca00d776f50a0e07a14c31b64793d8d86ecb5df2a11",
+  "READY.md": "bf020314cb12a04dcb8fe00438a1b3601f0e661c40aad60524250e166ba7b6b9"
+}

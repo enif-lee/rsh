@@ -1,0 +1,13 @@
+{
+  "cases": 48,
+  "evaluations": 2,
+  "parallel": 4,
+  "body_frames": 21601,
+  "raw_files_hashed": 96,
+  "source_hashes_compared_to_independent_audit": 48,
+  "no_fresh_terminal_replay_in_publication": true,
+  "resource_scope": "Saved-derived batch/summary/CSV consistency and units, not counter endpoint reconstruction",
+  "original_csv_patch_log_bytes_preserved": true,
+  "preview_pngs_removed": true,
+  "selection_scope": "FPS-group primary; CPU/RSS secondary; per-metric deficits not automatic veto; no numeric weighting"
+}

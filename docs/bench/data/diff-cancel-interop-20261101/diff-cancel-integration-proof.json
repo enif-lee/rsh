@@ -1,0 +1,7 @@
+{
+  "source": "diff-cancel-source",
+  "production_unchanged": true,
+  "fixture_only_change": "tests/session.rs accepts existing Bash ESC[?2004l prefix beforefirstseqnumber",
+  "fixture_sha256": "501eab050323ea071af50b4cc404bca56ef9203843cd9a902601e1345800f7cf",
+  "scope": "Functional only, no performance; sameCANproductsource93533574fffa"
+}

@@ -1,0 +1,68 @@
+{
+  "terminal_model": "native host tmux",
+  "version": "tmux 3.7c",
+  "cases": [
+    {
+      "case": "literal",
+      "expected": "[0m",
+      "actual": "[0m",
+      "matched": true,
+      "metadata": {
+        "rows": 30,
+        "cols": 100,
+        "payload_hex": "1b5b32353b3935485b306d",
+        "mode": "whole"
+      }
+    },
+    {
+      "case": "ordinary",
+      "expected": "   ",
+      "actual": "   ",
+      "matched": true,
+      "metadata": {
+        "rows": 30,
+        "cols": 100,
+        "payload_hex": "1b5b32353b3935481b5b306d",
+        "mode": "whole"
+      }
+    },
+    {
+      "case": "nested",
+      "expected": "   ",
+      "actual": "   ",
+      "matched": true,
+      "metadata": {
+        "rows": 30,
+        "cols": 100,
+        "payload_hex": "1b5b32353b3935481b5b1b5b306d",
+        "mode": "whole"
+      }
+    },
+    {
+      "case": "nested-bytewise",
+      "expected": "   ",
+      "actual": "   ",
+      "matched": true,
+      "metadata": {
+        "rows": 30,
+        "cols": 100,
+        "payload_hex": "1b5b32353b3935481b5b1b5b306d",
+        "mode": "bytewise"
+      }
+    },
+    {
+      "case": "cancel",
+      "expected": "   ",
+      "actual": "   ",
+      "matched": true,
+      "metadata": {
+        "rows": 30,
+        "cols": 100,
+        "payload_hex": "1b5b32353b3935481b5b181b5b306d",
+        "mode": "whole"
+      }
+    }
+  ],
+  "all_matched": true,
+  "scope": "Native isolated tmux terminal-parser control, not GPU/presentation or all terminals; no rsh product/benchmark/source processes. Literal negative control proves target cells are observable."
+}

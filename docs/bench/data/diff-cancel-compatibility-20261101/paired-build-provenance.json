@@ -1,0 +1,97 @@
+{
+  "at": 1793473690.775757,
+  "artifacts": [
+    {
+      "variant": "baseline",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-transit-floor-cancel-pair-main",
+      "sha256": "d45fc85fef7e2bb9b314ad3cdd68f3af24022d344911daa02e43f28860f41a7a",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/tcp-transit-floor-source",
+      "source_build_id": "239a8181363a",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "manifest_entries": 25,
+      "source_manifest_sha256": "4e2dc5fa4b906ef9bc1c32e514e3b72255957d9664636522b04f558b5f00d08c",
+      "guard_output": "verified build 239a8181363a: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-transit-floor-cancel-pair-main"
+    },
+    {
+      "variant": "candidate",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-transit-floor-cancel",
+      "sha256": "b63aeed9fc8af5e758b136ba5dd9c3c6438ac46241f29a66c086962269057d11",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/tcp-transit-floor-cancel-source",
+      "source_build_id": "4856e38648f4",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "manifest_entries": 31,
+      "source_manifest_sha256": "f3cb0a0e5e559d2fc47f3e5d3124e5bc26240cdf45006203893d7ef48f9232f3",
+      "guard_output": "verified build 4856e38648f4: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-transit-floor-cancel\nverified build 4856e38648f4: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/transit-floor-cancel-tests"
+    }
+  ],
+  "same_container_sequential_build": true,
+  "compiler_image": "sha256:b1d5dd5a22a09404d3e798c0cf051b689077360374eb505fa5bb93c479693d87",
+  "CARGO_HOME": "/cargo",
+  "build_path": "/src",
+  "apk_manifest_sha256": "d99b2de6a1a883172b2f814cd7ca03534ae3c72bbd1111ca3604ebc3914ca185",
+  "cargo_artifacts": {
+    "transit-floor-cancel-control-tests-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "0",
+        "debuginfo": 2,
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "test": true
+      },
+      "executable": "/target/debug/deps/rsh-a4e873949d566604"
+    },
+    "transit-floor-cancel-pair-main-release-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "executable": "/target/release/rsh"
+    },
+    "transit-floor-cancel-release-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "executable": "/target/release/rsh"
+    },
+    "transit-floor-cancel-tests-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "0",
+        "debuginfo": 2,
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "test": true
+      },
+      "executable": "/target/debug/deps/rsh-a4e873949d566604"
+    }
+  },
+  "tests": {
+    "targeted_passed": 3,
+    "library_passed": 106,
+    "ignored": 2
+  },
+  "control": {
+    "policy": "oldfar with identical3fixtures",
+    "passed": 2,
+    "expected_failed": 1,
+    "expected_failure": "client::diff_cancel_interop_tests::diff_cancel_prefix_explicitly_cancels_unfinished_sequence",
+    "guard": "verified build c2e5ffe9a694: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/transit-floor-cancel-control-tests\n",
+    "log_sha256": "ae97c9008cbff167823338b69ae3f0d4cc8d2dfc74a55f6de45bf1063b660d20"
+  },
+  "build_log_sha256": "4f4ee3d3e0aacc7f936685cc59fdd2f025e67e408db41304d9a1064b02dbe6e6",
+  "build_script_sha256": "7546fe2328f096eb3980926881d1376853747add1ba789a6aa36fe416e766ca6",
+  "source_reverse_proof_sha256": "be99c13af115c10529a33fe4d905fe760badaa6bb07b3e9b64bf2cdeeb1c6068",
+  "scope": "Frozenfarcontroller plus one emittedCANbyte in screen-diff prefix;clientproduction unchanged;same3compatibilityfixtures. Not an adaptive-policy change,notinstalled/adopted. Fullactualcapture compatibility still pending."
+}

@@ -1,0 +1,6 @@
+{
+  "at": 1793468875.9092622,
+  "status": "failed_before_build",
+  "reason": "Control edit matched both existing slow_rate floor guard and new drain_bdp guard; assertion stopped Python. Subsequent shell attempted missing script and exited2. No compiler/test/product ran.",
+  "build_log": "build-transit-floor-attempt1.log"
+}

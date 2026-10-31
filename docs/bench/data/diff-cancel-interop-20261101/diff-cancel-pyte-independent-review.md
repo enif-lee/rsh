@@ -1,0 +1,13 @@
+# Compiled CAN fixture / frozen pyte evidence: independent review
+
+**PASS for the bounded character/cursor interoperability claim.** No new pyte execution, Docker, native terminal, compilation or benchmark was performed. This review read the existing script/results/provenance and recalculated small hash/input-consistency checks only.
+
+Verified all five provenance evidence hashes, both original build/control log hashes, and all five HEX fields extracted directly from those logs. Snapshot, client snapshot and expected render are identical across variants; candidate delta and client delta are exactly one CAN followed by the old bytes. Input SHA is`cc018bb3b9791c6d62c527c52ba95337d021d5a26fbae69582c321ecee96434d`.
+
+All six saved result rows cover exactly old/new × whole/snapshot-delta split/bytewise. They agree between JSON and log. The expected display has30 rows of100 characters. All old rows report exactly row24/columns94–96 as`[0m` versus spaces; all new rows report zero different characters. Both variants' cursor is x94/y24 and the one-printable continuation is retained. The script compares characters before feeding the continuation, so the sentinel cannot erase the mismatch before measurement.
+
+The Markdown accurately limits the conclusion to actual compiled fixture bytes through the recorded pyte implementation. It does not prove full receive/Paced behavior, SGR/attributes, every parser state, actual GPU presentation or performance. The absence of a public ground API and the bounded nature of the printable continuation are explicit. Frozen Far34 metrics remain unchanged.
+
+Container image/network/CPU/mount/cleanup are retained in the executor's provenance record. The supplied result log is the Python result, not raw Docker lifecycle output. Independent command/inspect verification of that operational provenance is therefore not asserted by this review; the existing executor outputs were requested for preservation without asking for new execution. This is an evidence-scope limit, not a contradiction in the six character results.
+
+Addendum: the executor subsequently preserved `diff-cancel-offline-tool-transcript.txt`, explicitly a transcription of prior tool outputs rather than a new daemon capture. Its two commands request the pinned image, CPU1, networknone, studyRO/notesRW and unique names; the recorded later inspect reports both absent. That supports the requested flags and cleanup as executor tool-history evidence. Effective live cgroup/network state was not separately inspected and cannot now be recovered from the removed containers. No additional execution was requested or performed for the addendum.

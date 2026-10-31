@@ -1,0 +1,35 @@
+[
+  {
+    "variant": "main-A",
+    "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-transit-floor-pair-main",
+    "sha256": "9ab79c22ebd289047ffa616a5e8aef3c7d9f2498756b5974ae5a74b2d0ecb463",
+    "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/main-source",
+    "source_build_id": "6729d398d4f1",
+    "source_build_verified": true,
+    "source_manifest_unchanged": true,
+    "source_manifest_sha256": "691ce46870af026e614a960844f821580d0486ce4d7c551ee27041b3cd1d6c39",
+    "guard_output": "verified build 6729d398d4f1: rsh-transit-floor-pair-main"
+  },
+  {
+    "variant": "main-B",
+    "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-transit-floor-pair-main",
+    "sha256": "9ab79c22ebd289047ffa616a5e8aef3c7d9f2498756b5974ae5a74b2d0ecb463",
+    "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/main-source",
+    "source_build_id": "6729d398d4f1",
+    "source_build_verified": true,
+    "source_manifest_unchanged": true,
+    "source_manifest_sha256": "691ce46870af026e614a960844f821580d0486ce4d7c551ee27041b3cd1d6c39",
+    "guard_output": "verified build 6729d398d4f1: rsh-transit-floor-pair-main"
+  },
+  {
+    "variant": "candidate",
+    "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-tcp-transit-floor",
+    "sha256": "d45fc85fef7e2bb9b314ad3cdd68f3af24022d344911daa02e43f28860f41a7a",
+    "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/tcp-transit-floor-source",
+    "source_build_id": "239a8181363a",
+    "source_build_verified": true,
+    "source_manifest_unchanged": true,
+    "source_manifest_sha256": "4e2dc5fa4b906ef9bc1c32e514e3b72255957d9664636522b04f558b5f00d08c",
+    "guard_output": "verified build 239a8181363a: rsh-tcp-transit-floor\nverified build 239a8181363a: tcp-transit-floor-tests"
+  }
+]

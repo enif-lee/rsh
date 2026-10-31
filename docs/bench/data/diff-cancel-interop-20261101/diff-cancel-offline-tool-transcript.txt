@@ -1,0 +1,26 @@
+Provenance addendum: faithful transcription of previously captured tool commands/results.
+This is not a newly captured Docker daemon log and no command was rerun to create it.
+The source is this agent's functions.exec/exec_command tool history. Per-run shell
+elapsed time includes preceding source-file preparation; it is not Docker-only timing.
+
+Run A Docker command (exec output chunk e77a41, last shell command):
+docker run --rm --network none --cpus 1 --name rsh-offline-diff-cancel-interop-20261101a -v /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031:/study:ro -v '/Users/ed/personal/rsh/research_notes/LAN 원거리 low 성능 연구:/notes' sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b python3 /notes/diff-cancel-frozen-pyte-interop.py > 'research_notes/LAN 원거리 low 성능 연구/diff-cancel-frozen-pyte-interop.log' 2>&1
+Tool observed: exit_code=0, wall_time_seconds=0.396250083.
+
+Run B Docker command (exec output chunk 5bf556, last shell command):
+docker run --rm --network none --cpus 1 --name rsh-offline-diff-cancel-interop-20261101b -v /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031:/study:ro -v '/Users/ed/personal/rsh/research_notes/LAN 원거리 low 성능 연구:/notes' sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b python3 /notes/diff-cancel-frozen-pyte-interop.py > 'research_notes/LAN 원거리 low 성능 연구/diff-cancel-frozen-pyte-interop.log' 2>&1
+Tool observed: exit_code=0, wall_time_seconds=0.24751775.
+This final run reports the target cell string directly from the pyte screen.
+
+Subsequent existing cleanup query (exec output chunk 3c2ec8):
+docker inspect rsh-offline-diff-cancel-interop-20261101a rsh-offline-diff-cancel-interop-20261101b
+Tool observed: exit_code=1, wall_time_seconds=0.038805292.
+Complete output:
+[]
+error: no such object: rsh-offline-diff-cancel-interop-20261101a
+error: no such object: rsh-offline-diff-cancel-interop-20261101b
+
+Scope: the command history records requested CPU/network/mount/cleanup flags and
+subsequent absence. It does not independently inspect a live container's effective
+cgroup/network configuration; the original --rm containers are gone. No lifecycle
+replay, benchmark, product execution, build or new Docker query was made for this file.

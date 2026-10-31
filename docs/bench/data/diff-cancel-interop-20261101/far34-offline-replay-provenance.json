@@ -1,0 +1,46 @@
+{
+  "scope": "Offline same-image pyte only, no product executable, no new benchmark. Root explicitly allowed cpus1/networknone/data read-only/notes write only.",
+  "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b",
+  "actual34_image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b",
+  "cpus": 1,
+  "network": "none",
+  "net_admin": false,
+  "host_ports": false,
+  "data_mount_read_only": true,
+  "notes_mount_write_only_destination": true,
+  "runs": [
+    {
+      "name": "rsh-offline-far34-body-20261101-0328",
+      "exit_code": 1,
+      "reason": "Investigator comparison needed tuple-to-JSON-list normalization, not actual data difference"
+    },
+    {
+      "name": "rsh-offline-far34-body-20261101-0328b",
+      "exit_code": 1,
+      "reason": "Same tuple/list normalization for histogram comparison"
+    },
+    {
+      "name": "rsh-offline-far34-body-20261101-0328c",
+      "exit_code": 0
+    },
+    {
+      "name": "rsh-offline-far34-controls-20261101-0330",
+      "exit_code": 0
+    }
+  ],
+  "cleanup": "All four own --rm container names inspected afterward and returned No such object; no other containers modified",
+  "prepared_inputs_unchanged": 12,
+  "capture_sha256": "c30a87c1e7d9e137e4f8e84926f3fb8296f729f825836f97d7b870ce00f4f43f",
+  "source_ledger_sha256": "6aa5633886ce4b7480c4feb3d7e10f21171af0beb9fe25abf8f68902bf2221c8",
+  "evidence_sha256": {
+    "far34-body-mismatch-diagnostic.py": "72115eaf416684b3df46bc6bb0083a8a9ac019725d06cfaf8fdddb636b4a4a94",
+    "far34-body-mismatch-diagnostic.json": "fbe92b4ef9c09494c998bd08d63febac424997db8650228fc6138228d897f396",
+    "far34-body-mismatch-replay.log": "191e9de44b52e14bc33e618207162989ac916693e7d8214e3a801d0105f42a8c",
+    "far34-body-mismatch-replay-attempt2.log": "655b64c8baaa91ca3bc87662aa9e8863da778a4776f8a306eefa7cee9395908a",
+    "far34-pyte-stream-controls.py": "337f19b11dcd33d8eda73389f436c8297f60ac85aa52c50396ba6d8869092203",
+    "far34-pyte-stream-controls.json": "952fd135ae2d2dacb97077c7128549c8bfbce443f366b7fbdaf798623b503e1f",
+    "far34-pyte-stream-controls.log": "0741b39b2c8a6c7a487154ed0d33c2fed5bcdb91a9c10a4b9df59c7893fccfe3",
+    "far34-raw-escape-scan.json": "748fd509a7b06cbe2d75c36083a6451c83c480dd2caa77ed97d8133c60f3f935",
+    "far34-transition-raw-snippets.json": "da65c355b24d909402bc5d5a23d66f4c0c2446dadfd036e06bfd4c15f63dc787"
+  }
+}

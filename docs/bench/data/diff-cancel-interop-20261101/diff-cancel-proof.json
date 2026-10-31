@@ -1,0 +1,22 @@
+{
+  "status": "source_only_not_built_or_tested",
+  "parent": "main-source",
+  "canonical_files": 31,
+  "full_files": 90,
+  "changed_files": [
+    "src/client.rs",
+    "src/terminal.rs"
+  ],
+  "production_changes": "Exactly one emitted CAN byte prepended to Terminal::diff_from prefix; client production and all other product files unchanged",
+  "tests": 3,
+  "test_fixture_sha256": "014fa9f3171aa13fd0b2b99f7c4b3888b6bcdf86d9b3c9eee1c8254afbc7b6d2",
+  "tests_executed": 0,
+  "builds": 0,
+  "docker_calls": 0,
+  "oldcontrol_same_fixtures_planned": true,
+  "reverse_to_main_full_exact": true,
+  "raw_pipe_scope": "Only production diff_from caller is Session::refresh with existing shadow/screen synchronization; raw push_output/plain stage paths do not call diff_from. Full render already starts CAN. No arbitrary raw stream bytes are filtered/added.",
+  "source_manifest_sha256": "bbe5381a50213758ccdf0ccb1cc2872a1ffa4157dca0399c5bc2ab4ea74e9103",
+  "source_full_manifest_sha256": "075d079f34761f7c1c82277c14ed4e9ee8bb5d5086fe192a4d454b40263222a7",
+  "patch_sha256": "543e658e645b49d29479662d0cc3a528578a5deb8e59c27e1c49fbcacc08d8d9"
+}

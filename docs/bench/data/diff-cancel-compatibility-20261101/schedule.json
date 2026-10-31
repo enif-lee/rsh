@@ -1,0 +1,14 @@
+[
+  [
+    "00-slow64k-compress-i0",
+    "slow64k",
+    "compress",
+    0
+  ],
+  [
+    "01-slow64k-compress-i1",
+    "slow64k",
+    "compress",
+    1
+  ]
+]
