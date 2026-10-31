@@ -949,7 +949,7 @@ impl Terminal {
         // Autowrap off too while drawing: a terminal that draws a run of
         // non-ASCII cells wider than here (`WIDE_RUN`) must not wrap or
         // scroll with it at the right edge.
-        let mut out = String::from("\x1b[?2026h\x1b[0m\x1b(B\x0f\x1b[?6l\x1b[4l\x1b[?7l");
+        let mut out = String::from("\x18\x1b[?2026h\x1b[0m\x1b(B\x0f\x1b[?6l\x1b[4l\x1b[?7l");
         // The longest run of rows that moved together by k (up when k > 0).
         let mut best: Option<(isize, usize, usize)> = None;
         for k in (1..rows as isize).flat_map(|k| [k, -k]) {
