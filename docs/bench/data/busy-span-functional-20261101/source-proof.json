@@ -1,0 +1,37 @@
+{
+  "stage": "SOURCE_ONLY_NOT_BUILT",
+  "sources": {
+    "main": {
+      "parent_source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/49b-moving-cadence-trace/main-source",
+      "parent_manifest_sha256": "790e81d085bac390fc5b0d50c056e913e3a6549435de9106d693ee4c8ff020df",
+      "canonical_files": 26,
+      "changed": [
+        "src/labreason.rs",
+        "src/proto.rs"
+      ],
+      "inverse_exact_26": true,
+      "planned_unsalted_build_id": "d742268da4df",
+      "source_manifest_sha256": "8b61a4b7b2ea885684288e1787363d6ed0935981949ad9cdf7186cc06fbc4666"
+    },
+    "combined": {
+      "parent_source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/49b-moving-cadence-trace/combined-source",
+      "parent_manifest_sha256": "2c1428020bf3eb9746a5e4efb05bcb9362ceceaa4e16133fcc7a9eaab1b05f77",
+      "canonical_files": 26,
+      "changed": [
+        "src/labreason.rs",
+        "src/proto.rs"
+      ],
+      "inverse_exact_26": true,
+      "planned_unsalted_build_id": "3031e105b1aa",
+      "source_manifest_sha256": "5d41c0496e1889736893b763183a17f16e594e07670d4c4109635bc45aad94f2"
+    }
+  },
+  "record_capacity": 131072,
+  "record_bytes": 80,
+  "record_site_count": 1,
+  "new_policy_state": 0,
+  "new_API": 0,
+  "new_options": 0,
+  "policy_unchanged": true,
+  "scope": "One sample commit event and recorder name only in each reviewed49b trace source. Reverse exact26 parent inputs;39 clocks and all existing instrumentation remain byte-identical. No threshold/history/margin changes."
+}

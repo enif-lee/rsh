@@ -1,0 +1,37 @@
+--- a/src/labreason.rs
++++ b/src/labreason.rs
+@@ -66,7 +66,7 @@
+     9 => "write_end", 10 => "ack_send", 11 => "pty_read", 12 => "pty_apply",
+     13 => "pump", 14 => "stage_raw", 15 => "compress", 16 => "tx_stream",
+     17 => "tx_batch_begin", 18 => "tx_batch_end", 19 => "delivery_block",
+-    20 => "window_block", 23 => "tcp_kernel", 24 => "tcp_bytes", 25 => "sender_rate", 26 => "capacity_probe", 34 => "by_size_set", 35 => "by_size_clear", 36 => "screen_choice", 37 => "server_timer", 38 => "server_poll", 39 => "screen_refresh", _ => "unknown",
++    20 => "window_block", 23 => "tcp_kernel", 24 => "tcp_bytes", 25 => "sender_rate", 26 => "capacity_probe", 34 => "by_size_set", 35 => "by_size_clear", 36 => "screen_choice", 37 => "server_timer", 38 => "server_poll", 39 => "screen_refresh", 40 => "busy_sample_commit", _ => "unknown",
+ }}
+ pub fn check() { if enabled() && REQUEST.swap(false, Ordering::Relaxed) { dump(); } }
+ pub fn dump() {
+--- a/src/proto.rs
++++ b/src/proto.rs
+@@ -1624,7 +1624,9 @@
+                 _ => None,
+             };
+             if let Some((from, sum)) = self.rate_span.filter(|(from, _)| now.duration_since(*from) >= RATE_SAMPLE_SPAN) {
+-                self.rates.push_back((now, sum as f64 / now.duration_since(from).as_secs_f64()));
++                let trace_old_capacity = self.capacity;
++                let trace_sample = sum as f64 / now.duration_since(from).as_secs_f64();
++                self.rates.push_back((now, trace_sample));
+                 self.sampled += 1;
+                 self.rate_span = Some((now, 0));
+                 while self.rates.len() > RATE_SAMPLES || self.rates.front().is_some_and(|(at, _)| now.duration_since(*at) > RATE_SPAN) {
+@@ -1634,6 +1636,12 @@
+                     let mut sorted: Vec<f64> = self.rates.iter().map(|(_, rate)| *rate).collect();
+                     sorted.sort_by(f64::total_cmp);
+                     self.capacity = Some(sorted[sorted.len() / 2]);
++                }
++                if crate::labreason::enabled() {
++                    crate::labreason::mark(40, [self.gen as i64, crate::labreason::ns(from),
++                        crate::labreason::ns(now), sum as i64, trace_sample.to_bits() as i64,
++                        trace_old_capacity.map_or(-1, |rate| rate.to_bits() as i64),
++                        self.capacity.map_or(-1, |rate| rate.to_bits() as i64), self.rates.len() as i64]);
+                 }
+             }
+             self.last_ack = Some(now);

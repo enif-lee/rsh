@@ -1,0 +1,144 @@
+{
+  "status": "ROOT_BUILT_GUARDED_LIBRARY_TESTED_NOT_RUN",
+  "artifacts": [
+    {
+      "label": "main",
+      "variant": "main-trace-A",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-cadence54-main",
+      "sha256": "9907990ee3496c6d5346a187e9803c4217d3c16432e1239d33ddc81e40fa696a",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/54-busy-sample-trace/main-source",
+      "source_build_id": "d742268da4df",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "source_manifest_sha256": "8b61a4b7b2ea885684288e1787363d6ed0935981949ad9cdf7186cc06fbc4666",
+      "snapshot_manifest_entries": 26,
+      "status": "ROOT_BUILT_SOURCE_GUARDED_LIBRARY_TESTED_NOT_RUN",
+      "parent_source_build_id": "8a5c64627e45",
+      "reference_scope": "Traced final CAN+PTY baseline4f98",
+      "library_tests": {
+        "passed": 101,
+        "ignored": 2,
+        "failed": 0,
+        "log_path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence54-main-library-tests.log",
+        "log_sha256": "c744975b12809bddcbc87ea209fa3f65019d390046df1ff4c535356f6b31dadf"
+      }
+    },
+    {
+      "label": "main",
+      "variant": "main-trace-B",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-cadence54-main",
+      "sha256": "9907990ee3496c6d5346a187e9803c4217d3c16432e1239d33ddc81e40fa696a",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/54-busy-sample-trace/main-source",
+      "source_build_id": "d742268da4df",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "source_manifest_sha256": "8b61a4b7b2ea885684288e1787363d6ed0935981949ad9cdf7186cc06fbc4666",
+      "snapshot_manifest_entries": 26,
+      "status": "ROOT_BUILT_SOURCE_GUARDED_LIBRARY_TESTED_NOT_RUN",
+      "parent_source_build_id": "8a5c64627e45",
+      "reference_scope": "Traced final CAN+PTY baseline4f98",
+      "library_tests": {
+        "passed": 101,
+        "ignored": 2,
+        "failed": 0,
+        "log_path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence54-main-library-tests.log",
+        "log_sha256": "c744975b12809bddcbc87ea209fa3f65019d390046df1ff4c535356f6b31dadf"
+      }
+    },
+    {
+      "label": "combined",
+      "variant": "combined-trace",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-cadence54-combined",
+      "sha256": "64aaecdcc92dde57b415fd440718a8541f577c217f6c36adbde4e133d0dec1de",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/54-busy-sample-trace/combined-source",
+      "source_build_id": "3031e105b1aa",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "source_manifest_sha256": "5d41c0496e1889736893b763183a17f16e594e07670d4c4109635bc45aad94f2",
+      "snapshot_manifest_entries": 26,
+      "status": "ROOT_BUILT_SOURCE_GUARDED_LIBRARY_TESTED_NOT_RUN",
+      "parent_source_build_id": "26996017b7da",
+      "reference_scope": "Traced final combined295f",
+      "library_tests": {
+        "passed": 112,
+        "ignored": 2,
+        "failed": 0,
+        "log_path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence54-combined-library-tests.log",
+        "log_sha256": "6e036490e558cc86fbd239a42b6ea2b42ada368b3d64426b6487175d777d0b22"
+      }
+    }
+  ],
+  "actual_tests": {
+    "main": {
+      "library_passed": 101,
+      "library_ignored": 2,
+      "library_failed": 0,
+      "scope": "Root actual library executable only; no new CLI/session/concurrency run claimed for these traced sources."
+    },
+    "combined": {
+      "library_passed": 112,
+      "library_ignored": 2,
+      "library_failed": 0,
+      "scope": "Root actual library executable only; no new CLI/session/concurrency run claimed for these traced sources."
+    }
+  },
+  "same_environment_pair_verified": true,
+  "pair_scope": "Root sequential main/combined builds in one pinned compiler container; script clears crate dev/release artifacts and asserts flags/salt empty. Both instrumented policies unchanged from49b.",
+  "compiler": {
+    "rustc": "1.99.1 (58cf8f9c3 2026-10-13)",
+    "cargo": "1.99.1 (5f94df478 2026-08-27)",
+    "target": "aarch64-unknown-linux-musl"
+  },
+  "evidence": {
+    "build-cadence54.sh": {
+      "path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/build-cadence54.sh",
+      "sha256": "8efa8f37f52b6af3877d8f6f8dbb395408a7d512e6cac8114bde03fadadb38a3"
+    },
+    "cadence54-build.log": {
+      "path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence54-build.log",
+      "sha256": "092a4b31a2404719e3db367a09d6faa1ddaafe29c05862a504121c51c340e623"
+    },
+    "cadence54-guards.log": {
+      "path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence54-guards.log",
+      "sha256": "5f48504b31d1a5ae2052eb166b9c83ae5825f238df3be043b79dc80b17ee2023"
+    },
+    "cadence54-apk-packages.txt": {
+      "path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence54-apk-packages.txt",
+      "sha256": "d99b2de6a1a883172b2f814cd7ca03534ae3c72bbd1111ca3604ebc3914ca185"
+    },
+    "cadence54-main-tests-build.jsonl": {
+      "path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence54-main-tests-build.jsonl",
+      "sha256": "0e15ad6fa2600bf64c88344d535bd998604261751290e4a80eccae744106edb0"
+    },
+    "cadence54-main-release-build.jsonl": {
+      "path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence54-main-release-build.jsonl",
+      "sha256": "27df30a1e5c0841e9af775f7eeacbedc8f58068f421d78ee0feffc48710e1701"
+    },
+    "cadence54-main-library-tests": {
+      "path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence54-main-library-tests",
+      "sha256": "b6836a1e492bb1f0dc0e9864d70d44989ad04c3c5b1debe9b19a4d84ef35acef"
+    },
+    "cadence54-main-library-tests.log": {
+      "path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence54-main-library-tests.log",
+      "sha256": "c744975b12809bddcbc87ea209fa3f65019d390046df1ff4c535356f6b31dadf"
+    },
+    "cadence54-combined-tests-build.jsonl": {
+      "path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence54-combined-tests-build.jsonl",
+      "sha256": "a0ae59c47a5dc714dc0f7f62d3ce60f0103b0c5f28f78ad94c698dbc956e2688"
+    },
+    "cadence54-combined-release-build.jsonl": {
+      "path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence54-combined-release-build.jsonl",
+      "sha256": "36a5b1d4ee463cd94014c0218fc734b5c16cd7990050231c20088e44c070faf1"
+    },
+    "cadence54-combined-library-tests": {
+      "path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence54-combined-library-tests",
+      "sha256": "4c76d744ae0abea6d650e85c5fec3489d1acc3b1c47fe1a62c6b75e5edba3569"
+    },
+    "cadence54-combined-library-tests.log": {
+      "path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence54-combined-library-tests.log",
+      "sha256": "6e036490e558cc86fbd239a42b6ea2b42ada368b3d64426b6487175d777d0b22"
+    }
+  },
+  "historical_unbuilt_prepared_sha256": "2298ff2d66f6c3e8b01f1690dd28551cd970f0707df214ef9bc0b7e48184600b",
+  "source_peer": "N/busy54-source-review.md/json: final source/parser gen-binding PASS before activation"
+}

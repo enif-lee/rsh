@@ -454,6 +454,12 @@ keeps core gains, original slow-network losses and one predeclared replication
 as independent cohorts. The margin remains unselected; functional
 non-activation does not explain or erase earlier untraced deficits.
 
+The [busy-sample/screen-wait diagnostic](docs/bench/busy-span-20261101.md)
+is a separate functional appendix. Committed sample intervals overlap strict
+controller holds, without proving physical idle or justifying sample discard.
+Median-stage ordering and a physical-queue counterexample remain explicit;
+these are not additional eligible performance observations.
+
 ## References
 
 The [README references](README.md#references) identify the papers and
