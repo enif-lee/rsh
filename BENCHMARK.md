@@ -692,6 +692,11 @@ emulation had mixed effects and left slow replicas; it does not establish a
 product gain or universal SSH parity. Both modes use offline complete-body
 metrics, with two evaluations retained separately.
 
+The [probe60 investigation](docs/bench/probe60-20261101.md) retains separate
+core and slow-network screens. Some FPS gains accompany mixed lows and older
+received frames at 1 Mbit/s; the candidate remains unselected. Functional
+trace clues are separate from these performance comparisons.
+
 ## References
 
 The [README references](README.md#references) identify the papers and
