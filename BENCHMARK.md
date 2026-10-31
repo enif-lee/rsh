@@ -675,13 +675,16 @@ python3 benchmark/lab/lab.py demo --tools ssh,mosh,rsh --events '' \
 
 ## Development investigations
 
-The [2026-10-31 TCP low-tail investigation](docs/bench/lowtail-20261031.md)
-reports the four-worker, two-evaluation core screen separately, including
-per-repetition FPS/lows, received traffic and sampled client/server RSS charts.
-Neither prototype met full acceptance: transit improved the 100 ms dashboard
-but retained LAN tail deficits. These experiments are separate from the
-[TCP batch candidate](docs/bench/tcp-batch-20261030.md) and does not replace the
-published full-suite measurements above.
+The [TCP low-tail investigation](docs/bench/lowtail-20261031.md), begun
+2026-10-31 with November 1 follow-ups, reports separate four-worker,
+two-evaluation core, static low-bandwidth and ThinLTO screens. Per-repetition
+FPS/lows, received traffic, CPU, age and sampled client/server RSS remain
+visible. All three candidates remain unselected: transit improved dashboards
+but retained tail deficits, freshness-quarter had an adverse core repeat, and
+ThinLTO did not establish a runtime improvement. November 1 uses CPU<30% at
+admission with runtime load recorded as context. These experiments are separate
+from the [TCP batch candidate](docs/bench/tcp-batch-20261030.md) and do not
+replace the published full-suite measurements above.
 
 ## References
 
