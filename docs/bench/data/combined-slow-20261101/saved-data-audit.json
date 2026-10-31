@@ -1,0 +1,4022 @@
+{
+  "valid_saved_audit": true,
+  "errors": [],
+  "study": 39,
+  "performance_eligible": true,
+  "focused_performance_screen": true,
+  "final_selection": null,
+  "reference_scope": "main-A/main-B are duplicated CAN-fixedmain935/c68, notunfixedmain6729/9ab",
+  "geometry_method": "36-inheritedchildfd0 SET/GETassertbeforeexec; sourceflow andsuccessfulcapture only, notretainednativeioctl result orlaterproductgeometry",
+  "capture_details": [
+    {
+      "batch": "00-lowbw-compress-i0",
+      "slot": 0,
+      "variant": "ssh",
+      "capture": "00-lowbw-compress-i0/0.bin",
+      "sha256": "d1448912312c8ffc588f24800bade562113766a78f1ba2679528f034b053c39d",
+      "bytes": 1170496,
+      "read_records": 407,
+      "tty_bytes": 1165612,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 235,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "00-lowbw-compress-i0",
+      "slot": 1,
+      "variant": "main-A",
+      "capture": "00-lowbw-compress-i0/1.bin",
+      "sha256": "68414ad47c76c568b287811fd8ad0fcb2559dd4180d9330ae7fd63ddeca5df82",
+      "bytes": 2569649,
+      "read_records": 903,
+      "tty_bytes": 2558813,
+      "can_delta_prefix_count": 441,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 11,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "00-lowbw-compress-i0",
+      "slot": 2,
+      "variant": "main-B",
+      "capture": "00-lowbw-compress-i0/2.bin",
+      "sha256": "098f03e3fb500d8cf6ecf067956c2a8b9f586b9ceb25c046500c725c4c4c1f7d",
+      "bytes": 2574299,
+      "read_records": 905,
+      "tty_bytes": 2563439,
+      "can_delta_prefix_count": 441,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 11,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "00-lowbw-compress-i0",
+      "slot": 3,
+      "variant": "candidate",
+      "capture": "00-lowbw-compress-i0/3.bin",
+      "sha256": "22f58a7e2c00c9350edf2eb090c5bc74279dd94cae0793ebdce427600c2f5cb6",
+      "bytes": 2480391,
+      "read_records": 972,
+      "tty_bytes": 2468727,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "01-lowbw-compress-i1",
+      "slot": 0,
+      "variant": "main-B",
+      "capture": "01-lowbw-compress-i1/0.bin",
+      "sha256": "27d07d38d1963be9216a11919ebb4b2bbbf93cc88c8ba6b57b9ae736eb596871",
+      "bytes": 2587245,
+      "read_records": 906,
+      "tty_bytes": 2576373,
+      "can_delta_prefix_count": 442,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 12,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "01-lowbw-compress-i1",
+      "slot": 1,
+      "variant": "candidate",
+      "capture": "01-lowbw-compress-i1/1.bin",
+      "sha256": "b9870817e5923e597eb740aea3baa4b1cd9029d662c37b5fafb033fa978a245e",
+      "bytes": 2480211,
+      "read_records": 972,
+      "tty_bytes": 2468547,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "01-lowbw-compress-i1",
+      "slot": 2,
+      "variant": "ssh",
+      "capture": "01-lowbw-compress-i1/2.bin",
+      "sha256": "1645b18deab6172a9ed82c71d0653b30fa9d9b42f8aee008d57625e798a22d7e",
+      "bytes": 1194774,
+      "read_records": 415,
+      "tty_bytes": 1189794,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 240,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "01-lowbw-compress-i1",
+      "slot": 3,
+      "variant": "main-A",
+      "capture": "01-lowbw-compress-i1/3.bin",
+      "sha256": "f50da06c252f5ee63214766c82c530961b1dd72525a3759a178b90e143b57b76",
+      "bytes": 2578892,
+      "read_records": 905,
+      "tty_bytes": 2568032,
+      "can_delta_prefix_count": 441,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 12,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "02-lowbw-bandwidth-i0",
+      "slot": 0,
+      "variant": "ssh",
+      "capture": "02-lowbw-bandwidth-i0/0.bin",
+      "sha256": "26d333ff41fed33047f5e573005f704f73bb9b01eb21598eeaa28b40a5b92d71",
+      "bytes": 1192927,
+      "read_records": 355,
+      "tty_bytes": 1188667,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 101,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "02-lowbw-bandwidth-i0",
+      "slot": 1,
+      "variant": "main-A",
+      "capture": "02-lowbw-bandwidth-i0/1.bin",
+      "sha256": "c5c89075e6a0cb78b0e06c68e1184bdbc3c8a1657443cf6bbb152f4b1d991fd6",
+      "bytes": 2051743,
+      "read_records": 633,
+      "tty_bytes": 2044147,
+      "can_delta_prefix_count": 169,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "02-lowbw-bandwidth-i0",
+      "slot": 2,
+      "variant": "main-B",
+      "capture": "02-lowbw-bandwidth-i0/2.bin",
+      "sha256": "5637f6343f8377a358a52932f920d085d048c5ba98940e055173095f3172c736",
+      "bytes": 2026981,
+      "read_records": 632,
+      "tty_bytes": 2019397,
+      "can_delta_prefix_count": 168,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "02-lowbw-bandwidth-i0",
+      "slot": 3,
+      "variant": "candidate",
+      "capture": "02-lowbw-bandwidth-i0/3.bin",
+      "sha256": "c9c0b02bb011d1c6545c2c03804be7973de354c14f9ff360933a9126960cb438",
+      "bytes": 2154122,
+      "read_records": 677,
+      "tty_bytes": 2145998,
+      "can_delta_prefix_count": 177,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "03-lowbw-bandwidth-i1",
+      "slot": 0,
+      "variant": "main-B",
+      "capture": "03-lowbw-bandwidth-i1/0.bin",
+      "sha256": "38cfddd35c9b262a199413990f79cfa2561c26e1d9acae67ba552133ec3156b3",
+      "bytes": 2242976,
+      "read_records": 704,
+      "tty_bytes": 2234528,
+      "can_delta_prefix_count": 185,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "03-lowbw-bandwidth-i1",
+      "slot": 1,
+      "variant": "candidate",
+      "capture": "03-lowbw-bandwidth-i1/1.bin",
+      "sha256": "07c0eb7151c875836514e23de97f5c99c5c3e2bc21f5c3dc3a93ce759652be63",
+      "bytes": 2409782,
+      "read_records": 752,
+      "tty_bytes": 2400758,
+      "can_delta_prefix_count": 198,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "03-lowbw-bandwidth-i1",
+      "slot": 2,
+      "variant": "ssh",
+      "capture": "03-lowbw-bandwidth-i1/2.bin",
+      "sha256": "9065082670527e3995bf273fdebf14eff199d0007a4e2c307b575d9a5c7e3e2a",
+      "bytes": 1202356,
+      "read_records": 357,
+      "tty_bytes": 1198072,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 102,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "03-lowbw-bandwidth-i1",
+      "slot": 3,
+      "variant": "main-A",
+      "capture": "03-lowbw-bandwidth-i1/3.bin",
+      "sha256": "3787a4064b384ddbc6fffd644026913a1fb84039df44f23ce09dee0a6c06445b",
+      "bytes": 2377580,
+      "read_records": 742,
+      "tty_bytes": 2368676,
+      "can_delta_prefix_count": 195,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "04-verylow-compress-i0",
+      "slot": 0,
+      "variant": "ssh",
+      "capture": "04-verylow-compress-i0/0.bin",
+      "sha256": "287c1d274209093e46f568245ea2057fbe153e41235d576a5e29442e4266cc41",
+      "bytes": 284087,
+      "read_records": 112,
+      "tty_bytes": 282743,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 58,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "04-verylow-compress-i0",
+      "slot": 1,
+      "variant": "main-A",
+      "capture": "04-verylow-compress-i0/1.bin",
+      "sha256": "c147f6a883b25fd2ddaf6df03795ed1256318f89feb4c2ce5b3151b1ba61e9e3",
+      "bytes": 1724539,
+      "read_records": 607,
+      "tty_bytes": 1717255,
+      "can_delta_prefix_count": 298,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 6,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "04-verylow-compress-i0",
+      "slot": 2,
+      "variant": "main-B",
+      "capture": "04-verylow-compress-i0/2.bin",
+      "sha256": "603a22b428a874426c28f7cfc93302d308e0b648ba7f4a93c925abb515bff9de",
+      "bytes": 1871211,
+      "read_records": 662,
+      "tty_bytes": 1863267,
+      "can_delta_prefix_count": 312,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 18,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "04-verylow-compress-i0",
+      "slot": 3,
+      "variant": "candidate",
+      "capture": "04-verylow-compress-i0/3.bin",
+      "sha256": "ebc37c1079f7d1772dbca7ca8a42b02dfa5be86dee1a6676db39d3d061156e21",
+      "bytes": 2480558,
+      "read_records": 973,
+      "tty_bytes": 2468882,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "05-verylow-compress-i1",
+      "slot": 0,
+      "variant": "main-B",
+      "capture": "05-verylow-compress-i1/0.bin",
+      "sha256": "70d42fce5b5c6fee15c0c1244d6e1692dca2cd53538a00bdb1cbf648d28186ac",
+      "bytes": 1935081,
+      "read_records": 687,
+      "tty_bytes": 1926837,
+      "can_delta_prefix_count": 307,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 36,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "05-verylow-compress-i1",
+      "slot": 1,
+      "variant": "candidate",
+      "capture": "05-verylow-compress-i1/1.bin",
+      "sha256": "9d15cb6f898fc0ca66bec84c0a2f6f6814f1ae8fd4d16633fec01ebdb6f9a0c4",
+      "bytes": 2480366,
+      "read_records": 972,
+      "tty_bytes": 2468702,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "05-verylow-compress-i1",
+      "slot": 2,
+      "variant": "ssh",
+      "capture": "05-verylow-compress-i1/2.bin",
+      "sha256": "156ae433301209eed8fc653f9331f5445dce3ab92500a8628bcd726f16cfa443",
+      "bytes": 288739,
+      "read_records": 121,
+      "tty_bytes": 287287,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 59,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "05-verylow-compress-i1",
+      "slot": 3,
+      "variant": "main-A",
+      "capture": "05-verylow-compress-i1/3.bin",
+      "sha256": "952b91f570f74bee1402fb33818fa3c1b677d6039810105c8070bc2efe8b89e3",
+      "bytes": 1935395,
+      "read_records": 703,
+      "tty_bytes": 1926959,
+      "can_delta_prefix_count": 248,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 100,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "06-verylow-bandwidth-i0",
+      "slot": 0,
+      "variant": "ssh",
+      "capture": "06-verylow-bandwidth-i0/0.bin",
+      "sha256": "194eabf4bb16971bdc1fc7a9594057b8586147853c511d9e8a41dcf80ff61d56",
+      "bytes": 294315,
+      "read_records": 94,
+      "tty_bytes": 293187,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 25,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "06-verylow-bandwidth-i0",
+      "slot": 1,
+      "variant": "main-A",
+      "capture": "06-verylow-bandwidth-i0/1.bin",
+      "sha256": "8d1baaf1d5f60715d9ea5cb07c64c875c388b7707f5bacf02cb04bf4f588cd92",
+      "bytes": 647332,
+      "read_records": 209,
+      "tty_bytes": 644824,
+      "can_delta_prefix_count": 54,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "06-verylow-bandwidth-i0",
+      "slot": 2,
+      "variant": "main-B",
+      "capture": "06-verylow-bandwidth-i0/2.bin",
+      "sha256": "4dc94c2fe7089e6c7b12e41f97a7b714a442aacf10f1f7d0766af30c24117ecd",
+      "bytes": 635308,
+      "read_records": 207,
+      "tty_bytes": 632824,
+      "can_delta_prefix_count": 53,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "06-verylow-bandwidth-i0",
+      "slot": 3,
+      "variant": "candidate",
+      "capture": "06-verylow-bandwidth-i0/3.bin",
+      "sha256": "ef8508852994b5661b1a1cd882f1be33913d0f69253097fd40ea4370d06e3855",
+      "bytes": 636724,
+      "read_records": 206,
+      "tty_bytes": 634252,
+      "can_delta_prefix_count": 54,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "07-verylow-bandwidth-i1",
+      "slot": 0,
+      "variant": "main-B",
+      "capture": "07-verylow-bandwidth-i1/0.bin",
+      "sha256": "65c385d74ab36c1791eafc651465b128b4e0bdf9112d94f6797e67b503fdb9e5",
+      "bytes": 640470,
+      "read_records": 206,
+      "tty_bytes": 637998,
+      "can_delta_prefix_count": 54,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "07-verylow-bandwidth-i1",
+      "slot": 1,
+      "variant": "candidate",
+      "capture": "07-verylow-bandwidth-i1/1.bin",
+      "sha256": "9f9589bad8cff2b226a9fd6fb4e3024183a2ea894ce6687298d8dc7102ad8e6a",
+      "bytes": 635059,
+      "read_records": 205,
+      "tty_bytes": 632599,
+      "can_delta_prefix_count": 53,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "07-verylow-bandwidth-i1",
+      "slot": 2,
+      "variant": "ssh",
+      "capture": "07-verylow-bandwidth-i1/2.bin",
+      "sha256": "fee497d45aca63d68c4d8cb6587cfd793b9600ca5ba4e8a3aebbe80be08ff485",
+      "bytes": 294339,
+      "read_records": 96,
+      "tty_bytes": 293187,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 25,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "07-verylow-bandwidth-i1",
+      "slot": 3,
+      "variant": "main-A",
+      "capture": "07-verylow-bandwidth-i1/3.bin",
+      "sha256": "e96bf1e946e102f55068cfe0776e5cc37eea3c667dac35683d8a26559ee6a9b9",
+      "bytes": 635161,
+      "read_records": 206,
+      "tty_bytes": 632689,
+      "can_delta_prefix_count": 53,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "08-slow64k-compress-i0",
+      "slot": 0,
+      "variant": "ssh",
+      "capture": "08-slow64k-compress-i0/0.bin",
+      "sha256": "3c91e3581c7d3ae3219067555e061e7761122878cf30b920f1c7c743a234b125",
+      "bytes": 70472,
+      "read_records": 40,
+      "tty_bytes": 69992,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 14,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "08-slow64k-compress-i0",
+      "slot": 1,
+      "variant": "main-A",
+      "capture": "08-slow64k-compress-i0/1.bin",
+      "sha256": "7bc8b094c7b28816d6b95e0b60e23d12f47d30ae89cb741a8e3fda49242c4c71",
+      "bytes": 724086,
+      "read_records": 263,
+      "tty_bytes": 720930,
+      "can_delta_prefix_count": 127,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 4,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "08-slow64k-compress-i0",
+      "slot": 2,
+      "variant": "main-B",
+      "capture": "08-slow64k-compress-i0/2.bin",
+      "sha256": "ffccfa8757b38db1968b07a00b2e2bd1c7090855b3175d662ba48c03f4847a9e",
+      "bytes": 723755,
+      "read_records": 264,
+      "tty_bytes": 720587,
+      "can_delta_prefix_count": 127,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 4,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "08-slow64k-compress-i0",
+      "slot": 3,
+      "variant": "candidate",
+      "capture": "08-slow64k-compress-i0/3.bin",
+      "sha256": "6ffcf0dea73cb4985bcc5d9211c06f3fe9e6b01f6a4e36c791f4f78677c7cdfc",
+      "bytes": 753878,
+      "read_records": 274,
+      "tty_bytes": 750590,
+      "can_delta_prefix_count": 123,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 13,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "09-slow64k-compress-i1",
+      "slot": 0,
+      "variant": "main-B",
+      "capture": "09-slow64k-compress-i1/0.bin",
+      "sha256": "10f61f4be06ad04587548f676e289e2539decfa29178963dd549c2113f350f38",
+      "bytes": 727735,
+      "read_records": 266,
+      "tty_bytes": 724543,
+      "can_delta_prefix_count": 127,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 4,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "09-slow64k-compress-i1",
+      "slot": 1,
+      "variant": "candidate",
+      "capture": "09-slow64k-compress-i1/1.bin",
+      "sha256": "c17ffa281738339b4efc9b4c2c0bafa16c1a4610c60c392b793c7124b1377a49",
+      "bytes": 731640,
+      "read_records": 264,
+      "tty_bytes": 728472,
+      "can_delta_prefix_count": 119,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 13,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "09-slow64k-compress-i1",
+      "slot": 2,
+      "variant": "ssh",
+      "capture": "09-slow64k-compress-i1/2.bin",
+      "sha256": "035ba084f29d3d3ecf8945a7bbdb297ba3e7ce4a5511907d1eece7467347e950",
+      "bytes": 70460,
+      "read_records": 39,
+      "tty_bytes": 69992,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 14,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "09-slow64k-compress-i1",
+      "slot": 3,
+      "variant": "main-A",
+      "capture": "09-slow64k-compress-i1/3.bin",
+      "sha256": "7cc732706339336793456052d6743f8c1c6f9f54d866fc680b05fde071af4c7b",
+      "bytes": 734761,
+      "read_records": 266,
+      "tty_bytes": 731569,
+      "can_delta_prefix_count": 126,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 4,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "10-slow64k-bandwidth-i0",
+      "slot": 0,
+      "variant": "ssh",
+      "capture": "10-slow64k-bandwidth-i0/0.bin",
+      "sha256": "71c3efed97a8638d18bc9aabfa38b95da12d195831fa2982b7e451f84994869f",
+      "bytes": 64361,
+      "read_records": 24,
+      "tty_bytes": 64073,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 6,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "10-slow64k-bandwidth-i0",
+      "slot": 1,
+      "variant": "main-A",
+      "capture": "10-slow64k-bandwidth-i0/1.bin",
+      "sha256": "6667780f180e7725654e30373a8fd57020bef39a9011f99207d4841047a2a479",
+      "bytes": 196110,
+      "read_records": 75,
+      "tty_bytes": 195210,
+      "can_delta_prefix_count": 18,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "10-slow64k-bandwidth-i0",
+      "slot": 2,
+      "variant": "main-B",
+      "capture": "10-slow64k-bandwidth-i0/2.bin",
+      "sha256": "c251bb5ee2900d805d3063b767ce4d8ae2978b364d400801eacc8cbd4df201ad",
+      "bytes": 166033,
+      "read_records": 70,
+      "tty_bytes": 165193,
+      "can_delta_prefix_count": 17,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "10-slow64k-bandwidth-i0",
+      "slot": 3,
+      "variant": "candidate",
+      "capture": "10-slow64k-bandwidth-i0/3.bin",
+      "sha256": "c68fff7a3fd637bd503aea5e2afefae4119c111a6883f7406a10744e5c26e694",
+      "bytes": 165811,
+      "read_records": 68,
+      "tty_bytes": 164995,
+      "can_delta_prefix_count": 18,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "11-slow64k-bandwidth-i1",
+      "slot": 0,
+      "variant": "main-B",
+      "capture": "11-slow64k-bandwidth-i1/0.bin",
+      "sha256": "d7a35943c5fe5219e843ba1e155c49bbac6860e2a8c634ebb2f411c5746ca8da",
+      "bytes": 195858,
+      "read_records": 74,
+      "tty_bytes": 194970,
+      "can_delta_prefix_count": 18,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "11-slow64k-bandwidth-i1",
+      "slot": 1,
+      "variant": "candidate",
+      "capture": "11-slow64k-bandwidth-i1/1.bin",
+      "sha256": "2ee0bd18dfb420b32a210282ef73033d4f5254c38fb2f6d894db668920c8638b",
+      "bytes": 183243,
+      "read_records": 73,
+      "tty_bytes": 182367,
+      "can_delta_prefix_count": 20,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "11-slow64k-bandwidth-i1",
+      "slot": 2,
+      "variant": "ssh",
+      "capture": "11-slow64k-bandwidth-i1/2.bin",
+      "sha256": "f2ac06da489ee1f52c3a2e349b56862327696c2264b0338c9ab4f4e40365b6ed",
+      "bytes": 73134,
+      "read_records": 30,
+      "tty_bytes": 72774,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 7,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "11-slow64k-bandwidth-i1",
+      "slot": 3,
+      "variant": "main-A",
+      "capture": "11-slow64k-bandwidth-i1/3.bin",
+      "sha256": "9840c8d15b675f48171980323b1fdf84389592554148cc3650fabd26a10d2b9b",
+      "bytes": 186562,
+      "read_records": 69,
+      "tty_bytes": 185734,
+      "can_delta_prefix_count": 15,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    }
+  ],
+  "jobs": 48,
+  "blocks": 12,
+  "body_frames": 7867,
+  "source_records": 19765,
+  "retained_payload_bytes": 161805396,
+  "source_json_bytes": 221937523,
+  "source_schema": 2,
+  "pending_writes_saved": 7,
+  "pending_body_joins": 0,
+  "zero_body_jobs": 0,
+  "missing_low_jobs": [
+    {
+      "batch": "10-slow64k-bandwidth-i0",
+      "variant": "ssh",
+      "frames": 5
+    },
+    {
+      "batch": "11-slow64k-bandwidth-i1",
+      "variant": "ssh",
+      "frames": 4
+    }
+  ],
+  "generated_source_sha256": {
+    "scene-ledger.py": "cde0a45bde766e044108e8bb27248a28659cdcdcfdda8552eb70802b4c2907f8",
+    "agent.py": "54fab62fa8c5683ca0b7e23f3acb50f510170131974e9f1ea66d6c487e0d4abe"
+  },
+  "actual_source_manifest_checks": 33,
+  "saved_analysis_manifest_sha256": "2103e1808ca2ed737e30da8d805e08714054134bffc511159152829619bd0281",
+  "saved_summary_sha256": "f43a6778c55947c8e35974fc8508aa6b23ac4f7899b7180b1ba1c76f7bbe67f4",
+  "run_status_note": "run-status retains measurement_finished_analysis_pending; actual analysis outputs/manifest and root terminal sessions64235/83253 establish analysis completion",
+  "missing_age_p95_jobs": [
+    {
+      "batch": "06-verylow-bandwidth-i0",
+      "variant": "ssh",
+      "frames": 19
+    },
+    {
+      "batch": "08-slow64k-compress-i0",
+      "variant": "ssh",
+      "frames": 12
+    },
+    {
+      "batch": "09-slow64k-compress-i1",
+      "variant": "ssh",
+      "frames": 12
+    },
+    {
+      "batch": "10-slow64k-bandwidth-i0",
+      "variant": "ssh",
+      "frames": 5
+    },
+    {
+      "batch": "10-slow64k-bandwidth-i0",
+      "variant": "main-A",
+      "frames": 13
+    },
+    {
+      "batch": "10-slow64k-bandwidth-i0",
+      "variant": "main-B",
+      "frames": 12
+    },
+    {
+      "batch": "10-slow64k-bandwidth-i0",
+      "variant": "candidate",
+      "frames": 11
+    },
+    {
+      "batch": "11-slow64k-bandwidth-i1",
+      "variant": "main-B",
+      "frames": 13
+    },
+    {
+      "batch": "11-slow64k-bandwidth-i1",
+      "variant": "candidate",
+      "frames": 13
+    },
+    {
+      "batch": "11-slow64k-bandwidth-i1",
+      "variant": "ssh",
+      "frames": 4
+    },
+    {
+      "batch": "11-slow64k-bandwidth-i1",
+      "variant": "main-A",
+      "frames": 11
+    }
+  ],
+  "hash_scopes": {
+    "prepared-inputs.json": 10,
+    "harness/manifest.json": 33,
+    "parent-input-identities.json": 9,
+    "analysis": 6
+  },
+  "source_sha256": {
+    "00-lowbw-compress-i0/0-source.json": "d4a36ee2abf61b7a2b9477f4b13d97195d3fa7f51a439024cee9b7e90cf37fc1",
+    "00-lowbw-compress-i0/1-source.json": "6d4349fde6a0710ec179d49796d3b4fdcba9d6d90a5f384a9784cbb5729e5938",
+    "00-lowbw-compress-i0/2-source.json": "d6d531dcc41e1366503e1da5be601c9d835ce1f37676beeb711427d722fe287c",
+    "00-lowbw-compress-i0/3-source.json": "1f5e334092f1427fbfe0ce83cc83bdc66f89e7c3f66185099baa19d1b3bf5296",
+    "01-lowbw-compress-i1/0-source.json": "4ccd665ef653636aaefdbf2cef34fc81eed2efa3f0e1eed487411a35c4f39415",
+    "01-lowbw-compress-i1/1-source.json": "0f1b976e40ff39d3302f2686f148910f757959a3b600e337debeb63657a87143",
+    "01-lowbw-compress-i1/2-source.json": "ff066f5bcab38334210999726f46b2d7c19d7506400e3dac5d7b7180d258f3f2",
+    "01-lowbw-compress-i1/3-source.json": "74974b5ecdd98ade3a2631317c82f923ca2106c3921612d114685d34703c5268",
+    "02-lowbw-bandwidth-i0/0-source.json": "81a4dd57f6f292bb83ce4fc5fc95c6e61abba169f8f11c4d75e362011db9034e",
+    "02-lowbw-bandwidth-i0/1-source.json": "80a93822759c2c0f64380a7034bd9c2ffb69c3f9d7ebb9c6bebea9d248c596a3",
+    "02-lowbw-bandwidth-i0/2-source.json": "1952f01b20d59840381b8945f2111e6d9917d0d5c5f957ec156f328c1bcb1e38",
+    "02-lowbw-bandwidth-i0/3-source.json": "7ae43bb52d5920bb26d0c65249c7450748a9e2564fa12f75847bbac587f1dac1",
+    "03-lowbw-bandwidth-i1/0-source.json": "add4ed8500b3e535848736dd894dc18b1c9052b279addd2cd92454498092b51c",
+    "03-lowbw-bandwidth-i1/1-source.json": "ac704070f5b7050cf42c6d15013601998c00d1c5444668ac6e5ac2e71bc19646",
+    "03-lowbw-bandwidth-i1/2-source.json": "d1ec639f596f720f64a9d0230fab954265c368733854ca76edf68133d46be5ab",
+    "03-lowbw-bandwidth-i1/3-source.json": "04ff7909f0bda87a24e54dfdfbcb260f3e7018a8e60b49b331aa7f6ab3d8e3c2",
+    "04-verylow-compress-i0/0-source.json": "7225584f73b432454601ffea53ed102ece0cdb22e2ef4a760da4cedabe9ad8de",
+    "04-verylow-compress-i0/1-source.json": "db49d6b3b7ab92bbcd47820bc5242797f1a29a87a1029f31d4c29376a4518dd7",
+    "04-verylow-compress-i0/2-source.json": "b76deee2a0f753e4b5180a8678cdef06c7bf01a2e18d7b39872111903de57de6",
+    "04-verylow-compress-i0/3-source.json": "6dda80a8a41e1acd6a02dc6cf2396f69af636554f7f978a3fdf8cbd049914291",
+    "05-verylow-compress-i1/0-source.json": "ecb1a9a55357ace9a091287dcfac62dc1d08ab3e0ba86655307e7a260ef19f05",
+    "05-verylow-compress-i1/1-source.json": "705fd81012f44ee38fca1f57875df739fb1c3927c3659df73a0122d051557a49",
+    "05-verylow-compress-i1/2-source.json": "2fa0fe9c7abbc376ba252ee47b131fdf5b6dce06ef6714bbd1ca1cce2150d32e",
+    "05-verylow-compress-i1/3-source.json": "e373eb5e146fd373441566e22129b74aaac3f2d71a27a4be737448ef7620900c",
+    "06-verylow-bandwidth-i0/0-source.json": "d0a70bdb67e4644fa71a0ecbb7558decd1cee289ca18a81b1eb5b9854f5d0fb6",
+    "06-verylow-bandwidth-i0/1-source.json": "d0af7e9ed1204438032918eeb64c948874ab2e6c457e86a2339541318a51efca",
+    "06-verylow-bandwidth-i0/2-source.json": "26e737719f19960e745b2d36b087d67dd339955a63c6bbe5f272e43b9204c10e",
+    "06-verylow-bandwidth-i0/3-source.json": "011c805d63dd862d2110c40acaccfd613b813ca9588cd3ae72dedb05c6e94424",
+    "07-verylow-bandwidth-i1/0-source.json": "6b4be9b4abb2b02e8c57b204c106ed83b7efd5e96a6f65aa5bb2b32e5e8739ef",
+    "07-verylow-bandwidth-i1/1-source.json": "4f857ed1285733e20060e1bfaf5be0350625e49115710a018a0e34df9be47d92",
+    "07-verylow-bandwidth-i1/2-source.json": "4aec6c2bca3114aea8e143c9f1284e9fa29149f39ff42c3e70e90e031c8aa411",
+    "07-verylow-bandwidth-i1/3-source.json": "fd0aa9bd58cee7eb9333518ffc73c00ee3cb06089e4da27775ef65a6726679a1",
+    "08-slow64k-compress-i0/0-source.json": "c21bcd3bdbf944236190777d5813c171bf6342f0d7afbf5e916e168ac83e831a",
+    "08-slow64k-compress-i0/1-source.json": "7566084d14a1d60bc9efb6bfcd1d067f3b00fbe6177b5929f3ec39cdad077d6f",
+    "08-slow64k-compress-i0/2-source.json": "013b258f6dd73b75666944f3e2d70512e0a0777c1bfd4d71f4a9f565da4d3b5d",
+    "08-slow64k-compress-i0/3-source.json": "1661574612ede44c0b988c9ddae3649f767bac5887f70819240e3c0a7f549920",
+    "09-slow64k-compress-i1/0-source.json": "602b0a7f55bdda7e1ef00b79953f22b658c1f5d7ed20f7ae82c6c898b40658a6",
+    "09-slow64k-compress-i1/1-source.json": "263cd0e453cacfdb0d1f905a357d631914504b335222da6a6ff813a0dd51999b",
+    "09-slow64k-compress-i1/2-source.json": "41185e0d120820535d46d976ce7fc395bd22e3dbeb97cb2c8b588d3fc360f218",
+    "09-slow64k-compress-i1/3-source.json": "7c097be20e36ce5003dcedefc55dbe9d4fc4c54892605183c3aebdd2abfdaddd",
+    "10-slow64k-bandwidth-i0/0-source.json": "ca51983c4d8bd16ba4421fed5f1eb3023d1e83c4d45487ba22cba1f75fc4f62a",
+    "10-slow64k-bandwidth-i0/1-source.json": "62b826b36e376af951edc2dd7777f52442742fe9752fc3f2075c8ec45a371332",
+    "10-slow64k-bandwidth-i0/2-source.json": "bda932bc0c69d59d8d8d0aea9edfa495f5782ed1beb936fbd9d6c9777598bbd7",
+    "10-slow64k-bandwidth-i0/3-source.json": "e05bf724088b21ff95bddd742d14d21f546956bde03942cb8c3cc0216e3f61ed",
+    "11-slow64k-bandwidth-i1/0-source.json": "57c56ecea28d0864d0a5fe8b0a1e42c514eebbea1b08119cd3d97a2b89732682",
+    "11-slow64k-bandwidth-i1/1-source.json": "f45d23c20c9825f438b9b705adae0d6e2bf6e7288cd12596ad65bb4b4d82276c",
+    "11-slow64k-bandwidth-i1/2-source.json": "87c80a6666003a8e7c49e31a6482fbc15a0d5d57998b50e3251d9e9743eaa524",
+    "11-slow64k-bandwidth-i1/3-source.json": "daf62eb46a2d5ad5763114d36c3787c7b81d154851b41681a486a09f6984eb69"
+  },
+  "strict_network_checks": 96,
+  "endpoint_file_checks": 192,
+  "live_server_checks": 96,
+  "source_details": [
+    {
+      "path": "00-lowbw-compress-i0/0-source.json",
+      "records": 399,
+      "pending": 0,
+      "payload_bytes": 1981342,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "00-lowbw-compress-i0/1-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "00-lowbw-compress-i0/2-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "00-lowbw-compress-i0/3-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "01-lowbw-compress-i1/0-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 41
+    },
+    {
+      "path": "01-lowbw-compress-i1/1-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "01-lowbw-compress-i1/2-source.json",
+      "records": 398,
+      "pending": 0,
+      "payload_bytes": 1976548,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "01-lowbw-compress-i1/3-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "02-lowbw-bandwidth-i0/0-source.json",
+      "records": 167,
+      "pending": 0,
+      "payload_bytes": 1967021,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "02-lowbw-bandwidth-i0/1-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "02-lowbw-bandwidth-i0/2-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "02-lowbw-bandwidth-i0/3-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "03-lowbw-bandwidth-i1/0-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "03-lowbw-bandwidth-i1/1-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "03-lowbw-bandwidth-i1/2-source.json",
+      "records": 165,
+      "pending": 0,
+      "payload_bytes": 1943346,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "03-lowbw-bandwidth-i1/3-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "04-verylow-compress-i0/0-source.json",
+      "records": 257,
+      "pending": 1,
+      "payload_bytes": 1273912,
+      "offset_intersection_ns": 82
+    },
+    {
+      "path": "04-verylow-compress-i0/1-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 41
+    },
+    {
+      "path": "04-verylow-compress-i0/2-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 41
+    },
+    {
+      "path": "04-verylow-compress-i0/3-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 82
+    },
+    {
+      "path": "05-verylow-compress-i1/0-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 41
+    },
+    {
+      "path": "05-verylow-compress-i1/1-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 41
+    },
+    {
+      "path": "05-verylow-compress-i1/2-source.json",
+      "records": 256,
+      "pending": 1,
+      "payload_bytes": 1268974,
+      "offset_intersection_ns": 41
+    },
+    {
+      "path": "05-verylow-compress-i1/3-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "06-verylow-bandwidth-i0/0-source.json",
+      "records": 108,
+      "pending": 1,
+      "payload_bytes": 1273264,
+      "offset_intersection_ns": 41
+    },
+    {
+      "path": "06-verylow-bandwidth-i0/1-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "06-verylow-bandwidth-i0/2-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 41
+    },
+    {
+      "path": "06-verylow-bandwidth-i0/3-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "07-verylow-bandwidth-i1/0-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 82
+    },
+    {
+      "path": "07-verylow-bandwidth-i1/1-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 41
+    },
+    {
+      "path": "07-verylow-bandwidth-i1/2-source.json",
+      "records": 108,
+      "pending": 1,
+      "payload_bytes": 1273264,
+      "offset_intersection_ns": 82
+    },
+    {
+      "path": "07-verylow-bandwidth-i1/3-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 82
+    },
+    {
+      "path": "08-slow64k-compress-i0/0-source.json",
+      "records": 214,
+      "pending": 0,
+      "payload_bytes": 1062320,
+      "offset_intersection_ns": 82
+    },
+    {
+      "path": "08-slow64k-compress-i0/1-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 83
+    },
+    {
+      "path": "08-slow64k-compress-i0/2-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 82
+    },
+    {
+      "path": "08-slow64k-compress-i0/3-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 83
+    },
+    {
+      "path": "09-slow64k-compress-i1/0-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 41
+    },
+    {
+      "path": "09-slow64k-compress-i1/1-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 83
+    },
+    {
+      "path": "09-slow64k-compress-i1/2-source.json",
+      "records": 224,
+      "pending": 1,
+      "payload_bytes": 1111998,
+      "offset_intersection_ns": 41
+    },
+    {
+      "path": "09-slow64k-compress-i1/3-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 82
+    },
+    {
+      "path": "10-slow64k-bandwidth-i0/0-source.json",
+      "records": 95,
+      "pending": 1,
+      "payload_bytes": 1119926,
+      "offset_intersection_ns": 41
+    },
+    {
+      "path": "10-slow64k-bandwidth-i0/1-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 82
+    },
+    {
+      "path": "10-slow64k-bandwidth-i0/2-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 41
+    },
+    {
+      "path": "10-slow64k-bandwidth-i0/3-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 41
+    },
+    {
+      "path": "11-slow64k-bandwidth-i1/0-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "11-slow64k-bandwidth-i1/1-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 41
+    },
+    {
+      "path": "11-slow64k-bandwidth-i1/2-source.json",
+      "records": 94,
+      "pending": 1,
+      "payload_bytes": 1108251,
+      "offset_intersection_ns": 84
+    },
+    {
+      "path": "11-slow64k-bandwidth-i1/3-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 82
+    }
+  ],
+  "startup": {
+    "attempts": 1,
+    "admission_cpu": 20.0
+  },
+  "phases": [
+    {
+      "batch": "00-lowbw-compress-i0",
+      "admission_cpu": 25.0,
+      "admission_attempts": 2,
+      "runtime_cpu": {
+        "max": 32.0,
+        "mean": 30.333333333333332,
+        "samples_ge30": 2
+      },
+      "external_max": 89.6
+    },
+    {
+      "batch": "01-lowbw-compress-i1",
+      "admission_cpu": 26.0,
+      "admission_attempts": 1,
+      "runtime_cpu": {
+        "max": 38.0,
+        "mean": 35.0,
+        "samples_ge30": 3
+      },
+      "external_max": 168.7
+    },
+    {
+      "batch": "02-lowbw-bandwidth-i0",
+      "admission_cpu": 26.0,
+      "admission_attempts": 1,
+      "runtime_cpu": {
+        "max": 66.0,
+        "mean": 46.666666666666664,
+        "samples_ge30": 3
+      },
+      "external_max": 159.0
+    },
+    {
+      "batch": "03-lowbw-bandwidth-i1",
+      "admission_cpu": 27.0,
+      "admission_attempts": 1,
+      "runtime_cpu": {
+        "max": 42.0,
+        "mean": 35.333333333333336,
+        "samples_ge30": 2
+      },
+      "external_max": 119.1
+    },
+    {
+      "batch": "04-verylow-compress-i0",
+      "admission_cpu": 26.0,
+      "admission_attempts": 2,
+      "runtime_cpu": {
+        "max": 33.0,
+        "mean": 30.333333333333332,
+        "samples_ge30": 2
+      },
+      "external_max": 91.8
+    },
+    {
+      "batch": "05-verylow-compress-i1",
+      "admission_cpu": 29.0,
+      "admission_attempts": 2,
+      "runtime_cpu": {
+        "max": 43.0,
+        "mean": 35.333333333333336,
+        "samples_ge30": 3
+      },
+      "external_max": 95.9
+    },
+    {
+      "batch": "06-verylow-bandwidth-i0",
+      "admission_cpu": 7.0,
+      "admission_attempts": 1,
+      "runtime_cpu": {
+        "max": 21.0,
+        "mean": 16.0,
+        "samples_ge30": 0
+      },
+      "external_max": 10.0
+    },
+    {
+      "batch": "07-verylow-bandwidth-i1",
+      "admission_cpu": 12.0,
+      "admission_attempts": 1,
+      "runtime_cpu": {
+        "max": 21.0,
+        "mean": 16.0,
+        "samples_ge30": 0
+      },
+      "external_max": 17.4
+    },
+    {
+      "batch": "08-slow64k-compress-i0",
+      "admission_cpu": 14.0,
+      "admission_attempts": 1,
+      "runtime_cpu": {
+        "max": 35.0,
+        "mean": 24.0,
+        "samples_ge30": 1
+      },
+      "external_max": 91.1
+    },
+    {
+      "batch": "09-slow64k-compress-i1",
+      "admission_cpu": 12.0,
+      "admission_attempts": 1,
+      "runtime_cpu": {
+        "max": 26.0,
+        "mean": 23.75,
+        "samples_ge30": 0
+      },
+      "external_max": 100.7
+    },
+    {
+      "batch": "10-slow64k-bandwidth-i0",
+      "admission_cpu": 19.0,
+      "admission_attempts": 1,
+      "runtime_cpu": {
+        "max": 35.0,
+        "mean": 24.0,
+        "samples_ge30": 1
+      },
+      "external_max": 80.2
+    },
+    {
+      "batch": "11-slow64k-bandwidth-i1",
+      "admission_cpu": 16.0,
+      "admission_attempts": 1,
+      "runtime_cpu": {
+        "max": 27.0,
+        "mean": 23.25,
+        "samples_ge30": 0
+      },
+      "external_max": 64.3
+    }
+  ],
+  "uniform_header_total": 7888,
+  "partial_header_body_jobs": [
+    {
+      "batch": "00-lowbw-compress-i0",
+      "variant": "ssh",
+      "slot": 0,
+      "frames": 188,
+      "uniform_header_frames": 189,
+      "online_frames": 189,
+      "online_fps": 23.6,
+      "visible_state": {
+        "incomplete_pct": 59.507403928069714,
+        "unknown_pct": 0.0,
+        "complete_pct": 40.492596071930286
+      },
+      "boundary_gaps": {
+        "first_ms": 5.159616470336914,
+        "last_ms": 85.37411689758301,
+        "adjacent_max_ms": 153.29980850219727
+      },
+      "max_gap_ms": 153
+    },
+    {
+      "batch": "01-lowbw-compress-i1",
+      "variant": "ssh",
+      "slot": 2,
+      "frames": 190,
+      "uniform_header_frames": 191,
+      "online_frames": 191,
+      "online_fps": 23.9,
+      "visible_state": {
+        "incomplete_pct": 57.10640833733409,
+        "unknown_pct": 0.0,
+        "complete_pct": 42.89359166266591
+      },
+      "boundary_gaps": {
+        "first_ms": 8.949756622314453,
+        "last_ms": 16.76154136657715,
+        "adjacent_max_ms": 166.8689250946045
+      },
+      "max_gap_ms": 167
+    },
+    {
+      "batch": "02-lowbw-bandwidth-i0",
+      "variant": "ssh",
+      "slot": 0,
+      "frames": 79,
+      "uniform_header_frames": 80,
+      "online_frames": 80,
+      "online_fps": 10.0,
+      "visible_state": {
+        "incomplete_pct": 89.11264773610364,
+        "unknown_pct": 0.0,
+        "complete_pct": 10.887352263896371
+      },
+      "boundary_gaps": {
+        "first_ms": 65.31715393066406,
+        "last_ms": 98.09160232543945,
+        "adjacent_max_ms": 182.24549293518066
+      },
+      "max_gap_ms": 182
+    },
+    {
+      "batch": "02-lowbw-bandwidth-i0",
+      "variant": "main-A",
+      "slot": 1,
+      "frames": 163,
+      "uniform_header_frames": 164,
+      "online_frames": 164,
+      "online_fps": 20.5,
+      "visible_state": {
+        "incomplete_pct": 0.6614706923450058,
+        "unknown_pct": 0.618260955584133,
+        "complete_pct": 98.72026835207086
+      },
+      "boundary_gaps": {
+        "first_ms": 0.0,
+        "last_ms": 55.866241455078125,
+        "adjacent_max_ms": 104.10404205322266
+      },
+      "max_gap_ms": 104
+    },
+    {
+      "batch": "02-lowbw-bandwidth-i0",
+      "variant": "main-B",
+      "slot": 2,
+      "frames": 160,
+      "uniform_header_frames": 162,
+      "online_frames": 161,
+      "online_fps": 20.1,
+      "visible_state": {
+        "incomplete_pct": 1.2087581916071526,
+        "unknown_pct": 0.36873758122339817,
+        "complete_pct": 98.42250422716945
+      },
+      "boundary_gaps": {
+        "first_ms": 0.0,
+        "last_ms": 40.72093963623047,
+        "adjacent_max_ms": 105.40390014648438
+      },
+      "max_gap_ms": 105
+    },
+    {
+      "batch": "02-lowbw-bandwidth-i0",
+      "variant": "candidate",
+      "slot": 3,
+      "frames": 170,
+      "uniform_header_frames": 172,
+      "online_frames": 168,
+      "online_fps": 21.0,
+      "visible_state": {
+        "incomplete_pct": 1.0869478420451568,
+        "unknown_pct": 0.05670767942116691,
+        "complete_pct": 98.85634447853367
+      },
+      "boundary_gaps": {
+        "first_ms": 0.0,
+        "last_ms": 4.5375823974609375,
+        "adjacent_max_ms": 92.72909164428711
+      },
+      "max_gap_ms": 93
+    },
+    {
+      "batch": "03-lowbw-bandwidth-i1",
+      "variant": "main-B",
+      "slot": 0,
+      "frames": 176,
+      "uniform_header_frames": 178,
+      "online_frames": 178,
+      "online_fps": 22.2,
+      "visible_state": {
+        "incomplete_pct": 1.1952143748376574,
+        "unknown_pct": 0.3074993640384537,
+        "complete_pct": 98.49728626112389
+      },
+      "boundary_gaps": {
+        "first_ms": 0.0,
+        "last_ms": 30.317306518554688,
+        "adjacent_max_ms": 117.53463745117188
+      },
+      "max_gap_ms": 118
+    },
+    {
+      "batch": "03-lowbw-bandwidth-i1",
+      "variant": "candidate",
+      "slot": 1,
+      "frames": 190,
+      "uniform_header_frames": 192,
+      "online_frames": 190,
+      "online_fps": 23.7,
+      "visible_state": {
+        "incomplete_pct": 1.0707186815336935,
+        "unknown_pct": 0.34873629764997166,
+        "complete_pct": 98.58054502081633
+      },
+      "boundary_gaps": {
+        "first_ms": 0.0,
+        "last_ms": 33.34546089172363,
+        "adjacent_max_ms": 84.08641815185547
+      },
+      "max_gap_ms": 84
+    },
+    {
+      "batch": "03-lowbw-bandwidth-i1",
+      "variant": "ssh",
+      "slot": 2,
+      "frames": 79,
+      "uniform_header_frames": 80,
+      "online_frames": 80,
+      "online_fps": 10.0,
+      "visible_state": {
+        "incomplete_pct": 85.44702088808481,
+        "unknown_pct": 0.0,
+        "complete_pct": 14.5529791119152
+      },
+      "boundary_gaps": {
+        "first_ms": 64.94736671447754,
+        "last_ms": 117.16437339782715,
+        "adjacent_max_ms": 185.49084663391113
+      },
+      "max_gap_ms": 185
+    },
+    {
+      "batch": "03-lowbw-bandwidth-i1",
+      "variant": "main-A",
+      "slot": 3,
+      "frames": 189,
+      "uniform_header_frames": 190,
+      "online_frames": 187,
+      "online_fps": 23.4,
+      "visible_state": {
+        "incomplete_pct": 0.5853547613823649,
+        "unknown_pct": 0.30813774929211235,
+        "complete_pct": 99.10650748932552
+      },
+      "boundary_gaps": {
+        "first_ms": 0.0,
+        "last_ms": 28.066158294677734,
+        "adjacent_max_ms": 89.47277069091797
+      },
+      "max_gap_ms": 89
+    },
+    {
+      "batch": "04-verylow-compress-i0",
+      "variant": "ssh",
+      "slot": 0,
+      "frames": 47,
+      "uniform_header_frames": 48,
+      "online_frames": 48,
+      "online_fps": 6.0,
+      "visible_state": {
+        "incomplete_pct": 35.01813444888627,
+        "unknown_pct": 0.0,
+        "complete_pct": 64.98186555111373
+      },
+      "boundary_gaps": {
+        "first_ms": 26.961088180541992,
+        "last_ms": 267.6529884338379,
+        "adjacent_max_ms": 663.6645793914795
+      },
+      "max_gap_ms": 664
+    },
+    {
+      "batch": "06-verylow-bandwidth-i0",
+      "variant": "ssh",
+      "slot": 0,
+      "frames": 19,
+      "uniform_header_frames": 20,
+      "online_frames": 20,
+      "online_fps": 2.5,
+      "visible_state": {
+        "incomplete_pct": 78.57380920358516,
+        "unknown_pct": 0.0,
+        "complete_pct": 21.426190796414847
+      },
+      "boundary_gaps": {
+        "first_ms": 254.34541702270508,
+        "last_ms": 566.5817260742188,
+        "adjacent_max_ms": 759.9456310272217
+      },
+      "max_gap_ms": 760
+    },
+    {
+      "batch": "07-verylow-bandwidth-i1",
+      "variant": "ssh",
+      "slot": 2,
+      "frames": 20,
+      "uniform_header_frames": 21,
+      "online_frames": 21,
+      "online_fps": 2.6,
+      "visible_state": {
+        "incomplete_pct": 75.21740121679056,
+        "unknown_pct": 0.0,
+        "complete_pct": 24.782598783209426
+      },
+      "boundary_gaps": {
+        "first_ms": 151.66592597961426,
+        "last_ms": 155.81870079040527,
+        "adjacent_max_ms": 758.657693862915
+      },
+      "max_gap_ms": 759
+    },
+    {
+      "batch": "10-slow64k-bandwidth-i0",
+      "variant": "candidate",
+      "slot": 3,
+      "frames": 11,
+      "uniform_header_frames": 12,
+      "online_frames": 12,
+      "online_fps": 1.5,
+      "visible_state": {
+        "incomplete_pct": 42.24286871242614,
+        "unknown_pct": 0.0,
+        "complete_pct": 57.75713128757386
+      },
+      "boundary_gaps": {
+        "first_ms": 202.65579223632812,
+        "last_ms": 718.1084156036377,
+        "adjacent_max_ms": 760.3919506072998
+      },
+      "max_gap_ms": 760
+    },
+    {
+      "batch": "11-slow64k-bandwidth-i1",
+      "variant": "ssh",
+      "slot": 2,
+      "frames": 4,
+      "uniform_header_frames": 5,
+      "online_frames": 5,
+      "online_fps": 0.6,
+      "visible_state": {
+        "incomplete_pct": 68.52233115236331,
+        "unknown_pct": 0.0,
+        "complete_pct": 31.477668847636693
+      },
+      "boundary_gaps": {
+        "first_ms": 1025.352954864502,
+        "last_ms": 1869.530200958252,
+        "adjacent_max_ms": 1941.8442249298096
+      },
+      "max_gap_ms": 1942
+    },
+    {
+      "batch": "11-slow64k-bandwidth-i1",
+      "variant": "main-A",
+      "slot": 3,
+      "frames": 11,
+      "uniform_header_frames": 13,
+      "online_frames": 13,
+      "online_fps": 1.6,
+      "visible_state": {
+        "incomplete_pct": 38.50250677911767,
+        "unknown_pct": 0.0,
+        "complete_pct": 61.49749322088234
+      },
+      "boundary_gaps": {
+        "first_ms": 203.45044136047363,
+        "last_ms": 627.211332321167,
+        "adjacent_max_ms": 1274.2021083831787
+      },
+      "max_gap_ms": 1274
+    }
+  ],
+  "comparisons": [
+    {
+      "batch": "00-lowbw-compress-i0",
+      "roles": {
+        "ssh": {
+          "batch": "00-lowbw-compress-i0",
+          "net": "lowbw",
+          "scene": "compress",
+          "iteration": 0,
+          "variant": "ssh",
+          "slot": 0,
+          "online_fps": 23.6,
+          "online_frames": 189,
+          "uniform_header_frames": 189,
+          "uniform_header_fps": 23.6,
+          "visible_state": {
+            "incomplete_pct": 59.507403928069714,
+            "unknown_pct": 0.0,
+            "complete_pct": 40.492596071930286
+          },
+          "per_s": [
+            23,
+            24,
+            24,
+            21,
+            23,
+            27,
+            23,
+            23
+          ],
+          "boundary_gaps": {
+            "first_ms": 5.159616470336914,
+            "last_ms": 85.37411689758301,
+            "adjacent_max_ms": 153.29980850219727
+          },
+          "frames": 188,
+          "fps": 23.5,
+          "low1_fps": 6.6,
+          "low5_fps": 7.2,
+          "age_ms": 2573,
+          "age_p95_ms": 4673,
+          "max_gap_ms": 153,
+          "kbit_s": 977,
+          "rss_client_kb": 7540,
+          "rss_server_kb": 19692,
+          "cpu_client": 0.18,
+          "cpu_server": 0.54
+        },
+        "main-A": {
+          "batch": "00-lowbw-compress-i0",
+          "net": "lowbw",
+          "scene": "compress",
+          "iteration": 0,
+          "variant": "main-A",
+          "slot": 1,
+          "online_fps": 55.5,
+          "online_frames": 444,
+          "uniform_header_frames": 444,
+          "uniform_header_fps": 55.5,
+          "visible_state": {
+            "incomplete_pct": 0.1873892346444709,
+            "unknown_pct": 0.033354765252541434,
+            "complete_pct": 99.77925600010299
+          },
+          "per_s": [
+            55,
+            55,
+            56,
+            57,
+            55,
+            56,
+            55,
+            55
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 20.749807357788086,
+            "adjacent_max_ms": 35.50410270690918
+          },
+          "frames": 444,
+          "fps": 55.5,
+          "low1_fps": 42.1,
+          "low5_fps": 45.1,
+          "age_ms": 65,
+          "age_p95_ms": 74,
+          "max_gap_ms": 36,
+          "kbit_s": 221,
+          "rss_client_kb": 2652,
+          "rss_server_kb": 5988,
+          "cpu_client": 0.88,
+          "cpu_server": 3.28
+        },
+        "main-B": {
+          "batch": "00-lowbw-compress-i0",
+          "net": "lowbw",
+          "scene": "compress",
+          "iteration": 0,
+          "variant": "main-B",
+          "slot": 2,
+          "online_fps": 55.6,
+          "online_frames": 445,
+          "uniform_header_frames": 445,
+          "uniform_header_fps": 55.6,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.06440474209112687,
+            "complete_pct": 99.93559525790887
+          },
+          "per_s": [
+            55,
+            55,
+            57,
+            55,
+            56,
+            56,
+            56,
+            55
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 22.780656814575195,
+            "adjacent_max_ms": 30.548572540283203
+          },
+          "frames": 445,
+          "fps": 55.6,
+          "low1_fps": 41.2,
+          "low5_fps": 45.8,
+          "age_ms": 65,
+          "age_p95_ms": 74,
+          "max_gap_ms": 31,
+          "kbit_s": 222,
+          "rss_client_kb": 2656,
+          "rss_server_kb": 6040,
+          "cpu_client": 0.87,
+          "cpu_server": 3.24
+        },
+        "candidate": {
+          "batch": "00-lowbw-compress-i0",
+          "net": "lowbw",
+          "scene": "compress",
+          "iteration": 0,
+          "variant": "candidate",
+          "slot": 3,
+          "online_fps": 60.0,
+          "online_frames": 480,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.020010551505699387,
+            "complete_pct": 99.9799894484943
+          },
+          "per_s": [
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 16.45183563232422,
+            "adjacent_max_ms": 24.9631404876709
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 42.8,
+          "low5_fps": 46.8,
+          "age_ms": 59,
+          "age_p95_ms": 62,
+          "max_gap_ms": 25,
+          "kbit_s": 227,
+          "rss_client_kb": 2628,
+          "rss_server_kb": 5844,
+          "cpu_client": 0.87,
+          "cpu_server": 1.14
+        }
+      },
+      "observed_fps_deficits": []
+    },
+    {
+      "batch": "01-lowbw-compress-i1",
+      "roles": {
+        "main-B": {
+          "batch": "01-lowbw-compress-i1",
+          "net": "lowbw",
+          "scene": "compress",
+          "iteration": 1,
+          "variant": "main-B",
+          "slot": 0,
+          "online_fps": 55.9,
+          "online_frames": 447,
+          "uniform_header_frames": 447,
+          "uniform_header_fps": 55.9,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.0,
+            "complete_pct": 100.0
+          },
+          "per_s": [
+            55,
+            55,
+            55,
+            57,
+            56,
+            56,
+            57,
+            56
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 12.975215911865234,
+            "adjacent_max_ms": 26.147842407226562
+          },
+          "frames": 447,
+          "fps": 55.9,
+          "low1_fps": 42.1,
+          "low5_fps": 45.8,
+          "age_ms": 64,
+          "age_p95_ms": 74,
+          "max_gap_ms": 26,
+          "kbit_s": 222,
+          "rss_client_kb": 2640,
+          "rss_server_kb": 6004,
+          "cpu_client": 0.9,
+          "cpu_server": 3.44
+        },
+        "candidate": {
+          "batch": "01-lowbw-compress-i1",
+          "net": "lowbw",
+          "scene": "compress",
+          "iteration": 1,
+          "variant": "candidate",
+          "slot": 1,
+          "online_fps": 60.0,
+          "online_frames": 480,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.03519603925648799,
+            "complete_pct": 99.96480396074351
+          },
+          "per_s": [
+            61,
+            59,
+            61,
+            60,
+            60,
+            60,
+            60,
+            59
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 16.35003089904785,
+            "adjacent_max_ms": 25.57086944580078
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 40.7,
+          "low5_fps": 46.7,
+          "age_ms": 59,
+          "age_p95_ms": 63,
+          "max_gap_ms": 26,
+          "kbit_s": 227,
+          "rss_client_kb": 2628,
+          "rss_server_kb": 5804,
+          "cpu_client": 0.89,
+          "cpu_server": 1.23
+        },
+        "ssh": {
+          "batch": "01-lowbw-compress-i1",
+          "net": "lowbw",
+          "scene": "compress",
+          "iteration": 1,
+          "variant": "ssh",
+          "slot": 2,
+          "online_fps": 23.9,
+          "online_frames": 191,
+          "uniform_header_frames": 191,
+          "uniform_header_fps": 23.9,
+          "visible_state": {
+            "incomplete_pct": 57.10640833733409,
+            "unknown_pct": 0.0,
+            "complete_pct": 42.89359166266591
+          },
+          "per_s": [
+            24,
+            24,
+            23,
+            23,
+            23,
+            23,
+            25,
+            25
+          ],
+          "boundary_gaps": {
+            "first_ms": 8.949756622314453,
+            "last_ms": 16.76154136657715,
+            "adjacent_max_ms": 166.8689250946045
+          },
+          "frames": 190,
+          "fps": 23.7,
+          "low1_fps": 6.3,
+          "low5_fps": 7.1,
+          "age_ms": 2553,
+          "age_p95_ms": 4726,
+          "max_gap_ms": 167,
+          "kbit_s": 979,
+          "rss_client_kb": 7800,
+          "rss_server_kb": 19704,
+          "cpu_client": 0.18,
+          "cpu_server": 0.53
+        },
+        "main-A": {
+          "batch": "01-lowbw-compress-i1",
+          "net": "lowbw",
+          "scene": "compress",
+          "iteration": 1,
+          "variant": "main-A",
+          "slot": 3,
+          "online_fps": 55.7,
+          "online_frames": 446,
+          "uniform_header_frames": 446,
+          "uniform_header_fps": 55.7,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.045880155112519735,
+            "complete_pct": 99.95411984488747
+          },
+          "per_s": [
+            54,
+            56,
+            57,
+            56,
+            56,
+            56,
+            56,
+            55
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 20.825624465942383,
+            "adjacent_max_ms": 25.643348693847656
+          },
+          "frames": 446,
+          "fps": 55.7,
+          "low1_fps": 40.8,
+          "low5_fps": 44.8,
+          "age_ms": 64,
+          "age_p95_ms": 74,
+          "max_gap_ms": 26,
+          "kbit_s": 222,
+          "rss_client_kb": 2644,
+          "rss_server_kb": 6016,
+          "cpu_client": 0.9,
+          "cpu_server": 3.45
+        }
+      },
+      "observed_fps_deficits": [
+        {
+          "control": "main-A",
+          "metric": "low1_fps",
+          "candidate": 40.7,
+          "reference": 40.8
+        },
+        {
+          "control": "main-B",
+          "metric": "low1_fps",
+          "candidate": 40.7,
+          "reference": 42.1
+        }
+      ]
+    },
+    {
+      "batch": "02-lowbw-bandwidth-i0",
+      "roles": {
+        "ssh": {
+          "batch": "02-lowbw-bandwidth-i0",
+          "net": "lowbw",
+          "scene": "bandwidth",
+          "iteration": 0,
+          "variant": "ssh",
+          "slot": 0,
+          "online_fps": 10.0,
+          "online_frames": 80,
+          "uniform_header_frames": 80,
+          "uniform_header_fps": 10.0,
+          "visible_state": {
+            "incomplete_pct": 89.11264773610364,
+            "unknown_pct": 0.0,
+            "complete_pct": 10.887352263896371
+          },
+          "per_s": [
+            10,
+            10,
+            9,
+            10,
+            10,
+            11,
+            10,
+            9
+          ],
+          "boundary_gaps": {
+            "first_ms": 65.31715393066406,
+            "last_ms": 98.09160232543945,
+            "adjacent_max_ms": 182.24549293518066
+          },
+          "frames": 79,
+          "fps": 9.9,
+          "low1_fps": 5.5,
+          "low5_fps": 6.3,
+          "age_ms": 3501,
+          "age_p95_ms": 6459,
+          "max_gap_ms": 182,
+          "kbit_s": 980,
+          "rss_client_kb": 7564,
+          "rss_server_kb": 21200,
+          "cpu_client": 0.15,
+          "cpu_server": 0.33
+        },
+        "main-A": {
+          "batch": "02-lowbw-bandwidth-i0",
+          "net": "lowbw",
+          "scene": "bandwidth",
+          "iteration": 0,
+          "variant": "main-A",
+          "slot": 1,
+          "online_fps": 20.5,
+          "online_frames": 164,
+          "uniform_header_frames": 164,
+          "uniform_header_fps": 20.5,
+          "visible_state": {
+            "incomplete_pct": 0.6614706923450058,
+            "unknown_pct": 0.618260955584133,
+            "complete_pct": 98.72026835207086
+          },
+          "per_s": [
+            21,
+            20,
+            20,
+            19,
+            24,
+            20,
+            20,
+            19
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 55.866241455078125,
+            "adjacent_max_ms": 104.10404205322266
+          },
+          "frames": 163,
+          "fps": 20.4,
+          "low1_fps": 15.8,
+          "low5_fps": 17.9,
+          "age_ms": 97,
+          "age_p95_ms": 132,
+          "max_gap_ms": 104,
+          "kbit_s": 814,
+          "rss_client_kb": 2644,
+          "rss_server_kb": 6064,
+          "cpu_client": 0.84,
+          "cpu_server": 2.76
+        },
+        "main-B": {
+          "batch": "02-lowbw-bandwidth-i0",
+          "net": "lowbw",
+          "scene": "bandwidth",
+          "iteration": 0,
+          "variant": "main-B",
+          "slot": 2,
+          "online_fps": 20.1,
+          "online_frames": 161,
+          "uniform_header_frames": 162,
+          "uniform_header_fps": 20.2,
+          "visible_state": {
+            "incomplete_pct": 1.2087581916071526,
+            "unknown_pct": 0.36873758122339817,
+            "complete_pct": 98.42250422716945
+          },
+          "per_s": [
+            20,
+            20,
+            20,
+            20,
+            20,
+            21,
+            19,
+            20
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 40.72093963623047,
+            "adjacent_max_ms": 105.40390014648438
+          },
+          "frames": 160,
+          "fps": 20.0,
+          "low1_fps": 9.5,
+          "low5_fps": 17.9,
+          "age_ms": 97,
+          "age_p95_ms": 116,
+          "max_gap_ms": 105,
+          "kbit_s": 801,
+          "rss_client_kb": 2640,
+          "rss_server_kb": 6048,
+          "cpu_client": 0.81,
+          "cpu_server": 2.65
+        },
+        "candidate": {
+          "batch": "02-lowbw-bandwidth-i0",
+          "net": "lowbw",
+          "scene": "bandwidth",
+          "iteration": 0,
+          "variant": "candidate",
+          "slot": 3,
+          "online_fps": 21.0,
+          "online_frames": 168,
+          "uniform_header_frames": 172,
+          "uniform_header_fps": 21.5,
+          "visible_state": {
+            "incomplete_pct": 1.0869478420451568,
+            "unknown_pct": 0.05670767942116691,
+            "complete_pct": 98.85634447853367
+          },
+          "per_s": [
+            20,
+            20,
+            22,
+            21,
+            21,
+            23,
+            21,
+            22
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 4.5375823974609375,
+            "adjacent_max_ms": 92.72909164428711
+          },
+          "frames": 170,
+          "fps": 21.2,
+          "low1_fps": 13.1,
+          "low5_fps": 17.8,
+          "age_ms": 98,
+          "age_p95_ms": 141,
+          "max_gap_ms": 93,
+          "kbit_s": 852,
+          "rss_client_kb": 2652,
+          "rss_server_kb": 6072,
+          "cpu_client": 0.87,
+          "cpu_server": 2.91
+        }
+      },
+      "observed_fps_deficits": [
+        {
+          "control": "main-A",
+          "metric": "low1_fps",
+          "candidate": 13.1,
+          "reference": 15.8
+        },
+        {
+          "control": "main-A",
+          "metric": "low5_fps",
+          "candidate": 17.8,
+          "reference": 17.9
+        },
+        {
+          "control": "main-B",
+          "metric": "low5_fps",
+          "candidate": 17.8,
+          "reference": 17.9
+        }
+      ]
+    },
+    {
+      "batch": "03-lowbw-bandwidth-i1",
+      "roles": {
+        "main-B": {
+          "batch": "03-lowbw-bandwidth-i1",
+          "net": "lowbw",
+          "scene": "bandwidth",
+          "iteration": 1,
+          "variant": "main-B",
+          "slot": 0,
+          "online_fps": 22.2,
+          "online_frames": 178,
+          "uniform_header_frames": 178,
+          "uniform_header_fps": 22.2,
+          "visible_state": {
+            "incomplete_pct": 1.1952143748376574,
+            "unknown_pct": 0.3074993640384537,
+            "complete_pct": 98.49728626112389
+          },
+          "per_s": [
+            22,
+            23,
+            18,
+            20,
+            22,
+            24,
+            25,
+            22
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 30.317306518554688,
+            "adjacent_max_ms": 117.53463745117188
+          },
+          "frames": 176,
+          "fps": 22.0,
+          "low1_fps": 10.0,
+          "low5_fps": 18.4,
+          "age_ms": 105,
+          "age_p95_ms": 138,
+          "max_gap_ms": 118,
+          "kbit_s": 886,
+          "rss_client_kb": 1924,
+          "rss_server_kb": 5196,
+          "cpu_client": 0.82,
+          "cpu_server": 2.71
+        },
+        "candidate": {
+          "batch": "03-lowbw-bandwidth-i1",
+          "net": "lowbw",
+          "scene": "bandwidth",
+          "iteration": 1,
+          "variant": "candidate",
+          "slot": 1,
+          "online_fps": 23.7,
+          "online_frames": 190,
+          "uniform_header_frames": 192,
+          "uniform_header_fps": 24.0,
+          "visible_state": {
+            "incomplete_pct": 1.0707186815336935,
+            "unknown_pct": 0.34873629764997166,
+            "complete_pct": 98.58054502081633
+          },
+          "per_s": [
+            25,
+            23,
+            24,
+            25,
+            23,
+            24,
+            22,
+            24
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 33.34546089172363,
+            "adjacent_max_ms": 84.08641815185547
+          },
+          "frames": 190,
+          "fps": 23.7,
+          "low1_fps": 12.2,
+          "low5_fps": 18.6,
+          "age_ms": 128,
+          "age_p95_ms": 178,
+          "max_gap_ms": 84,
+          "kbit_s": 953,
+          "rss_client_kb": 1828,
+          "rss_server_kb": 5356,
+          "cpu_client": 0.89,
+          "cpu_server": 2.92
+        },
+        "ssh": {
+          "batch": "03-lowbw-bandwidth-i1",
+          "net": "lowbw",
+          "scene": "bandwidth",
+          "iteration": 1,
+          "variant": "ssh",
+          "slot": 2,
+          "online_fps": 10.0,
+          "online_frames": 80,
+          "uniform_header_frames": 80,
+          "uniform_header_fps": 10.0,
+          "visible_state": {
+            "incomplete_pct": 85.44702088808481,
+            "unknown_pct": 0.0,
+            "complete_pct": 14.5529791119152
+          },
+          "per_s": [
+            10,
+            10,
+            9,
+            10,
+            11,
+            9,
+            10,
+            10
+          ],
+          "boundary_gaps": {
+            "first_ms": 64.94736671447754,
+            "last_ms": 117.16437339782715,
+            "adjacent_max_ms": 185.49084663391113
+          },
+          "frames": 79,
+          "fps": 9.9,
+          "low1_fps": 5.4,
+          "low5_fps": 6.8,
+          "age_ms": 3441,
+          "age_p95_ms": 6423,
+          "max_gap_ms": 185,
+          "kbit_s": 978,
+          "rss_client_kb": 7332,
+          "rss_server_kb": 21000,
+          "cpu_client": 0.14,
+          "cpu_server": 0.3
+        },
+        "main-A": {
+          "batch": "03-lowbw-bandwidth-i1",
+          "net": "lowbw",
+          "scene": "bandwidth",
+          "iteration": 1,
+          "variant": "main-A",
+          "slot": 3,
+          "online_fps": 23.4,
+          "online_frames": 187,
+          "uniform_header_frames": 190,
+          "uniform_header_fps": 23.7,
+          "visible_state": {
+            "incomplete_pct": 0.5853547613823649,
+            "unknown_pct": 0.30813774929211235,
+            "complete_pct": 99.10650748932552
+          },
+          "per_s": [
+            22,
+            24,
+            24,
+            24,
+            25,
+            22,
+            24,
+            24
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 28.066158294677734,
+            "adjacent_max_ms": 89.47277069091797
+          },
+          "frames": 189,
+          "fps": 23.6,
+          "low1_fps": 12.8,
+          "low5_fps": 19.1,
+          "age_ms": 109,
+          "age_p95_ms": 134,
+          "max_gap_ms": 89,
+          "kbit_s": 939,
+          "rss_client_kb": 1668,
+          "rss_server_kb": 4944,
+          "cpu_client": 0.89,
+          "cpu_server": 2.86
+        }
+      },
+      "observed_fps_deficits": [
+        {
+          "control": "main-A",
+          "metric": "low1_fps",
+          "candidate": 12.2,
+          "reference": 12.8
+        },
+        {
+          "control": "main-A",
+          "metric": "low5_fps",
+          "candidate": 18.6,
+          "reference": 19.1
+        }
+      ]
+    },
+    {
+      "batch": "04-verylow-compress-i0",
+      "roles": {
+        "ssh": {
+          "batch": "04-verylow-compress-i0",
+          "net": "verylow",
+          "scene": "compress",
+          "iteration": 0,
+          "variant": "ssh",
+          "slot": 0,
+          "online_fps": 6.0,
+          "online_frames": 48,
+          "uniform_header_frames": 48,
+          "uniform_header_fps": 6.0,
+          "visible_state": {
+            "incomplete_pct": 35.01813444888627,
+            "unknown_pct": 0.0,
+            "complete_pct": 64.98186555111373
+          },
+          "per_s": [
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            5
+          ],
+          "boundary_gaps": {
+            "first_ms": 26.961088180541992,
+            "last_ms": 267.6529884338379,
+            "adjacent_max_ms": 663.6645793914795
+          },
+          "frames": 47,
+          "fps": 5.9,
+          "low1_fps": 1.5,
+          "low5_fps": 2.3,
+          "age_ms": 3703,
+          "age_p95_ms": 7176,
+          "max_gap_ms": 664,
+          "kbit_s": 250,
+          "rss_client_kb": 7552,
+          "rss_server_kb": 19820,
+          "cpu_client": 0.09,
+          "cpu_server": 0.53
+        },
+        "main-A": {
+          "batch": "04-verylow-compress-i0",
+          "net": "verylow",
+          "scene": "compress",
+          "iteration": 0,
+          "variant": "main-A",
+          "slot": 1,
+          "online_fps": 37.1,
+          "online_frames": 297,
+          "uniform_header_frames": 297,
+          "uniform_header_fps": 37.1,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.1725394095188874,
+            "complete_pct": 99.82746059048111
+          },
+          "per_s": [
+            40,
+            36,
+            35,
+            38,
+            37,
+            37,
+            39,
+            35
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 28.923988342285156,
+            "adjacent_max_ms": 40.250539779663086
+          },
+          "frames": 297,
+          "fps": 37.1,
+          "low1_fps": 26.0,
+          "low5_fps": 27.4,
+          "age_ms": 70,
+          "age_p95_ms": 89,
+          "max_gap_ms": 40,
+          "kbit_s": 147,
+          "rss_client_kb": 2652,
+          "rss_server_kb": 6012,
+          "cpu_client": 0.87,
+          "cpu_server": 3.15
+        },
+        "main-B": {
+          "batch": "04-verylow-compress-i0",
+          "net": "verylow",
+          "scene": "compress",
+          "iteration": 0,
+          "variant": "main-B",
+          "slot": 2,
+          "online_fps": 40.5,
+          "online_frames": 324,
+          "uniform_header_frames": 324,
+          "uniform_header_fps": 40.5,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.18803587901439975,
+            "complete_pct": 99.81196412098559
+          },
+          "per_s": [
+            41,
+            41,
+            40,
+            41,
+            40,
+            40,
+            42,
+            39
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 25.844097137451172,
+            "adjacent_max_ms": 40.196895599365234
+          },
+          "frames": 324,
+          "fps": 40.5,
+          "low1_fps": 26.7,
+          "low5_fps": 27.6,
+          "age_ms": 70,
+          "age_p95_ms": 88,
+          "max_gap_ms": 40,
+          "kbit_s": 162,
+          "rss_client_kb": 2644,
+          "rss_server_kb": 6016,
+          "cpu_client": 0.96,
+          "cpu_server": 3.36
+        },
+        "candidate": {
+          "batch": "04-verylow-compress-i0",
+          "net": "verylow",
+          "scene": "compress",
+          "iteration": 0,
+          "variant": "candidate",
+          "slot": 3,
+          "online_fps": 60.0,
+          "online_frames": 480,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.22682821094523,
+            "complete_pct": 99.77317178905477
+          },
+          "per_s": [
+            61,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            59
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 26.027917861938477,
+            "adjacent_max_ms": 27.936220169067383
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 41.2,
+          "low5_fps": 46.2,
+          "age_ms": 72,
+          "age_p95_ms": 76,
+          "max_gap_ms": 28,
+          "kbit_s": 229,
+          "rss_client_kb": 2640,
+          "rss_server_kb": 5824,
+          "cpu_client": 1.26,
+          "cpu_server": 1.79
+        }
+      },
+      "observed_fps_deficits": []
+    },
+    {
+      "batch": "05-verylow-compress-i1",
+      "roles": {
+        "main-B": {
+          "batch": "05-verylow-compress-i1",
+          "net": "verylow",
+          "scene": "compress",
+          "iteration": 1,
+          "variant": "main-B",
+          "slot": 0,
+          "online_fps": 42.1,
+          "online_frames": 337,
+          "uniform_header_frames": 337,
+          "uniform_header_fps": 42.1,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.030887643485809992,
+            "complete_pct": 99.96911235651419
+          },
+          "per_s": [
+            42,
+            42,
+            41,
+            42,
+            44,
+            41,
+            42,
+            43
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 26.46780014038086,
+            "adjacent_max_ms": 41.0306453704834
+          },
+          "frames": 337,
+          "fps": 42.1,
+          "low1_fps": 25.9,
+          "low5_fps": 28.1,
+          "age_ms": 70,
+          "age_p95_ms": 88,
+          "max_gap_ms": 41,
+          "kbit_s": 171,
+          "rss_client_kb": 1624,
+          "rss_server_kb": 5232,
+          "cpu_client": 0.97,
+          "cpu_server": 3.21
+        },
+        "candidate": {
+          "batch": "05-verylow-compress-i1",
+          "net": "verylow",
+          "scene": "compress",
+          "iteration": 1,
+          "variant": "candidate",
+          "slot": 1,
+          "online_fps": 60.0,
+          "online_frames": 480,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.14536808720773947,
+            "complete_pct": 99.85463191279226
+          },
+          "per_s": [
+            61,
+            59,
+            61,
+            60,
+            60,
+            60,
+            60,
+            59
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 17.92454719543457,
+            "adjacent_max_ms": 28.16176414489746
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 42.6,
+          "low5_fps": 45.4,
+          "age_ms": 72,
+          "age_p95_ms": 76,
+          "max_gap_ms": 28,
+          "kbit_s": 229,
+          "rss_client_kb": 1988,
+          "rss_server_kb": 5044,
+          "cpu_client": 1.26,
+          "cpu_server": 1.86
+        },
+        "ssh": {
+          "batch": "05-verylow-compress-i1",
+          "net": "verylow",
+          "scene": "compress",
+          "iteration": 1,
+          "variant": "ssh",
+          "slot": 2,
+          "online_fps": 6.1,
+          "online_frames": 49,
+          "uniform_header_frames": 49,
+          "uniform_header_fps": 6.1,
+          "visible_state": {
+            "incomplete_pct": 15.896028734548883,
+            "unknown_pct": 0.0,
+            "complete_pct": 84.10397126545112
+          },
+          "per_s": [
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            7,
+            6
+          ],
+          "boundary_gaps": {
+            "first_ms": 29.394865036010742,
+            "last_ms": 14.64986801147461,
+            "adjacent_max_ms": 246.02460861206055
+          },
+          "frames": 49,
+          "fps": 6.1,
+          "low1_fps": 4.1,
+          "low5_fps": 5.0,
+          "age_ms": 3833,
+          "age_p95_ms": 7122,
+          "max_gap_ms": 246,
+          "kbit_s": 250,
+          "rss_client_kb": 7536,
+          "rss_server_kb": 19832,
+          "cpu_client": 0.12,
+          "cpu_server": 0.52
+        },
+        "main-A": {
+          "batch": "05-verylow-compress-i1",
+          "net": "verylow",
+          "scene": "compress",
+          "iteration": 1,
+          "variant": "main-A",
+          "slot": 3,
+          "online_fps": 43.0,
+          "online_frames": 344,
+          "uniform_header_frames": 344,
+          "uniform_header_fps": 43.0,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.03262816291135355,
+            "complete_pct": 99.96737183708865
+          },
+          "per_s": [
+            40,
+            43,
+            42,
+            41,
+            53,
+            53,
+            36,
+            36
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 30.615806579589844,
+            "adjacent_max_ms": 41.10836982727051
+          },
+          "frames": 344,
+          "fps": 43.0,
+          "low1_fps": 25.5,
+          "low5_fps": 27.9,
+          "age_ms": 71,
+          "age_p95_ms": 86,
+          "max_gap_ms": 41,
+          "kbit_s": 171,
+          "rss_client_kb": 1900,
+          "rss_server_kb": 5148,
+          "cpu_client": 0.97,
+          "cpu_server": 2.95
+        }
+      },
+      "observed_fps_deficits": []
+    },
+    {
+      "batch": "06-verylow-bandwidth-i0",
+      "roles": {
+        "ssh": {
+          "batch": "06-verylow-bandwidth-i0",
+          "net": "verylow",
+          "scene": "bandwidth",
+          "iteration": 0,
+          "variant": "ssh",
+          "slot": 0,
+          "online_fps": 2.5,
+          "online_frames": 20,
+          "uniform_header_frames": 20,
+          "uniform_header_fps": 2.5,
+          "visible_state": {
+            "incomplete_pct": 78.57380920358516,
+            "unknown_pct": 0.0,
+            "complete_pct": 21.426190796414847
+          },
+          "per_s": [
+            2,
+            3,
+            2,
+            3,
+            2,
+            3,
+            2,
+            2
+          ],
+          "boundary_gaps": {
+            "first_ms": 254.34541702270508,
+            "last_ms": 566.5817260742188,
+            "adjacent_max_ms": 759.9456310272217
+          },
+          "frames": 19,
+          "fps": 2.4,
+          "low1_fps": 1.3,
+          "low5_fps": 1.3,
+          "age_ms": 3915,
+          "age_p95_ms": null,
+          "max_gap_ms": 760,
+          "kbit_s": 247,
+          "rss_client_kb": 7576,
+          "rss_server_kb": 19904,
+          "cpu_client": 0.08,
+          "cpu_server": 0.31
+        },
+        "main-A": {
+          "batch": "06-verylow-bandwidth-i0",
+          "net": "verylow",
+          "scene": "bandwidth",
+          "iteration": 0,
+          "variant": "main-A",
+          "slot": 1,
+          "online_fps": 6.0,
+          "online_frames": 48,
+          "uniform_header_frames": 48,
+          "uniform_header_fps": 6.0,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.0,
+            "complete_pct": 100.0
+          },
+          "per_s": [
+            7,
+            5,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 42.84310340881348,
+            "adjacent_max_ms": 185.29391288757324
+          },
+          "frames": 48,
+          "fps": 6.0,
+          "low1_fps": 5.4,
+          "low5_fps": 5.6,
+          "age_ms": 379,
+          "age_p95_ms": 417,
+          "max_gap_ms": 185,
+          "kbit_s": 256,
+          "rss_client_kb": 2632,
+          "rss_server_kb": 6044,
+          "cpu_client": 0.57,
+          "cpu_server": 2.39
+        },
+        "main-B": {
+          "batch": "06-verylow-bandwidth-i0",
+          "net": "verylow",
+          "scene": "bandwidth",
+          "iteration": 0,
+          "variant": "main-B",
+          "slot": 2,
+          "online_fps": 6.0,
+          "online_frames": 48,
+          "uniform_header_frames": 48,
+          "uniform_header_fps": 6.0,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.0,
+            "complete_pct": 100.0
+          },
+          "per_s": [
+            7,
+            5,
+            6,
+            6,
+            6,
+            6,
+            6,
+            5
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 0.014781951904296875,
+            "adjacent_max_ms": 187.90197372436523
+          },
+          "frames": 48,
+          "fps": 6.0,
+          "low1_fps": 5.3,
+          "low5_fps": 5.4,
+          "age_ms": 380,
+          "age_p95_ms": 407,
+          "max_gap_ms": 188,
+          "kbit_s": 256,
+          "rss_client_kb": 2624,
+          "rss_server_kb": 6056,
+          "cpu_client": 0.57,
+          "cpu_server": 2.23
+        },
+        "candidate": {
+          "batch": "06-verylow-bandwidth-i0",
+          "net": "verylow",
+          "scene": "bandwidth",
+          "iteration": 0,
+          "variant": "candidate",
+          "slot": 3,
+          "online_fps": 6.0,
+          "online_frames": 48,
+          "uniform_header_frames": 48,
+          "uniform_header_fps": 6.0,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.17150029119404028,
+            "complete_pct": 99.82849970880596
+          },
+          "per_s": [
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 18.532991409301758,
+            "adjacent_max_ms": 183.04800987243652
+          },
+          "frames": 48,
+          "fps": 6.0,
+          "low1_fps": 5.5,
+          "low5_fps": 5.5,
+          "age_ms": 380,
+          "age_p95_ms": 411,
+          "max_gap_ms": 183,
+          "kbit_s": 256,
+          "rss_client_kb": 2628,
+          "rss_server_kb": 6084,
+          "cpu_client": 0.57,
+          "cpu_server": 2.37
+        }
+      },
+      "observed_fps_deficits": [
+        {
+          "control": "main-A",
+          "metric": "low5_fps",
+          "candidate": 5.5,
+          "reference": 5.6
+        }
+      ]
+    },
+    {
+      "batch": "07-verylow-bandwidth-i1",
+      "roles": {
+        "main-B": {
+          "batch": "07-verylow-bandwidth-i1",
+          "net": "verylow",
+          "scene": "bandwidth",
+          "iteration": 1,
+          "variant": "main-B",
+          "slot": 0,
+          "online_fps": 5.9,
+          "online_frames": 47,
+          "uniform_header_frames": 47,
+          "uniform_header_fps": 5.9,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.0,
+            "complete_pct": 100.0
+          },
+          "per_s": [
+            6,
+            6,
+            6,
+            6,
+            5,
+            6,
+            6,
+            6
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 66.72859191894531,
+            "adjacent_max_ms": 231.8136692047119
+          },
+          "frames": 47,
+          "fps": 5.9,
+          "low1_fps": 4.3,
+          "low5_fps": 5.6,
+          "age_ms": 383,
+          "age_p95_ms": 426,
+          "max_gap_ms": 232,
+          "kbit_s": 256,
+          "rss_client_kb": 2624,
+          "rss_server_kb": 6044,
+          "cpu_client": 0.55,
+          "cpu_server": 2.08
+        },
+        "candidate": {
+          "batch": "07-verylow-bandwidth-i1",
+          "net": "verylow",
+          "scene": "bandwidth",
+          "iteration": 1,
+          "variant": "candidate",
+          "slot": 1,
+          "online_fps": 5.9,
+          "online_frames": 47,
+          "uniform_header_frames": 47,
+          "uniform_header_fps": 5.9,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.0,
+            "complete_pct": 100.0
+          },
+          "per_s": [
+            6,
+            6,
+            6,
+            6,
+            6,
+            6,
+            5,
+            6
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 140.2454376220703,
+            "adjacent_max_ms": 183.92276763916016
+          },
+          "frames": 47,
+          "fps": 5.9,
+          "low1_fps": 5.4,
+          "low5_fps": 5.5,
+          "age_ms": 384,
+          "age_p95_ms": 401,
+          "max_gap_ms": 184,
+          "kbit_s": 256,
+          "rss_client_kb": 2628,
+          "rss_server_kb": 6060,
+          "cpu_client": 0.56,
+          "cpu_server": 2.11
+        },
+        "ssh": {
+          "batch": "07-verylow-bandwidth-i1",
+          "net": "verylow",
+          "scene": "bandwidth",
+          "iteration": 1,
+          "variant": "ssh",
+          "slot": 2,
+          "online_fps": 2.6,
+          "online_frames": 21,
+          "uniform_header_frames": 21,
+          "uniform_header_fps": 2.6,
+          "visible_state": {
+            "incomplete_pct": 75.21740121679056,
+            "unknown_pct": 0.0,
+            "complete_pct": 24.782598783209426
+          },
+          "per_s": [
+            2,
+            3,
+            3,
+            2,
+            3,
+            2,
+            2,
+            3
+          ],
+          "boundary_gaps": {
+            "first_ms": 151.66592597961426,
+            "last_ms": 155.81870079040527,
+            "adjacent_max_ms": 758.657693862915
+          },
+          "frames": 20,
+          "fps": 2.5,
+          "low1_fps": 1.3,
+          "low5_fps": 1.3,
+          "age_ms": 4092,
+          "age_p95_ms": 7324,
+          "max_gap_ms": 759,
+          "kbit_s": 250,
+          "rss_client_kb": 7560,
+          "rss_server_kb": 19892,
+          "cpu_client": 0.07,
+          "cpu_server": 0.3
+        },
+        "main-A": {
+          "batch": "07-verylow-bandwidth-i1",
+          "net": "verylow",
+          "scene": "bandwidth",
+          "iteration": 1,
+          "variant": "main-A",
+          "slot": 3,
+          "online_fps": 6.0,
+          "online_frames": 48,
+          "uniform_header_frames": 48,
+          "uniform_header_fps": 6.0,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.12696207834733253,
+            "complete_pct": 99.87303792165267
+          },
+          "per_s": [
+            7,
+            5,
+            6,
+            6,
+            6,
+            6,
+            6,
+            6
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 17.220735549926758,
+            "adjacent_max_ms": 185.31441688537598
+          },
+          "frames": 48,
+          "fps": 6.0,
+          "low1_fps": 5.4,
+          "low5_fps": 5.5,
+          "age_ms": 385,
+          "age_p95_ms": 407,
+          "max_gap_ms": 185,
+          "kbit_s": 256,
+          "rss_client_kb": 2640,
+          "rss_server_kb": 6060,
+          "cpu_client": 0.57,
+          "cpu_server": 2.14
+        }
+      },
+      "observed_fps_deficits": [
+        {
+          "control": "main-A",
+          "metric": "fps",
+          "candidate": 5.9,
+          "reference": 6.0
+        },
+        {
+          "control": "main-B",
+          "metric": "low5_fps",
+          "candidate": 5.5,
+          "reference": 5.6
+        }
+      ]
+    },
+    {
+      "batch": "08-slow64k-compress-i0",
+      "roles": {
+        "ssh": {
+          "batch": "08-slow64k-compress-i0",
+          "net": "slow64k",
+          "scene": "compress",
+          "iteration": 0,
+          "variant": "ssh",
+          "slot": 0,
+          "online_fps": 1.5,
+          "online_frames": 12,
+          "uniform_header_frames": 12,
+          "uniform_header_fps": 1.5,
+          "visible_state": {
+            "incomplete_pct": 11.724680090396134,
+            "unknown_pct": 0.0,
+            "complete_pct": 88.27531990960387
+          },
+          "per_s": [
+            2,
+            1,
+            2,
+            1,
+            1,
+            2,
+            1,
+            2
+          ],
+          "boundary_gaps": {
+            "first_ms": 116.0893440246582,
+            "last_ms": 233.7632179260254,
+            "adjacent_max_ms": 798.5527515411377
+          },
+          "frames": 12,
+          "fps": 1.5,
+          "low1_fps": 1.3,
+          "low5_fps": 1.3,
+          "age_ms": 4523,
+          "age_p95_ms": null,
+          "max_gap_ms": 799,
+          "kbit_s": 61,
+          "rss_client_kb": 7560,
+          "rss_server_kb": 19724,
+          "cpu_client": 0.07,
+          "cpu_server": 0.56
+        },
+        "main-A": {
+          "batch": "08-slow64k-compress-i0",
+          "net": "slow64k",
+          "scene": "compress",
+          "iteration": 0,
+          "variant": "main-A",
+          "slot": 1,
+          "online_fps": 15.5,
+          "online_frames": 124,
+          "uniform_header_frames": 124,
+          "uniform_header_fps": 15.5,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.09656351352096279,
+            "complete_pct": 99.90343648647904
+          },
+          "per_s": [
+            15,
+            15,
+            16,
+            16,
+            15,
+            16,
+            16,
+            15
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 44.005632400512695,
+            "adjacent_max_ms": 112.6413345336914
+          },
+          "frames": 124,
+          "fps": 15.5,
+          "low1_fps": 11.1,
+          "low5_fps": 12.6,
+          "age_ms": 166,
+          "age_p95_ms": 380,
+          "max_gap_ms": 113,
+          "kbit_s": 63,
+          "rss_client_kb": 2320,
+          "rss_server_kb": 5592,
+          "cpu_client": 0.57,
+          "cpu_server": 2.43
+        },
+        "main-B": {
+          "batch": "08-slow64k-compress-i0",
+          "net": "slow64k",
+          "scene": "compress",
+          "iteration": 0,
+          "variant": "main-B",
+          "slot": 2,
+          "online_fps": 15.5,
+          "online_frames": 124,
+          "uniform_header_frames": 124,
+          "uniform_header_fps": 15.5,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.48228864618736517,
+            "complete_pct": 99.51771135381263
+          },
+          "per_s": [
+            15,
+            15,
+            16,
+            16,
+            16,
+            15,
+            16,
+            15
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 90.79527854919434,
+            "adjacent_max_ms": 137.41064071655273
+          },
+          "frames": 124,
+          "fps": 15.5,
+          "low1_fps": 9.2,
+          "low5_fps": 12.6,
+          "age_ms": 172,
+          "age_p95_ms": 370,
+          "max_gap_ms": 137,
+          "kbit_s": 63,
+          "rss_client_kb": 2328,
+          "rss_server_kb": 5552,
+          "cpu_client": 0.56,
+          "cpu_server": 2.41
+        },
+        "candidate": {
+          "batch": "08-slow64k-compress-i0",
+          "net": "slow64k",
+          "scene": "compress",
+          "iteration": 0,
+          "variant": "candidate",
+          "slot": 3,
+          "online_fps": 16.1,
+          "online_frames": 129,
+          "uniform_header_frames": 129,
+          "uniform_header_fps": 16.1,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.3686226669369413,
+            "complete_pct": 99.63137733306306
+          },
+          "per_s": [
+            14,
+            15,
+            17,
+            16,
+            16,
+            18,
+            17,
+            16
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 59.81302261352539,
+            "adjacent_max_ms": 182.23309516906738
+          },
+          "frames": 129,
+          "fps": 16.1,
+          "low1_fps": 8.6,
+          "low5_fps": 13.0,
+          "age_ms": 184,
+          "age_p95_ms": 378,
+          "max_gap_ms": 182,
+          "kbit_s": 63,
+          "rss_client_kb": 2320,
+          "rss_server_kb": 5560,
+          "cpu_client": 0.59,
+          "cpu_server": 2.54
+        }
+      },
+      "observed_fps_deficits": [
+        {
+          "control": "main-A",
+          "metric": "low1_fps",
+          "candidate": 8.6,
+          "reference": 11.1
+        },
+        {
+          "control": "main-B",
+          "metric": "low1_fps",
+          "candidate": 8.6,
+          "reference": 9.2
+        }
+      ]
+    },
+    {
+      "batch": "09-slow64k-compress-i1",
+      "roles": {
+        "main-B": {
+          "batch": "09-slow64k-compress-i1",
+          "net": "slow64k",
+          "scene": "compress",
+          "iteration": 1,
+          "variant": "main-B",
+          "slot": 0,
+          "online_fps": 15.6,
+          "online_frames": 125,
+          "uniform_header_frames": 125,
+          "uniform_header_fps": 15.6,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.279691378072947,
+            "complete_pct": 99.72030862192706
+          },
+          "per_s": [
+            15,
+            16,
+            16,
+            16,
+            16,
+            16,
+            16,
+            14
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 55.42302131652832,
+            "adjacent_max_ms": 106.66990280151367
+          },
+          "frames": 125,
+          "fps": 15.6,
+          "low1_fps": 11.6,
+          "low5_fps": 12.8,
+          "age_ms": 169,
+          "age_p95_ms": 373,
+          "max_gap_ms": 107,
+          "kbit_s": 63,
+          "rss_client_kb": 2632,
+          "rss_server_kb": 6040,
+          "cpu_client": 0.45,
+          "cpu_server": 1.77
+        },
+        "candidate": {
+          "batch": "09-slow64k-compress-i1",
+          "net": "slow64k",
+          "scene": "compress",
+          "iteration": 1,
+          "variant": "candidate",
+          "slot": 1,
+          "online_fps": 15.5,
+          "online_frames": 124,
+          "uniform_header_frames": 124,
+          "uniform_header_fps": 15.5,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.0,
+            "complete_pct": 100.0
+          },
+          "per_s": [
+            12,
+            16,
+            16,
+            16,
+            17,
+            15,
+            15,
+            17
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 9.85097885131836,
+            "adjacent_max_ms": 202.10909843444824
+          },
+          "frames": 124,
+          "fps": 15.5,
+          "low1_fps": 5.8,
+          "low5_fps": 12.2,
+          "age_ms": 180,
+          "age_p95_ms": 352,
+          "max_gap_ms": 202,
+          "kbit_s": 63,
+          "rss_client_kb": 2660,
+          "rss_server_kb": 6040,
+          "cpu_client": 0.43,
+          "cpu_server": 1.75
+        },
+        "ssh": {
+          "batch": "09-slow64k-compress-i1",
+          "net": "slow64k",
+          "scene": "compress",
+          "iteration": 1,
+          "variant": "ssh",
+          "slot": 2,
+          "online_fps": 1.5,
+          "online_frames": 12,
+          "uniform_header_frames": 12,
+          "uniform_header_fps": 1.5,
+          "visible_state": {
+            "incomplete_pct": 11.685219048598666,
+            "unknown_pct": 0.0,
+            "complete_pct": 88.31478095140135
+          },
+          "per_s": [
+            2,
+            1,
+            2,
+            1,
+            1,
+            2,
+            1,
+            2
+          ],
+          "boundary_gaps": {
+            "first_ms": 117.9354190826416,
+            "last_ms": 221.98057174682617,
+            "adjacent_max_ms": 812.7312660217285
+          },
+          "frames": 12,
+          "fps": 1.5,
+          "low1_fps": 1.2,
+          "low5_fps": 1.2,
+          "age_ms": 4508,
+          "age_p95_ms": null,
+          "max_gap_ms": 813,
+          "kbit_s": 61,
+          "rss_client_kb": 7568,
+          "rss_server_kb": 19712,
+          "cpu_client": 0.05,
+          "cpu_server": 0.47
+        },
+        "main-A": {
+          "batch": "09-slow64k-compress-i1",
+          "net": "slow64k",
+          "scene": "compress",
+          "iteration": 1,
+          "variant": "main-A",
+          "slot": 3,
+          "online_fps": 15.7,
+          "online_frames": 126,
+          "uniform_header_frames": 126,
+          "uniform_header_fps": 15.7,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.6343100644994054,
+            "complete_pct": 99.36568993550058
+          },
+          "per_s": [
+            15,
+            16,
+            17,
+            14,
+            17,
+            16,
+            15,
+            16
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 89.06793594360352,
+            "adjacent_max_ms": 122.55215644836426
+          },
+          "frames": 126,
+          "fps": 15.7,
+          "low1_fps": 11.0,
+          "low5_fps": 12.3,
+          "age_ms": 163,
+          "age_p95_ms": 375,
+          "max_gap_ms": 123,
+          "kbit_s": 63,
+          "rss_client_kb": 2636,
+          "rss_server_kb": 6008,
+          "cpu_client": 0.46,
+          "cpu_server": 1.75
+        }
+      },
+      "observed_fps_deficits": [
+        {
+          "control": "main-A",
+          "metric": "fps",
+          "candidate": 15.5,
+          "reference": 15.7
+        },
+        {
+          "control": "main-A",
+          "metric": "low1_fps",
+          "candidate": 5.8,
+          "reference": 11.0
+        },
+        {
+          "control": "main-A",
+          "metric": "low5_fps",
+          "candidate": 12.2,
+          "reference": 12.3
+        },
+        {
+          "control": "main-B",
+          "metric": "fps",
+          "candidate": 15.5,
+          "reference": 15.6
+        },
+        {
+          "control": "main-B",
+          "metric": "low1_fps",
+          "candidate": 5.8,
+          "reference": 11.6
+        },
+        {
+          "control": "main-B",
+          "metric": "low5_fps",
+          "candidate": 12.2,
+          "reference": 12.8
+        }
+      ]
+    },
+    {
+      "batch": "10-slow64k-bandwidth-i0",
+      "roles": {
+        "ssh": {
+          "batch": "10-slow64k-bandwidth-i0",
+          "net": "slow64k",
+          "scene": "bandwidth",
+          "iteration": 0,
+          "variant": "ssh",
+          "slot": 0,
+          "online_fps": 0.6,
+          "online_frames": 5,
+          "uniform_header_frames": 5,
+          "uniform_header_fps": 0.6,
+          "visible_state": {
+            "incomplete_pct": 69.9854201814674,
+            "unknown_pct": 0.0,
+            "complete_pct": 30.014579818532596
+          },
+          "per_s": [
+            0,
+            1,
+            1,
+            0,
+            1,
+            1,
+            0,
+            1
+          ],
+          "boundary_gaps": {
+            "first_ms": 1021.9590663909912,
+            "last_ms": 509.4013214111328,
+            "adjacent_max_ms": 1868.0682182312012
+          },
+          "frames": 5,
+          "fps": 0.6,
+          "low1_fps": null,
+          "low5_fps": null,
+          "age_ms": 4844,
+          "age_p95_ms": null,
+          "max_gap_ms": 1868,
+          "kbit_s": 62,
+          "rss_client_kb": 7564,
+          "rss_server_kb": 19900,
+          "cpu_client": 0.07,
+          "cpu_server": 0.33
+        },
+        "main-A": {
+          "batch": "10-slow64k-bandwidth-i0",
+          "net": "slow64k",
+          "scene": "bandwidth",
+          "iteration": 0,
+          "variant": "main-A",
+          "slot": 1,
+          "online_fps": 1.6,
+          "online_frames": 13,
+          "uniform_header_frames": 13,
+          "uniform_header_fps": 1.6,
+          "visible_state": {
+            "incomplete_pct": 26.132577231262733,
+            "unknown_pct": 0.0,
+            "complete_pct": 73.86742276873727
+          },
+          "per_s": [
+            2,
+            1,
+            2,
+            2,
+            1,
+            2,
+            1,
+            2
+          ],
+          "boundary_gaps": {
+            "first_ms": 206.77852630615234,
+            "last_ms": 198.54378700256348,
+            "adjacent_max_ms": 731.2684059143066
+          },
+          "frames": 13,
+          "fps": 1.6,
+          "low1_fps": 1.4,
+          "low5_fps": 1.4,
+          "age_ms": 2041,
+          "age_p95_ms": null,
+          "max_gap_ms": 731,
+          "kbit_s": 63,
+          "rss_client_kb": 2648,
+          "rss_server_kb": 6064,
+          "cpu_client": 0.21,
+          "cpu_server": 1.83
+        },
+        "main-B": {
+          "batch": "10-slow64k-bandwidth-i0",
+          "net": "slow64k",
+          "scene": "bandwidth",
+          "iteration": 0,
+          "variant": "main-B",
+          "slot": 2,
+          "online_fps": 1.5,
+          "online_frames": 12,
+          "uniform_header_frames": 12,
+          "uniform_header_fps": 1.5,
+          "visible_state": {
+            "incomplete_pct": 45.44963107911816,
+            "unknown_pct": 0.0,
+            "complete_pct": 54.55036892088183
+          },
+          "per_s": [
+            2,
+            1,
+            2,
+            1,
+            1,
+            2,
+            1,
+            2
+          ],
+          "boundary_gaps": {
+            "first_ms": 207.0009708404541,
+            "last_ms": 16.461610794067383,
+            "adjacent_max_ms": 753.974437713623
+          },
+          "frames": 12,
+          "fps": 1.5,
+          "low1_fps": 1.3,
+          "low5_fps": 1.3,
+          "age_ms": 1008,
+          "age_p95_ms": null,
+          "max_gap_ms": 754,
+          "kbit_s": 64,
+          "rss_client_kb": 2652,
+          "rss_server_kb": 6024,
+          "cpu_client": 0.3,
+          "cpu_server": 1.78
+        },
+        "candidate": {
+          "batch": "10-slow64k-bandwidth-i0",
+          "net": "slow64k",
+          "scene": "bandwidth",
+          "iteration": 0,
+          "variant": "candidate",
+          "slot": 3,
+          "online_fps": 1.5,
+          "online_frames": 12,
+          "uniform_header_frames": 12,
+          "uniform_header_fps": 1.5,
+          "visible_state": {
+            "incomplete_pct": 42.24286871242614,
+            "unknown_pct": 0.0,
+            "complete_pct": 57.75713128757386
+          },
+          "per_s": [
+            2,
+            1,
+            1,
+            2,
+            1,
+            2,
+            1,
+            1
+          ],
+          "boundary_gaps": {
+            "first_ms": 202.65579223632812,
+            "last_ms": 718.1084156036377,
+            "adjacent_max_ms": 760.3919506072998
+          },
+          "frames": 11,
+          "fps": 1.4,
+          "low1_fps": 1.3,
+          "low5_fps": 1.3,
+          "age_ms": 1045,
+          "age_p95_ms": null,
+          "max_gap_ms": 760,
+          "kbit_s": 64,
+          "rss_client_kb": 2652,
+          "rss_server_kb": 6064,
+          "cpu_client": 0.3,
+          "cpu_server": 1.65
+        }
+      },
+      "observed_fps_deficits": [
+        {
+          "control": "main-A",
+          "metric": "fps",
+          "candidate": 1.4,
+          "reference": 1.6
+        },
+        {
+          "control": "main-A",
+          "metric": "low1_fps",
+          "candidate": 1.3,
+          "reference": 1.4
+        },
+        {
+          "control": "main-A",
+          "metric": "low5_fps",
+          "candidate": 1.3,
+          "reference": 1.4
+        },
+        {
+          "control": "main-B",
+          "metric": "fps",
+          "candidate": 1.4,
+          "reference": 1.5
+        }
+      ]
+    },
+    {
+      "batch": "11-slow64k-bandwidth-i1",
+      "roles": {
+        "main-B": {
+          "batch": "11-slow64k-bandwidth-i1",
+          "net": "slow64k",
+          "scene": "bandwidth",
+          "iteration": 1,
+          "variant": "main-B",
+          "slot": 0,
+          "online_fps": 1.6,
+          "online_frames": 13,
+          "uniform_header_frames": 13,
+          "uniform_header_fps": 1.6,
+          "visible_state": {
+            "incomplete_pct": 26.213848526339127,
+            "unknown_pct": 0.0,
+            "complete_pct": 73.78615147366087
+          },
+          "per_s": [
+            2,
+            1,
+            2,
+            2,
+            1,
+            2,
+            1,
+            2
+          ],
+          "boundary_gaps": {
+            "first_ms": 202.98147201538086,
+            "last_ms": 192.33036041259766,
+            "adjacent_max_ms": 730.7209968566895
+          },
+          "frames": 13,
+          "fps": 1.6,
+          "low1_fps": 1.4,
+          "low5_fps": 1.4,
+          "age_ms": 2048,
+          "age_p95_ms": null,
+          "max_gap_ms": 731,
+          "kbit_s": 63,
+          "rss_client_kb": 2628,
+          "rss_server_kb": 6088,
+          "cpu_client": 0.2,
+          "cpu_server": 1.57
+        },
+        "candidate": {
+          "batch": "11-slow64k-bandwidth-i1",
+          "net": "slow64k",
+          "scene": "bandwidth",
+          "iteration": 1,
+          "variant": "candidate",
+          "slot": 1,
+          "online_fps": 1.6,
+          "online_frames": 13,
+          "uniform_header_frames": 13,
+          "uniform_header_fps": 1.6,
+          "visible_state": {
+            "incomplete_pct": 25.200510769516672,
+            "unknown_pct": 0.0,
+            "complete_pct": 74.79948923048333
+          },
+          "per_s": [
+            2,
+            1,
+            2,
+            2,
+            1,
+            2,
+            1,
+            2
+          ],
+          "boundary_gaps": {
+            "first_ms": 203.8593292236328,
+            "last_ms": 221.08078002929688,
+            "adjacent_max_ms": 720.3712463378906
+          },
+          "frames": 13,
+          "fps": 1.6,
+          "low1_fps": 1.4,
+          "low5_fps": 1.4,
+          "age_ms": 1684,
+          "age_p95_ms": null,
+          "max_gap_ms": 720,
+          "kbit_s": 63,
+          "rss_client_kb": 2624,
+          "rss_server_kb": 6108,
+          "cpu_client": 0.2,
+          "cpu_server": 1.57
+        },
+        "ssh": {
+          "batch": "11-slow64k-bandwidth-i1",
+          "net": "slow64k",
+          "scene": "bandwidth",
+          "iteration": 1,
+          "variant": "ssh",
+          "slot": 2,
+          "online_fps": 0.6,
+          "online_frames": 5,
+          "uniform_header_frames": 5,
+          "uniform_header_fps": 0.6,
+          "visible_state": {
+            "incomplete_pct": 68.52233115236331,
+            "unknown_pct": 0.0,
+            "complete_pct": 31.477668847636693
+          },
+          "per_s": [
+            0,
+            1,
+            1,
+            0,
+            1,
+            0,
+            1,
+            0
+          ],
+          "boundary_gaps": {
+            "first_ms": 1025.352954864502,
+            "last_ms": 1869.530200958252,
+            "adjacent_max_ms": 1941.8442249298096
+          },
+          "frames": 4,
+          "fps": 0.5,
+          "low1_fps": null,
+          "low5_fps": null,
+          "age_ms": 3973,
+          "age_p95_ms": null,
+          "max_gap_ms": 1942,
+          "kbit_s": 60,
+          "rss_client_kb": 7548,
+          "rss_server_kb": 19844,
+          "cpu_client": 0.04,
+          "cpu_server": 0.28
+        },
+        "main-A": {
+          "batch": "11-slow64k-bandwidth-i1",
+          "net": "slow64k",
+          "scene": "bandwidth",
+          "iteration": 1,
+          "variant": "main-A",
+          "slot": 3,
+          "online_fps": 1.6,
+          "online_frames": 13,
+          "uniform_header_frames": 13,
+          "uniform_header_fps": 1.6,
+          "visible_state": {
+            "incomplete_pct": 38.50250677911767,
+            "unknown_pct": 0.0,
+            "complete_pct": 61.49749322088234
+          },
+          "per_s": [
+            1,
+            1,
+            2,
+            2,
+            1,
+            2,
+            1,
+            1
+          ],
+          "boundary_gaps": {
+            "first_ms": 203.45044136047363,
+            "last_ms": 627.211332321167,
+            "adjacent_max_ms": 1274.2021083831787
+          },
+          "frames": 11,
+          "fps": 1.4,
+          "low1_fps": 0.8,
+          "low5_fps": 0.8,
+          "age_ms": 1590,
+          "age_p95_ms": null,
+          "max_gap_ms": 1274,
+          "kbit_s": 63,
+          "rss_client_kb": 2632,
+          "rss_server_kb": 6104,
+          "cpu_client": 0.23,
+          "cpu_server": 1.67
+        }
+      },
+      "observed_fps_deficits": []
+    }
+  ],
+  "actual_window_kst": [
+    "2026-11-01T04:50:43.613920+09:00",
+    "2026-11-01T04:54:08.264775+09:00"
+  ],
+  "resource_units": {
+    "kbit_s": "whole client non-loopback received bytes / scene seconds, decimal kbit/s; not bidirectional sum",
+    "rss": "midpoint process-name sums in KiB; not peak/session total",
+    "cpu": "transport process/thread scheduler percent of one core; source/observer Python excluded"
+  },
+  "limits": [
+    "No independent whole48terminal/emulator replay; saved oracle validity and complete-frame arithmetic audited, not GPU/allterminal presentation proof",
+    "Uninstrumented combined controller: no branch activation or causal attribution to transit/probe60/CAN or additive component effect",
+    "Static core/slow two-scene/two-evaluation comparison; no moving/fullmatrix promotion or fixed acceptance tolerance",
+    "Raw transport RX/CPU counter endpoints and RSS samples are not separately saved: resource verification covers raw-result-to-summary-to-CSV identity and formula/unit source review, not independent counter remeasurement",
+    "Data validity and artifact isolation do not establish final candidate selection",
+    "Age is conditional on completed body frames, not input/held-screen/GPU latency",
+    "CPU30 is admission only; runtime CPU/process values retained context; no P-core affinity proof"
+  ],
+  "script_sha256": "e6c81f3b2b973ab134dd96b7f37e6de046901420c759156a8513b16f02f559fc"
+}

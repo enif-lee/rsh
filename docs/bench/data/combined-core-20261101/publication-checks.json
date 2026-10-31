@@ -1,0 +1,14 @@
+{
+  "records": 48,
+  "parallel": 4,
+  "evaluations": 2,
+  "body_frames": 21530,
+  "offline_header_frames": 21550,
+  "raw_capture_source_hashes": 96,
+  "independent_source_hash_checks": 48,
+  "independent_capture_hash_checks": 48,
+  "resource_scope": "Saved-derived values/units, not unretained counter endpoints",
+  "raw_partial_body_states_preserved": true,
+  "primary_criteria": "1%/5%/average FPS group; CPU/RSS secondary; no automatic veto/weights",
+  "new_terminal_or_benchmark_runs_in_publication": 0
+}

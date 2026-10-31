@@ -716,6 +716,12 @@ compares positive sub-millisecond polling against the CAN-fixed baseline.
 All 16 jobs retain 60 FPS averages; tails are mixed against baseline and
 below SSH. This is not a full-matrix or causal wait-improvement claim.
 
+The [combined transit/probe comparison](docs/bench/combined-20261101.md)
+uses CAN-fixed references and the same RAM/geometry method in both static
+screens. Dashboard FPS gains, age costs, mixed tails and partial-body
+observations remain separate; the evidence does not imply global SSH parity
+or automatic policy promotion.
+
 ## References
 
 The [README references](README.md#references) identify the papers and

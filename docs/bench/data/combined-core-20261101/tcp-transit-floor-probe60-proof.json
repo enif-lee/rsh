@@ -1,0 +1,30 @@
+{
+  "status": "source_only_prepared_not_built_or_tested",
+  "parent": "tcp-transit-floor-source",
+  "canonical_files": 25,
+  "full_files": 31,
+  "changed_files": [
+    "src/proto.rs"
+  ],
+  "production_changed_lines": 1,
+  "added_test_module": "tcp_transit_floor_probe60_tests",
+  "fixture_tests": 4,
+  "fixture_bytes_exact": true,
+  "fixture_sha256": "9c46f9e7382f385c38bed51d3143320968f82f457ce4e2a684976cb483eee428",
+  "reverse_canonical25_exact_far": true,
+  "reverse_full31_exact_far": true,
+  "existing_far_gate_unchanged": true,
+  "server_bytes_unchanged": true,
+  "no_new_state_api_options_or_near_predicate": true,
+  "production_scope": "Extra0.6 branch only when Sender.lossless istrue; current production set_lossless call sites apply to server output, client input remainsfalse0.8",
+  "tests_executed": 0,
+  "builds": 0,
+  "docker_calls": 0,
+  "performance_runs": 0,
+  "combined_fps_benefit_unproven": true,
+  "parent_manifest_sha256": "4e2dc5fa4b906ef9bc1c32e514e3b72255957d9664636522b04f558b5f00d08c",
+  "parent_full_manifest_sha256": "201f57f3e40e1aa46152e7ff070d22a26e64f8f558d749c932b5800cf8a6f3e5",
+  "source_manifest_sha256": "140c603c3e813317182c306c7340f888054d20b0e53d3e4bb01d583927e86c69",
+  "source_full_manifest_sha256": "1fff20693ff6a9d989d1a98d13ee2fa1a6d5e7a14e2f2bd804929ccf64eaa758",
+  "patch_sha256": "c1ef13456938b8bb5bd868e3783d78fb5ea4936d19ee9de202c7f668b434c502"
+}

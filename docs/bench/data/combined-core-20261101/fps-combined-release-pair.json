@@ -1,0 +1,100 @@
+{
+  "at": 1793475629.629857,
+  "artifacts": [
+    {
+      "variant": "baseline",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-fps-combined-pair-main",
+      "sha256": "c68e0f735c3015813bbdea4588d994a21a6d3fdb863b0e4ea8cfb91ea384a136",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/diff-cancel-source",
+      "source_build_id": "93533574fffa",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "manifest_entries": 31,
+      "source_manifest_sha256": "bbe5381a50213758ccdf0ccb1cc2872a1ffa4157dca0399c5bc2ab4ea74e9103",
+      "guard_output": "verified build 93533574fffa: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-fps-combined-pair-main"
+    },
+    {
+      "variant": "candidate",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-fps-combined",
+      "sha256": "7198d2edab91d7e624b61612a87405119287bf5360ca6f93ac1ce7ae2afb7263",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/tcp-transit-floor-probe60-cancel-source",
+      "source_build_id": "94f28a7b3b13",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "manifest_entries": 25,
+      "source_manifest_sha256": "834557b9d804860ae3257edfc08a686a940f49721299dfd0725b624c03aec06c",
+      "guard_output": "verified build 94f28a7b3b13: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-fps-combined\nverified build 94f28a7b3b13: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/fps-combined-tests",
+      "full_inventory_entries": 31,
+      "source_full_manifest_sha256": "eb39d0444b31f87b42d54f2e811784f5bacb1124a0eb07dd4f6852efe7dfa282"
+    }
+  ],
+  "same_container_sequential_build": true,
+  "compiler_image": "sha256:b1d5dd5a22a09404d3e798c0cf051b689077360374eb505fa5bb93c479693d87",
+  "CARGO_HOME": "/cargo",
+  "build_path": "/src",
+  "apk_manifest_sha256": "d99b2de6a1a883172b2f814cd7ca03534ae3c72bbd1111ca3604ebc3914ca185",
+  "cargo_artifacts": {
+    "fps-combined-control-tests-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "0",
+        "debuginfo": 2,
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "test": true
+      },
+      "executable": "/target/debug/deps/rsh-a4e873949d566604"
+    },
+    "fps-combined-release-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "executable": "/target/release/rsh"
+    },
+    "fps-combined-tests-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "0",
+        "debuginfo": 2,
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "test": true
+      },
+      "executable": "/target/debug/deps/rsh-a4e873949d566604"
+    },
+    "fps-combined-pair-main-release-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "executable": "/target/release/rsh"
+    }
+  },
+  "tests": {
+    "library_passed": 110,
+    "ignored": 2,
+    "targeted_fixtures_observed_passing_within_full_suite": 14,
+    "standalone_targeted_rerun": false
+  },
+  "control": {
+    "policy": "oldfarCAN with same4probe60fixtures",
+    "passed": 3,
+    "expected_failed": 1,
+    "expected_failure": "proto::tcp_transit_floor_probe60_tests::tcp_probe60_grows_at_seventy_percent_only_on_tcp",
+    "guard": "verified build 045dd2764aad: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/fps-combined-control-tests\n",
+    "log_sha256": "aa674966c6d1a68d2447e8f72dad9468f71700a10fe3bff1d64c4f3574bf1519"
+  },
+  "build_log_sha256": "17e8371fce7d3da0cea5bda547a49e2668bf0319a260cc43173d763338a00c70",
+  "build_script_sha256": "f5388775aa5df8329e14997df2836455fa4c432aa1090ce2476f2a7faaa725e4",
+  "source_reverse_proof_sha256": "ec1d113c6338dd26b9cb3367369e80c9bef7a8ae0a9c8afe515d54412019f4cc",
+  "scope": "CAN-main935 commonbaseline byteidentical; measuredfloor>=20ms transit + broad0.6 TCP-output exploration + sharedCAN. No submswait/near condition/newoptions. Full110 includes14targetfixtures; noextra14rerun. FunctionalpassnotFPSbenefit/no-regression proof. Notinstalled/adopted/performanceunrun."
+}
