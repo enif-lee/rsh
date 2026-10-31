@@ -1,0 +1,48 @@
+{
+  "run": "41-fps-final-slow-cpu30-screen",
+  "study_number": 41,
+  "audit_stem": "final41",
+  "title": "Final TCP recovery \u00b7 slow",
+  "figure_prefix": "final-tcp-slow",
+  "candidate": "combined295f",
+  "nets": [
+    "lowbw",
+    "verylow",
+    "slow64k"
+  ],
+  "net_labels": [
+    "1 Mbit/s",
+    "256 kbit/s",
+    "64 kbit/s"
+  ],
+  "pipeline": "source-ram-signal-schema2",
+  "expected_jobs": 48,
+  "expected_blocks": 12,
+  "performance_eligible": true,
+  "provenance": [
+    "pty-account-release-pair.json",
+    "pty-name-account-source-manifest.json",
+    "pty-name-account-source-full-manifest.json",
+    "fps-combined-pty-account-source-manifest.json",
+    "fps-combined-pty-account-source-full-manifest.json",
+    "pty-name-account-proof.json",
+    "fps-combined-pty-account-proof.json",
+    "pty-name-account.patch",
+    "fps-combined-pty-account.patch",
+    "pty-account-hypothesis.md",
+    "build-pty-account-pair.sh",
+    "pty-account-pair-apk-packages.txt",
+    "build-pty-account-pair.log",
+    "pty-name-account-library-tests.log",
+    "pty-name-account-binary_cli-tests.log",
+    "pty-name-account-session-tests.log",
+    "pty-name-account-pty_concurrency-tests.log",
+    "fps-combined-pty-account-library-tests.log",
+    "fps-combined-pty-account-binary_cli-tests.log",
+    "fps-combined-pty-account-session-tests.log",
+    "fps-combined-pty-account-pty_concurrency-tests.log",
+    "pty-name-account-guard.log",
+    "fps-combined-pty-account-guard.log",
+    "pty-account-macos-final-tests.log"
+  ]
+}

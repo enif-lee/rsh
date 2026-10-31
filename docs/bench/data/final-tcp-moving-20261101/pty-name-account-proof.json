@@ -1,0 +1,32 @@
+{
+  "status": "source_only_v2_prepared_not_built_or_tested",
+  "parent": "pty-name-source",
+  "canonical_files": 31,
+  "full_files": 91,
+  "changed_files": [
+    "src/pty.rs"
+  ],
+  "reverse_all_parent_bytes_exact": true,
+  "production_change": "Portable POSIX getpwuid_r with private passwd and c_char buffer; sysconf positive size else16384; ERANGE checked double/retry; owned copies before bufferdrop; no globalmutex",
+  "error_fallback": "nonERANGE error/resultNULL/reservation failure/sizeoverflow retain existingENV defaults then unchanged shell/home checks",
+  "ptsname_r_linux_and_nonlinux_v1_paths_unchanged": true,
+  "concurrency64_fixture_unchanged": true,
+  "bash_fixture_unchanged": true,
+  "controller_bytes_unchanged": true,
+  "fixture_sha256": "9ae8e82e989e069b9ac5272b9aab79c65f9c5daf13cbf44018642a508a6c7805",
+  "bash_fixture_sha256": "501eab050323ea071af50b4cc404bca56ef9203843cd9a902601e1345800f7cf",
+  "contract": "https://man7.org/linux/man-pages/man3/getpwnam.3.html",
+  "v1_failure_log_sha256": "5770f00c9806588b09bcc49437d601205d2a0d2f371b8371d609a3b4368e1194",
+  "original_attach_failure_causality_claimed": false,
+  "v1_wrong_sync_lifecycle": "ObservedBusyBoxsync-c/status256 isconsistent with invalid passwd shellcopy; selectedshellpath/interleaving notlogged so exactcause remains inference",
+  "tests_executed": 0,
+  "builds": 0,
+  "docker_calls": 0,
+  "performance_runs": 0,
+  "linux_and_macos_compile_pending": true,
+  "parent_manifest_sha256": "d7fea30e91034f39cd6789966e896cf63de3b9f522031d7486763957c473c9fd",
+  "parent_full_manifest_sha256": "e06a057a423bb5ab9eab36c32f874562c6a51a0d456cbfb455cd59b131f74fd3",
+  "source_manifest_sha256": "63fc7bb537988d9517be0c9b3f1a001c94ccfb5aa7d7ea8776d43f18df506b1d",
+  "source_full_manifest_sha256": "90e464b42ec1ea612fc531ca6f1dcb3a25ab2fd467cbb1206465ab674dcc5005",
+  "patch_sha256": "c9c70a5cda5bf9ab7344731ac51b8c00558465e1f85925fef7644d2e3e17cfec"
+}

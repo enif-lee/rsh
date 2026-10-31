@@ -1,0 +1,52 @@
+--- a/src/pty.rs
++++ b/src/pty.rs
+@@ -299,19 +299,37 @@
+     let mut home = std::env::var("HOME").unwrap_or_else(|_| "/".to_string());
+     let mut shell = std::env::var("SHELL").unwrap_or_else(|_| "/bin/sh".to_string());
+     unsafe {
+-        let pw = libc::getpwuid(libc::geteuid());
+-        if !pw.is_null() {
+-            if let Some(value) = c_string((*pw).pw_name) {
+-                name = value;
+-            }
+-            if let Some(value) = c_string((*pw).pw_dir) {
+-                home = value;
+-            }
+-            if let Some(value) = c_string((*pw).pw_shell) {
+-                if !value.is_empty() {
+-                    shell = value;
++        let suggested = libc::sysconf(libc::_SC_GETPW_R_SIZE_MAX);
++        let mut size = if suggested > 0 { suggested as usize } else { 16_384 };
++        let mut buf = Vec::<libc::c_char>::new();
++        let uid = libc::geteuid();
++        loop {
++            if buf.try_reserve(size - buf.len()).is_err() {
++                break;
++            }
++            buf.resize(size, 0);
++            let mut pw: libc::passwd = std::mem::zeroed();
++            let mut result = std::ptr::null_mut();
++            let error = libc::getpwuid_r(uid, &mut pw, buf.as_mut_ptr(), buf.len(), &mut result);
++            if error == libc::ERANGE {
++                let Some(next) = size.checked_mul(2) else { break };
++                size = next;
++                continue;
++            }
++            if error == 0 && !result.is_null() {
++                if let Some(value) = c_string(pw.pw_name) {
++                    name = value;
+                 }
+-            }
++                if let Some(value) = c_string(pw.pw_dir) {
++                    home = value;
++                }
++                if let Some(value) = c_string(pw.pw_shell) {
++                    if !value.is_empty() {
++                        shell = value;
++                    }
++                }
++            }
++            break;
+         }
+     }
+     if shell.is_empty() || !std::path::Path::new(&shell).exists() {

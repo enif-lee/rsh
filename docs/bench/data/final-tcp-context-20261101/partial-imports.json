@@ -1,0 +1,26 @@
+{
+  "scope": "Exact saved partial analysis copies, descriptive only; incomplete matrix, no new independent raw audit. Same safe-PTY reference4f98/c25 and combined295f/fb04 cohort.",
+  "performance_eligible": false,
+  "files": {
+    "44-fps-final-loss-cpu30-screen/acceptance-per-rep.csv": {
+      "public": "study44-acceptance-per-rep.csv",
+      "sha256": "62e8ddeeea05cf906e824bf6a4609227412928805846ab2adc113fd4b2b0aba1",
+      "bytes": 3781
+    },
+    "44-fps-final-loss-cpu30-screen/analysis-partial.log": {
+      "public": "study44-analysis-partial.log",
+      "sha256": "5166cc5ad80404bd7860e70c877e22137a6f732f48add30f09d1ce93b01cccb2",
+      "bytes": 289
+    },
+    "46-badmobile-retry/acceptance-per-rep.csv": {
+      "public": "study46-acceptance-per-rep.csv",
+      "sha256": "a84086a1026abf6b15d4ead704e0d67e40b6d63765496837b4e77fb313c3f4c7",
+      "bytes": 641
+    },
+    "46-badmobile-retry/analysis-partial.log": {
+      "public": "study46-analysis-partial.log",
+      "sha256": "f83f9f2a6bf434efb6f9fc1ecf2bd9b8427597512a4aa97afebbb8cde80ff4ff",
+      "bytes": 352
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "at": 1793482664.4678998,
+  "source_sha256": "5ba58e25c59bbaddab5c37bcfc5ed78eb9591960fc7fedf15c409face31fea17",
+  "worker_sha256": "c5e4c3d1ca5f8d347be6bb1edffedec1b3873e453508007ed538910b6ef61f87",
+  "compiler_image": "sha256:b1d5dd5a22a09404d3e798c0cf051b689077360374eb505fa5bb93c479693d87",
+  "build_script_sha256": "b622b7a3882c5f434f7ae9ac0256f8c85e4353be316b8b5e5733cad70ee8a1f4",
+  "build_log_sha256": "3ef4b2409a844ed08be0c8f136da54b55483b582647b7f3fe7432186bc2b5c78",
+  "apk_manifest_sha256": "91d98350426024493532e42ffcd83d2e4311e82f58f3f5fd0689c0515de25c11",
+  "original_prepared_sha256": "68307cafdddd756b77eee9d70a0e5846a5adee7e877ae5373ccc6b1d42e64b5b",
+  "active_prepared_sha256": "0b86bcd82e84be693dc33a67e06cf694c2012929cbfb322ee29f695250375e78",
+  "controller_sha256": "afeeb5c4b0637c50bee079bd155c79a0286c24d1c1d98280520282a850c94142",
+  "change": "copied controller-built, only actual WORKER_SHA literal and prepared hash changed; originals untouched",
+  "timing_only": true,
+  "timing_fidelity_accepted": false,
+  "performance_accepted": false
+}

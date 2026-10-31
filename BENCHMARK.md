@@ -722,6 +722,14 @@ screens. Dashboard FPS gains, age costs, mixed tails and partial-body
 observations remain separate; the evidence does not imply global SSH parity
 or automatic policy promotion.
 
+The [final CAN+PTY-fixed TCP comparison](docs/bench/final-tcp-20261101.md)
+adds 96 eligible static observations and 16 separate descriptive moving
+records. Average/1%/5% FPS remain primary, with traffic/RSS/CPU and fresh
+recovery alongside. Dashboard gains do not remove LAN or high-RTT random
+deficits. Moving retains all 28 ACK bounds and unapproved timing fidelity;
+incomplete loss screens and connection-only checks remain separate.
+No global parity or release adoption is claimed.
+
 ## References
 
 The [README references](README.md#references) identify the papers and
