@@ -1,0 +1,1 @@
+{"run":"26-observer-core-cpu30-screen","title":"Fixed main · observer comparison","figure_prefix":"observer-cpu30","nets":["lan","wan","highlat"],"net_labels":["LAN","RTT 100 ms","RTT 300 ms"],"pipeline":"legacy-post-write-ledger","roles":["ssh","main-A","main-B","main-C"],"modes":["legacy","raw-only"]}

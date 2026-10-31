@@ -686,6 +686,12 @@ admission with runtime load recorded as context. These experiments are separate
 from the [TCP batch candidate](docs/bench/tcp-batch-20261030.md) and do not
 replace the published full-suite measurements above.
 
+The separate [live observer comparison](docs/bench/observer-20261101.md)
+keeps the product fixed across 96 observations. Disabling post-anchor live
+emulation had mixed effects and left slow replicas; it does not establish a
+product gain or universal SSH parity. Both modes use offline complete-body
+metrics, with two evaluations retained separately.
+
 ## References
 
 The [README references](README.md#references) identify the papers and
