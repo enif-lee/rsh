@@ -673,6 +673,16 @@ python3 benchmark/lab/lab.py demo --tools ssh,mosh,rsh --events '' \
   --nets moving --scenes compress,bandwidth --fps 60 --duration 60
 ```
 
+## Development investigations
+
+The [2026-10-31 TCP low-tail investigation](docs/bench/lowtail-20261031.md)
+reports the four-worker, two-evaluation core screen separately, including
+per-repetition FPS/lows, received traffic and sampled client/server RSS charts.
+Neither prototype met full acceptance: transit improved the 100 ms dashboard
+but retained LAN tail deficits. These experiments are separate from the
+[TCP batch candidate](docs/bench/tcp-batch-20261030.md) and does not replace the
+published full-suite measurements above.
+
 ## References
 
 The [README references](README.md#references) identify the papers and
