@@ -640,16 +640,16 @@ python3 benchmark/lab/lab.py run --tools ssh,et,mosh,rsh \
 
 ### Next full measurement
 
-Published benchmarks always use **four parallel jobs** (the default),
-**three repeats per case**, and **one sessions repeat** (`--session-iterations`).
-Development checks use `--iterations 1 --parallel 8`; their results are kept
-separate from published comparisons. The recorded
-tables above retain their actual four-job, six-screen-repeat conditions.
+New performance measurements use **four parallel jobs** and **two evaluations
+per case**, including sessions, for both development and publication. These
+defaults reflect the host's four performance cores, without claiming physical
+core affinity. Historical datasets remain separate. The recorded tables above
+retain their actual four-job, six-screen-repeat conditions.
 For the next measurement, run the static command above once with
-`--parallel 4`; omit the extra screen-only repeat. Run the sessions command
-with `--session-iterations 1 --parallel 4`. This retains all five static
+`--iterations 2 --parallel 4`; omit the extra screen-only repeat. Run the sessions command
+with `--session-iterations 2 --parallel 4`. This retains all five static
 transports, nine links, both scenes and the same observation durations:
-750 static jobs plus four memory jobs, rather than 1,178 jobs.
+500 static jobs plus eight memory jobs, rather than 1,178 jobs.
 
 The [twelve-worker validation](docs/bench/parallel12-20261029.md) completed
 the same 750-job, three-repeat static batch in **11.02 minutes**, versus

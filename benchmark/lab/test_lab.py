@@ -28,18 +28,18 @@ class RunScheduleTests(unittest.TestCase):
             lab.main()
             return run.call_args.args[0]
 
-    def test_default_full_matrix_has_three_repeats_and_one_memory_sample(self):
+    def test_default_full_matrix_has_four_workers_and_two_repeats_per_case(self):
         opts = self.options(
             "--tests", "render,switch,echo,flood,outage,roam,reattach,udpblock,sessions",
             "--nets", "lan,wan,lowbw,verylow,slow64k,highlat,lossy,mobile,badmobile",
             "--switches", "lan:highlat,lan:lowbw,lowbw:highlat,highlat:lossy,wan:verylow")
         self.assertEqual(opts.parallel, 4)
         jobs = lab.jobs_of(opts)
-        self.assertEqual(len(jobs), 755)
-        self.assertEqual(sum(j["test"] == "render" for j in jobs), 270)
-        self.assertEqual(sum(j["test"] == "switch" for j in jobs), 150)
-        self.assertEqual([j["iteration"] for j in jobs if j["test"] == "sessions"], [0] * 5)
-        self.assertEqual({j["iteration"] for j in jobs if j["test"] != "sessions"}, {0, 1, 2})
+        self.assertEqual(len(jobs), 510)
+        self.assertEqual(sum(j["test"] == "render" for j in jobs), 180)
+        self.assertEqual(sum(j["test"] == "switch" for j in jobs), 100)
+        self.assertEqual([j["iteration"] for j in jobs if j["test"] == "sessions"], [0] * 5 + [1] * 5)
+        self.assertEqual({j["iteration"] for j in jobs}, {0, 1})
 
     def test_memory_repeats_can_exceed_the_other_repeats(self):
         opts = self.options("--tools", "ssh,rsh", "--tests", "echo,sessions", "--nets", "lan",

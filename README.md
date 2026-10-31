@@ -281,13 +281,15 @@ Run render and link-switch tests:
 python3 benchmark/lab/lab.py run --tools ssh,mosh,rsh \
   --tests render,switch --nets lan,wan,lowbw,highlat \
   --switches lan:lowbw,lowbw:highlat \
-  --scenes compress,bandwidth --fps 60 --duration 8 --iterations 3 --parallel 4
+  --scenes compress,bandwidth --fps 60 --duration 8 --iterations 2 --parallel 4
 ```
 
-Published benchmarks always use four parallel jobs (the default), with
-three repeats per case. Development checks use `--iterations 1 --parallel 8`;
-their results are kept separate from published comparisons.
-The `sessions` test defaults to one repeat; `--session-iterations` overrides it.
+Performance measurements use four parallel jobs and two evaluations per case,
+including session memory, in both development and published comparisons.
+These defaults reflect the measurement host's four performance cores; they do
+not pin processes to physical cores. Historical measurements retain their
+recorded concurrency and repeat counts and are kept separate from new runs.
+`--session-iterations` overrides the session-memory repeat count.
 
 The [twelve-worker validation](docs/bench/parallel12-20261029.md) shortened
 the matched 750-job batch from 33.17 to 11.02 minutes. It compares the same
