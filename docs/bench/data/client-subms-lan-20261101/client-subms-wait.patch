@@ -1,0 +1,19 @@
+--- a/src/client.rs
++++ b/src/client.rs
+@@ -667,6 +667,16 @@
+         ];
+         forwarder.pollfds(&mut fds);
+         unsafe {
++            #[cfg(target_os = "linux")]
++            {
++                if !wait.is_zero() && wait < Duration::from_millis(1) {
++                    let timeout = libc::timespec { tv_sec: 0, tv_nsec: wait.subsec_nanos() as libc::c_long };
++                    libc::ppoll(fds.as_mut_ptr(), fds.len() as libc::nfds_t, &timeout, std::ptr::null());
++                } else {
++                    libc::poll(fds.as_mut_ptr(), fds.len() as libc::nfds_t, wait.as_millis().max(1) as i32);
++                }
++            }
++            #[cfg(not(target_os = "linux"))]
+             libc::poll(fds.as_mut_ptr(), fds.len() as libc::nfds_t, wait.as_millis().max(1) as i32);
+         }
+         let now = Instant::now();

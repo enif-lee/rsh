@@ -1,0 +1,40 @@
+[
+  {
+    "variant": "main-A",
+    "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-client-subms-wait-pair-main",
+    "sha256": "c68e0f735c3015813bbdea4588d994a21a6d3fdb863b0e4ea8cfb91ea384a136",
+    "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/diff-cancel-source",
+    "source_build_id": "93533574fffa",
+    "source_build_verified": true,
+    "source_manifest_unchanged": true,
+    "manifest_entries": 31,
+    "source_manifest_sha256": "bbe5381a50213758ccdf0ccb1cc2872a1ffa4157dca0399c5bc2ab4ea74e9103",
+    "guard_output": "verified build 93533574fffa: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-client-subms-wait-pair-main",
+    "reference_scope": "CAN-fixed main935/c68, notunfixedmain"
+  },
+  {
+    "variant": "main-B",
+    "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-client-subms-wait-pair-main",
+    "sha256": "c68e0f735c3015813bbdea4588d994a21a6d3fdb863b0e4ea8cfb91ea384a136",
+    "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/diff-cancel-source",
+    "source_build_id": "93533574fffa",
+    "source_build_verified": true,
+    "source_manifest_unchanged": true,
+    "manifest_entries": 31,
+    "source_manifest_sha256": "bbe5381a50213758ccdf0ccb1cc2872a1ffa4157dca0399c5bc2ab4ea74e9103",
+    "guard_output": "verified build 93533574fffa: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-client-subms-wait-pair-main",
+    "reference_scope": "CAN-fixed main935/c68, notunfixedmain"
+  },
+  {
+    "variant": "candidate",
+    "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-client-subms-wait",
+    "sha256": "91e765718f4cd60cc716071fee753181e81427ad468c330e85d8c7cdc01d92cb",
+    "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/client-subms-wait-source",
+    "source_build_id": "ca0abbd5fc40",
+    "source_build_verified": true,
+    "source_manifest_unchanged": true,
+    "manifest_entries": 31,
+    "source_manifest_sha256": "e176d8d53bf98927fa276d667ad79b280e8b1d2f374dde8b1e876b7e6013943d",
+    "guard_output": "verified build ca0abbd5fc40: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-client-subms-wait\nverified build ca0abbd5fc40: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/client-subms-wait-tests"
+  }
+]

@@ -711,6 +711,11 @@ shown beside adjacent-gap lows. CAN interoperability controls and focused
 follow-ups are separate from adaptive-policy promotion; no global parity or
 resource-only veto is inferred.
 
+A [focused LAN client-wait follow-up](docs/bench/client-subms-20261101.md)
+compares positive sub-millisecond polling against the CAN-fixed baseline.
+All 16 jobs retain 60 FPS averages; tails are mixed against baseline and
+below SSH. This is not a full-matrix or causal wait-improvement claim.
+
 ## References
 
 The [README references](README.md#references) identify the papers and

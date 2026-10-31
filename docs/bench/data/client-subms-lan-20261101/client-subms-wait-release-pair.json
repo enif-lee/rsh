@@ -1,0 +1,78 @@
+{
+  "at": 1793474388.462452,
+  "artifacts": [
+    {
+      "variant": "baseline",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-client-subms-wait-pair-main",
+      "sha256": "c68e0f735c3015813bbdea4588d994a21a6d3fdb863b0e4ea8cfb91ea384a136",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/diff-cancel-source",
+      "source_build_id": "93533574fffa",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "manifest_entries": 31,
+      "source_manifest_sha256": "bbe5381a50213758ccdf0ccb1cc2872a1ffa4157dca0399c5bc2ab4ea74e9103",
+      "guard_output": "verified build 93533574fffa: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-client-subms-wait-pair-main"
+    },
+    {
+      "variant": "candidate",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-client-subms-wait",
+      "sha256": "91e765718f4cd60cc716071fee753181e81427ad468c330e85d8c7cdc01d92cb",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/client-subms-wait-source",
+      "source_build_id": "ca0abbd5fc40",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "manifest_entries": 31,
+      "source_manifest_sha256": "e176d8d53bf98927fa276d667ad79b280e8b1d2f374dde8b1e876b7e6013943d",
+      "guard_output": "verified build ca0abbd5fc40: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-client-subms-wait\nverified build ca0abbd5fc40: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/client-subms-wait-tests"
+    }
+  ],
+  "compiler_image": "sha256:b1d5dd5a22a09404d3e798c0cf051b689077360374eb505fa5bb93c479693d87",
+  "same_container_sequential_build": true,
+  "CARGO_HOME": "/cargo",
+  "build_path": "/src",
+  "apk_manifest_sha256": "d99b2de6a1a883172b2f814cd7ca03534ae3c72bbd1111ca3604ebc3914ca185",
+  "cargo_artifacts": {
+    "client-subms-wait-tests-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "0",
+        "debuginfo": 2,
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "test": true
+      },
+      "executable": "/target/debug/deps/rsh-a4e873949d566604"
+    },
+    "client-subms-wait-pair-main-release-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "executable": "/target/release/rsh"
+    },
+    "client-subms-wait-release-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "executable": "/target/release/rsh"
+    }
+  },
+  "tests": {
+    "targeted_CAN_passed": 3,
+    "library_passed": 99,
+    "ignored": 2
+  },
+  "build_log_sha256": "8bbd134d73aabb49757e561d2e19b1834fef089e36c40249c050cb402eadb342",
+  "build_script_sha256": "769bcf4787df05fa2c85676f4ddf2f486e1f602cc96e1eea19e193fbd2931c8c",
+  "source_reverse_proof_sha256": "8bc7aa08682c015a980e684d49f728ebdbfd5b69cff7935c6486947d92b54047",
+  "scope": "CAN-mainbaseline935 byteidentical; client Linuxpositive subms onlyppoll, overdue/large/nonLinuxoldpoll. ExistingCANtestsnotwait-specific; librarypassnotproofwakeprecision/FDtiming/performance. Notinstalled/adopted; actualperformanceunrun."
+}
