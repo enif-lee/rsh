@@ -416,6 +416,13 @@ core and slow-network screens. Some FPS gains accompany mixed lows and older
 received frames at 1 Mbit/s; the candidate remains unselected. Functional
 trace clues are separate from these performance comparisons.
 
+The subsequent [near-floor probe study](docs/bench/probe60-near-20261101.md)
+reports another separate core/slow comparison. FPS/lows are primary and
+CPU/RSS secondary; dashboard deficits and freshness costs remain visible.
+Overall gains may justify individual metric costs; the candidate is currently
+unselected while that tradeoff is evaluated. Cross-run observations are not a
+causal proof of a fix.
+
 ## References
 
 The [README references](README.md#references) identify the papers and

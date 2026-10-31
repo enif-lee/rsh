@@ -1,0 +1,94 @@
+{
+  "at": 1793467063.828516,
+  "artifacts": [
+    {
+      "variant": "baseline",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-probe60-near-pair-main",
+      "sha256": "9ab79c22ebd289047ffa616a5e8aef3c7d9f2498756b5974ae5a74b2d0ecb463",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/main-source",
+      "source_build_id": "6729d398d4f1",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "source_manifest_sha256": "691ce46870af026e614a960844f821580d0486ce4d7c551ee27041b3cd1d6c39",
+      "guard_output": "verified build 6729d398d4f1: rsh-probe60-near-pair-main"
+    },
+    {
+      "variant": "candidate",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-tcp-probe60-near",
+      "sha256": "ad375f1c3b91ac72bfa24d1cb7211ffd7717ace32c392c55c819292730f61ad8",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/tcp-probe60-near-source",
+      "source_build_id": "b6f26c518f1f",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "source_manifest_sha256": "922975eb50c263866552a20319c2d93fb91fb0033298fbaf51d6b027a583a1bc",
+      "guard_output": "verified build b6f26c518f1f: rsh-tcp-probe60-near\nverified build b6f26c518f1f: tcp-probe60-near-tests"
+    }
+  ],
+  "same_container_sequential_build": true,
+  "compiler_image": "sha256:b1d5dd5a22a09404d3e798c0cf051b689077360374eb505fa5bb93c479693d87",
+  "CARGO_HOME": "/cargo",
+  "build_path": "/src",
+  "apk_manifest_sha256": "d99b2de6a1a883172b2f814cd7ca03534ae3c72bbd1111ca3604ebc3914ca185",
+  "cargo_artifacts": {
+    "probe60-near-pair-main-release-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "executable": "/target/release/rsh"
+    },
+    "probe60-near-tests-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "0",
+        "debuginfo": 2,
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "test": true
+      },
+      "executable": "/target/debug/deps/rsh-a4e873949d566604"
+    },
+    "tcp-probe60-near-release-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "executable": "/target/release/rsh"
+    },
+    "probe60-near-control-tests-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "0",
+        "debuginfo": 2,
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "test": true
+      },
+      "executable": "/target/debug/deps/rsh-a4e873949d566604"
+    }
+  },
+  "tests": {
+    "targeted_passed": 7,
+    "library_passed": 103,
+    "ignored": 2
+  },
+  "control": {
+    "policy": "broadprobe60 with identical7fixtures",
+    "passed": 6,
+    "expected_failed": 1,
+    "expected_failure": "tcp_probe60_near_rejects_extra_growth_with_one_later_packet",
+    "test_log_sha256": "670d6627acc679a29c72147b784295fa06346f00a2436ef5e362a826e2acd613",
+    "guard": "verified build ea24a93c365b: tcp-probe60-near-control-tests\n"
+  },
+  "build_log_sha256": "49e4735a6ffd4a3d4a4a02bd84a6d30528a13bd6e867bdbd2bdbca2123ba5d16",
+  "build_script_sha256": "1923b80d5350d774d1cc48f371db213fef63c976f643ec0b7b17bc99bd782555",
+  "scope": "Uninstrumented main versus near-floor-only extra0.6 server-outputTCP probe; old0.8 retained. Sevenunitfixtures, not promoted, not installed, performance unrun. Current-ACK witness is not interval demand/physical zero-queue proof."
+}
