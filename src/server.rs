@@ -1803,7 +1803,9 @@ impl State {
             attach.ack_at = None;
         }
         if is_tcp_addr(attach.addr) {
-            tcp.send_batch(&batch, attach.addr);
+            for packet in &batch {
+                tcp.send(packet, attach.addr);
+            }
         } else {
             crate::net::send_all(socket, attach.addr, &batch);
             if let Some(path) = attach.path.as_mut() {
