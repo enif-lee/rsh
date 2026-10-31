@@ -1,0 +1,461 @@
+[
+  {
+    "variant": "main-A",
+    "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-fps-combined-pty-account",
+    "sha256": "fb04386fdfe25f25f1bfd0354f11ba7a01c954525a11634ae35caafd46c2eec4",
+    "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/fps-combined-pty-account-source",
+    "source_build_id": "295f81d54ea4",
+    "source_build_verified": true,
+    "source_manifest_unchanged": true,
+    "snapshot_manifest_entries": 25,
+    "source_manifest_sha256": "bcb90ebadd5770b6659c5fb6107772db5738e30426c38355dc4a26ebc37a796c",
+    "full_inventory_entries": 32,
+    "source_full_manifest_sha256": "27320c01d284830245feed20138497347f233bf55ceac2c148c742b3bac12235",
+    "guard_output": "verified build 295f81d54ea4: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-fps-combined-pty-account\nverified build 295f81d54ea4: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/fps-combined-pty-account-library-tests",
+    "functional_tests": {
+      "library": {
+        "passed": 110,
+        "ignored": 2,
+        "log_sha256": "938c179b887ec81d9d5b1b67d90de6728551b7755d8124234e3527fc4d2c81a1"
+      },
+      "binary_cli": {
+        "passed": 4,
+        "ignored": 0,
+        "log_sha256": "b7bb262b666b33b93b120d5d1298944dbe89c87c69e8a9acaa778f532ca2b63c"
+      },
+      "session": {
+        "passed": 25,
+        "ignored": 0,
+        "log_sha256": "fe442769b7c431babd9c9923d476c68a4b6f781a4743250f68eaa807810c0739"
+      },
+      "pty_concurrency": {
+        "passed": 1,
+        "ignored": 0,
+        "log_sha256": "5c4f37fb46e3c7d2990b5b4c82c727cb999546e0bb8288c7efda81c12815bfc1"
+      }
+    },
+    "functional_total_passed": 140,
+    "concurrency_child_spawns": 64,
+    "cargo_root_artifacts": {
+      "all-tests-build.jsonl": [
+        {
+          "name": "pty_concurrency",
+          "kind": [
+            "test"
+          ],
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": true
+          },
+          "fresh": false,
+          "executable": "/target/debug/deps/pty_concurrency-72e082953d31c37e"
+        },
+        {
+          "name": "rsh",
+          "kind": [
+            "bin"
+          ],
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": true
+          },
+          "fresh": false,
+          "executable": "/target/debug/deps/rsh-ffba42ccfca42a15"
+        },
+        {
+          "name": "binary_cli",
+          "kind": [
+            "test"
+          ],
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": true
+          },
+          "fresh": false,
+          "executable": "/target/debug/deps/binary_cli-499ca979f2f3fc6b"
+        },
+        {
+          "name": "session",
+          "kind": [
+            "test"
+          ],
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": true
+          },
+          "fresh": false,
+          "executable": "/target/debug/deps/session-7a5d2366fdc3fcc5"
+        },
+        {
+          "name": "rsh",
+          "kind": [
+            "bin"
+          ],
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          },
+          "fresh": false,
+          "executable": "/target/debug/rsh"
+        },
+        {
+          "name": "rsh",
+          "kind": [
+            "lib"
+          ],
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": true
+          },
+          "fresh": false,
+          "executable": "/target/debug/deps/rsh-a4e873949d566604"
+        }
+      ],
+      "release-build.jsonl": [
+        {
+          "name": "rsh",
+          "kind": [
+            "bin"
+          ],
+          "profile": {
+            "opt_level": "3",
+            "debuginfo": 0,
+            "debug_assertions": false,
+            "overflow_checks": false,
+            "test": false
+          },
+          "fresh": false,
+          "executable": "/target/release/rsh"
+        }
+      ]
+    },
+    "reference_scope": "Duplicate COMBINED final295f/fb04 baseline for cadence48 margin ablation; inherited main-A/B labels do not mean actual main4f98"
+  },
+  {
+    "variant": "main-B",
+    "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-fps-combined-pty-account",
+    "sha256": "fb04386fdfe25f25f1bfd0354f11ba7a01c954525a11634ae35caafd46c2eec4",
+    "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/fps-combined-pty-account-source",
+    "source_build_id": "295f81d54ea4",
+    "source_build_verified": true,
+    "source_manifest_unchanged": true,
+    "snapshot_manifest_entries": 25,
+    "source_manifest_sha256": "bcb90ebadd5770b6659c5fb6107772db5738e30426c38355dc4a26ebc37a796c",
+    "full_inventory_entries": 32,
+    "source_full_manifest_sha256": "27320c01d284830245feed20138497347f233bf55ceac2c148c742b3bac12235",
+    "guard_output": "verified build 295f81d54ea4: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-fps-combined-pty-account\nverified build 295f81d54ea4: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/fps-combined-pty-account-library-tests",
+    "functional_tests": {
+      "library": {
+        "passed": 110,
+        "ignored": 2,
+        "log_sha256": "938c179b887ec81d9d5b1b67d90de6728551b7755d8124234e3527fc4d2c81a1"
+      },
+      "binary_cli": {
+        "passed": 4,
+        "ignored": 0,
+        "log_sha256": "b7bb262b666b33b93b120d5d1298944dbe89c87c69e8a9acaa778f532ca2b63c"
+      },
+      "session": {
+        "passed": 25,
+        "ignored": 0,
+        "log_sha256": "fe442769b7c431babd9c9923d476c68a4b6f781a4743250f68eaa807810c0739"
+      },
+      "pty_concurrency": {
+        "passed": 1,
+        "ignored": 0,
+        "log_sha256": "5c4f37fb46e3c7d2990b5b4c82c727cb999546e0bb8288c7efda81c12815bfc1"
+      }
+    },
+    "functional_total_passed": 140,
+    "concurrency_child_spawns": 64,
+    "cargo_root_artifacts": {
+      "all-tests-build.jsonl": [
+        {
+          "name": "pty_concurrency",
+          "kind": [
+            "test"
+          ],
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": true
+          },
+          "fresh": false,
+          "executable": "/target/debug/deps/pty_concurrency-72e082953d31c37e"
+        },
+        {
+          "name": "rsh",
+          "kind": [
+            "bin"
+          ],
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": true
+          },
+          "fresh": false,
+          "executable": "/target/debug/deps/rsh-ffba42ccfca42a15"
+        },
+        {
+          "name": "binary_cli",
+          "kind": [
+            "test"
+          ],
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": true
+          },
+          "fresh": false,
+          "executable": "/target/debug/deps/binary_cli-499ca979f2f3fc6b"
+        },
+        {
+          "name": "session",
+          "kind": [
+            "test"
+          ],
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": true
+          },
+          "fresh": false,
+          "executable": "/target/debug/deps/session-7a5d2366fdc3fcc5"
+        },
+        {
+          "name": "rsh",
+          "kind": [
+            "bin"
+          ],
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          },
+          "fresh": false,
+          "executable": "/target/debug/rsh"
+        },
+        {
+          "name": "rsh",
+          "kind": [
+            "lib"
+          ],
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": true
+          },
+          "fresh": false,
+          "executable": "/target/debug/deps/rsh-a4e873949d566604"
+        }
+      ],
+      "release-build.jsonl": [
+        {
+          "name": "rsh",
+          "kind": [
+            "bin"
+          ],
+          "profile": {
+            "opt_level": "3",
+            "debuginfo": 0,
+            "debug_assertions": false,
+            "overflow_checks": false,
+            "test": false
+          },
+          "fresh": false,
+          "executable": "/target/release/rsh"
+        }
+      ]
+    },
+    "reference_scope": "Duplicate COMBINED final295f/fb04 baseline for cadence48 margin ablation; inherited main-A/B labels do not mean actual main4f98"
+  },
+  {
+    "source_build_id": "ea6c0df76a70",
+    "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-cadence48",
+    "sha256": "e34a2fc46a1b10ec69cebb155a50958a52b70b2aa86205ff5458ad8f02a7aa45",
+    "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/48-tcp-cadence-margin-source",
+    "source_build_verified": true,
+    "source_manifest_unchanged": true,
+    "source_manifest_sha256": "594b013cad77bdf779b1a236140b782d296fd90da8832da288d82250aa64674d",
+    "source_full_manifest_sha256": "2cb6be544a37f7c4c9e19c022eeac172e033fd75aac56af282b05d0ac0148c7c",
+    "snapshot_manifest_entries": 25,
+    "full_inventory_entries": 32,
+    "guard_output": "verified build ea6c0df76a70: rsh-cadence48\nverified build ea6c0df76a70: cadence48-library-tests\n",
+    "functional_tests": {
+      "library": {
+        "passed": 113,
+        "failed": 0,
+        "ignored": 2,
+        "log": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence48-library-tests.log",
+        "log_sha256": "618e0f85d222539d019f496df67c65ee500f3e82a2d428d38cc480d4660418c9"
+      },
+      "binary_cli": {
+        "passed": 4,
+        "failed": 0,
+        "ignored": 0,
+        "log": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence48-binary_cli-tests.log",
+        "log_sha256": "edd9b47d0ced5cf8edc527e692d58be005ddbba16a5a411a6c5002318ddc3877"
+      },
+      "session": {
+        "passed": 25,
+        "failed": 0,
+        "ignored": 0,
+        "log": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence48-session-tests.log",
+        "log_sha256": "f6393be209879e06c0a20ac72e014e32630694bd63589a07e3c19fb0586f2097"
+      },
+      "pty_concurrency": {
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "log": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence48-pty_concurrency-tests.log",
+        "log_sha256": "5c4f37fb46e3c7d2990b5b4c82c727cb999546e0bb8288c7efda81c12815bfc1"
+      }
+    },
+    "functional_total_passed": 143,
+    "ignored": 2,
+    "cargo_root_artifacts": {
+      "cadence48-all-tests-build.jsonl": [
+        {
+          "target": "pty_concurrency",
+          "kind": [
+            "test"
+          ],
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": true
+          },
+          "fresh": false,
+          "executable": "/target/debug/deps/pty_concurrency-72e082953d31c37e"
+        },
+        {
+          "target": "rsh",
+          "kind": [
+            "bin"
+          ],
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": false
+          },
+          "fresh": false,
+          "executable": "/target/debug/rsh"
+        },
+        {
+          "target": "rsh",
+          "kind": [
+            "bin"
+          ],
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": true
+          },
+          "fresh": false,
+          "executable": "/target/debug/deps/rsh-ffba42ccfca42a15"
+        },
+        {
+          "target": "binary_cli",
+          "kind": [
+            "test"
+          ],
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": true
+          },
+          "fresh": false,
+          "executable": "/target/debug/deps/binary_cli-499ca979f2f3fc6b"
+        },
+        {
+          "target": "rsh",
+          "kind": [
+            "lib"
+          ],
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": true
+          },
+          "fresh": false,
+          "executable": "/target/debug/deps/rsh-a4e873949d566604"
+        },
+        {
+          "target": "session",
+          "kind": [
+            "test"
+          ],
+          "profile": {
+            "opt_level": "0",
+            "debuginfo": 2,
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "test": true
+          },
+          "fresh": false,
+          "executable": "/target/debug/deps/session-7a5d2366fdc3fcc5"
+        }
+      ],
+      "cadence48-release-build.jsonl": [
+        {
+          "target": "rsh",
+          "kind": [
+            "bin"
+          ],
+          "profile": {
+            "opt_level": "3",
+            "debuginfo": 0,
+            "debug_assertions": false,
+            "overflow_checks": false,
+            "test": false
+          },
+          "fresh": false,
+          "executable": "/target/release/rsh"
+        }
+      ]
+    },
+    "compiler_image": "sha256:b1d5dd5a22a09404d3e798c0cf051b689077360374eb505fa5bb93c479693d87",
+    "flags_asserted_empty_in_build_script": true,
+    "variant": "candidate"
+  }
+]

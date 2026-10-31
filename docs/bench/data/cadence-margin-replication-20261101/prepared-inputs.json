@@ -1,0 +1,15 @@
+{
+  "run.py": "4fcf9abe069eff0c81134a0fa06074ffe890b7728a2fd3067b283859100ebfd6",
+  "schedule.json": "046883ea0a0fa26a58f913dac00d53af39bb08285e7477b2d25626a4ba39d63d",
+  "artifact-identities.json": "a9abcd40e06bdc53e813d1c7c09b1da777a6d5895fcbe0777ca37d63353a057a",
+  "paired-build-provenance.json": "58555a80bdb8ef9cde6e17e73cdd62efdc336f15495eecec836f022561f55085",
+  "plan.json": "1690fd42f76be3a47a631ba4f922b500b5df50ff9f16c48ba9db212d1a5565d6",
+  "harness/manifest.json": "834f77fc33d6217f9f2d40b0f383040692ca973f1b52903412eb20924c1a5374",
+  "parent-input-identities.json": "e838ab045cde70e551029bb1480d5738fdf39d915b996724a67fefc29b58a709",
+  "verification-summary.json": "2dbefe1d267a6c04bdd0d086fb74ac7a6da3a8f153d34edc2bc4a5785f0cbd6f",
+  "preparation.patch": "b8dee8782590911c6786a2277f0b53e92a50e70970d7f6278ccb0e5eb0a2b62e",
+  "READY.md": "3b88ca8ccb5466ad2703a622558022e67f6deb9be3d7eb1440cf4e0dc4213de0",
+  "test-contract.py": "c943b73e9c9466a9e62fc4e0eafb6630d517ab4ef572d96a58c38fb4b08556a2",
+  "pure-contract-tests.log": "3578c3788523c23bc5304d92561d86740c653adbbff8f117da9c070154096464",
+  "pure-contract-tests-first.log": "87d44d4be80a07d97348dfeda95b45dc27c23e7000a2097bc49bde3fd11c3291"
+}

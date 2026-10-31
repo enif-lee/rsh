@@ -1,0 +1,17 @@
+{
+  "status": "source_only_unbuilt_untested",
+  "parent": "fps-combined-pty-account-source",
+  "parent_build_id": "295f81d54ea4",
+  "canonical_files": 25,
+  "full_files": 32,
+  "only_changed_file": "src/server.rs",
+  "only_change": "exact candidate48 test fixture suffix; parent production unchanged",
+  "fixture_sha256": "08c1e0a9bb5eecd34bd04819b5d12bea8cef39667d992a898a2fbe175f293783",
+  "production_exact_parent": true,
+  "reverse_all_parent_bytes_exact": true,
+  "planned_unsalted_build_id": "72e051a3f7a2",
+  "expected_target_plan": "one boundary fixture expected failure, two unchanged-scope fixtures expected pass; not observed",
+  "builds": 0,
+  "tests": 0,
+  "Docker": 0
+}

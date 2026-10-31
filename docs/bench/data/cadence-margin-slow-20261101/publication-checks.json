@@ -1,0 +1,11 @@
+{
+  "jobs": 48,
+  "body_frames": 8673,
+  "primary": "1%low/5%low/avgFPS",
+  "resource_scope": "Saved-job/summary/CSV consistency, not independent raw endpoint counter reconstruction.",
+  "new_benchmarks": 0,
+  "raw_payload_replays": 0,
+  "raw_hashes_imported": true,
+  "source_pair": "Reused295f baseline; separately built ea6c candidate; no new same-container pair.",
+  "selection": null
+}

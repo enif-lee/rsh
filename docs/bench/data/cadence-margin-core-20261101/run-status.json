@@ -1,0 +1,21 @@
+{
+ "accepted_host_phases": 12,
+ "completed_jobs": 48,
+ "accepted_guard_jobs": 48,
+ "expected_jobs": 48,
+ "status": "measurement_finished_analysis_pending",
+ "completed_blocks": [
+  "00-lan-compress-i0",
+  "01-lan-compress-i1",
+  "02-lan-bandwidth-i0",
+  "03-lan-bandwidth-i1",
+  "04-wan-compress-i0",
+  "05-wan-compress-i1",
+  "06-wan-bandwidth-i0",
+  "07-wan-bandwidth-i1",
+  "08-highlat-compress-i0",
+  "09-highlat-compress-i1",
+  "10-highlat-bandwidth-i0",
+  "11-highlat-bandwidth-i1"
+ ]
+}

@@ -31,7 +31,7 @@ def export(fig,suffix,preview):
     if preview:fig.savefig(HERE/('preview-'+suffix+'.png'),dpi=110)
     plt.close(fig)
 def fps(preview):
-    fig,axes=plt.subplots(2,len(CONFIG['nets']),figsize=(13 if len(CONFIG['nets'])==3 else 8,7),sharey=CONFIG['nets']!=['lowbw','verylow','slow64k'],squeeze=False)
+    fig,axes=plt.subplots(2,len(CONFIG['nets']),figsize=(13,7),sharey=CONFIG['nets']!=['lowbw','verylow','slow64k'],squeeze=False)
     for si,scene in enumerate(('compress','bandwidth')):
         for ni,net in enumerate(CONFIG['nets']):
             ax=axes[si,ni]
@@ -61,7 +61,7 @@ def resources(preview):
     legend(fig);fig.tight_layout(rect=(0,.055,1,.93));export(fig,'resources',preview)
 
 def age(preview):
-    fig,axes=plt.subplots(2,len(CONFIG['nets']),figsize=(13 if len(CONFIG['nets'])==3 else 8,7),squeeze=False)
+    fig,axes=plt.subplots(2,len(CONFIG['nets']),figsize=(13,9),squeeze=False)
     for si,scene in enumerate(('compress','bandwidth')):
         for ni,net in enumerate(CONFIG['nets']):
             ax=axes[si,ni]
@@ -77,7 +77,7 @@ def age(preview):
             if ni==0:ax.set_ylabel('Generation-to-read age (ms, log scale)')
             style(ax)
     fig.suptitle(CONFIG['title']+' · source generation to complete-body read\nAge samples include detected body matches only; unmatched remainder is unrepresented\nNot RTT/input/GPU latency · missing p95 omitted',fontsize=13)
-    legend(fig);fig.tight_layout(rect=(0,.065,1,.92));export(fig,'age',preview)
+    legend(fig);fig.legends[-1].set_bbox_to_anchor((.5,.035));fig.tight_layout(rect=(0,.16,1,.92));export(fig,'age',preview)
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--preview',action='store_true');args=parser.parse_args()

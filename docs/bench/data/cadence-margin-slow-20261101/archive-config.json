@@ -1,0 +1,52 @@
+{
+  "run": "51-cadence48-slow-cpu30-screen",
+  "study_number": 51,
+  "audit_stem": "cadence51",
+  "title": "TCP cadence margin \u00b7 slow",
+  "figure_prefix": "cadence-margin-slow",
+  "candidate": "margin48ea6c",
+  "nets": [
+    "lowbw",
+    "verylow",
+    "slow64k"
+  ],
+  "net_labels": [
+    "1 Mbit/s",
+    "256 kbit/s",
+    "64 kbit/s"
+  ],
+  "pipeline": "source-ram-signal-schema2",
+  "expected_jobs": 48,
+  "expected_blocks": 12,
+  "performance_eligible": true,
+  "provenance": [
+    "fps-combined-pty-account-source-manifest.json",
+    "fps-combined-pty-account-source-full-manifest.json",
+    "48-tcp-cadence-margin-source-manifest.json",
+    "48-tcp-cadence-margin-source-full-manifest.json",
+    "48-tcp-cadence-margin-proof.json",
+    "48-tcp-cadence-margin.patch",
+    "48-tcp-cadence-margin-tests.rs",
+    "48-tcp-cadence-margin-control-proof.json",
+    "48-tcp-cadence-margin-control-source-manifest.json",
+    "48-tcp-cadence-margin-control-source-full-manifest.json",
+    "build-cadence48.sh",
+    "cadence48-apk-packages.txt",
+    "cadence48-guards.log",
+    "cadence48-build.log",
+    "cadence48-all-tests-build.jsonl",
+    "cadence48-release-build.jsonl",
+    "cadence48-library-tests.log",
+    "cadence48-binary_cli-tests.log",
+    "cadence48-session-tests.log",
+    "cadence48-pty_concurrency-tests.log",
+    "cadence48-control-build.log",
+    "cadence48-control-library-tests.log",
+    "cadence48-control-guards.log",
+    "cadence48-control-tests-build.jsonl",
+    "fps-combined-pty-account-library-tests.log",
+    "fps-combined-pty-account-binary_cli-tests.log",
+    "fps-combined-pty-account-session-tests.log",
+    "fps-combined-pty-account-pty_concurrency-tests.log"
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "status": "ROOT_BUILT_GUARDED_LIBRARY_TESTED_NOT_RUN",
+  "artifacts": [
+    {
+      "variant": "main-trace-A",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-cadence52-baseline",
+      "sha256": "8e34ee21cbf693b78a57470f0e1d8a7f8863a199651302f2995a78d2bc5fac96",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/52-lowbw-cadence-trace/baseline-source",
+      "source_build_id": "9621a9ce4e8a",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "source_manifest_sha256": "f11743719d2b410c6879c68475e3819068d94f2fce15d2f25ff12c78145b1dfa",
+      "snapshot_manifest_entries": 26,
+      "reference_scope": "Duplicate COMBINED295f traced baseline, not actualmain4f98",
+      "status": "ROOT_BUILT_SOURCE_GUARDED_LIBRARY_TESTED_NOT_RUN"
+    },
+    {
+      "variant": "main-trace-B",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-cadence52-baseline",
+      "sha256": "8e34ee21cbf693b78a57470f0e1d8a7f8863a199651302f2995a78d2bc5fac96",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/52-lowbw-cadence-trace/baseline-source",
+      "source_build_id": "9621a9ce4e8a",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "source_manifest_sha256": "f11743719d2b410c6879c68475e3819068d94f2fce15d2f25ff12c78145b1dfa",
+      "snapshot_manifest_entries": 26,
+      "reference_scope": "Duplicate COMBINED295f traced baseline, not actualmain4f98",
+      "status": "ROOT_BUILT_SOURCE_GUARDED_LIBRARY_TESTED_NOT_RUN"
+    },
+    {
+      "variant": "margin-trace",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-cadence52-margin",
+      "sha256": "f249750268a3dd34c122042aa1a6ed6eee2f72160174dc2e2cd4157a31b3e753",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/52-lowbw-cadence-trace/margin-source",
+      "source_build_id": "e8a3f8def09b",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "source_manifest_sha256": "6c10914513bc4779df8f9c3c082bd45ab5b16c3b6046388c25de04b46ed1d3f3",
+      "snapshot_manifest_entries": 26,
+      "reference_scope": "Only product48 cadence margin; common actual-gap diagnostic",
+      "status": "ROOT_BUILT_SOURCE_GUARDED_LIBRARY_TESTED_NOT_RUN"
+    }
+  ],
+  "actual_tests": {
+    "baseline": {
+      "library_passed": 112,
+      "library_ignored": 2,
+      "library_failed": 0,
+      "scope": "root actual library executable; no CLI/session/concurrency execution for these traced sources"
+    },
+    "margin": {
+      "library_passed": 112,
+      "library_ignored": 2,
+      "library_failed": 0,
+      "scope": "root actual library executable; no CLI/session/concurrency execution for these traced sources"
+    }
+  },
+  "same_environment_pair_verified": true,
+  "pair_scope": "Sequential baseline and margin copies in one root-owned pinned compiler container; root script clears crate dev/release artifacts and rejects flags/salt. Both sources have identical recorder/schema except product48 margin.",
+  "compiler": {
+    "rustc": "1.99.1 (58cf8f9c3 2026-10-13)",
+    "target": "aarch64-unknown-linux-musl",
+    "cargo": "1.99.1 (5f94df478 2026-08-27)"
+  },
+  "evidence": {
+    "build-cadence52.sh": {
+      "path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/build-cadence52.sh",
+      "sha256": "b8168f22ce01f3ff342e199aacf1e2c7463792dcc0f0ba96857d600f827ab9e8"
+    },
+    "cadence52-build.log": {
+      "path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence52-build.log",
+      "sha256": "8cc5d43ac5915234027e88dca280ef4e784d4b6b20cdd17dec7966ef53b6da12"
+    },
+    "cadence52-guards.log": {
+      "path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence52-guards.log",
+      "sha256": "1934b46d9e928bbcb6793bf0d314388cac42797250e18ad6a6b84489065d5d4d"
+    },
+    "cadence52-apk-packages.txt": {
+      "path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence52-apk-packages.txt",
+      "sha256": "d99b2de6a1a883172b2f814cd7ca03534ae3c72bbd1111ca3604ebc3914ca185"
+    },
+    "cadence52-baseline-tests-build.jsonl": {
+      "path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence52-baseline-tests-build.jsonl",
+      "sha256": "b0756581eced79e59859aa8252549a5d4c84839b23ce17807d949bf802f68051"
+    },
+    "cadence52-baseline-release-build.jsonl": {
+      "path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence52-baseline-release-build.jsonl",
+      "sha256": "bbb978321c0a0b56dc13bb6f87d762dad5aefffa5a3c933a9ec917b0c08646c5"
+    },
+    "cadence52-baseline-library-tests": {
+      "path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence52-baseline-library-tests",
+      "sha256": "7679482175e9fb607a3d6eed1b013a18bb29be8841e0376b8294d216cd35443e"
+    },
+    "cadence52-baseline-library-tests.log": {
+      "path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence52-baseline-library-tests.log",
+      "sha256": "4225812f2eec191f5ca5dbfdfd5f4d343dd139118898c1adc06eda4258ad0062"
+    },
+    "cadence52-margin-tests-build.jsonl": {
+      "path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence52-margin-tests-build.jsonl",
+      "sha256": "c8ec50ac3bad92fd811ef3d2c85aa240a829c98108e018349bb3230a38ba9c2d"
+    },
+    "cadence52-margin-release-build.jsonl": {
+      "path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence52-margin-release-build.jsonl",
+      "sha256": "57e31b7e490490a69b962d1a6face95cff29483eae0a49a0ba94913fc8fa4985"
+    },
+    "cadence52-margin-library-tests": {
+      "path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence52-margin-library-tests",
+      "sha256": "c82194be74888196b8e8ea1056c064db25a68515666a9591e41274a15c8d6132"
+    },
+    "cadence52-margin-library-tests.log": {
+      "path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence52-margin-library-tests.log",
+      "sha256": "f6574afd254b5eded54e0e7dc2d471030bc3e74e4a7e14182b03e4ead0fa8bb4"
+    }
+  },
+  "historical_source_prep": {
+    "path": "source-prep/prepared-inputs.json",
+    "sha256": "faa750f2725f431085e95e8ba917f7db1752b66cc621bd18c2b24931182fc661"
+  }
+}

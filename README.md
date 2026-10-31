@@ -46,7 +46,7 @@ raw measurements, aggregation rules and collection failures.
 
 ### TCP development measurements · November 1
 
-The [latest TCP controller report](docs/bench/final-tcp-20261101.md) compares
+The [TCP controller report](docs/bench/final-tcp-20261101.md) compares
 CAN+PTY-fixed reference `4f98` and combined `295f`, separately from released UDP
 results above. Four parallel jobs, two evaluations; cells are **avg / 1% low /
 5% low FPS**. RX is client kbit/s; RSS is client+server midpoint MiB.
@@ -68,6 +68,11 @@ full report retains both identical references and every evaluation/age cost.
 Its separate moving records show newer-frame recovery and lower FPS than
 SSH, with timing fidelity unapproved.
 
+
+The separate [cadence 0.9 follow-up](docs/bench/cadence-margin-20261101.md)
+retains high-RTT FPS gains, original 1 Mbit/s tail losses and a predeclared
+replication with mixed outcomes. Its margin remains unselected; the preceding
+comparison table and datasets are unchanged.
 
 ## Installation
 

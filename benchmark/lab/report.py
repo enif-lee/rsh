@@ -449,6 +449,11 @@ deficits. Moving retains all 28 ACK bounds and unapproved timing fidelity;
 incomplete loss screens and connection-only checks remain separate.
 No global parity or release adoption is claimed.
 
+The separate [TCP cadence-margin follow-up](docs/bench/cadence-margin-20261101.md)
+keeps core gains, original slow-network losses and one predeclared replication
+as independent cohorts. The margin remains unselected; functional
+non-activation does not explain or erase earlier untraced deficits.
+
 ## References
 
 The [README references](README.md#references) identify the papers and
