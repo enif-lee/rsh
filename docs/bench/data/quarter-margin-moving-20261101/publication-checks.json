@@ -1,0 +1,18 @@
+{
+  "dataset": "moving",
+  "verifier_pre_manifest_passed": true,
+  "negative_checks": "Three mutated temporary copies rejected; originals unchanged",
+  "raw_payloads_reparsed": 0,
+  "new_terminal_replays": 0,
+  "new_benchmarks": 0,
+  "figures": {
+    "quarter-margin-moving-fps.svg": "bad747be68a7d22ed4b6ce4257d03c628ae6bea6f25d81ceb7a207bc21568337",
+    "quarter-margin-moving-age.svg": "6a52351b69235eca9e7cdcbcf405951d761a54d31c2df20daa49f69bd16e117d",
+    "quarter-margin-moving-resources.svg": "d3a4d545fa9166469d42a49c424f9fb30066aed9e535a662fe2c82dd28b17931",
+    "quarter-margin-moving-recovery.svg": "7520569f74d7c2ab508e7e285f3472f21a8cd91f79c2655e283f5a6770afd8b6",
+    "quarter-margin-moving-bounds.svg": "93a76321c078e984991b77fe3cef5b7ebc44242be6b4fc4829fa8897fdf9fbac"
+  },
+  "visual_qa": "PNG inspected; slow title and age ylabels corrected; allage13x9 renderedtext bbox andpairwise overlaps0. Private PNGs retained in notes, not curated.",
+  "performance_eligible": false,
+  "final_selection": null
+}

@@ -1,0 +1,98 @@
+{
+  "rows": 16,
+  "traced_rows": 12,
+  "performance_eligible": false,
+  "functional_valid": true,
+  "robust": 0,
+  "possible_only": 0,
+  "topgap_categories": {
+    "later": 57,
+    "first_half_second": 1,
+    "crossing_half_second": 2
+  },
+  "gate_reasons_by_scene": {
+    "compress": {
+      "0": 2877
+    },
+    "bandwidth": {
+      "2": 1418,
+      "0": 2882
+    }
+  },
+  "refill_medians_ms": [
+    [
+      "compress",
+      0,
+      "main-trace-A",
+      14.889598
+    ],
+    [
+      "compress",
+      0,
+      "main-trace-B",
+      14.893326
+    ],
+    [
+      "compress",
+      0,
+      "combined-trace",
+      14.869846
+    ],
+    [
+      "compress",
+      1,
+      "main-trace-B",
+      14.880578
+    ],
+    [
+      "compress",
+      1,
+      "combined-trace",
+      14.878722
+    ],
+    [
+      "compress",
+      1,
+      "main-trace-A",
+      14.922306
+    ],
+    [
+      "bandwidth",
+      0,
+      "main-trace-A",
+      14.803205
+    ],
+    [
+      "bandwidth",
+      0,
+      "main-trace-B",
+      14.784119
+    ],
+    [
+      "bandwidth",
+      0,
+      "combined-trace",
+      14.82983
+    ],
+    [
+      "bandwidth",
+      1,
+      "main-trace-B",
+      14.83753
+    ],
+    [
+      "bandwidth",
+      1,
+      "combined-trace",
+      14.816649
+    ],
+    [
+      "bandwidth",
+      1,
+      "main-trace-A",
+      14.8194385
+    ]
+  ],
+  "source_analysis_sha256": "04585edde86ec3d22f43ac6ac396e96e0b6219720e91deedbeade31ef42e8dde",
+  "script_sha256": "de8a483619707e56ba12d54cbd38a83ba64d91bcffdfaff820fd43797342fb05"
+}

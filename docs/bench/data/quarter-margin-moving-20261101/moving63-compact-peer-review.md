@@ -1,0 +1,1 @@
+PASS. MD의 48개 FPS 표 값, 16개 CSV 행과 JSON 저장 scalar, 원본 감사 4파일 해시 및 집계를 대조했다. 원시 capture/source/trace를 다시 파싱하거나 재측정하지 않았다. 자원 값은 저장 scalar 일치 검증 범위다. COMBINED295f A/A와 두 정책 결합60 비교이며 단독 정책 가산성·활성화·인과나 최종 승격을 주장하지 않는다. FPS 우선 기준 아래 평균/low 이득과 반복별 손해·age 비용을 모두 보존한다. Moving의 28개 bounds/524 skew 및 phase/second 합계를 확인했다. 짧아진 6 ms 재현 bounds와 performance/fidelity false를 유지한다.

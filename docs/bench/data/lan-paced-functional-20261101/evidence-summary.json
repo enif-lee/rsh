@@ -1,0 +1,214 @@
+{
+  "functional_valid": true,
+  "performance_eligible": false,
+  "host_rejected": [
+    "02-lan-bandwidth-i0-host-status"
+  ],
+  "jobs": 16,
+  "blocks": 4,
+  "parallel": 4,
+  "iterations": 2,
+  "trace_endpoints": 24,
+  "body_frames": 7679,
+  "traced_jobs": 12,
+  "gate_reasons_by_scene": {
+    "compress": {
+      "0": 2877
+    },
+    "bandwidth": {
+      "2": 1418,
+      "0": 2882
+    }
+  },
+  "top_gap_categories": {
+    "later": 57,
+    "first_half_second": 1,
+    "crossing_half_second": 2
+  },
+  "row_time_token_robust": 0,
+  "row_time_token_possible_only": 0,
+  "catch_only": 1418,
+  "catch_row_crossings": 0,
+  "catch_then_poll_crossings": 0,
+  "catch_budget_10ms": 1418,
+  "catch_budget_300ms": 0,
+  "official_metrics": [
+    {
+      "batch": "00-lan-compress-i0",
+      "variant": "ssh",
+      "frames": 480,
+      "fps": 60.0,
+      "low1_fps": 43.4,
+      "low5_fps": 47.1,
+      "age_ms": 1,
+      "age_p95_ms": 4,
+      "max_gap_ms": 24
+    },
+    {
+      "batch": "00-lan-compress-i0",
+      "variant": "main-trace-A",
+      "frames": 480,
+      "fps": 60.0,
+      "low1_fps": 42.1,
+      "low5_fps": 46.9,
+      "age_ms": 4,
+      "age_p95_ms": 8,
+      "max_gap_ms": 26
+    },
+    {
+      "batch": "00-lan-compress-i0",
+      "variant": "main-trace-B",
+      "frames": 480,
+      "fps": 60.0,
+      "low1_fps": 41.1,
+      "low5_fps": 46.2,
+      "age_ms": 4,
+      "age_p95_ms": 8,
+      "max_gap_ms": 26
+    },
+    {
+      "batch": "00-lan-compress-i0",
+      "variant": "combined-trace",
+      "frames": 480,
+      "fps": 60.0,
+      "low1_fps": 42.5,
+      "low5_fps": 46.7,
+      "age_ms": 4,
+      "age_p95_ms": 8,
+      "max_gap_ms": 25
+    },
+    {
+      "batch": "01-lan-compress-i1",
+      "variant": "main-trace-B",
+      "frames": 480,
+      "fps": 60.0,
+      "low1_fps": 41.5,
+      "low5_fps": 45.7,
+      "age_ms": 4,
+      "age_p95_ms": 8,
+      "max_gap_ms": 28
+    },
+    {
+      "batch": "01-lan-compress-i1",
+      "variant": "combined-trace",
+      "frames": 480,
+      "fps": 60.0,
+      "low1_fps": 42.0,
+      "low5_fps": 45.7,
+      "age_ms": 4,
+      "age_p95_ms": 8,
+      "max_gap_ms": 30
+    },
+    {
+      "batch": "01-lan-compress-i1",
+      "variant": "ssh",
+      "frames": 480,
+      "fps": 60.0,
+      "low1_fps": 42.7,
+      "low5_fps": 47.2,
+      "age_ms": 1,
+      "age_p95_ms": 4,
+      "max_gap_ms": 25
+    },
+    {
+      "batch": "01-lan-compress-i1",
+      "variant": "main-trace-A",
+      "frames": 480,
+      "fps": 60.0,
+      "low1_fps": 43.3,
+      "low5_fps": 46.9,
+      "age_ms": 4,
+      "age_p95_ms": 8,
+      "max_gap_ms": 25
+    },
+    {
+      "batch": "02-lan-bandwidth-i0",
+      "variant": "ssh",
+      "frames": 480,
+      "fps": 60.0,
+      "low1_fps": 42.2,
+      "low5_fps": 45.6,
+      "age_ms": 3,
+      "age_p95_ms": 10,
+      "max_gap_ms": 26
+    },
+    {
+      "batch": "02-lan-bandwidth-i0",
+      "variant": "main-trace-A",
+      "frames": 480,
+      "fps": 60.0,
+      "low1_fps": 37.7,
+      "low5_fps": 43.0,
+      "age_ms": 6,
+      "age_p95_ms": 13,
+      "max_gap_ms": 34
+    },
+    {
+      "batch": "02-lan-bandwidth-i0",
+      "variant": "main-trace-B",
+      "frames": 480,
+      "fps": 60.0,
+      "low1_fps": 35.9,
+      "low5_fps": 43.0,
+      "age_ms": 7,
+      "age_p95_ms": 14,
+      "max_gap_ms": 29
+    },
+    {
+      "batch": "02-lan-bandwidth-i0",
+      "variant": "combined-trace",
+      "frames": 480,
+      "fps": 60.0,
+      "low1_fps": 34.1,
+      "low5_fps": 43.8,
+      "age_ms": 6,
+      "age_p95_ms": 15,
+      "max_gap_ms": 32
+    },
+    {
+      "batch": "03-lan-bandwidth-i1",
+      "variant": "main-trace-B",
+      "frames": 479,
+      "fps": 59.9,
+      "low1_fps": 39.0,
+      "low5_fps": 44.6,
+      "age_ms": 5,
+      "age_p95_ms": 9,
+      "max_gap_ms": 28
+    },
+    {
+      "batch": "03-lan-bandwidth-i1",
+      "variant": "combined-trace",
+      "frames": 480,
+      "fps": 60.0,
+      "low1_fps": 40.2,
+      "low5_fps": 45.3,
+      "age_ms": 6,
+      "age_p95_ms": 9,
+      "max_gap_ms": 34
+    },
+    {
+      "batch": "03-lan-bandwidth-i1",
+      "variant": "ssh",
+      "frames": 480,
+      "fps": 60.0,
+      "low1_fps": 43.6,
+      "low5_fps": 49.0,
+      "age_ms": 3,
+      "age_p95_ms": 5,
+      "max_gap_ms": 30
+    },
+    {
+      "batch": "03-lan-bandwidth-i1",
+      "variant": "main-trace-A",
+      "frames": 480,
+      "fps": 60.0,
+      "low1_fps": 41.4,
+      "low5_fps": 45.1,
+      "age_ms": 5,
+      "age_p95_ms": 9,
+      "max_gap_ms": 37
+    }
+  ],
+  "scope": "Functional negative diagnostics only. Full8s metrics unchanged. No fresh-clock prototype/patch, causal proof or new performance matrix."
+}

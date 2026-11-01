@@ -1,0 +1,21 @@
+{
+  "status": "SOURCE_ONLY_PASS_UNBUILT",
+  "inputs_sha256": "d903625485a0e0c98189a6542c8bb911952571372fbaced2e01fa58333d4c782",
+  "canonical_files": 25,
+  "full_files": 32,
+  "planned_build_id": "fa934e198646",
+  "control_planned_build_id": "653e6d050510",
+  "inverse48_full32": true,
+  "inverse55_full32_after_one_expectation_restored": true,
+  "inverse_common295_full32": true,
+  "control_exact48_plus_same_adapted_quarter_fixture": true,
+  "margin_fixture_exact": true,
+  "quarter_adapted_assertions": 1,
+  "actual_tests": null,
+  "own_tests": 0,
+  "own_builds": 0,
+  "own_imports": 0,
+  "own_Docker": 0,
+  "own_actual": 0,
+  "scope": "Two reviewed mutually exclusive screen_due_at production branches only; no proto/client/global cadence/API/state/options/deps changes. Single adapted unknown-rate expectation follows existing margin branch; other assertions unchanged. No additivity/no-regression/promotion claim; prior adverse data retained."
+}

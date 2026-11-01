@@ -1,0 +1,83 @@
+{
+  "verdict": "PASS",
+  "scope": "Source/hash/AST reads only. No project imports, tests, builds, Docker or actual capture.",
+  "errors": [],
+  "checks": {
+    "prepared": {
+      "count": 13,
+      "mismatches": []
+    },
+    "harness": {
+      "count": 27,
+      "mismatches": []
+    },
+    "fixtures": {
+      "count": 52,
+      "mismatches": []
+    },
+    "parents": {
+      "count": 9,
+      "mismatches": []
+    },
+    "harness_vs52": {
+      "same": 26,
+      "changed": [
+        "probe_report.py"
+      ]
+    },
+    "exact54_functions": {
+      "cadence_context": true,
+      "busy_sample_context": true,
+      "sender_context": true,
+      "signal_collection_errors": true,
+      "body_delivery_errors": true
+    },
+    "plan": {
+      "jobs": 16,
+      "blocks": 4,
+      "parallel": 4,
+      "iterations": 2,
+      "nets": [
+        "lan"
+      ],
+      "roles": [
+        "combined-trace",
+        "main-trace-A",
+        "main-trace-B",
+        "ssh"
+      ],
+      "contexts": 8
+    },
+    "artifacts": [
+      {
+        "variant": "main-trace-A",
+        "absolute": true,
+        "sha_match": true,
+        "marker_present": true,
+        "source_build_id": "d742268da4df"
+      },
+      {
+        "variant": "main-trace-B",
+        "absolute": true,
+        "sha_match": true,
+        "marker_present": true,
+        "source_build_id": "d742268da4df"
+      },
+      {
+        "variant": "combined-trace",
+        "absolute": true,
+        "sha_match": true,
+        "marker_present": true,
+        "source_build_id": "3031e105b1aa"
+      }
+    ],
+    "fixture_paths": {
+      "all_within_sealed54": true,
+      "count": 52
+    },
+    "source_artifact_identity_exact54": true,
+    "source_pair_exact54": true,
+    "no_actual_batches": true,
+    "prepared_sha256": "a322faeceb2d84aa506db8f1f36e9bd4e2b2147f320cf474d7f1569f68d44901"
+  }
+}

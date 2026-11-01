@@ -1,0 +1,13 @@
+{
+ "accepted_host_phases": 3,
+ "completed_jobs": 16,
+ "accepted_guard_jobs": 12,
+ "expected_jobs": 16,
+ "status": "functional_collection_finished_analysis_pending",
+ "completed_blocks": [
+  "00-lan-compress-i0",
+  "01-lan-compress-i1",
+  "02-lan-bandwidth-i0",
+  "03-lan-bandwidth-i1"
+ ]
+}

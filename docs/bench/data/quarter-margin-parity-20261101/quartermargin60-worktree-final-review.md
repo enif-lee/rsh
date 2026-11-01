@@ -1,0 +1,5 @@
+PR8 예정 worktree source 리뷰 PASS. `/Users/ed/personal/rsh-quarter-margin`는 PR7 head5ca55dac919c4409d12bd8426f0739d2ea77792b이며 `src/server.rs` 하나만 수정되어 있다. HEAD server는 reviewed48 source와 exact, worktree는 reviewed60 canonical25/full32 hash 모두 exact다. Diff95 insertions/1 deletion은 quarter predicate와3 fixture이며 기존 margin module의 이동이나 추가 정책은 없다. Adapted unknown-rate expectation을 포함한 quarter fixture는60 원문과 같다.
+
+실험은 COMBINED295f A/A 대 두 정책 결합60 효과이며, PR7 위 source 배치는 리뷰를 위한 것이다. quarter increment versus48 또는 효과 가산성은 이 실험으로 분리하지 않는다. Root 실제116library+4CLI+25session+1stress=146pass/2ignored, controlquarter2pass1expectedfail와 margin3pass를 paired metadata/log hashes에 연결했다. OutsideCargo worktree release/library sourceguard는 fa934로 일치한다.
+
+데이터 유효성과 채택은 별도다. 61/62/63 전체 FPS 그룹과 회복/age/traffic 비용, 기존19/51/53/57 손해를 남겨야 한다. Worktree review가 성능 승격이나 원래 실패 인과를 입증하지 않는다. Reviewer는 source/hash/git 상태 읽기만 했으며 새 tests/build/Docker/commit/push 및 원본 수정0이다. 전체 대조는 `quartermargin60-worktree-final-review.json`에 보존했다.

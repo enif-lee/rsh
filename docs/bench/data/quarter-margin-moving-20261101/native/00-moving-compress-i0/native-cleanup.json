@@ -1,0 +1,34 @@
+[
+  {
+    "container": "rl-0-srv",
+    "controller_restore_returncode": 0
+  },
+  {
+    "container": "rl-0-cli",
+    "controller_restore_returncode": 0
+  },
+  {
+    "container": "rl-1-srv",
+    "controller_restore_returncode": 0
+  },
+  {
+    "container": "rl-1-cli",
+    "controller_restore_returncode": 0
+  },
+  {
+    "container": "rl-2-srv",
+    "controller_restore_returncode": 0
+  },
+  {
+    "container": "rl-2-cli",
+    "controller_restore_returncode": 0
+  },
+  {
+    "container": "rl-3-srv",
+    "controller_restore_returncode": 0
+  },
+  {
+    "container": "rl-3-cli",
+    "controller_restore_returncode": 0
+  }
+]

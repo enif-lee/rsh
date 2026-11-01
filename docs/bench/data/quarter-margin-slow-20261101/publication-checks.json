@@ -1,0 +1,16 @@
+{
+  "dataset": "slow",
+  "verifier_pre_manifest_passed": true,
+  "negative_checks": "Three mutated temporary copies rejected; originals unchanged",
+  "raw_payloads_reparsed": 0,
+  "new_terminal_replays": 0,
+  "new_benchmarks": 0,
+  "figures": {
+    "quarter-margin-slow-fps.svg": "7db26f5dcd621b7fadf73d930b3fdc87d077a12dff9764806bc0abd94eb92456",
+    "quarter-margin-slow-age.svg": "234ee43a7dfe72f0e4ce53a3771fb1a706b3f6fa8e71bd2f11ae3627ab037462",
+    "quarter-margin-slow-resources.svg": "e28086fc54b4c48b169d52d754dfba881c49e046cd0eef2bde6cdba00cd77efd"
+  },
+  "visual_qa": "PNG inspected; slow title and age ylabels corrected; allage13x9 renderedtext bbox andpairwise overlaps0. Private PNGs retained in notes, not curated.",
+  "performance_eligible": true,
+  "final_selection": null
+}

@@ -1,0 +1,9 @@
+batch,net,scene,iteration,variant,slot,frames,fps,low1_fps,low5_fps,kbit_s,rss_client_kb,rss_server_kb,cpu_client,cpu_server,age_ms,age_p95_ms,max_gap_ms,assessment
+00-wan-bandwidth-i0,wan,bandwidth,0,ssh,0,480,60.0,31.3,46.5,5802,7896,18828,0.21,0.22,53,57,61,control
+00-wan-bandwidth-i0,wan,bandwidth,0,main-A,1,439,54.9,37.9,44.8,2133,2436,5524,1.02,4.52,62,71,88,control
+00-wan-bandwidth-i0,wan,bandwidth,0,main-B,2,436,54.5,42.2,45.3,2126,2500,5560,1.02,4.43,61,71,94,control
+00-wan-bandwidth-i0,wan,bandwidth,0,candidate,3,465,58.1,29.8,46.8,2270,2472,5528,1.1,4.71,58,64,92,fps_tradeoff_review_required
+01-wan-bandwidth-i1,wan,bandwidth,1,ssh,3,480,60.0,39.0,48.1,5802,7700,18840,0.23,0.24,53,58,86,control
+01-wan-bandwidth-i1,wan,bandwidth,1,main-A,2,440,55.0,41.7,46.6,2141,2728,5976,1.07,4.58,63,71,91,control
+01-wan-bandwidth-i1,wan,bandwidth,1,main-B,1,435,54.4,36.4,45.3,2125,2772,6000,1.07,4.64,61,71,106,control
+01-wan-bandwidth-i1,wan,bandwidth,1,candidate,0,467,58.4,29.5,46.0,2280,2756,6008,1.17,4.77,55,67,83,fps_tradeoff_review_required
