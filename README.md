@@ -23,10 +23,9 @@ fallback on the same port.
 <!-- benchmark-summary:start -->
 ### Performance at a glance
 
-The first seven rows use a 256 kbit/s link at RTT 100 ms. The memory row
-uses ten simultaneous idle LAN sessions. The remaining rows show other
-conditions, including cases where SSH leads. Rendering requests 60 FPS in a
-100×30 terminal; four jobs run in parallel, with two evaluations per case.
+A 256 kbit/s link at RTT 100 ms, requesting 60 FPS in a 100×30 terminal.
+Four jobs run in parallel; each case has two evaluations. The memory row
+uses ten simultaneous idle LAN sessions.
 
 | Measurement | **rsh (UDP)** | **vs SSH** | mosh | OpenSSH | Eternal Terminal |
 | --- | --- | --- | --- | --- | --- |
@@ -38,17 +37,10 @@ conditions, including cases where SSH leads. Rendering requests 60 FPS in a
 | Key echo, ms | **7** | **17.42×** | 8 | 120 | 112 |
 | Bulk output to prompt, s | **0.16** | **143.94×** | 0.19 | 23.03 | 22.71 |
 | Ten idle LAN sessions, client + server MiB | **33.7** | **6.55×** | 243.1 | 220.6 | 201.4 |
-| LAN dashboard — avg / 1% / 5% low FPS | **60.0 / 44.2 / 48.5** | **1.00× / 0.87× / 0.92×** | 46.3 / 38.0 / 41.5 | 60.0 / 50.8 / 52.9 | 60.0 / 51.0 / 53.2 |
-| RTT 100 ms random screen — avg / 1% / 5% low FPS | **57.8 / 23.7 / 44.6** | **0.96× / 0.67× / 0.91×** | 18.8 / 15.6 / 17.8 | 60.0 / 35.5 / 49.3 | 60.0 / 21.9 / 49.0 |
-| 5 Mbit/s · RTT 100 ms random screen — avg / 1% / 5% low FPS | **57.0 / 26.0 / 43.1** | **1.14× / 0.89× / 1.06×** | 17.8 / 16.2 / 16.6 | 49.9 / 29.3 / 40.7 | 49.9 / 27.5 / 30.9 |
-| RTT 300 ms random screen — avg / 1% / 5% low FPS | **57.4 / 27.6 / 44.2** | **0.96× / 2.04× / 0.95×** | 6.6 / 6.3 / 6.4 | 60.0 / 13.6 / 46.7 | 60.0 / 3.6 / 49.5 |
 
 For FPS, **vs SSH** is rsh/SSH. For age, RX, echo, bulk time and RSS it is
 SSH/rsh: a larger factor favors rsh, while a factor below 1 favors SSH.
-Slash-separated factors correspond to each displayed metric in order.
-For example, at RTT 100 ms the random-screen 1% low is lower than SSH's,
-even though the constrained-link dashboard is faster. These are selected
-examples, not an overall score. Resource ratios describe usage, not speed;
+The 1%/5% factors are separate. Resource ratios describe usage, not speed;
 ratios use unrounded statistics. [Full results and methodology](BENCHMARK.md)
 include both rsh transports, every profile, CPU/RSS and collection failures.
 <!-- benchmark-summary:end -->

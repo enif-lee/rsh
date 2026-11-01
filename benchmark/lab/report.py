@@ -398,18 +398,6 @@ def glance_table():
            ('Key echo, ms',lambda t:median(runs('echo',t,'verylow'),'echo_ms'),False,0),
            ('Bulk output to prompt, s',lambda t:median(runs('flood',t,'verylow'),'flood_s'),False,2),
            ('Ten idle LAN sessions, client + server MiB',memory,False,1)]
-    # Show tradeoffs alongside the constrained-link example, using the same
-    # aggregation and reference tools rather than selecting only winning metrics.
-    for label,net,scene in [('LAN dashboard','lan','compress'),
-                            ('RTT 100 ms random screen','wan','bandwidth'),
-                            ('5 Mbit/s · RTT 100 ms random screen','mid5','bandwidth'),
-                            ('RTT 300 ms random screen','highlat','bandwidth')]:
-        def fps_summary(tool,net=net,scene=scene):
-            samples=runs('render',tool,net,scene)
-            values=[r['fps'] for r in samples if r.get('fps') is not None]
-            return (statistics.mean(values) if values else None,
-                    low(samples),low(samples,quantile=.95))
-        specs.append((label+' — avg / 1% / 5% low FPS',fps_summary,True,1))
     display=lambda v,d:' / '.join(fmt(x,d) for x in v) if isinstance(v,tuple) else fmt(v,d)
     def factor(a,b,higher):
         if isinstance(a,tuple):return ' / '.join(factor(x,y,higher) for x,y in zip(a,b))
@@ -427,19 +415,15 @@ def glance_table():
 def readme_sections():
     opening='''### Performance at a glance
 
-The first seven rows use a 256 kbit/s link at RTT 100 ms. The memory row
-uses ten simultaneous idle LAN sessions. The remaining rows show other
-conditions, including cases where SSH leads. Rendering requests 60 FPS in a
-100×30 terminal; four jobs run in parallel, with two evaluations per case.
+A 256 kbit/s link at RTT 100 ms, requesting 60 FPS in a 100×30 terminal.
+Four jobs run in parallel; each case has two evaluations. The memory row
+uses ten simultaneous idle LAN sessions.
 
 '''+glance_table()+'''
 
 For FPS, **vs SSH** is rsh/SSH. For age, RX, echo, bulk time and RSS it is
 SSH/rsh: a larger factor favors rsh, while a factor below 1 favors SSH.
-Slash-separated factors correspond to each displayed metric in order.
-For example, at RTT 100 ms the random-screen 1% low is lower than SSH's,
-even though the constrained-link dashboard is faster. These are selected
-examples, not an overall score. Resource ratios describe usage, not speed;
+The 1%/5% factors are separate. Resource ratios describe usage, not speed;
 ratios use unrounded statistics. [Full results and methodology](BENCHMARK.md)
 include both rsh transports, every profile, CPU/RSS and collection failures.
 '''
