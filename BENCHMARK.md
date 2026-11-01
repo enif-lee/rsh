@@ -1,23 +1,397 @@
 # Benchmark report
 
+## Measurement scope
+
+The TCP implementation used by main is measured as source **781bbe465298**.
+Its complete-body comparisons appear first. The released **0.2.0** multi-tool
+suite follows separately, identified by build **6729d398d4f1**; it supplies UDP,
+mosh, ET, input, bulk-output and session-memory comparisons, not a full-suite
+measurement of the main implementation.
+
+**1% low, 5% low and average FPS are primary; CPU/RSS are secondary.**
+Every evaluation is shown separately. Different sources, observers, requested
+rates and network schedules are never pooled into one FPS value.
+
+## TCP fallback
+
+### Method
+
+Four parallel jobs compare SSH, two identical CAN+PTY correctness-fixed
+references (source `4f98af080434`), and rsh TCP source `781bbe465298`. This is
+the complete controller-stack comparison, not an isolated effect of any one
+policy. The second evaluation reverses the slot order. Slots are not evidence
+of physical P/E-core assignment.
+
+The terminal is 100×30. Core/slow scenes request 60 FPS for an eight-second
+window; the separate fast-rate guard requests 120 FPS. Moving uses a common
+future start and a fixed 30-second receive window. There are 112 eligible
+static observations and 16 descriptive moving observations in these four
+cohorts. Each profile/scene has two evaluations; no retries select a winner.
+
+FPS counts source-matched complete terminal bodies, not header-only changes or
+GPU presentations. Lows are 1000/p99 and 1000/p95 adjacent frame gaps with
+nearest-rank percentiles; startup/end gaps are excluded from lows but retained
+in maximum gap. Sparse lows and p95 age remain missing. Actual window endpoints
+include any residual beyond complete one-second bins.
+
+RX is client interface traffic in decimal kbit/s, including overhead. RSS is a
+midpoint process sample in MiB; CPU is recorded client/server utilization.
+Age is actual source creation to complete-body observation, not RTT. Resource
+scalars are checked against saved jobs/CSV, not independent counter remeasurement.
+Host admission uses one total CPU interval below 30%; runtime load is context.
+Raw payloads remain local; compact records, hashes, source manifests, actual
+build/test logs and independent saved-data audits are committed in each archive.
+
+Correctness tests passed on Linux (149) and macOS (148), with two ignored on each.
+Release/library source guards identify the measured source. The Linux-only
+concurrency fixture runs zero tests on macOS; macOS performance is not measured.
+
+The implementation combines bounded transit accounting, capacity probing,
+TCP-local cadence margin, quarter-gap fresh alignment and bounded recent-output
+gathering. Its 20ms logical deadline cap is not a service or display-latency
+bound. LAN tails, high-RTT average deficits and 120 Hz costs remain. No universal
+SSH parity, loss-path coverage or policy-additivity claim follows.
+
+
+### Core links
+
+60 FPS requested; LAN, RTT 100 ms and RTT 300 ms, with no configured loss or rate cap.
+
+Cells are **avg / 1% low / 5% low FPS**.
+
+| Profile / scene / evaluation | SSH | Reference A | Reference B | rsh TCP |
+| --- | --- | --- | --- | --- |
+| LAN / dashboard / 0 | 60.0 / 45.2 / 50.1 | 60.0 / 45.2 / 48.6 | 60.0 / 45.0 / 47.8 | 60.0 / 43.5 / 47.3 |
+| LAN / dashboard / 1 | 60.0 / 45.2 / 49.6 | 60.0 / 45.2 / 47.3 | 60.0 / 43.5 / 48.1 | 60.0 / 43.7 / 48.1 |
+| LAN / random / 0 | 59.9 / 46.5 / 48.8 | 60.0 / 40.5 / 45.0 | 60.0 / 42.4 / 46.9 | 60.0 / 42.4 / 46.3 |
+| LAN / random / 1 | 60.0 / 46.0 / 49.1 | 60.0 / 41.7 / 46.6 | 60.0 / 41.9 / 45.4 | 59.9 / 43.3 / 46.1 |
+| RTT 100 ms / dashboard / 0 | 60.0 / 43.2 / 48.6 | 56.0 / 43.0 / 46.9 | 56.0 / 44.0 / 46.8 | 60.0 / 43.4 / 46.0 |
+| RTT 100 ms / dashboard / 1 | 60.0 / 43.8 / 48.8 | 55.6 / 42.1 / 46.4 | 55.8 / 42.2 / 46.3 | 60.0 / 43.8 / 47.9 |
+| RTT 100 ms / random / 0 | 60.0 / 38.2 / 46.8 | 54.2 / 30.6 / 46.0 | 54.4 / 35.6 / 45.9 | 58.4 / 35.5 / 46.5 |
+| RTT 100 ms / random / 1 | 60.0 / 31.5 / 47.4 | 53.6 / 29.0 / 43.9 | 54.4 / 31.2 / 45.6 | 58.5 / 42.5 / 47.5 |
+| RTT 300 ms / dashboard / 0 | 60.0 / 22.9 / 46.5 | 53.6 / 29.3 / 44.6 | 54.7 / 40.2 / 45.9 | 58.9 / 45.5 / 49.2 |
+| RTT 300 ms / dashboard / 1 | 60.0 / 22.9 / 45.3 | 54.4 / 38.0 / 43.7 | 39.7 / 18.9 / 28.0 | 56.1 / 31.4 / 42.8 |
+| RTT 300 ms / random / 0 | 60.0 / 12.1 / 44.2 | 48.2 / 13.6 / 43.5 | 49.4 / 14.4 / 44.9 | 53.5 / 27.6 / 47.3 |
+| RTT 300 ms / random / 1 | 60.0 / 14.9 / 45.0 | 49.7 / 15.1 / 45.4 | 50.1 / 13.5 / 45.3 | 53.4 / 14.5 / 47.4 |
+
+![core fps](docs/bench/bounded-quiet65-reference-core-fps.svg)
+
+![core age](docs/bench/bounded-quiet65-reference-core-age.svg)
+
+![core resources](docs/bench/bounded-quiet65-reference-core-resources.svg)
+
+### Traffic, resources and delivery
+
+| Profile / scene / evaluation | Role | RX kbit/s | Client / server RSS MiB | Client / server CPU % | Median / p95 age ms | Maxgap ms | Body frames | Header frames |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| LAN / dashboard / 0 | SSH | 2476 | 7.36 / 18.37 | 0.22 / 0.28 | 1 / 3 | 27 | 480 | 480 |
+| LAN / dashboard / 0 | CAN+PTY reference A | 227 | 2.56 / 5.52 | 0.78 / 1.09 | 3 / 6 | 25 | 480 | 480 |
+| LAN / dashboard / 0 | CAN+PTY reference B | 228 | 2.57 / 5.55 | 0.78 / 1.10 | 3 / 6 | 24 | 480 | 480 |
+| LAN / dashboard / 0 | rsh TCP | 228 | 2.57 / 5.52 | 0.83 / 1.13 | 3 / 6 | 24 | 480 | 480 |
+| LAN / dashboard / 1 | rsh TCP | 227 | 1.68 / 4.76 | 0.78 / 1.08 | 3 / 6 | 28 | 480 | 480 |
+| LAN / dashboard / 1 | CAN+PTY reference B | 227 | 1.70 / 4.77 | 0.77 / 1.03 | 3 / 6 | 24 | 480 | 480 |
+| LAN / dashboard / 1 | CAN+PTY reference A | 228 | 1.98 / 4.55 | 0.76 / 1.08 | 4 / 6 | 23 | 480 | 480 |
+| LAN / dashboard / 1 | SSH | 2483 | 7.38 / 18.39 | 0.24 / 0.29 | 1 / 3 | 23 | 480 | 480 |
+| LAN / random / 0 | SSH | 5781 | 7.38 / 18.38 | 0.19 / 0.25 | 2 / 4 | 26 | 480 | 480 |
+| LAN / random / 0 | CAN+PTY reference A | 2718 | 2.59 / 5.60 | 1.15 / 1.55 | 5 / 9 | 26 | 480 | 480 |
+| LAN / random / 0 | CAN+PTY reference B | 2723 | 2.59 / 5.56 | 1.19 / 1.55 | 5 / 9 | 25 | 480 | 480 |
+| LAN / random / 0 | rsh TCP | 2718 | 2.59 / 5.60 | 1.19 / 1.56 | 5 / 9 | 30 | 480 | 480 |
+| LAN / random / 1 | rsh TCP | 2715 | 2.59 / 5.58 | 1.11 / 1.44 | 5 / 8 | 29 | 480 | 480 |
+| LAN / random / 1 | CAN+PTY reference B | 2716 | 2.59 / 5.62 | 1.07 / 1.41 | 4 / 8 | 29 | 480 | 480 |
+| LAN / random / 1 | CAN+PTY reference A | 2717 | 2.59 / 5.58 | 1.11 / 1.44 | 5 / 9 | 26 | 480 | 480 |
+| LAN / random / 1 | SSH | 5789 | 7.42 / 18.39 | 0.18 / 0.22 | 2 / 4 | 23 | 480 | 480 |
+| RTT 100 ms / dashboard / 0 | SSH | 2511 | 7.39 / 18.38 | 0.22 / 0.26 | 52 / 55 | 39 | 480 | 480 |
+| RTT 100 ms / dashboard / 0 | CAN+PTY reference A | 224 | 1.99 / 5.34 | 0.82 / 3.13 | 60 / 69 | 28 | 448 | 448 |
+| RTT 100 ms / dashboard / 0 | CAN+PTY reference B | 223 | 2.21 / 4.93 | 0.80 / 3.18 | 60 / 69 | 25 | 448 | 448 |
+| RTT 100 ms / dashboard / 0 | rsh TCP | 228 | 1.46 / 4.76 | 0.80 / 1.08 | 55 / 58 | 29 | 480 | 480 |
+| RTT 100 ms / dashboard / 1 | rsh TCP | 228 | 2.57 / 5.59 | 0.80 / 1.06 | 55 / 58 | 23 | 480 | 480 |
+| RTT 100 ms / dashboard / 1 | CAN+PTY reference B | 223 | 2.58 / 5.75 | 0.81 / 3.17 | 60 / 69 | 25 | 447 | 447 |
+| RTT 100 ms / dashboard / 1 | CAN+PTY reference A | 221 | 2.58 / 5.77 | 0.80 / 3.09 | 60 / 69 | 24 | 445 | 445 |
+| RTT 100 ms / dashboard / 1 | SSH | 2515 | 7.37 / 18.39 | 0.23 / 0.25 | 52 / 55 | 38 | 480 | 480 |
+| RTT 100 ms / random / 0 | SSH | 5798 | 7.47 / 18.39 | 0.23 / 0.23 | 53 / 57 | 81 | 480 | 480 |
+| RTT 100 ms / random / 0 | CAN+PTY reference A | 2127 | 2.63 / 5.83 | 1.09 / 4.63 | 63 / 72 | 101 | 434 | 436 |
+| RTT 100 ms / random / 0 | CAN+PTY reference B | 2124 | 2.65 / 5.84 | 1.08 / 4.62 | 62 / 71 | 91 | 435 | 435 |
+| RTT 100 ms / random / 0 | rsh TCP | 2281 | 2.65 / 5.86 | 1.19 / 5.11 | 58 / 65 | 105 | 467 | 467 |
+| RTT 100 ms / random / 1 | rsh TCP | 2279 | 2.64 / 5.82 | 1.14 / 4.70 | 59 / 67 | 93 | 468 | 468 |
+| RTT 100 ms / random / 1 | CAN+PTY reference B | 2124 | 2.66 / 5.88 | 1.04 / 4.46 | 62 / 71 | 95 | 435 | 435 |
+| RTT 100 ms / random / 1 | CAN+PTY reference A | 2092 | 2.64 / 5.82 | 1.04 / 4.34 | 62 / 72 | 93 | 429 | 430 |
+| RTT 100 ms / random / 1 | SSH | 5790 | 7.23 / 18.41 | 0.22 / 0.22 | 53 / 57 | 68 | 480 | 480 |
+| RTT 300 ms / dashboard / 0 | SSH | 2505 | 7.41 / 18.49 | 0.23 / 0.25 | 152 / 239 | 47 | 480 | 480 |
+| RTT 300 ms / dashboard / 0 | CAN+PTY reference A | 214 | 2.62 / 5.77 | 0.75 / 2.94 | 160 / 170 | 72 | 429 | 429 |
+| RTT 300 ms / dashboard / 0 | CAN+PTY reference B | 218 | 2.67 / 5.77 | 0.76 / 3.02 | 161 / 169 | 88 | 438 | 438 |
+| RTT 300 ms / dashboard / 0 | rsh TCP | 235 | 2.63 / 5.82 | 0.85 / 3.27 | 158 / 165 | 80 | 471 | 471 |
+| RTT 300 ms / dashboard / 1 | rsh TCP | 220 | 2.64 / 5.61 | 0.81 / 1.79 | 157 / 167 | 106 | 449 | 449 |
+| RTT 300 ms / dashboard / 1 | CAN+PTY reference B | 160 | 2.63 / 5.77 | 0.64 / 2.42 | 153 / 172 | 82 | 318 | 318 |
+| RTT 300 ms / dashboard / 1 | CAN+PTY reference A | 216 | 2.61 / 5.79 | 0.84 / 3.14 | 162 / 170 | 81 | 435 | 436 |
+| RTT 300 ms / dashboard / 1 | SSH | 2508 | 7.43 / 18.46 | 0.23 / 0.27 | 152 / 240 | 50 | 480 | 480 |
+| RTT 300 ms / random / 0 | SSH | 5796 | 7.73 / 18.55 | 0.20 / 0.21 | 153 / 489 | 99 | 480 | 480 |
+| RTT 300 ms / random / 0 | CAN+PTY reference A | 1926 | 2.68 / 5.71 | 0.94 / 4.07 | 163 / 173 | 295 | 386 | 388 |
+| RTT 300 ms / random / 0 | CAN+PTY reference B | 1978 | 2.68 / 5.47 | 0.97 / 4.12 | 162 / 172 | 293 | 395 | 398 |
+| RTT 300 ms / random / 0 | rsh TCP | 2129 | 2.68 / 5.37 | 1.05 / 4.46 | 161 / 168 | 283 | 428 | 429 |
+| RTT 300 ms / random / 1 | rsh TCP | 2130 | 2.72 / 5.98 | 1.05 / 4.43 | 160 / 166 | 516 | 427 | 428 |
+| RTT 300 ms / random / 1 | CAN+PTY reference B | 1994 | 2.69 / 5.92 | 1.02 / 4.12 | 162 / 172 | 291 | 401 | 402 |
+| RTT 300 ms / random / 1 | CAN+PTY reference A | 1981 | 2.68 / 5.89 | 0.96 / 4.08 | 163 / 172 | 282 | 398 | 399 |
+| RTT 300 ms / random / 1 | SSH | 5792 | 7.74 / 18.62 | 0.20 / 0.20 | 153 / 477 | 118 | 480 | 480 |
+
+[All saved results, source identities and verification code](docs/bench/data/bounded-quiet65-reference-core-20261101/README.md).
+
+### Bandwidth-limited links
+
+60 FPS requested; RTT 100 ms with server-egress1M/256k/64kbit/s caps; client direction uncapped.
+
+Cells are **avg / 1% low / 5% low FPS**.
+
+| Profile / scene / evaluation | SSH | Reference A | Reference B | rsh TCP |
+| --- | --- | --- | --- | --- |
+| 1 Mbit/s / dashboard / 0 | 23.5 / 5.9 / 7.2 | 56.0 / 43.3 / 46.4 | 55.6 / 39.8 / 46.9 | 60.0 / 42.1 / 46.5 |
+| 1 Mbit/s / dashboard / 1 | 23.5 / 6.5 / 7.0 | 55.9 / 40.5 / 46.9 | 55.9 / 43.8 / 46.6 | 60.0 / 43.4 / 46.7 |
+| 1 Mbit/s / random / 0 | 9.7 / 6.3 / 6.5 | 22.9 / 17.5 / 19.3 | 22.4 / 17.7 / 18.6 | 24.4 / 19.2 / 20.9 |
+| 1 Mbit/s / random / 1 | 9.9 / 5.4 / 6.3 | 21.2 / 16.4 / 18.3 | 23.2 / 13.6 / 18.6 | 24.1 / 14.8 / 19.5 |
+| 256 kbit/s / dashboard / 0 | 6.0 / 2.1 / 5.1 | 34.0 / 23.8 / 27.0 | 37.6 / 25.3 / 27.7 | 60.0 / 43.8 / 47.1 |
+| 256 kbit/s / dashboard / 1 | 6.1 / 2.4 / 4.1 | 35.0 / 24.9 / 26.8 | 35.9 / 25.1 / 27.7 | 60.0 / 38.7 / 44.6 |
+| 256 kbit/s / random / 0 | 2.4 / 1.3 / 1.3 | 5.9 / 5.4 / 5.6 | 6.0 / 5.4 / 5.5 | 5.9 / 5.3 / 5.5 |
+| 256 kbit/s / random / 1 | 2.5 / 1.6 / 1.6 | 6.0 / 5.4 / 5.5 | 6.0 / 5.4 / 5.5 | 5.9 / 5.2 / 5.4 |
+| 64 kbit/s / dashboard / 0 | 1.5 / 1.3 / 1.3 | 15.6 / 11.5 / 12.6 | 15.6 / 11.3 / 12.0 | 15.6 / 6.9 / 12.6 |
+| 64 kbit/s / dashboard / 1 | 1.4 / 1.3 / 1.3 | 16.0 / 11.9 / 12.5 | 15.7 / 11.3 / 12.8 | 15.7 / 8.9 / 12.5 |
+| 64 kbit/s / random / 0 | 0.6 / — / — | 1.2 / — / — | 1.4 / 0.8 / 0.8 | 1.2 / — / — |
+| 64 kbit/s / random / 1 | 0.6 / — / — | 1.4 / 1.3 / 1.3 | 1.4 / 1.3 / 1.3 | 1.5 / 0.8 / 0.8 |
+
+![slow fps](docs/bench/bounded-quiet65-reference-slow-fps.svg)
+
+![slow age](docs/bench/bounded-quiet65-reference-slow-age.svg)
+
+![slow resources](docs/bench/bounded-quiet65-reference-slow-resources.svg)
+
+### Traffic, resources and delivery
+
+| Profile / scene / evaluation | Role | RX kbit/s | Client / server RSS MiB | Client / server CPU % | Median / p95 age ms | Maxgap ms | Body frames | Header frames |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 Mbit/s / dashboard / 0 | SSH | 978 | 7.36 / 19.25 | 0.14 / 0.50 | 2547 / 4680 | 172 | 188 | 188 |
+| 1 Mbit/s / dashboard / 0 | CAN+PTY reference A | 223 | 2.58 / 5.74 | 0.84 / 3.37 | 64 / 74 | 29 | 448 | 448 |
+| 1 Mbit/s / dashboard / 0 | CAN+PTY reference B | 222 | 2.57 / 5.76 | 0.85 / 3.38 | 64 / 73 | 34 | 445 | 445 |
+| 1 Mbit/s / dashboard / 0 | rsh TCP | 228 | 2.58 / 5.58 | 0.84 / 1.15 | 60 / 63 | 26 | 480 | 480 |
+| 1 Mbit/s / dashboard / 1 | rsh TCP | 228 | 2.57 / 5.55 | 0.83 / 1.13 | 60 / 63 | 25 | 480 | 480 |
+| 1 Mbit/s / dashboard / 1 | CAN+PTY reference B | 222 | 2.58 / 5.74 | 0.83 / 3.38 | 64 / 73 | 25 | 447 | 447 |
+| 1 Mbit/s / dashboard / 1 | CAN+PTY reference A | 222 | 2.59 / 5.76 | 0.82 / 3.40 | 64 / 74 | 35 | 447 | 447 |
+| 1 Mbit/s / dashboard / 1 | SSH | 977 | 7.39 / 19.34 | 0.16 / 0.56 | 2573 / 4689 | 158 | 188 | 189 |
+| 1 Mbit/s / random / 0 | SSH | 977 | 7.41 / 19.66 | 0.12 / 0.29 | 3427 / 6431 | 158 | 78 | 79 |
+| 1 Mbit/s / random / 0 | CAN+PTY reference A | 905 | 2.58 / 5.79 | 0.79 / 2.79 | 103 / 124 | 67 | 183 | 183 |
+| 1 Mbit/s / random / 0 | CAN+PTY reference B | 885 | 2.57 / 5.82 | 0.77 / 2.77 | 101 / 120 | 78 | 179 | 179 |
+| 1 Mbit/s / random / 0 | rsh TCP | 966 | 2.61 / 5.84 | 0.87 / 2.99 | 118 / 160 | 76 | 195 | 195 |
+| 1 Mbit/s / random / 1 | rsh TCP | 956 | 2.57 / 5.81 | 0.84 / 2.95 | 113 / 146 | 71 | 193 | 193 |
+| 1 Mbit/s / random / 1 | CAN+PTY reference B | 924 | 2.57 / 5.82 | 0.83 / 2.86 | 107 / 128 | 80 | 186 | 187 |
+| 1 Mbit/s / random / 1 | CAN+PTY reference A | 842 | 2.57 / 5.80 | 0.74 / 2.69 | 100 / 124 | 81 | 170 | 170 |
+| 1 Mbit/s / random / 1 | SSH | 979 | 7.40 / 19.68 | 0.13 / 0.32 | 3508 / 6491 | 184 | 79 | 80 |
+| 256 kbit/s / dashboard / 0 | SSH | 249 | 7.36 / 19.34 | 0.09 / 0.58 | 3762 / 6954 | 470 | 48 | 49 |
+| 256 kbit/s / dashboard / 0 | CAN+PTY reference A | 131 | 2.58 / 5.75 | 0.80 / 2.85 | 69 / 88 | 44 | 272 | 272 |
+| 256 kbit/s / dashboard / 0 | CAN+PTY reference B | 150 | 2.59 / 5.75 | 0.86 / 3.14 | 70 / 88 | 41 | 301 | 301 |
+| 256 kbit/s / dashboard / 0 | rsh TCP | 229 | 2.57 / 5.56 | 1.22 / 1.73 | 72 / 76 | 25 | 480 | 480 |
+| 256 kbit/s / dashboard / 1 | rsh TCP | 228 | 2.58 / 5.59 | 1.17 / 1.67 | 72 / 76 | 31 | 480 | 480 |
+| 256 kbit/s / dashboard / 1 | CAN+PTY reference B | 140 | 2.59 / 5.79 | 0.85 / 3.00 | 70 / 89 | 42 | 287 | 287 |
+| 256 kbit/s / dashboard / 1 | CAN+PTY reference A | 135 | 2.58 / 5.75 | 0.80 / 2.76 | 70 / 88 | 44 | 280 | 280 |
+| 256 kbit/s / dashboard / 1 | SSH | 250 | 7.38 / 19.42 | 0.08 / 0.53 | 3868 / 7249 | 425 | 49 | 49 |
+| 256 kbit/s / random / 0 | SSH | 250 | 7.38 / 19.48 | 0.12 / 0.36 | 3919 / — | 756 | 19 | 20 |
+| 256 kbit/s / random / 0 | CAN+PTY reference A | 256 | 2.57 / 5.80 | 0.71 / 2.32 | 384 / 404 | 186 | 47 | 47 |
+| 256 kbit/s / random / 0 | CAN+PTY reference B | 256 | 2.59 / 5.79 | 0.66 / 2.39 | 381 / 408 | 184 | 48 | 48 |
+| 256 kbit/s / random / 0 | rsh TCP | 256 | 2.56 / 5.81 | 0.70 / 2.36 | 385 / 412 | 188 | 47 | 47 |
+| 256 kbit/s / random / 1 | rsh TCP | 256 | 2.59 / 5.85 | 0.84 / 2.62 | 386 / 420 | 191 | 47 | 47 |
+| 256 kbit/s / random / 1 | CAN+PTY reference B | 256 | 2.56 / 5.80 | 0.82 / 2.62 | 382 / 409 | 184 | 48 | 48 |
+| 256 kbit/s / random / 1 | CAN+PTY reference A | 256 | 2.55 / 5.78 | 0.82 / 2.65 | 382 / 395 | 185 | 48 | 48 |
+| 256 kbit/s / random / 1 | SSH | 249 | 7.39 / 19.49 | 0.12 / 0.39 | 4227 / 7647 | 626 | 20 | 21 |
+| 64 kbit/s / dashboard / 0 | SSH | 62 | 7.42 / 19.34 | 0.12 / 0.75 | 4496 / — | 798 | 12 | 12 |
+| 64 kbit/s / dashboard / 0 | CAN+PTY reference A | 63 | 2.58 / 5.77 | 0.68 / 2.61 | 171 / 413 | 149 | 125 | 125 |
+| 64 kbit/s / dashboard / 0 | CAN+PTY reference B | 63 | 2.58 / 5.77 | 0.68 / 2.63 | 165 / 352 | 130 | 125 | 125 |
+| 64 kbit/s / dashboard / 0 | rsh TCP | 64 | 2.59 / 5.80 | 0.67 / 2.70 | 194 / 429 | 171 | 125 | 125 |
+| 64 kbit/s / dashboard / 1 | rsh TCP | 63 | 2.39 / 5.29 | 0.62 / 2.43 | 189 / 345 | 158 | 126 | 126 |
+| 64 kbit/s / dashboard / 1 | CAN+PTY reference B | 63 | 2.20 / 5.34 | 0.69 / 2.36 | 142 / 350 | 124 | 126 | 126 |
+| 64 kbit/s / dashboard / 1 | CAN+PTY reference A | 63 | 1.71 / 5.04 | 0.64 / 2.36 | 164 / 374 | 129 | 128 | 128 |
+| 64 kbit/s / dashboard / 1 | SSH | 60 | 7.37 / 19.34 | 0.09 / 0.65 | 4122 / — | 793 | 11 | 12 |
+| 64 kbit/s / random / 0 | SSH | 60 | 7.39 / 19.43 | 0.09 / 0.33 | 4933 / — | 1738 | 5 | 5 |
+| 64 kbit/s / random / 0 | CAN+PTY reference A | 64 | 2.58 / 5.81 | 0.29 / 1.71 | 1020 / — | 1348 | 10 | 12 |
+| 64 kbit/s / random / 0 | CAN+PTY reference B | 64 | 2.59 / 5.78 | 0.29 / 1.69 | 997 / — | 1332 | 11 | 12 |
+| 64 kbit/s / random / 0 | rsh TCP | 63 | 2.58 / 5.78 | 0.35 / 1.73 | 1015 / — | 1342 | 10 | 12 |
+| 64 kbit/s / random / 1 | rsh TCP | 63 | 2.55 / 5.81 | 0.23 / 1.93 | 2179 / — | 1285 | 12 | 13 |
+| 64 kbit/s / random / 1 | CAN+PTY reference B | 64 | 2.60 / 5.77 | 0.29 / 1.72 | 1022 / — | 753 | 11 | 12 |
+| 64 kbit/s / random / 1 | CAN+PTY reference A | 63 | 2.55 / 5.80 | 0.29 / 1.75 | 1079 / — | 776 | 11 | 12 |
+| 64 kbit/s / random / 1 | SSH | 61 | 7.61 / 19.36 | 0.09 / 0.33 | 5067 / — | 1738 | 5 | 5 |
+
+[All saved results, source identities and verification code](docs/bench/data/bounded-quiet65-reference-slow-20261101/README.md).
+
+## Moving network
+
+60 FPS requested; all sessions replay the same intended delay/rate/outage schedule.
+Moving data integrity passed, but timing fidelity remains unapproved and
+performance_eligible=False. ACK bounds do not prove identical packet losses.
+The final 23–30 s phase uses 5 Mbit/s, changing delay samples and an intended 7 ms
+outage at 27.2 s. SSH can replay backlog faster than60FPS after a stall; the
+producer can also catch up missed ticks. Compare frame age and newly produced
+body arrivals with average and low FPS.
+
+Cells are **avg / 1% low / 5% low FPS**.
+
+| Profile / scene / evaluation | SSH | Reference A | Reference B | rsh TCP |
+| --- | --- | --- | --- | --- |
+| Moving / dashboard / 0 | 47.9 / 3.6 / 32.5 | 15.2 / 2.5 / 5.4 | 18.5 / 2.3 / 7.4 | 26.9 / 3.2 / 8.4 |
+| Moving / dashboard / 1 | 48.2 / 6.3 / 27.0 | 15.7 / 2.8 / 5.0 | 18.0 / 2.8 / 5.3 | 28.2 / 3.4 / 9.8 |
+| Moving / random / 0 | 16.5 / 3.5 / 16.6 | 14.2 / 1.6 / 4.8 | 12.9 / 1.5 / 5.1 | 21.7 / 2.5 / 6.5 |
+| Moving / random / 1 | 27.2 / 2.6 / 12.8 | 15.9 / 1.9 / 6.0 | 13.9 / 1.4 / 3.7 | 20.3 / 2.6 / 7.1 |
+
+![moving fps](docs/bench/bounded-quiet65-reference-moving-fps.svg)
+
+![moving age](docs/bench/bounded-quiet65-reference-moving-age.svg)
+
+![moving resources](docs/bench/bounded-quiet65-reference-moving-resources.svg)
+
+![moving recovery](docs/bench/bounded-quiet65-reference-moving-recovery.svg)
+
+![moving bounds](docs/bench/bounded-quiet65-reference-moving-bounds.svg)
+
+### Recovery phases
+
+| Scene / evaluation / phase | SSH | CAN+PTY reference A | CAN+PTY reference B | rsh TCP |
+| --- | --- | --- | --- | --- |
+| Moving / dashboard / 0 / clear signal | 59.3 / 34.2 / 47.6 | 28.8 / 15.3 / 20.8 | 44.2 / 19.1 / 27.5 | 58.2 / 36.5 / 43.6 |
+| Moving / dashboard / 0 / congestion | 43.8 / 11.1 / 15.5 | 15.8 / 8.3 / 9.4 | 15.5 / 8.7 / 9.7 | 22.0 / 3.5 / 10.3 |
+| Moving / dashboard / 0 / weak signal | 13.5 / 3.2 / 3.5 | 5.0 / 1.5 / 1.5 | 4.5 / 1.1 / 1.1 | 6.2 / 3.2 / 3.2 |
+| Moving / dashboard / 0 / deep fade | 4.0 / 1.1 / 1.1 | 2.0 / — / — | 2.3 / — / — | 2.7 / — / — |
+| Moving / dashboard / 0 / handover | 3.0 / — / — | 0.0 / — / — | 0.0 / — / — | 1.0 / — / — |
+| Moving / dashboard / 0 / recovering | 10.0 / 0.9 / 1.1 | 6.4 / 2.8 / 4.1 | 7.2 / 3.2 / 3.8 | 7.6 / 2.5 / 2.7 |
+| Moving / dashboard / 0 / clear again | 112.3 / 30.4 / 34.2 | 23.3 / 11.1 / 14.9 | 24.0 / 11.4 / 14.8 | 42.4 / 10.9 / 25.8 |
+| Moving / dashboard / 1 / clear signal | 59.3 / 38.0 / 47.5 | 30.0 / 18.7 / 22.3 | 43.5 / 21.7 / 26.6 | 56.8 / 36.6 / 43.2 |
+| Moving / dashboard / 1 / congestion | 47.0 / 11.5 / 33.6 | 14.2 / 4.0 / 9.0 | 15.5 / 8.7 / 9.7 | 23.8 / 3.4 / 12.4 |
+| Moving / dashboard / 1 / weak signal | 11.2 / 2.7 / 3.6 | 5.0 / 2.8 / 2.8 | 5.0 / 2.9 / 2.9 | 5.8 / 2.3 / 2.6 |
+| Moving / dashboard / 1 / deep fade | 7.7 / 1.0 / 1.3 | 3.7 / 2.0 / 2.0 | 3.7 / 1.9 / 1.9 | 4.7 / 1.6 / 1.6 |
+| Moving / dashboard / 1 / handover | 4.0 / — / — | 1.0 / — / — | 1.0 / — / — | 1.0 / — / — |
+| Moving / dashboard / 1 / recovering | 15.8 / 0.6 / 6.5 | 7.6 / 2.2 / 4.4 | 7.0 / 2.1 / 3.0 | 14.4 / 3.4 / 7.8 |
+| Moving / dashboard / 1 / clear again | 107.4 / 22.2 / 30.4 | 23.3 / 11.8 / 14.6 | 21.3 / 7.9 / 13.7 | 42.7 / 15.0 / 22.7 |
+| Moving / random / 0 / clear signal | 59.2 / 32.8 / 47.6 | 29.5 / 10.1 / 19.5 | 20.5 / 11.6 / 16.3 | 56.3 / 25.8 / 40.8 |
+| Moving / random / 0 / congestion | 17.8 / 12.2 / 16.6 | 13.5 / 2.1 / 6.7 | 14.0 / 1.5 / 7.7 | 14.0 / 2.5 / 5.0 |
+| Moving / random / 0 / weak signal | 13.2 / 2.6 / 3.6 | 4.5 / 1.6 / 1.6 | 5.2 / 0.8 / 3.1 | 4.2 / 1.9 / 1.9 |
+| Moving / random / 0 / deep fade | 5.0 / 2.6 / 2.6 | 2.0 / — / — | 1.7 / — / — | 2.0 / — / — |
+| Moving / random / 0 / handover | 0.0 / — / — | 1.0 / — / — | 1.0 / — / — | 1.0 / — / — |
+| Moving / random / 0 / recovering | 0.0 / — / — | 6.0 / 1.0 / 4.5 | 6.4 / 2.1 / 4.2 | 7.8 / 3.7 / 3.9 |
+| Moving / random / 0 / clear again | 0.0 / — / — | 20.0 / 7.6 / 10.6 | 21.3 / 9.2 / 14.9 | 27.7 / 4.9 / 12.1 |
+| Moving / random / 1 / clear signal | 59.3 / 27.8 / 45.0 | 38.5 / 12.1 / 22.9 | 29.7 / 11.7 / 21.3 | 54.7 / 20.0 / 36.2 |
+| Moving / random / 1 / congestion | 20.0 / 2.6 / 12.5 | 13.8 / 1.9 / 6.8 | 10.0 / 1.3 / 3.0 | 14.8 / 5.2 / 7.0 |
+| Moving / random / 1 / weak signal | 6.0 / 3.4 / 3.5 | 4.5 / 1.1 / 1.1 | 4.2 / 1.4 / 1.4 | 3.8 / 0.8 / 0.8 |
+| Moving / random / 1 / deep fade | 3.0 / — / — | 1.7 / — / — | 2.3 / — / — | 2.0 / — / — |
+| Moving / random / 1 / handover | 2.0 / — / — | 0.0 / — / — | 1.0 / — / — | 1.0 / — / — |
+| Moving / random / 1 / recovering | 5.0 / 0.9 / 1.0 | 5.4 / 2.0 / 2.4 | 3.2 / 1.0 / 1.0 | 6.0 / 1.1 / 4.3 |
+| Moving / random / 1 / clear again | 45.7 / 12.5 / 25.2 | 20.3 / 8.6 / 10.3 | 22.4 / 9.7 / 12.7 | 24.4 / 8.6 / 10.0 |
+
+### Traffic, resources and delivery
+
+| Profile / scene / evaluation | Role | RX kbit/s | Client / server RSS MiB | Client / server CPU % | Median / p95 age ms | Maxgap ms | Body frames | Header frames |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Moving / dashboard / 0 | SSH | 1969 | 7.78 / 19.63 | 0.22 / 0.38 | 1685 / 12033 | 1224 | 1436 | 1429 |
+| Moving / dashboard / 0 | CAN+PTY reference A | 59 | 2.66 / 5.73 | 0.31 / 1.49 | 50 / 164 | 1660 | 457 | 457 |
+| Moving / dashboard / 0 | CAN+PTY reference B | 73 | 2.68 / 5.75 | 0.36 / 1.45 | 47 / 135 | 1784 | 556 | 556 |
+| Moving / dashboard / 0 | rsh TCP | 107 | 2.67 / 5.77 | 0.47 / 1.54 | 46 / 131 | 1270 | 806 | 806 |
+| Moving / dashboard / 1 | rsh TCP | 113 | 2.66 / 5.75 | 0.51 / 1.80 | 48 / 140 | 1267 | 845 | 845 |
+| Moving / dashboard / 1 | CAN+PTY reference B | 70 | 2.57 / 5.75 | 0.33 / 1.38 | 46 / 164 | 1204 | 539 | 539 |
+| Moving / dashboard / 1 | CAN+PTY reference A | 60 | 2.59 / 5.76 | 0.31 / 1.46 | 49 / 204 | 1214 | 470 | 470 |
+| Moving / dashboard / 1 | SSH | 1989 | 7.52 / 19.52 | 0.24 / 0.37 | 1780 / 11258 | 1700 | 1447 | 1444 |
+| Moving / random / 0 | SSH | 1694 | 7.86 / 18.65 | 0.14 / 0.09 | 54 / 4527 | 13129 | 494 | 495 |
+| Moving / random / 0 | CAN+PTY reference A | 602 | 2.71 / 5.36 | 0.57 / 2.44 | 61 / 354 | 1477 | 426 | 433 |
+| Moving / random / 0 | CAN+PTY reference B | 537 | 2.66 / 5.37 | 0.53 / 2.31 | 65 / 356 | 2029 | 387 | 393 |
+| Moving / random / 0 | rsh TCP | 910 | 2.65 / 5.39 | 0.81 / 3.12 | 55 / 208 | 2002 | 651 | 653 |
+| Moving / random / 1 | rsh TCP | 856 | 2.65 / 5.38 | 0.73 / 2.99 | 54 / 222 | 2164 | 610 | 618 |
+| Moving / random / 1 | CAN+PTY reference B | 585 | 2.70 / 5.37 | 0.51 / 2.33 | 57 / 339 | 2090 | 416 | 426 |
+| Moving / random / 1 | CAN+PTY reference A | 692 | 2.70 / 5.39 | 0.63 / 2.61 | 60 / 268 | 2828 | 478 | 490 |
+| Moving / random / 1 | SSH | 2652 | 7.56 / 20.68 | 0.21 / 0.21 | 1700 / 13834 | 1448 | 816 | 817 |
+
+[All saved results, source identities and verification code](docs/bench/data/bounded-quiet65-reference-moving-20261101/README.md).
+
+## 120 Hz guard
+
+120 FPS requested; LAN/RTT 100 ms random screens. This cohort is separate from60 Hz results.
+
+Cells are **avg / 1% low / 5% low FPS**.
+
+| Profile / scene / evaluation | SSH | Reference A | Reference B | rsh TCP |
+| --- | --- | --- | --- | --- |
+| LAN / random / 0 | 120.0 / 75.7 / 86.4 | 119.5 / 66.2 / 77.7 | 120.0 / 64.0 / 77.0 | 119.2 / 62.1 / 76.3 |
+| LAN / random / 1 | 120.0 / 74.4 / 84.4 | 119.9 / 67.3 / 76.7 | 119.5 / 63.5 / 75.6 | 119.3 / 65.1 / 75.6 |
+| RTT 100 ms / random / 0 | 120.0 / 50.9 / 75.1 | 100.4 / 54.7 / 68.9 | 100.7 / 55.0 / 68.9 | 99.9 / 51.9 / 69.6 |
+| RTT 100 ms / random / 1 | 120.0 / 48.9 / 77.4 | 99.7 / 42.5 / 69.2 | 100.9 / 45.9 / 69.8 | 101.0 / 55.9 / 67.8 |
+
+![fast120 fps](docs/bench/bounded-quiet65-reference-fast120-fps.svg)
+
+### Traffic, resources and delivery
+
+| Profile / scene / evaluation | Role | RX kbit/s | Client / server RSS MiB | Client / server CPU % | Median / p95 age ms | Maxgap ms | Body frames | Header frames |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| LAN / random / 0 | SSH | 11567 | 7.37 / 18.38 | 0.40 / 0.51 | 2 / 5 | 15 | 960 | 960 |
+| LAN / random / 0 | CAN+PTY reference A | 5438 | 2.60 / 5.61 | 2.62 / 3.39 | 5 / 9 | 29 | 956 | 956 |
+| LAN / random / 0 | CAN+PTY reference B | 5441 | 2.59 / 5.58 | 2.61 / 3.33 | 6 / 10 | 17 | 960 | 960 |
+| LAN / random / 0 | rsh TCP | 5435 | 2.62 / 5.64 | 2.71 / 3.35 | 5 / 9 | 27 | 954 | 954 |
+| LAN / random / 1 | rsh TCP | 5433 | 2.64 / 5.62 | 2.71 / 3.63 | 6 / 9 | 38 | 955 | 955 |
+| LAN / random / 1 | CAN+PTY reference B | 5439 | 2.62 / 5.59 | 2.66 / 3.56 | 5 / 10 | 24 | 956 | 957 |
+| LAN / random / 1 | CAN+PTY reference A | 5439 | 2.62 / 5.62 | 2.70 / 3.57 | 5 / 9 | 20 | 959 | 959 |
+| LAN / random / 1 | SSH | 11577 | 7.41 / 18.38 | 0.45 / 0.58 | 2 / 5 | 18 | 960 | 960 |
+| RTT 100 ms / random / 0 | SSH | 11589 | 7.78 / 18.59 | 0.44 / 0.53 | 54 / 142 | 72 | 960 | 960 |
+| RTT 100 ms / random / 0 | CAN+PTY reference A | 3956 | 2.66 / 5.84 | 2.17 / 9.54 | 58 / 64 | 105 | 803 | 808 |
+| RTT 100 ms / random / 0 | CAN+PTY reference B | 3972 | 2.64 / 5.90 | 2.22 / 9.64 | 58 / 65 | 101 | 806 | 809 |
+| RTT 100 ms / random / 0 | rsh TCP | 3917 | 2.63 / 5.86 | 2.22 / 9.71 | 60 / 66 | 105 | 799 | 799 |
+| RTT 100 ms / random / 1 | rsh TCP | 3959 | 2.64 / 5.86 | 2.37 / 10.30 | 60 / 65 | 108 | 808 | 808 |
+| RTT 100 ms / random / 1 | CAN+PTY reference B | 3967 | 2.61 / 5.88 | 2.33 / 10.14 | 59 / 65 | 97 | 807 | 811 |
+| RTT 100 ms / random / 1 | CAN+PTY reference A | 3943 | 2.64 / 5.84 | 2.33 / 9.98 | 59 / 65 | 104 | 798 | 803 |
+| RTT 100 ms / random / 1 | SSH | 11584 | 7.94 / 18.59 | 0.47 / 0.57 | 54 / 117 | 76 | 960 | 960 |
+
+[All saved results, source identities and verification code](docs/bench/data/bounded-quiet65-reference-fast120-20261101/README.md).
+
+## Evidence and reproduction
+
+The [full controller study](docs/bench/bounded-quiet65-20261101.md) retains all
+nine independent cohorts, including quiet-only comparisons against parent60,
+the two repeated reference roles, all adverse observations and their original
+experimental status. Those records describe the experiments; main uses the
+source identified above. The [research archive](docs/bench) also retains the
+functional controller investigations and unsuccessful alternatives.
+
+Regenerate these tables and README benchmark sections from committed data:
+
+```sh
+python3 benchmark/lab/report.py
+```
+
+Build and compare the implementation with SSH using the lab:
+
+```sh
+scripts/dist.sh
+python3 benchmark/harness/run.py build
+python3 benchmark/lab/lab.py run --tools ssh,rsh-tcp \
+  --tests render --nets lan,wan,highlat,lowbw,verylow,slow64k \
+  --scenes compress,bandwidth --fps 60 --duration 8 --iterations 2 --parallel 4
+python3 benchmark/lab/lab.py demo --tools ssh,rsh-tcp --events '' \
+  --nets moving --scenes compress,bandwidth --fps 60
+```
+
+These commands run the public lab; recreating the exact compact TCP cohorts
+also requires their archived deployment/collector configuration and original
+local raw inputs for a full body-oracle replay. They do not reproduce the
+separate released0.2.0 multi-tool dataset below.
+
+
+## Released 0.2.0 suite
+
 Recorded comparisons of rsh (UDP), rsh with UDP blocked (TCP fallback),
 OpenSSH, Eternal Terminal (ET), and mosh. All tables and charts below are
 generated from the [committed measurement snapshots](docs/bench/data).
 
-## Measurement scope
+### Release suite scope
 
 | Dataset | Conditions | Samples | Version provenance |
 | --- | --- | --- | --- |
-| Static links, 2026-10-29 | Five transports; 100×30 terminal; requested 60 FPS; 8 s render window | Six render/switch attempts per case; three attempts per other case; two ten-session runs | Published 0.2.0, build `6729d398d4f1`; binary hash and versions recorded for all containers. |
-| Moving link, 2026-10-29 | SSH/mosh/rsh; 158×43 viewer; requested 60 FPS; 60 s per scene | One run, two 30 s cycles per scene | Published 0.2.0, build `6729d398d4f1`. |
+| Static links | Five transports; 100×30 terminal; requested 60 FPS; 8 s render window | Six render/switch attempts per case; three attempts per other case; two ten-session runs | Published 0.2.0, build `6729d398d4f1`; binary hash and versions recorded for all containers. |
+| Moving link | SSH/mosh/rsh; 158×43 viewer; requested 60 FPS; 60 s per scene | One run, two 30 s cycles per scene | Published 0.2.0, build `6729d398d4f1`. |
 
-Both datasets were freshly measured on **2026-10-29**, using the published
-**rsh 0.2.0** Linux arm64 binary, build `6729d398d4f1`. Its SHA-256 and
+Both release datasets use the published **rsh 0.2.0** Linux arm64 binary, build `6729d398d4f1`. Its SHA-256 and
 source build hash were verified before testing. The moving measurement
 is reported separately because its window, screen size and impairment
 semantics differ from the static tests.
 
-### Environment and workloads
+#### Environment and workloads
 
 Apple M5 (10 cores, 32 GiB), macOS 27.0.1 (26A434), OrbStack Docker
 29.8.2 with ten vCPUs and approximately 16 GiB assigned to the VM;
@@ -29,9 +403,7 @@ the base image's older rsh was explicitly replaced on both ends of every
 slot with the checksum-verified 0.2.0 binary.
 
 Each job has a server/client container pair and an isolated shaped link;
-jobs share host CPUs. Static batches used **four parallel jobs**, reduced from the old
-snapshot's ten to limit host contention. This changes the historical host
-load, so old/new differences alone cannot establish a code regression.
+jobs share host CPUs. Static batches use **four parallel jobs**.
 Other local containers remained running; host timing can still vary. `compress` is a compressible full-screen dashboard;
 `bandwidth` changes every cell with random content. Both request 60 FPS.
 SSH/ET frame headers are observed in the raw-output reader thread;
@@ -40,7 +412,7 @@ on another thread. Header arrival can precede the remaining cells, and
 emulator scheduling contributes to the latter tools' measurements. This
 does not measure GPU presentation or prove that every cell was repainted.
 
-### Metrics and aggregation
+#### Metrics and aggregation
 
 - **Avg FPS** is the arithmetic mean of each run's displayed frames divided
   by its observation duration. **Median FPS** is the median of those run
@@ -72,7 +444,7 @@ Metric implementations: [agent.py](benchmark/lab/agent.py),
 [original charts](benchmark/lab/charts.py), and
 [report generator](benchmark/lab/report.py).
 
-### Static network profiles
+#### Static network profiles
 
 `tc netem` applies delay and independent random loss in both directions;
 rate limits below apply server → client. RTT is the nominal delay total,
@@ -91,7 +463,7 @@ before queueing. No bandwidth cap means no configured rate limit.
 | highlat | RTT 300 ms |
 | lossy | 2% loss · RTT 100 ms |
 
-## 1. Dashboard rendering
+### 1. Dashboard rendering
 
 Light bars show median FPS, medium bars 5% low and solid bars 1% low.
 All five transports and all nine network profiles are included; six runs per case were attempted.
@@ -147,7 +519,7 @@ All five transports and all nine network profiles are included; six runs per cas
 | 2% loss · RTT 100 ms | ET | 6 | 33.9 | 36.2 | 4.9 | 9.6 | 709 | 1486 | 18.19 | 14.94 |
 | 2% loss · RTT 100 ms | mosh | 6 | 17.2 | 17.6 | 3.7 | 17.6 | 60 | 102 | 14.53 | 10.66 |
 
-## 2. Random full-screen rendering
+### 2. Random full-screen rendering
 
 Every cell changes each frame. This workload compresses less effectively
 and exposes a different bandwidth and frame-gap tradeoff than the dashboard.
@@ -203,13 +575,13 @@ and exposes a different bandwidth and frame-gap tradeoff than the dashboard.
 | 2% loss · RTT 100 ms | ET | 6 | 16.9 | 16.5 | 3.2 | 4.9 | 1570 | 1587 | 17.79 | 16.01 |
 | 2% loss · RTT 100 ms | mosh | 6 | 14.9 | 14.6 | 3.7 | 6.1 | 62 | 794 | 14.45 | 10.90 |
 
-## 3. Frame age
+### 3. Frame age
 
 ![Dashboard median frame age by link and transport](docs/bench/age.svg)
 
 The rendering tables above include age for both scenes. The chart uses a log scale.
 
-## 4. Network traffic and CPU
+### 4. Network traffic and CPU
 
 ![Dashboard received KiB per displayed frame](docs/bench/network.svg)
 
@@ -217,7 +589,7 @@ The rendering tables above include age for both scenes. The chart uses a log sca
 
 The render tables give RX kbit/s. Below: median per-run bytes/frame, packets/frame and CPU for each scene.
 
-### Dashboard
+#### Dashboard
 
 | Link | Tool | RX KiB/frame | Packets in/frame | Packets out/frame | Client CPU % | Server CPU % |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -267,7 +639,7 @@ The render tables give RX kbit/s. Below: median per-run bytes/frame, packets/fra
 | lossy | ET | 5.02 | 2.06 | 1.21 | 0.22 | 0.40 |
 | lossy | mosh | 0.71 | 1.10 | 0.54 | 0.54 | 2.09 |
 
-### Random screen
+#### Random screen
 
 | Link | Tool | RX KiB/frame | Packets in/frame | Packets out/frame | Client CPU % | Server CPU % |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -317,13 +689,13 @@ The render tables give RX kbit/s. Below: median per-run bytes/frame, packets/fra
 | lossy | ET | 11.84 | 4.68 | 2.87 | 0.26 | 0.49 |
 | lossy | mosh | 6.62 | 6.23 | 0.52 | 1.10 | 3.85 |
 
-## 5. Resident memory
+### 5. Resident memory
 
 ![Median client and server RSS while rendering](docs/bench/memory.svg)
 
 Per-link RSS for both scenes is in sections 1–2. The chart pools the render samples across links and scenes.
 
-### Ten simultaneous sessions
+#### Ten simultaneous sessions
 
 ![Combined client and server RSS for ten idle sessions](docs/bench/memory-sessions.svg)
 
@@ -336,7 +708,7 @@ Per-link RSS for both scenes is in sections 1–2. The chart pools the render sa
 
 Each shell prints 3,000 lines, then becomes quiet. Packet rates are totals for the container's ten sessions. No rsh-TCP ten-session result was recorded.
 
-## 6. Connection and key echo
+### 6. Connection and key echo
 
 ![Connection time in echo jobs](docs/bench/connect.svg)
 
@@ -392,7 +764,7 @@ Each shell prints 3,000 lines, then becomes quiet. Packet rates are totals for t
 
 Ten keys per run. Echo includes predictive local output for mosh/rsh. Connection times come from these same echo jobs, including their startup path; they are not a new dedicated cold-install test.
 
-## 7. Bulk output
+### 7. Bulk output
 
 ![Time until the prompt returns after seq 1 100000](docs/bench/flood.svg)
 
@@ -446,11 +818,11 @@ Ten keys per run. Echo includes predictive local output for mosh/rsh. Connection
 
 Completion is the marker after `seq 1 100000`, watched for 30 s. When a case is mixed, completion time covers only completed runs; the counts remain explicit. mosh and rsh may skip intermediate output, so prompt recovery does not imply delivery of the complete byte stream.
 
-## 8. Link changes
+### 8. Link changes
 
 Each scene runs two seconds on the first link and eight seconds after the change. FPS before/after is medianed; post-change lows pool only post-change inter-frame gaps. Adaptation is the first whole-second bucket reaching 90% of that tool's own settled FPS, not time to recover 60 FPS.
 
-### Dashboard
+#### Dashboard
 
 ![Dashboard FPS and lows after each link change](docs/bench/switch-dashboard.svg)
 
@@ -482,7 +854,7 @@ Each scene runs two seconds on the first link and eight seconds after the change
 | highlat → lossy | ET | 6/6 | 58.4 | 48.3 | 7.2 | 11.9 | 122 | 0.0 |
 | highlat → lossy | mosh | 6/6 | 6.7 | 13.4 | 3.0 | 8.0 | 61 | 3.0 |
 
-### Random screen
+#### Random screen
 
 ![Random screen FPS and lows after each link change](docs/bench/switch-random.svg)
 
@@ -514,7 +886,7 @@ Each scene runs two seconds on the first link and eight seconds after the change
 | highlat → lossy | ET | 6/6 | 31.6 | 41.0 | 5.0 | 9.7 | 1058 | 0.5 |
 | highlat → lossy | mosh | 6/6 | 6.7 | 12.1 | 2.9 | 5.9 | 63 | 3.0 |
 
-## 9. Outage, roaming, reattachment and UDP block
+### 9. Outage, roaming, reattachment and UDP block
 
 Three runs each on RTT 100 ms. Outage is five seconds; roaming is watched for eight seconds. Reattachment restarts the client. UDP-block connection is watched for 15 seconds.
 
@@ -545,9 +917,9 @@ Three runs each on RTT 100 ms. Outage is five seconds; roaming is watched for ei
 
 Restart time alone does not establish session continuity: see Same shell. A missing roaming response within eight seconds is a censored observation, not a measured infinite recovery time. All three UDP-block mosh jobs reported no prompt, consistent with its UDP-only transport.
 
-## 10. Moving network
+### 10. Moving network
 
-This is a fresh 0.2.0 measurement, not pooled into the static comparison. Three independent links replay a common delay/rate/outage schedule on the Docker VM clock. Each 60 s scene contains two 30 s cycles. Nominal loss fractions are shared intervals of complete outage, unlike static independent per-packet random loss. A controlled 158×43 PTY attaches to tmux and continuously drains its output to a file; there is no on-screen GPU presentation measurement.
+This released0.2.0 moving dataset is separate from the static comparison. Three independent links replay a common delay/rate/outage schedule on the Docker VM clock. Each 60 s scene contains two 30 s cycles. Nominal loss fractions are shared intervals of complete outage, unlike static independent per-packet random loss. A controlled 158×43 PTY attaches to tmux and continuously drains its output to a file; there is no on-screen GPU presentation measurement.
 
 | Moving tool | Workload columns | Workload rows |
 | --- | --- | --- |
@@ -582,29 +954,29 @@ The demo's scene RX counters include warmup/drain outside the common FPS window;
 
 Dashboard rsh averaged 58.4 / 58.6 FPS in the final five seconds of the two clear phases. Random screens averaged 54.4 / 56.4 FPS in those final windows. Maximum application skew between containers was 27.47 / 3.88 ms (dashboard/random). All figures in this paragraph are computed from the newly committed frame observations and replay timestamps.
 
-## Collection failures and limitations
+### Collection failures and limitations
 
 | Source | Test | Link | Scene | Tool | Iteration | Error |
 | --- | --- | --- | --- | --- | --- | --- |
-| run-20261029-161607 | udpblock | wan | — | mosh | 0 | no prompt |
-| run-20261029-161607 | udpblock | wan | — | mosh | 1 | no prompt |
-| run-20261029-161607 | udpblock | wan | — | mosh | 2 | no prompt |
-| run-20261029-161607 | render | badmobile | bandwidth | rsh (TCP) | 2 | no prompt |
-| run-20261029-161607 | render | lossy | bandwidth | rsh (TCP) | 0 | no prompt |
-| run-20261029-163746 | render | badmobile | compress | rsh (TCP) | 0 | no prompt |
-| run-20261029-163746 | render | badmobile | bandwidth | rsh (TCP) | 2 | no prompt |
+| Static batch 1 | udpblock | wan | — | mosh | 0 | no prompt |
+| Static batch 1 | udpblock | wan | — | mosh | 1 | no prompt |
+| Static batch 1 | udpblock | wan | — | mosh | 2 | no prompt |
+| Static batch 1 | render | badmobile | bandwidth | rsh (TCP) | 2 | no prompt |
+| Static batch 1 | render | lossy | bandwidth | rsh (TCP) | 0 | no prompt |
+| Static batch 2 | render | badmobile | compress | rsh (TCP) | 0 | no prompt |
+| Static batch 2 | render | badmobile | bandwidth | rsh (TCP) | 2 | no prompt |
 
 Static render jobs: 536/540 measured; switch jobs: 300/300 measured. Other tests use the first main batch only, except the separate sessions batch. Collection failures: 7; expected mosh UDP-block no-prompt cases: 3. No failed job was silently converted to a numeric result.
 
 Results cover synthetic isolated paths on one shared host, not fairness with cross traffic, real radio traces, independent hardware replications or statistical confidence intervals. Static nominal loss percentages do not guarantee equal realized drops across protocols. High average FPS can coexist with worse tails; compare the average and percentile columns separately. No universal win or non-regression claim is made.
 
-## Data and reproduction
+### Data and reproduction
 
 | Source run | Jobs | Used for | Original SHA-256 |
 | --- | --- | --- | --- |
-| run-20261029-161607.json | 750 | echo, flood, outage, reattach, render, roam, switch, udpblock | 28c70957b6e0e628149610aef179fb929356b6df3875dabedea7c248593df6d0 |
-| run-20261029-163746.json | 420 | render, switch | e3bbec2fac8b5626049c1015f1465ce2d06959761bfd8538667383cdf8a11752 |
-| run-20261029-163908.json | 8 | sessions | a9405a2dec1dfccf00053d3f2ebe0e9d04415f3cbbf7eda583766e51356713e7 |
+| Static batch 1 | 750 | echo, flood, outage, reattach, render, roam, switch, udpblock | 28c70957b6e0e628149610aef179fb929356b6df3875dabedea7c248593df6d0 |
+| Static batch 2 | 420 | render, switch | e3bbec2fac8b5626049c1015f1465ce2d06959761bfd8538667383cdf8a11752 |
+| Static batch 3 | 8 | sessions | a9405a2dec1dfccf00053d3f2ebe0e9d04415f3cbbf7eda583766e51356713e7 |
 
 | Provenance | Value |
 | --- | --- |
@@ -614,163 +986,48 @@ Results cover synthetic isolated paths on one shared host, not fairness with cro
 | Source commit | fd9031cb576e2156a5907a49f572b8c01f622dab |
 | Docker image ID | sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b |
 
-The [static snapshot](docs/bench/data/static-20261029.json) contains all three batches, original options, per-job results, frame gaps and errors. The [moving snapshot](docs/bench/data/moving-20261029-release.json) includes all six results, raw frame observations, window timestamps, RSS/byte counters and the complete replay trace. SHA-256 fields identify the original local files; JSON is repackaged without changing measurement values. The [environment manifest](docs/bench/data/environment-20261029.json) records host/VM resources, image and package versions, original/executed harness hashes and the binary checks on both ends of every slot. The former [static](docs/bench/data/static-20261028.json) and [development moving](docs/bench/data/moving-20261029.json) snapshots remain available as historical data; they are not pooled into today's results.
+The [static snapshot](docs/bench/data/static-20261029.json) contains all three batches, original options, per-job results, frame gaps and errors. The [moving snapshot](docs/bench/data/moving-20261029-release.json) includes all six results, raw frame observations, window timestamps, RSS/byte counters and the complete replay trace. SHA-256 fields identify the original local files; JSON is repackaged without changing measurement values. The [environment manifest](docs/bench/data/environment-20261029.json) records host/VM resources, image and package versions, original/executed harness hashes and the binary checks on both ends of every slot. The former [static](docs/bench/data/static-20261028.json) and [development moving](docs/bench/data/moving-20261029.json) snapshots remain available as historical data; the datasets remain separate.
 
-Regenerate this report, the README tables and all charts from committed data:
+Regenerate the report, README tables and released-suite charts from committed data. TCP figures have separate plot scripts in their linked archives:
 
 ```sh
 python3 benchmark/lab/report.py
 ```
 
-To reproduce the recorded workload and its four-job concurrency:
+The recorded release workload uses the following options. Supply the verified 0.2.0 binary; exact replay also requires its archived harness/environment:
 
 ```sh
 scripts/dist.sh
 python3 benchmark/harness/run.py build
-python3 benchmark/lab/lab.py run --tools ssh,et,mosh,rsh,rsh-tcp \
+python3 benchmark/lab/lab.py run --rsh /path/to/verified/rsh-0.2.0-linux-aarch64 --tools ssh,et,mosh,rsh,rsh-tcp \
   --tests render,switch,echo,flood,outage,roam,reattach,udpblock \
   --nets lan,wan,lowbw,verylow,slow64k,highlat,lossy,mobile,badmobile \
   --switches lan:highlat,lan:lowbw,lowbw:highlat,highlat:lossy,wan:verylow \
   --scenes compress,bandwidth --fps 60 --duration 8 --iterations 3 \
   --cols 100 --rows 30 --parallel 4
 # Repeat render,switch only with the same options for six screen samples.
-python3 benchmark/lab/lab.py run --tools ssh,et,mosh,rsh \
+python3 benchmark/lab/lab.py run --rsh /path/to/verified/rsh-0.2.0-linux-aarch64 --tools ssh,et,mosh,rsh \
   --tests sessions --sessions 10 --session-iterations 2 --nets lan --parallel 4
 ```
 
-### Next full measurement
+#### Lab defaults
 
-New performance measurements use **four parallel jobs** and **two evaluations
-per case**, including sessions, for both development and publication. These
-defaults reflect the host's four performance cores, without claiming physical
-core affinity. Historical datasets remain separate. The recorded tables above
-retain their actual four-job, six-screen-repeat conditions.
-For the next measurement, run the static command above once with
-`--iterations 2 --parallel 4`; omit the extra screen-only repeat. Run the sessions command
-with `--session-iterations 2 --parallel 4`. This retains all five static
-transports, nine links, both scenes and the same observation durations:
-500 static jobs plus eight memory jobs, rather than 1,178 jobs.
+Performance runs use four parallel jobs and two evaluations per case, including sessions.
+The release tables retain their original repeat counts.
 
-The [twelve-worker validation](docs/bench/parallel12-20261029.md) completed
-the same 750-job, three-repeat static batch in **11.02 minutes**, versus
-**33.17 minutes** with four workers. The whole run through moving postflight
-took **15.63 minutes**, versus **59.60 minutes** for the earlier 1,178-job
-suite; this also includes fewer screen/memory repeats and stage gaps.
-The earlier 14–15 minute estimate excluded preparation and review.
-Mean FPS was close in all twelve lossless rsh UDP pairs under the report's
-descriptive rule, but lows, lossy-path results and RSS were not identical.
-The comparison uses the first three-repeat baseline batch, and moving
-remains a separate three-link test rather than a twelve-worker load test.
-
-Use a freshly built image or pass `--rsh /path/to/verified/rsh-linux-aarch64`
+Use a built image or pass `--rsh /path/to/verified/rsh-linux-aarch64`
 to replace an older embedded binary. The committed snapshot records the
 actual image ID, binary SHA-256, package versions, source commit and harness
 checksums. Moving demos need a 158×43 viewer to reproduce the recorded
 layout; the three workload panes are narrower than the viewer:
 
 ```sh
-python3 benchmark/lab/lab.py demo --tools ssh,mosh,rsh --events '' \
+python3 benchmark/lab/lab.py demo --rsh /path/to/verified/rsh-0.2.0-linux-aarch64 --tools ssh,mosh,rsh --events '' \
   --nets moving --scenes compress,bandwidth --fps 60 --duration 60
 ```
 
-## Development investigations
-
-The [TCP low-tail investigation](docs/bench/lowtail-20261031.md), begun
-2026-10-31 with November 1 follow-ups, reports separate four-worker,
-two-evaluation core, static low-bandwidth and ThinLTO screens. Per-repetition
-FPS/lows, received traffic, CPU, age and sampled client/server RSS remain
-visible. All three candidates remain unselected: transit improved dashboards
-but retained tail deficits, freshness-quarter had an adverse core repeat, and
-ThinLTO did not establish a runtime improvement. November 1 uses CPU<30% at
-admission with runtime load recorded as context. These experiments are separate
-from the [TCP batch candidate](docs/bench/tcp-batch-20261030.md) and do not
-replace the published full-suite measurements above.
-
-The separate [live observer comparison](docs/bench/observer-20261101.md)
-keeps the product fixed across 96 observations. Disabling post-anchor live
-emulation had mixed effects and left slow replicas; it does not establish a
-product gain or universal SSH parity. Both modes use offline complete-body
-metrics, with two evaluations retained separately.
-
-The [probe60 investigation](docs/bench/probe60-20261101.md) retains separate
-core and slow-network screens. Some FPS gains accompany mixed lows and older
-received frames at 1 Mbit/s; the candidate remains unselected. Functional
-trace clues are separate from these performance comparisons.
-
-The subsequent [near-floor probe study](docs/bench/probe60-near-20261101.md)
-reports another separate core/slow comparison. FPS/lows are primary and
-CPU/RSS secondary; dashboard deficits and freshness costs remain visible.
-Overall gains may justify individual metric costs; the candidate is currently
-unselected while that tradeoff is evaluated. Cross-run observations are not a
-causal proof of a fix.
-
-The [sampled-floor transit study](docs/bench/transit-floor-20261101.md)
-adds separate core/slow evidence, retaining dashboard FPS gains and a
-parser-sensitive 64k body/header disagreement. Its long unmatched tail is
-shown beside adjacent-gap lows. CAN interoperability controls and focused
-follow-ups are separate from adaptive-policy promotion; no global parity or
-resource-only veto is inferred.
-
-A [focused LAN client-wait follow-up](docs/bench/client-subms-20261101.md)
-compares positive sub-millisecond polling against the CAN-fixed baseline.
-All 16 jobs retain 60 FPS averages; tails are mixed against baseline and
-below SSH. This is not a full-matrix or causal wait-improvement claim.
-
-The [combined transit/probe comparison](docs/bench/combined-20261101.md)
-uses CAN-fixed references and the same RAM/geometry method in both static
-screens. Dashboard FPS gains, age costs, mixed tails and partial-body
-observations remain separate; the evidence does not imply global SSH parity
-or automatic policy promotion.
-
-The [final CAN+PTY-fixed TCP comparison](docs/bench/final-tcp-20261101.md)
-adds 96 eligible static observations and 16 separate descriptive moving
-records. Average/1%/5% FPS remain primary, with traffic/RSS/CPU and fresh
-recovery alongside. Dashboard gains do not remove LAN or high-RTT random
-deficits. Moving retains all 28 ACK bounds and unapproved timing fidelity;
-incomplete loss screens and connection-only checks remain separate.
-No global parity or release adoption is claimed.
-
-The separate [TCP cadence-margin follow-up](docs/bench/cadence-margin-20261101.md)
-keeps core gains, original slow-network losses and one predeclared replication
-as independent cohorts. The margin remains unselected; functional
-non-activation does not explain or erase earlier untraced deficits.
-
-The [busy-sample/screen-wait diagnostic](docs/bench/busy-span-20261101.md)
-is a separate functional appendix. Committed sample intervals overlap strict
-controller holds, without proving physical idle or justifying sample discard.
-Median-stage ordering and a physical-queue counterexample remain explicit;
-these are not additional eligible performance observations.
-
-The separate [TCP quarter-freshness follow-up](docs/bench/fresh-quarter55-20261101.md)
-retains96 eligible static observations and16 descriptive moving observations,
-including1Mbit/s random FPS gains, dashboard/age costs and random moving1%low
-losses. The candidate remains unselected; earlier19 adverse evidence is retained.
-
-The [combined quarter-wait/cadence study](docs/bench/quarter-margin-20261101.md)
-keeps 96 eligible static observations, 16 descriptive moving observations and
-8 separate balanced-slot observations. WAN tail costs persist after the slot
-crossover. All gains and costs remain per evaluation; native build evidence
-is archived.
-
-The [LAN pacing diagnostic](docs/bench/lan-paced-20261101.md) records 16 separate
-functional observations. The retained window showed no token-blocked gates
-or ordinary catch-deadline crossings, so those hypotheses did not justify a
-client pacing patch.
-
-The [bounded frame-gather follow-up](docs/bench/bounded-quiet65-20261101.md)
-keeps nine cohorts separate: focused, full core/slow/moving and 120Hz guards
-against the advanced controller, then core/slow/moving and 120Hz against the
-CAN+PTY-fixed reference. It retains 240 eligible static observations and 32
-separate descriptive moving records, without pooling FPS. 1% low, 5% low
-and average FPS are primary; CPU/RSS are auxiliary. WAN/low-bandwidth gains
-coexist with LAN tails, high-RTT average deficits and 120Hz costs. Linux and
-macOS correctness tests passed; global parity and release adoption are not
-claimed.
-
 ## References
 
-The [README references](README.md#references) identify the papers and
-protocol specifications considered for rsh's sender/receiver design,
-with links to the corresponding implementation. Those publications do
-not supply the measurements in this report. The benchmark uses its own
-Docker/netem/terminal collector described above.
+The [README references](README.md#references) connect the sender/receiver design
+to its research sources. The benchmark data come from this repository's own
+Docker/netem/terminal collectors.
