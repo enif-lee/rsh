@@ -2009,7 +2009,7 @@ impl Attachment {
             // 38 ms update and 20 ms of it made gaps of 58 ms, the slowest
             // frames shown; 1 Mbit/s random screens 1% low 8.4 to 11.4,
             // 5% low 16.6 to 19.7, for 8 ms of age).
-            let wait = if self.modelled() { FRESH_WAIT.min(gap / 4) } else { FRESH_WAIT };
+            let wait = if self.modelled() || is_tcp_addr(self.addr) { FRESH_WAIT.min(gap / 4) } else { FRESH_WAIT };
             return Some(match self.output_at {
                 Some(at) if at >= idle => at,
                 Some(at) => {
@@ -2023,7 +2023,20 @@ impl Attachment {
             // Not faster than a frame every 20 ms (or the program's step):
             // a burst of output (a `cat`) would otherwise queue an update
             // per read.
-            return Some(last + self.screen_gap());
+            let tcp_animation = is_tcp_addr(self.addr) && self.animating();
+            let gap = if tcp_animation {
+                self.output_gap.mul_f64(0.9).clamp(MIN_SCREEN_GAP, SCREEN_GAP)
+            } else {
+                self.screen_gap()
+            };
+            let due = last + gap;
+            return Some(if tcp_animation {
+                self.output_at.map_or(due, |at| {
+                    due.max((at + FRAME_GATHER_GAP).min(last + SCREEN_GAP))
+                })
+            } else {
+                due
+            });
         }
         let half = self.output.srtt().map_or(Duration::from_millis(50), |srtt| srtt / 2);
         Some(last + half.clamp(self.screen_gap(), Duration::from_millis(250)))
@@ -2112,11 +2125,12 @@ impl Attachment {
     /// Bytes waiting for the link, not for an ack of bytes already on
     /// their way. Up to a bandwidth-delay product can be in flight with
     /// no queue. Its wire overhead takes part of that allowance too.
-    fn drain_backlog(&self, pending: usize) -> usize {
-        if !self.modelled() {
+    fn drain_backlog(&self, pending: usize, now: Instant) -> usize {
+        if !self.modelled() && !is_tcp_addr(self.addr) {
             return pending;
         }
-        let Some(bdp) = self.output.slow_bdp() else {
+        let bdp = if is_tcp_addr(self.addr) { self.output.drain_bdp(now) } else { self.output.slow_bdp() };
+        let Some(bdp) = bdp else {
             return pending;
         };
         let flight = self.output.in_flight();
@@ -2360,7 +2374,7 @@ impl Session {
                 let incoming = attach.stream_len(bytes.len());
                 // Half the limit: the first frames of an animation would
                 // otherwise queue before the mode starts.
-                let backlog = attach.drain_backlog(attach.output.in_flight() as usize + incoming);
+                let backlog = attach.drain_backlog(attach.output.in_flight() as usize + incoming, now);
                 if incoming > 128 && backlog as f64 / rate > LAG_LIMIT.as_secs_f64() / 2.0 {
                     let (cols, rows) = self.term.size();
                     let mut shadow = Terminal::with_history(cols, rows, 0);
@@ -2446,7 +2460,7 @@ impl Session {
         // Into a compressed stream new bytes take about a ratio's share.
         let incoming = attach.stream_len(bytes.len());
         let lag = output.pending() + attach.stream_len(attach.zraw.len()) + incoming;
-        let backlog = attach.drain_backlog(lag);
+        let backlog = attach.drain_backlog(lag, now);
         // Time to drain at one window per round trip; a repaint only helps
         // once the client has the last one.
         let window = output.window() as f64;
@@ -2457,11 +2471,14 @@ impl Session {
         // Or a program drawing in steps that the ack clock would take
         // longer than the limit to let through, before the rate is known.
         let stepped = attach.animating() && !attach.modelled();
+        // A measured bandwidth-delay product can be in transit over TCP
+        // too. Unsent bytes and flight beyond that allowance remain queued.
+        let stepped_lag = if is_tcp_addr(attach.addr) { backlog } else { lag };
         let slow = output.first_acked()
             && ((lag > 2 * output.window() as usize && output.srtt().is_some_and(|srtt| srtt.mul_f64(lag as f64 / window) > LAG_LIMIT))
                 || (output.pending() > 0 && attach.queue_delay() > LAG_LIMIT)
                 || (attach.screens && attach.bottleneck_shown(now) && output.slow_rate().is_some_and(|rate| backlog > 512 && backlog as f64 / rate > LAG_LIMIT.as_secs_f64()))
-                || (attach.screens && stepped && output.drain_rate(now).is_some_and(|rate| lag > 512 && lag as f64 / rate > LAG_LIMIT.as_secs_f64())));
+                || (attach.screens && stepped && output.drain_rate(now).is_some_and(|rate| stepped_lag > 512 && stepped_lag as f64 / rate > LAG_LIMIT.as_secs_f64())));
         // Memory: what is held, staged bytes as they are.
         let held = output.pending() + attach.zraw.len() + bytes.len();
         if !(held > OUTPUT_BACKLOG || slow) {
@@ -2598,6 +2615,128 @@ mod tests {
     }
 
     #[test]
+    fn tcp_transit_credit_requires_a_measured_bdp_and_keeps_excess_queued() {
+        let server = Server::spawn();
+        let mut state = server.state();
+        let now = Instant::now();
+        let key = Key::from_token("test");
+        let command = vec!["sleep".into(), "30".into()];
+        let hello = crate::net::new_hello("test", Action::Default, (80, 24), &command);
+        let packet = Packet { kind: KIND_CONFIRM, session: 1, counter: 0, nonce: [0; 24], payload: Vec::new() };
+        let tcp = "[fd72:7368:7463:7000::1]:1".parse().unwrap();
+        assert!(is_tcp_addr(tcp));
+        let attached = state.carry_out(1, &key, 0, &hello, &packet, tcp, now);
+        let attach = state.sessions.get_mut(&attached.session).unwrap().attach.as_mut().unwrap();
+        attach.path = None;
+        attach.output = Sender::new(0);
+        attach.output.set_lossless(true);
+        attach.output.push(&vec![b'x'; 6_000]);
+        while attach.output.next_chunk(now).is_some() {}
+        assert_eq!(attach.output.in_flight(), 6_000);
+        assert_eq!(attach.drain_backlog(6_600, now), 6_600, "unknown capacity gets no transit credit");
+        // A modelled rate with no sampled floor must not bypass the gate.
+        attach.output.set_path(Some(55_000.0), Some(300.0));
+        assert_eq!(attach.drain_backlog(6_600, now), 6_600, "model alone is not a sampled floor");
+        attach.output = Sender::new(0);
+        attach.output.set_lossless(true);
+        let sent_at = now - Duration::from_millis(300);
+        attach.output.push(b"x");
+        let (offset, data) = attach.output.next_chunk(sent_at).unwrap();
+        let end = offset + data.len() as u64;
+        assert!(attach.output.on_ack(0, end, now, false));
+        attach.output.push(&vec![b'x'; 6_000]);
+        while attach.output.next_chunk(now).is_some() {}
+        // Synthetic rate now isolates queue accounting after a real RTT sample.
+        attach.output.set_path(Some(55_000.0), Some(300.0));
+        assert_eq!(attach.drain_backlog(6_600, now), 600, "in-flight data fits the measured BDP");
+        attach.output.push(&vec![b'x'; 14_000]);
+        assert_eq!(attach.drain_backlog(20_600, now), 14_600, "unsent bytes remain backlog");
+        attach.output.set_path(Some(8_000.0), Some(300.0));
+        let slow = attach.drain_backlog(20_600, now);
+        assert!(slow > 18_200, "wire overhead and flight beyond BDP remain backlog: {slow}");
+        attach.addr = "127.0.0.1:12345".parse().unwrap();
+        assert_eq!(attach.drain_backlog(20_600, now), 20_600, "unmodelled UDP is unchanged");
+    }
+
+    #[test]
+    fn tcp_transit_does_not_trigger_proactive_or_stepped_screen_modes() {
+        let server = Server::spawn();
+        let mut state = server.state();
+        let now = Instant::now();
+        let key = Key::from_token("test");
+        let command = vec!["sleep".into(), "30".into()];
+        let hello = crate::net::new_hello("test", Action::Default, (80, 24), &command);
+        let packet = Packet { kind: KIND_CONFIRM, session: 1, counter: 0, nonce: [0; 24], payload: Vec::new() };
+        let tcp = "[fd72:7368:7463:7000::1]:1".parse().unwrap();
+        let attached = state.carry_out(1, &key, 0, &hello, &packet, tcp, now);
+        let session = state.sessions.get_mut(&attached.session).unwrap();
+        for (rate, unsent, expected) in [(55_000.0, 0, false), (55_000.0, 14_000, true), (8_000.0, 0, true)] {
+            let attach = session.attach.as_mut().unwrap();
+            attach.path = None;
+            attach.output = Sender::new(0);
+            attach.output.set_lossless(true);
+            let sent_at = now - Duration::from_millis(300);
+            attach.output.push(b"x");
+            let (offset, data) = attach.output.next_chunk(sent_at).unwrap();
+            let end = offset + data.len() as u64;
+            assert!(attach.output.on_ack(0, end, now, false));
+            attach.output.push(&vec![b'x'; 6_000]);
+            while attach.output.next_chunk(now).is_some() {}
+            attach.output.push(&vec![b'x'; unsent]);
+            // Synthetic rate isolates both screen-entry decisions.
+            attach.output.set_path(Some(rate), Some(300.0));
+            attach.screens = true;
+            attach.zstream = false;
+            attach.z = None;
+            attach.zraw.clear();
+            attach.syncing_until = None;
+            attach.repaint_due = false;
+            attach.shadow = None;
+            attach.frames = ANIMATION_FRAMES;
+            attach.step_bytes = FRAME_BYTES;
+            attach.output_gap = Duration::from_millis(16);
+            attach.output_at = Some(Instant::now() - Duration::from_millis(16));
+            session.output(&vec![b'x'; 600]);
+            assert_eq!(session.attach.as_ref().unwrap().syncing_until.is_some(), expected,
+                       "rate {rate}, unsent {unsent}");
+        }
+    }
+
+    #[test]
+    fn tcp_transit_near_sample_keeps_backlog_equal_to_main() {
+        let server = Server::spawn();
+        let mut state = server.state();
+        let now = Instant::now();
+        let key = Key::from_token("test");
+        let command = vec!["sleep".into(), "30".into()];
+        let hello = crate::net::new_hello("test", Action::Default, (80, 24), &command);
+        let packet = Packet { kind: KIND_CONFIRM, session: 1, counter: 0, nonce: [0; 24], payload: Vec::new() };
+        let tcp = "[fd72:7368:7463:7000::1]:1".parse().unwrap();
+        let attached = state.carry_out(1, &key, 0, &hello, &packet, tcp, now);
+        let attach = state.sessions.get_mut(&attached.session).unwrap().attach.as_mut().unwrap();
+        for rtt_ms in [1, 19] {
+            attach.path = None;
+            attach.output = Sender::new(0);
+            attach.output.set_lossless(true);
+            let sent_at = now - Duration::from_millis(rtt_ms);
+            attach.output.push(b"x");
+            let (offset, data) = attach.output.next_chunk(sent_at).unwrap();
+            let end = offset + data.len() as u64;
+            assert!(attach.output.on_ack(0, end, now, false));
+            attach.output.push(&vec![b'x'; 6_000]);
+            while attach.output.next_chunk(now).is_some() {}
+            attach.output.set_path(Some(55_000.0), Some(300.0));
+            for lag in [6_600, 20_600] {
+                assert_eq!(attach.drain_backlog(lag, now), lag, "near RTT {rtt_ms}, lag {lag}");
+            }
+            // Existing UDP modelled/unmodelled selection bypasses drain_bdp.
+            attach.addr = "127.0.0.1:12345".parse().unwrap();
+            assert_eq!(attach.drain_backlog(6_600, now), 6_600, "unmodelled UDP remains unchanged");
+            attach.addr = tcp;
+        }
+    }
+
+    #[test]
     fn the_level_follows_the_link_at_once_and_the_output_with_a_lag() {
         let (small, fast) = (proto::SMALL_LEVEL, proto::FAST_LEVEL);
         let long = Some(LEVEL_DWELL * 2);
@@ -2615,5 +2754,325 @@ mod tests {
         // Not within the dwell of the last change.
         assert_eq!(pick_level(Some(small), 2.0, false, short), small);
         assert_eq!(pick_level(Some(fast), 10.0, false, short), fast);
+    }
+}
+
+#[cfg(test)]
+mod tcp_cadence_margin_tests {
+    use super::*;
+
+    fn attachment() -> (Attachment, Instant) {
+        let server = Server::spawn();
+        let mut state = server.state();
+        let now = Instant::now();
+        let key = Key::from_token("test");
+        let command = vec!["sleep".into(), "30".into()];
+        let hello = crate::net::new_hello("test", Action::Default, (80, 24), &command);
+        let packet = Packet { kind: KIND_CONFIRM, session: 1, counter: 0, nonce: [0; 24], payload: Vec::new() };
+        let tcp = "[fd72:7368:7463:7000::1]:1".parse().unwrap();
+        let attached = state.carry_out(1, &key, 0, &hello, &packet, tcp, now);
+        let mut attach = state.sessions.get_mut(&attached.session).unwrap().attach.take().unwrap();
+        attach.path = None;
+        attach.output = Sender::new(0);
+        attach.output.set_lossless(true);
+        attach.repaint_due = true;
+        attach.shadow = Some(Terminal::with_history(80, 24, 0));
+        attach.screen_at = Some(now);
+        attach.output_at = None;
+        attach.frames = ANIMATION_FRAMES;
+        attach.mid_sequence = None;
+        (attach, now)
+    }
+
+    #[test]
+    fn tcp_cadence_margin_scales_raw_step_before_existing_bounds() {
+        let (mut attach, now) = attachment();
+        assert!(attach.output.slow_bdp().is_none());
+        assert!(attach.queue_delay() < LAG_LIMIT / 2);
+        for (step_ms, due_ms, global_ms) in [(1,8,8),(8,8,8),(10,9,10),(20,18,20),(25,20,20)] {
+            attach.output_gap = Duration::from_millis(step_ms);
+            assert_eq!(attach.screen_due_at(), Some(now + Duration::from_millis(due_ms)), "step {step_ms}");
+            assert_eq!(attach.screen_gap(), Duration::from_millis(global_ms), "global cadence stays unchanged");
+        }
+    }
+
+    #[test]
+    fn tcp_cadence_margin_preserves_nonanimating_and_both_udp_paths() {
+        let (mut attach, now) = attachment();
+        attach.output_gap = Duration::from_millis(10);
+        attach.frames = ANIMATION_FRAMES - 1;
+        assert_eq!(attach.screen_due_at(), Some(now + Duration::from_millis(20)));
+        attach.frames = ANIMATION_FRAMES;
+        attach.addr = "127.0.0.1:12345".parse().unwrap();
+        assert!(!attach.modelled());
+        assert_eq!(attach.screen_due_at(), Some(now + Duration::from_millis(10)));
+        let sent = now - Duration::from_millis(300);
+        let mut path = PathModel::new(sent);
+        let pn = path.number(sent, 600, false);
+        path.feedback(&proto::Feedback { sent_us: 300_000, arrivals: vec![(pn, 300_000)] }, now);
+        attach.path = Some(path);
+        assert!(attach.modelled());
+        assert!(attach.output.slow_bdp().is_none());
+        assert!(attach.queue_delay() < LAG_LIMIT / 2);
+        assert_eq!(attach.screen_due_at(), Some(now + Duration::from_millis(10)));
+    }
+
+    #[test]
+    fn tcp_cadence_margin_keeps_slow_queue_and_atomicity_gates() {
+        let (mut attach, now) = attachment();
+        attach.output_gap = Duration::from_millis(20);
+        attach.update_len = 1000;
+        attach.output.set_path(Some(32_000.0), Some(300.0));
+        let serialized = Duration::from_secs_f64((1000 + proto::WIRE_OVERHEAD) as f64 / 32_000.0) + SLOW_ROOM;
+        assert!(serialized > SCREEN_GAP);
+        assert_eq!(attach.screen_due_at(), Some(now + serialized), "known slow branch unchanged");
+
+        // Public ACK samples keep the least RTT near but show a long queue.
+        attach.output = Sender::new(1);
+        attach.output.set_lossless(true);
+        let sent = now - Duration::from_millis(500);
+        attach.output.push(b"a");
+        let (offset, data) = attach.output.next_chunk(sent).unwrap();
+        let end = offset + data.len() as u64;
+        assert!(attach.output.on_ack(1, end, sent + Duration::from_millis(1), false));
+        let sent = now - Duration::from_millis(400);
+        attach.output.push(b"b");
+        let (offset, data) = attach.output.next_chunk(sent).unwrap();
+        let end = offset + data.len() as u64;
+        assert!(attach.output.on_ack(1, end, now, false));
+        assert!(attach.output.slow_bdp().is_none());
+        assert!(attach.queue_delay() >= LAG_LIMIT / 2);
+        let half = attach.output.srtt().unwrap() / 2;
+        assert!(half > SCREEN_GAP && half < Duration::from_millis(250));
+        assert_eq!(attach.screen_due_at(), Some(now + half), "high queue branch unchanged");
+
+        attach.output = Sender::new(0);
+        attach.mid_sequence = Some(now);
+        assert_eq!(attach.next_screen_at(), Some(now + TAIL_WAIT), "unfinished escape tail still holds refresh");
+        attach.repaint_due = false;
+        assert_eq!(attach.screen_due_at(), None);
+        attach.repaint_due = true;
+        attach.shadow = None;
+        assert_eq!(attach.screen_due_at(), None);
+        attach.shadow = Some(Terminal::with_history(80, 24, 0));
+        attach.output.push(b"unsent");
+        assert_eq!(attach.screen_due_at(), None);
+    }
+}
+
+#[cfg(test)]
+mod tcp_fresh_quarter55_tests {
+    use super::*;
+
+    // Synthetic known rate isolates the deadline; no estimator-learning claim.
+    fn with_attachment(check: impl FnOnce(&mut Attachment, Instant)) {
+        let server = Server::spawn();
+        let mut state = server.state();
+        let now = Instant::now();
+        let key = Key::from_token("fresh-quarter55-test");
+        let command = vec!["sleep".into(), "30".into()];
+        let hello = crate::net::new_hello("fresh-quarter55-test", Action::Default, (100, 30), &command);
+        let packet = Packet { kind: KIND_CONFIRM, session: 1, counter: 0, nonce: [0; 24], payload: Vec::new() };
+        let tcp = "[fd72:7368:7463:7000::1]:12345".parse().unwrap();
+        let attached = state.carry_out(1, &key, 0, &hello, &packet, tcp, now);
+        let attach = state.sessions.get_mut(&attached.session).unwrap().attach.as_mut().unwrap();
+        let last = now - Duration::from_secs(2);
+        attach.output = Sender::new(0);
+        attach.output.set_lossless(true);
+        attach.output.set_path(Some(21_000.0), Some(100.0));
+        attach.path = None;
+        attach.shadow = Some(Terminal::with_history(100, 30, 0));
+        attach.repaint_due = true;
+        attach.screen_at = Some(last);
+        attach.update_len = 332;
+        attach.output_gap = Duration::from_nanos(16_666_666);
+        attach.output_at = Some(last + attach.output_gap);
+        attach.frames = ANIMATION_FRAMES;
+        attach.mid_sequence = None;
+        attach.link_free = None;
+        check(attach, last);
+    }
+
+    #[test]
+    fn known_slow_tcp_does_not_wait_past_the_quarter_gap() {
+        with_attachment(|attach, last| {
+            assert!(is_tcp_addr(attach.addr));
+            assert!(!attach.modelled());
+            let step = attach.screen_gap();
+            let gap = Duration::from_secs_f64((332 + proto::WIRE_OVERHEAD) as f64 / 21_000.0) + SLOW_ROOM;
+            assert!(gap > step && step * 2 - gap > gap / 4);
+            assert_eq!(attach.screen_due_at(), Some(last + gap));
+            assert_eq!(attach.screen_gap(), step, "global cadence unchanged");
+        });
+    }
+
+    #[test]
+    fn both_udp_fresh_wait_paths_keep_their_old_deadlines() {
+        with_attachment(|attach, last| {
+            let gap = Duration::from_secs_f64((332 + proto::WIRE_OVERHEAD) as f64 / 21_000.0) + SLOW_ROOM;
+            attach.addr = "127.0.0.1:12345".parse().unwrap();
+            attach.output.set_lossless(false);
+            assert!(!attach.modelled());
+            assert_eq!(attach.screen_due_at(), Some(last + attach.output_gap * 2));
+            let mut path = PathModel::new(last);
+            let arrivals = (0..2).map(|i| (path.number(last, 600, false), 100_000 + i * 10_000)).collect();
+            path.feedback(&proto::Feedback { sent_us: 110_000, arrivals }, last + Duration::from_millis(220));
+            attach.path = Some(path);
+            attach.link_free = Some(last + gap);
+            assert!(attach.modelled());
+            assert_eq!(attach.screen_due_at(), Some(last + gap));
+        });
+    }
+
+    #[test]
+    fn eighty_ms_cap_unknown_rate_and_tail_gates_stay_unchanged() {
+        with_attachment(|attach, last| {
+            attach.output.set_path(Some(50_000.0), Some(100.0));
+            attach.update_len = 3_636;
+            attach.output_at = Some(last + attach.output_gap * 4);
+            let gap = Duration::from_secs_f64((3_636 + proto::WIRE_OVERHEAD) as f64 / 50_000.0) + SLOW_ROOM;
+            assert_eq!(gap, Duration::from_millis(80));
+            assert_eq!(attach.screen_due_at(), Some(last + attach.output_gap * 5));
+            attach.update_len = 4_096;
+            attach.output_at = Some(last + attach.output_gap * 5);
+            assert_eq!(attach.screen_due_at(), Some(last + attach.output_gap * 6));
+            let began = last + Duration::from_millis(100);
+            attach.mid_sequence = Some(began);
+            assert_eq!(attach.next_screen_at(), Some(began + TAIL_WAIT));
+            attach.mid_sequence = None;
+            attach.output = Sender::new(0);
+            attach.output.set_lossless(true);
+            attach.output_at = Some(last);
+            assert!(attach.output.slow_rate().is_none());
+            assert_eq!(attach.screen_due_at(), Some(last + attach.output_gap.mul_f64(0.9).clamp(MIN_SCREEN_GAP, SCREEN_GAP)), "unknown-rate TCP follows the margin branch");
+            attach.output.push(b"not sent");
+            assert_eq!(attach.screen_due_at(), None);
+            attach.output = Sender::new(0);
+            attach.shadow = None;
+            assert_eq!(attach.screen_due_at(), None);
+        });
+    }
+}
+#[cfg(test)]
+mod tcp_margin_quiet65_tests {
+    use super::*;
+
+    // Deadline-only fixtures: no complete-producer-frame or runtime-FPS proof.
+    fn with_attachment(check: impl FnOnce(&mut Attachment, Instant, Instant)) {
+        let server = Server::spawn();
+        let mut state = server.state();
+        let now = Instant::now();
+        let key = Key::from_token("margin-quiet65-test");
+        let command = vec!["sleep".into(), "30".into()];
+        let hello = crate::net::new_hello("margin-quiet65-test", Action::Default, (100, 30), &command);
+        let packet = Packet { kind: KIND_CONFIRM, session: 1, counter: 0, nonce: [0; 24], payload: Vec::new() };
+        let tcp = "[fd72:7368:7463:7000::1]:12345".parse().unwrap();
+        let attached = state.carry_out(1, &key, 0, &hello, &packet, tcp, now);
+        let attach = state.sessions.get_mut(&attached.session).unwrap().attach.as_mut().unwrap();
+        let last = now - Duration::from_secs(2);
+        attach.output = Sender::new(0);
+        attach.output.set_lossless(true);
+        attach.path = None;
+        attach.shadow = Some(Terminal::with_history(100, 30, 0));
+        attach.repaint_due = true;
+        attach.screen_at = Some(last);
+        attach.output_at = None;
+        attach.output_gap = Duration::from_millis(20);
+        attach.frames = ANIMATION_FRAMES;
+        attach.mid_sequence = None;
+        check(attach, last, now);
+    }
+
+    #[test]
+    fn recent_output_wait_is_capped_by_the_existing_twenty_ms_deadline() {
+        with_attachment(|attach, last, _| {
+            assert!(attach.output.slow_bdp().is_none());
+            assert!(attach.queue_delay() < LAG_LIMIT / 2);
+            for (output_us, expected_us) in [(17_000,18_000),(18_500,19_500),(19_500,20_000),(20_000,20_000),(2_000_000,20_000)] {
+                attach.output_at = Some(last + Duration::from_micros(output_us));
+                assert_eq!(attach.screen_due_at(), Some(last + Duration::from_micros(expected_us)));
+                assert_eq!(attach.screen_gap(), SCREEN_GAP, "global cadence unchanged");
+            }
+            // Repeated sub-ms pieces cannot push this logical raw deadline
+            // beyond last+20ms; this is not a bound on actual poll service.
+            for output_us in (18_000..2_000_000).step_by(400) {
+                attach.output_at = Some(last + Duration::from_micros(output_us));
+                let due = attach.screen_due_at().unwrap();
+                assert!(due >= last + Duration::from_millis(18));
+                assert!(due <= last + SCREEN_GAP);
+            }
+            attach.output_at = None;
+            assert_eq!(attach.screen_due_at(), Some(last + Duration::from_millis(18)));
+            attach.output_gap = Duration::from_millis(25);
+            attach.output_at = Some(last + Duration::from_millis(100));
+            assert_eq!(attach.screen_due_at(), Some(last + SCREEN_GAP), "already-clamped margin cannot grow");
+        });
+    }
+
+    #[test]
+    fn other_cadence_udp_slow_and_high_queue_paths_stay_unchanged() {
+        with_attachment(|attach, last, now| {
+            attach.output_at = Some(last + Duration::from_millis(200));
+            attach.frames = ANIMATION_FRAMES - 1;
+            assert_eq!(attach.screen_due_at(), Some(last + SCREEN_GAP));
+            attach.frames = ANIMATION_FRAMES;
+            attach.output_gap = Duration::from_millis(10);
+            attach.addr = "127.0.0.1:12345".parse().unwrap();
+            attach.output.set_lossless(false);
+            assert!(!attach.modelled());
+            assert_eq!(attach.screen_due_at(), Some(last + Duration::from_millis(10)));
+            let sent = now - Duration::from_millis(300);
+            let mut path = PathModel::new(sent);
+            let pn = path.number(sent, 600, false);
+            path.feedback(&proto::Feedback { sent_us: 300_000, arrivals: vec![(pn, 300_000)] }, now);
+            attach.path = Some(path);
+            assert!(attach.modelled());
+            assert_eq!(attach.screen_due_at(), Some(last + Duration::from_millis(10)));
+
+            attach.addr = "[fd72:7368:7463:7000::1]:12345".parse().unwrap();
+            attach.path = None;
+            attach.output.set_lossless(true);
+            attach.output.set_path(Some(32_000.0), Some(300.0));
+            attach.update_len = 1_000;
+            assert!(attach.output.slow_bdp().is_some());
+            assert_eq!(attach.screen_due_at(), Some(last + Duration::from_millis(200)), "known-slow result is not capped to20ms");
+
+            attach.output = Sender::new(1);
+            attach.output.set_lossless(true);
+            let sent = now - Duration::from_millis(500);
+            attach.output.push(b"a");
+            let (offset, data) = attach.output.next_chunk(sent).unwrap();
+            let end = offset + data.len() as u64;
+            assert!(attach.output.on_ack(1, end, sent + Duration::from_millis(1), false));
+            let sent = now - Duration::from_millis(400);
+            attach.output.push(b"b");
+            let (offset, data) = attach.output.next_chunk(sent).unwrap();
+            let end = offset + data.len() as u64;
+            assert!(attach.output.on_ack(1, end, now, false));
+            assert!(attach.output.slow_bdp().is_none());
+            assert!(attach.queue_delay() >= LAG_LIMIT / 2);
+            let half = attach.output.srtt().unwrap() / 2;
+            assert_eq!(attach.screen_due_at(), Some(last + half.clamp(attach.screen_gap(), Duration::from_millis(250))));
+        });
+    }
+
+    #[test]
+    fn tail_and_unsent_guards_remain_and_long_idle_is_not_atomic() {
+        with_attachment(|attach, last, now| {
+            attach.output_at = Some(last + Duration::from_micros(18_500));
+            attach.mid_sequence = Some(last + Duration::from_millis(25));
+            assert_eq!(attach.next_screen_at(), Some(last + Duration::from_millis(25) + TAIL_WAIT));
+            attach.mid_sequence = None;
+            attach.output_at = Some(now);
+            assert!(attach.screen_due_at().unwrap() < now, "after a long idle, immediate rendering and partial-frame risk remain");
+            attach.repaint_due = false;
+            assert_eq!(attach.screen_due_at(), None);
+            attach.repaint_due = true;
+            attach.shadow = None;
+            assert_eq!(attach.screen_due_at(), None);
+            attach.shadow = Some(Terminal::with_history(100, 30, 0));
+            attach.output.push(b"not sent");
+            assert_eq!(attach.screen_due_at(), None);
+        });
     }
 }
