@@ -69,10 +69,11 @@ Its separate moving records show newer-frame recovery and lower FPS than
 SSH, with timing fidelity unapproved.
 
 
-The separate [cadence 0.9 follow-up](docs/bench/cadence-margin-20261101.md)
-retains high-RTT FPS gains, original 1 Mbit/s tail losses and a predeclared
-replication with mixed outcomes. Its margin remains unselected; the preceding
-comparison table and datasets are unchanged.
+[Cadence](docs/bench/cadence-margin-20261101.md),
+[fresh-frame wait](docs/bench/fresh-quarter55-20261101.md) and
+[combined TCP studies](docs/bench/quarter-margin-20261101.md) retain
+per-evaluation FPS, resource costs and moving recovery. Experimental candidates
+remain unselected.
 
 ## Installation
 

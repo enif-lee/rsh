@@ -746,6 +746,17 @@ retains96 eligible static observations and16 descriptive moving observations,
 including1Mbit/s random FPS gains, dashboard/age costs and random moving1%low
 losses. The candidate remains unselected; earlier19 adverse evidence is retained.
 
+The [combined quarter-wait/cadence study](docs/bench/quarter-margin-20261101.md)
+keeps 96 eligible static observations, 16 descriptive moving observations and
+8 separate balanced-slot observations. WAN tail costs persist after the slot
+crossover. All gains and costs remain per evaluation; native build evidence
+is archived.
+
+The [LAN pacing diagnostic](docs/bench/lan-paced-20261101.md) records 16 separate
+functional observations. The retained window showed no token-blocked gates
+or ordinary catch-deadline crossings, so those hypotheses did not justify a
+client pacing patch.
+
 ## References
 
 The [README references](README.md#references) identify the papers and
