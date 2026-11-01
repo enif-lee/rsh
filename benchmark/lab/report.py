@@ -117,7 +117,7 @@ per-packet random loss. No GPU presentation or radio-network claim follows.''']
                                  'seen' if w['done'][index] else 'not seen'])
                 groups.append((f"{label} · evaluation {run['iteration']}", values))
         save_chart(figure, 'Moving link: two 30-second cycles',
-                   f'{cohort} cohort; each evaluation separate; lightFPS/mid5%low/solid1%low', groups,
+                   f'{cohort} cohort; evaluations separate; strongest: FPS, softer: 5% low, softest: 1% low', groups,
                    lambda v: ' / '.join(fmt(x, 2) for x in v), True, pair='lows', value_w=175)
         blocks += [image(figure, f'Moving {cohort} cohort FPS and lows'),
                    table(['Cohort','Evaluation','Scene','Tool','Avg FPS','1% low','5% low','Age ms','Maxgap ms','Scene RX MiB','Client RSS MiB','Server RSS MiB','End marker'],rows)]
@@ -213,7 +213,7 @@ before queueing. No bandwidth cap means no configured rate limit.
 """, table(["Profile", "Conditions"], [(n, label) for n, label in NETS.items()]),
               """## 1. Dashboard rendering
 
-Light bars show median FPS, medium bars 5% low and solid bars 1% low.
+Full-strength color shows median FPS; 5% and 1% lows use progressively softer shades.
 All five transports and all ten static profiles are included; two runs per case were attempted.
 """, image("fps-dashboard", "Dashboard FPS, 1% low and 5% low by link and transport"),
               table(RENDER_HEADERS, [render_row(n, t, "compress") for n in NETS for t in TOOLS]),
@@ -294,7 +294,7 @@ and exposes a different bandwidth and frame-gap tradeoff than the dashboard.
                              fmt(values[t][0]), fmt(values[t][1]), fmt(values[t][2]), fmt(median(ok, "age_after_ms"), 0), fmt(median(ok, "adapt_s"))])
             groups.append((f"{n} → {to}", values))
         name = "switch-dashboard" if scene == "compress" else "switch-random"
-        save_chart(name, f"Link changes: {label}", "after change; light: median FPS, mid: 5% low, solid: 1% low", groups,
+        save_chart(name, f"Link changes: {label}", "after change; strongest: median FPS, softer: 5% low, softest: 1% low", groups,
                    lambda v: f"{v[0]:.1f} / {fmt(v[1])} / {fmt(v[2])}", True, pair="lows", value_w=160)
         blocks += [f"### {label}", image(name, f"{label} FPS and lows after each link change"),
                    table(["Change", "Tool", "Runs", "FPS before", "FPS after", "1% low after", "5% low after", "Age after ms", "Adapt s"], rows)]

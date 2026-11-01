@@ -110,7 +110,7 @@ def svg(title, note, groups, fmt, higher, log=False, missing="n/a", pair=None, v
     has no value (e.g. it did not finish). With `pair` ("overlay" or
     "stack") each value is two: the first drawn solid, the second light,
     over it (to its length) or after it. With `pair` "lows" each value is
-    (fps, 1% low, 5% low): fps light, the 5% low over it, the 1% low solid."""
+    (fps, 1% low, 5% low): fps full-strength, then progressively softer lows."""
     tools = [t for t in ORDER if any(t in values for _, values in groups)]
     if not tools:
         return None
@@ -152,10 +152,13 @@ def svg(title, note, groups, fmt, higher, log=False, missing="n/a", pair=None, v
             elif pair == "lows":
                 cls = t.replace("-", "_")
                 width = lambda x: max(2.0, plot * scale(x) / most if most else 0)
-                out.append('<rect class="s-%s" x="%d" y="%d" width="%.1f" height="%d" rx="2" opacity="0.3"/>' % (cls, LABEL_W + 16, y, width(v[0]), BAR))
-                for low, opacity in ((v[2], ' opacity="0.6"'), (v[1], "")):
+                out.append('<rect class="s-%s" x="%d" y="%d" width="%.1f" height="%d" rx="2"/>' % (cls, LABEL_W + 16, y, width(v[0]), BAR))
+                for low, opacity in ((v[2], '0.88'), (v[1], '0.76')):
                     if low is not None:
-                        out.append('<rect class="s-%s" x="%d" y="%d" width="%.1f" height="%d" rx="2"%s/>' % (cls, LABEL_W + 16, y, width(low), BAR, opacity))
+                        # Blend against the theme background, not the darker
+                        # bar underneath, so each shade stays distinct.
+                        out.append('<rect class="bg" x="%d" y="%d" width="%.1f" height="%d" rx="2"/>' % (LABEL_W + 16, y, width(low), BAR))
+                        out.append('<rect class="s-%s" x="%d" y="%d" width="%.1f" height="%d" rx="2" opacity="%s"/>' % (cls, LABEL_W + 16, y, width(low), BAR, opacity))
                 # A low over the median fps (a few long stalls in runs
                 # otherwise steady) draws past it.
                 total = max(width(x) for x in v if x is not None)
@@ -190,7 +193,7 @@ def main():
         return [(label, table[net]) for net, label in NETS if net in table]
     rate = next((r["scene_fps"] for r in results if r.get("scene_fps")), 30)
     lows_fmt = lambda v: "%.1f fps" % v[0] + ("" if v[1] is None else " · 1%% %.1f · 5%% %.1f" % v[1:])
-    lows_note = "median of runs; light: fps, mid: 5% low, solid: 1% low (the fps the slowest frames would give)"
+    lows_note = "median of runs; strongest: FPS, softer: 5% low, softest: 1% low"
     charts = {
         "fps-dashboard.svg": svg("Frames shown per second: a full-screen dashboard at %d fps" % rate, lows_note,
                                  groups(fps_lows(results, "compress")), lows_fmt, True, pair="lows", value_w=175),

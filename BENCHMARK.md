@@ -91,7 +91,7 @@ before queueing. No bandwidth cap means no configured rate limit.
 
 ## 1. Dashboard rendering
 
-Light bars show median FPS, medium bars 5% low and solid bars 1% low.
+Full-strength color shows median FPS; 5% and 1% lows use progressively softer shades.
 All five transports and all ten static profiles are included; two runs per case were attempted.
 
 
