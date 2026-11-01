@@ -144,15 +144,28 @@ unsafe fn spawn_pty(opts: &SpawnOptions) -> io::Result<Pty> {
         }
         return Err(io::Error::other("open pty"));
     }
-    let name_ptr = libc::ptsname(master);
-    if name_ptr.is_null() {
-        libc::close(master);
-        return Err(io::Error::other("ptsname"));
-    }
-    let slave_name = CString::new(CStr::from_ptr(name_ptr).to_bytes()).map_err(|_| {
-        libc::close(master);
-        io::Error::other("slave name")
-    })?;
+    #[cfg(target_os = "linux")]
+    let slave_name = {
+        let mut name = [0 as libc::c_char; libc::PATH_MAX as usize];
+        let error = libc::ptsname_r(master, name.as_mut_ptr(), name.len());
+        if error != 0 {
+            libc::close(master);
+            return Err(io::Error::from_raw_os_error(error));
+        }
+        CStr::from_ptr(name.as_ptr()).to_owned()
+    };
+    #[cfg(not(target_os = "linux"))]
+    let slave_name = {
+        let name_ptr = libc::ptsname(master);
+        if name_ptr.is_null() {
+            libc::close(master);
+            return Err(io::Error::other("ptsname"));
+        }
+        CString::new(CStr::from_ptr(name_ptr).to_bytes()).map_err(|_| {
+            libc::close(master);
+            io::Error::other("slave name")
+        })?
+    };
     let account = user_account();
     let shell_c = CString::new(account.shell.clone()).unwrap_or_else(|_| CString::new("/bin/sh").expect("sh"));
     let home_c = CString::new(account.home.clone()).unwrap_or_else(|_| CString::new("/").expect("root"));
@@ -286,19 +299,37 @@ fn user_account() -> Account {
     let mut home = std::env::var("HOME").unwrap_or_else(|_| "/".to_string());
     let mut shell = std::env::var("SHELL").unwrap_or_else(|_| "/bin/sh".to_string());
     unsafe {
-        let pw = libc::getpwuid(libc::geteuid());
-        if !pw.is_null() {
-            if let Some(value) = c_string((*pw).pw_name) {
-                name = value;
+        let suggested = libc::sysconf(libc::_SC_GETPW_R_SIZE_MAX);
+        let mut size = if suggested > 0 { suggested as usize } else { 16_384 };
+        let mut buf = Vec::<libc::c_char>::new();
+        let uid = libc::geteuid();
+        loop {
+            if buf.try_reserve(size - buf.len()).is_err() {
+                break;
             }
-            if let Some(value) = c_string((*pw).pw_dir) {
-                home = value;
+            buf.resize(size, 0);
+            let mut pw: libc::passwd = std::mem::zeroed();
+            let mut result = std::ptr::null_mut();
+            let error = libc::getpwuid_r(uid, &mut pw, buf.as_mut_ptr(), buf.len(), &mut result);
+            if error == libc::ERANGE {
+                let Some(next) = size.checked_mul(2) else { break };
+                size = next;
+                continue;
             }
-            if let Some(value) = c_string((*pw).pw_shell) {
-                if !value.is_empty() {
-                    shell = value;
+            if error == 0 && !result.is_null() {
+                if let Some(value) = c_string(pw.pw_name) {
+                    name = value;
+                }
+                if let Some(value) = c_string(pw.pw_dir) {
+                    home = value;
+                }
+                if let Some(value) = c_string(pw.pw_shell) {
+                    if !value.is_empty() {
+                        shell = value;
+                    }
                 }
             }
+            break;
         }
     }
     if shell.is_empty() || !std::path::Path::new(&shell).exists() {
