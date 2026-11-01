@@ -1,0 +1,17 @@
+batch,net,scene,iteration,variant,slot,frames,fps,low1_fps,low5_fps,kbit_s,rss_client_kb,rss_server_kb,cpu_client,cpu_server,age_ms,age_p95_ms,max_gap_ms,assessment
+00-moving-compress-i0,moving,compress,0,ssh,0,1436,47.9,3.6,32.5,1969,7968,20100,0.22,0.38,1685,12033,1224,control
+00-moving-compress-i0,moving,compress,0,main-A,1,457,15.2,2.5,5.4,59,2724,5868,0.31,1.49,50,164,1660,control
+00-moving-compress-i0,moving,compress,0,main-B,2,556,18.5,2.3,7.4,73,2748,5892,0.36,1.45,47,135,1784,control
+00-moving-compress-i0,moving,compress,0,candidate,3,806,26.9,3.2,8.4,107,2736,5912,0.47,1.54,46,131,1270,moving_profile_fidelity_pending_manual_review
+01-moving-compress-i1,moving,compress,1,ssh,3,1447,48.2,6.3,27.0,1989,7696,19988,0.24,0.37,1780,11258,1700,control
+01-moving-compress-i1,moving,compress,1,main-A,2,470,15.7,2.8,5.0,60,2652,5896,0.31,1.46,49,204,1214,control
+01-moving-compress-i1,moving,compress,1,main-B,1,539,18.0,2.8,5.3,70,2628,5888,0.33,1.38,46,164,1204,control
+01-moving-compress-i1,moving,compress,1,candidate,0,845,28.2,3.4,9.8,113,2728,5888,0.51,1.8,48,140,1267,moving_profile_fidelity_pending_manual_review
+02-moving-bandwidth-i0,moving,bandwidth,0,ssh,0,494,16.5,3.5,16.6,1694,8048,19100,0.14,0.09,54,4527,13129,control
+02-moving-bandwidth-i0,moving,bandwidth,0,main-A,1,426,14.2,1.6,4.8,602,2772,5488,0.57,2.44,61,354,1477,control
+02-moving-bandwidth-i0,moving,bandwidth,0,main-B,2,387,12.9,1.5,5.1,537,2728,5496,0.53,2.31,65,356,2029,control
+02-moving-bandwidth-i0,moving,bandwidth,0,candidate,3,651,21.7,2.5,6.5,910,2716,5516,0.81,3.12,55,208,2002,moving_profile_fidelity_pending_manual_review
+03-moving-bandwidth-i1,moving,bandwidth,1,ssh,3,816,27.2,2.6,12.8,2652,7744,21176,0.21,0.21,1700,13834,1448,control
+03-moving-bandwidth-i1,moving,bandwidth,1,main-A,2,478,15.9,1.9,6.0,692,2768,5520,0.63,2.61,60,268,2828,control
+03-moving-bandwidth-i1,moving,bandwidth,1,main-B,1,416,13.9,1.4,3.7,585,2768,5496,0.51,2.33,57,339,2090,control
+03-moving-bandwidth-i1,moving,bandwidth,1,candidate,0,610,20.3,2.6,7.1,856,2712,5504,0.73,2.99,54,222,2164,moving_profile_fidelity_pending_manual_review

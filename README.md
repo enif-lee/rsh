@@ -46,34 +46,36 @@ raw measurements, aggregation rules and collection failures.
 
 ### TCP development measurements · November 1
 
-The [TCP controller report](docs/bench/final-tcp-20261101.md) compares
-CAN+PTY-fixed reference `4f98` and combined `295f`, separately from released UDP
-results above. Four parallel jobs, two evaluations; cells are **avg / 1% low /
-5% low FPS**. RX is client kbit/s; RSS is client+server midpoint MiB.
+The [bounded TCP frame-gather report](docs/bench/bounded-quiet65-20261101.md)
+compares candidate `781bbe465298` with SSH and duplicate CAN+PTY-fixed
+references `4f98` (base `24248` plus PRs #4–5), separately from released UDP
+results above. Four parallel jobs, two evaluations, 60 FPS requested;
+cells are **avg / 1% low / 5% low FPS**. RX is client kbit/s; RSS is
+client+server midpoint MiB, not peak memory.
 
-| Profile / scene / evaluation | SSH FPS | Combined FPS | SSH / combined RX | SSH / combined RSS |
+| Profile / scene / evaluation | SSH FPS | Candidate FPS | SSH / candidate RX | SSH / candidate RSS |
 |---|---:|---:|---:|---:|
-| RTT300ms random / 0 | 60.0 / 12.1 / 42.6 | 47.7 / 12.4 / 29.9 | 5791 / 1896 | 26.47 / 8.61 |
-| RTT300ms random / 1 | 60.0 / 12.1 / 43.1 | 49.7 / 12.5 / 44.2 | 5799 / 1983 | 26.44 / 8.62 |
-| 1Mbit/s random / 0 | 10.0 / 5.8 / 6.5 | 20.2 / 13.7 / 17.8 | 979 / 809 | 27.03 / 8.47 |
-| 1Mbit/s random / 1 | 9.9 / 5.4 / 6.4 | 21.1 / 14.3 / 18.1 | 977 / 842 | 27.23 / 7.81 |
-| 256kbit/s dashboard / 0 | 6.0 / 2.6 / 5.1 | 60.0 / 40.3 / 46.3 | 248 / 229 | 26.71 / 8.18 |
-| 256kbit/s dashboard / 1 | 6.1 / 1.5 / 5.2 | 60.0 / 40.1 / 45.5 | 251 / 229 | 26.74 / 8.23 |
-| 64kbit/s dashboard / 0 | 1.4 / 1.1 / 1.1 | 15.4 / 5.9 / 12.3 | 63 / 64 | 26.88 / 8.48 |
-| 64kbit/s dashboard / 1 | 1.5 / 1.0 / 1.0 | 15.7 / 8.8 / 12.7 | 62 / 64 | 26.70 / 8.36 |
+| RTT300ms random / 0 | 60.0 / 12.1 / 44.2 | 53.5 / 27.6 / 47.3 | 5796 / 2129 | 26.29 / 8.05 |
+| RTT300ms random / 1 | 60.0 / 14.9 / 45.0 | 53.4 / 14.5 / 47.4 | 5792 / 2130 | 26.36 / 8.70 |
+| 1Mbit/s random / 0 | 9.7 / 6.3 / 6.5 | 24.4 / 19.2 / 20.9 | 977 / 966 | 27.06 / 8.45 |
+| 1Mbit/s random / 1 | 9.9 / 5.4 / 6.3 | 24.1 / 14.8 / 19.5 | 979 / 956 | 27.08 / 8.38 |
+| 256kbit/s dashboard / 0 | 6.0 / 2.1 / 5.1 | 60.0 / 43.8 / 47.1 | 249 / 229 | 26.70 / 8.13 |
+| 256kbit/s dashboard / 1 | 6.1 / 2.4 / 4.1 | 60.0 / 38.7 / 44.6 | 250 / 228 | 26.80 / 8.17 |
+| 64kbit/s dashboard / 0 | 1.5 / 1.3 / 1.3 | 15.6 / 6.9 / 12.6 | 62 / 64 | 26.76 / 8.39 |
+| 64kbit/s dashboard / 1 | 1.4 / 1.3 / 1.3 | 15.7 / 8.9 / 12.5 | 60 / 63 | 26.71 / 7.69 |
 
-FPS/lows are primary; CPU/RSS are secondary. Dashboard gains coexist with
-remaining SSH deficits; this is not global parity or release adoption. The
-full report retains both identical references and every evaluation/age cost.
-Its separate moving records show newer-frame recovery and lower FPS than
-SSH, with timing fidelity unapproved.
+1% low, 5% low and average FPS are primary; CPU/RSS are secondary.
+At RTT300ms random, both 5% lows exceed SSH while average FPS remains
+53.4–53.5 versus 60; one 1% low is slightly below SSH. LAN tails and
+120Hz costs also remain in the full report. This is a review candidate,
+with no global parity or release adoption claimed. Moving recovery is
+reported separately because timing fidelity remains unapproved.
 
-
-[Cadence](docs/bench/cadence-margin-20261101.md),
+Earlier [controller](docs/bench/final-tcp-20261101.md),
+[cadence](docs/bench/cadence-margin-20261101.md),
 [fresh-frame wait](docs/bench/fresh-quarter55-20261101.md) and
-[combined TCP studies](docs/bench/quarter-margin-20261101.md) retain
-per-evaluation FPS, resource costs and moving recovery. Experimental candidates
-remain unselected.
+[combined TCP studies](docs/bench/quarter-margin-20261101.md) retain their
+own evaluations and adverse results.
 
 ## Installation
 

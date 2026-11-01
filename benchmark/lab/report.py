@@ -476,6 +476,16 @@ functional observations. The retained window showed no token-blocked gates
 or ordinary catch-deadline crossings, so those hypotheses did not justify a
 client pacing patch.
 
+The [bounded frame-gather follow-up](docs/bench/bounded-quiet65-20261101.md)
+keeps nine cohorts separate: focused, full core/slow/moving and 120Hz guards
+against the advanced controller, then core/slow/moving and 120Hz against the
+CAN+PTY-fixed reference. It retains 240 eligible static observations and 32
+separate descriptive moving records, without pooling FPS. 1% low, 5% low
+and average FPS are primary; CPU/RSS are auxiliary. WAN/low-bandwidth gains
+coexist with LAN tails, high-RTT average deficits and 120Hz costs. Linux and
+macOS correctness tests passed; global parity and release adoption are not
+claimed.
+
 ## References
 
 The [README references](README.md#references) identify the papers and

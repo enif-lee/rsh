@@ -1,0 +1,139 @@
+{
+  "start": 1793495756.1843064,
+  "end": 1793495786.1843064,
+  "sources": {
+    "1": {
+      "schema": 2,
+      "identity": {
+        "pid": 702,
+        "uid": 1001,
+        "starttime_ticks": 77341572,
+        "cmdline": [
+          "python3",
+          "/tmp/scene.py",
+          "bandwidth",
+          "30",
+          "60",
+          "0",
+          "",
+          "1793495756.1843064"
+        ],
+        "scene": "bandwidth"
+      },
+      "job": {
+        "source_token": "5735851a24cd4442aae6875c7920d911",
+        "slot": 1,
+        "tool": "rsh-tcp",
+        "variant": "main-A",
+        "iteration": 0,
+        "binary_sha256": "c25f94dd9fb4b3b694fefa5f3b024bc600c38a7b382eeb3a2726399f8fb51a33",
+        "scene": "bandwidth",
+        "cols": 100,
+        "rows": 30,
+        "scene_fps": 60,
+        "duration": 30
+      },
+      "ready_epoch": 1793495753.3219516
+    },
+    "2": {
+      "schema": 2,
+      "identity": {
+        "pid": 710,
+        "uid": 1001,
+        "starttime_ticks": 77341572,
+        "cmdline": [
+          "python3",
+          "/tmp/scene.py",
+          "bandwidth",
+          "30",
+          "60",
+          "0",
+          "",
+          "1793495756.1843064"
+        ],
+        "scene": "bandwidth"
+      },
+      "job": {
+        "source_token": "5aafcaa165e24c96ae74184517354ec6",
+        "slot": 2,
+        "tool": "rsh-tcp",
+        "variant": "main-B",
+        "iteration": 0,
+        "binary_sha256": "c25f94dd9fb4b3b694fefa5f3b024bc600c38a7b382eeb3a2726399f8fb51a33",
+        "scene": "bandwidth",
+        "cols": 100,
+        "rows": 30,
+        "scene_fps": 60,
+        "duration": 30
+      },
+      "ready_epoch": 1793495753.3261285
+    },
+    "3": {
+      "schema": 2,
+      "identity": {
+        "pid": 707,
+        "uid": 1001,
+        "starttime_ticks": 77341572,
+        "cmdline": [
+          "python3",
+          "/tmp/scene.py",
+          "bandwidth",
+          "30",
+          "60",
+          "0",
+          "",
+          "1793495756.1843064"
+        ],
+        "scene": "bandwidth"
+      },
+      "job": {
+        "source_token": "7e0de81a4e01427394a7171111fc6a70",
+        "slot": 3,
+        "tool": "rsh-tcp",
+        "variant": "candidate",
+        "iteration": 0,
+        "binary_sha256": "3d4c5bd15f7d4e2ebe0d71f53c3bdc1fc3e21b3fdde8d396c28a8519b3795827",
+        "scene": "bandwidth",
+        "cols": 100,
+        "rows": 30,
+        "scene_fps": 60,
+        "duration": 30
+      },
+      "ready_epoch": 1793495753.3253274
+    },
+    "0": {
+      "schema": 2,
+      "identity": {
+        "pid": 756,
+        "uid": 1001,
+        "starttime_ticks": 77341573,
+        "cmdline": [
+          "python3",
+          "/tmp/scene.py",
+          "bandwidth",
+          "30",
+          "60",
+          "0",
+          "",
+          "1793495756.1843064"
+        ],
+        "scene": "bandwidth"
+      },
+      "job": {
+        "source_token": "696110c1c5d94359bb4c3d23819319cc",
+        "slot": 0,
+        "tool": "ssh",
+        "variant": "ssh",
+        "iteration": 0,
+        "binary_sha256": "c25f94dd9fb4b3b694fefa5f3b024bc600c38a7b382eeb3a2726399f8fb51a33",
+        "scene": "bandwidth",
+        "cols": 100,
+        "rows": 30,
+        "scene_fps": 60,
+        "duration": 30
+      },
+      "ready_epoch": 1793495753.3304975
+    }
+  },
+  "all_armed_confirmed_epoch": 1793495753.3755498
+}
