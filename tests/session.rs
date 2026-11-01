@@ -403,7 +403,12 @@ fn output_is_exact_through_loss_duplication_and_reordering() {
     assert!(text.contains("DONE-42"), "tail: {}", &text[text.len().saturating_sub(300)..]);
     let numbers: Vec<u32> = text
         .split("\r\n")
-        .filter_map(|line| line.rsplit('\x07').next().unwrap_or(line).trim().parse::<u32>().ok())
+        .filter_map(|line| {
+            let line = line.rsplit('\x07').next().unwrap_or(line);
+            // Bash can prefix the first number with its bracketed-paste reset.
+            let line = line.strip_prefix("\x1b[?2004l").unwrap_or(line);
+            line.trim().parse::<u32>().ok()
+        })
         .collect();
     let start = numbers.iter().position(|n| *n == 1).unwrap();
     let run: Vec<u32> = numbers[start..start + 30000].to_vec();
