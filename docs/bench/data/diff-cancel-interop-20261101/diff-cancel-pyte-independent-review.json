@@ -1,0 +1,20 @@
+{
+  "verdict": "pass_bounded_character_cursor_claim",
+  "scope": "read existing artifacts and verify hashes/input/result consistency; no pyte rerun",
+  "evidence_hashes_verified": 5,
+  "source_log_hashes_verified": 2,
+  "hex_fields_each_variant_exactly_from_logs": 5,
+  "candidate_delta_only_change": "one prefix CAN",
+  "cases": 6,
+  "expected_character_geometry": [100,30],
+  "old_differing_cells_each_mode": 3,
+  "candidate_differing_cells_each_mode": 0,
+  "both_cursor_xy": [94,24],
+  "full_receive_Paced_attributes_GPU_performance_proven": false,
+  "raw_Docker_lifecycle_independently_verified": false,
+  "executor_tool_history_transcript_reviewed": "diff-cancel-offline-tool-transcript.txt",
+  "requested_flags_and_absence_consistent_in_transcript": true,
+  "effective_live_container_configuration_independently_inspected": false,
+  "accepted_defects": [],
+  "reviewer_new_native_Docker_build_pyte_runs": 0
+}

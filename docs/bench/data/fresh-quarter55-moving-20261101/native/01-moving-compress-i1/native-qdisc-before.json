@@ -1,0 +1,466 @@
+{
+  "rl-0-srv": {
+    "container": "rl-0-srv",
+    "device": "eth0",
+    "qdiscs": [
+      {
+        "kind": "netem",
+        "handle": "e09f:",
+        "root": true,
+        "refcnt": 11,
+        "options": {
+          "limit": 1000,
+          "delay": {
+            "delay": 0.035,
+            "jitter": 0,
+            "correlation": 0
+          },
+          "rate": {
+            "rate": 1000000,
+            "packetoverhead": 0,
+            "cellsize": 0,
+            "celloverhead": 0
+          },
+          "ecn": false,
+          "gap": 0
+        },
+        "bytes": 0,
+        "packets": 0,
+        "drops": 0,
+        "overlimits": 0,
+        "requeues": 0,
+        "backlog": 0,
+        "qlen": 0
+      }
+    ],
+    "links": [
+      {
+        "ifindex": 2,
+        "link_index": 37805,
+        "ifname": "eth0",
+        "flags": [
+          "BROADCAST",
+          "MULTICAST",
+          "UP",
+          "LOWER_UP"
+        ],
+        "mtu": 1500,
+        "qdisc": "netem",
+        "operstate": "UP",
+        "linkmode": "DEFAULT",
+        "group": "default",
+        "txqlen": 1000,
+        "link_type": "ether",
+        "address": "da:58:a7:d1:86:10",
+        "broadcast": "ff:ff:ff:ff:ff:ff",
+        "link_netnsid": 0
+      }
+    ]
+  },
+  "rl-0-cli": {
+    "container": "rl-0-cli",
+    "device": "eth0",
+    "qdiscs": [
+      {
+        "kind": "netem",
+        "handle": "e0a5:",
+        "root": true,
+        "refcnt": 11,
+        "options": {
+          "limit": 1000,
+          "delay": {
+            "delay": 0.035,
+            "jitter": 0,
+            "correlation": 0
+          },
+          "rate": {
+            "rate": 250000,
+            "packetoverhead": 0,
+            "cellsize": 0,
+            "celloverhead": 0
+          },
+          "ecn": false,
+          "gap": 0
+        },
+        "bytes": 0,
+        "packets": 0,
+        "drops": 0,
+        "overlimits": 0,
+        "requeues": 0,
+        "backlog": 0,
+        "qlen": 0
+      }
+    ],
+    "links": [
+      {
+        "ifindex": 2,
+        "link_index": 37813,
+        "ifname": "eth0",
+        "flags": [
+          "BROADCAST",
+          "MULTICAST",
+          "UP",
+          "LOWER_UP"
+        ],
+        "mtu": 1500,
+        "qdisc": "netem",
+        "operstate": "UP",
+        "linkmode": "DEFAULT",
+        "group": "default",
+        "txqlen": 1000,
+        "link_type": "ether",
+        "address": "36:29:e0:b5:3f:4c",
+        "broadcast": "ff:ff:ff:ff:ff:ff",
+        "link_netnsid": 0
+      }
+    ]
+  },
+  "rl-1-srv": {
+    "container": "rl-1-srv",
+    "device": "eth0",
+    "qdiscs": [
+      {
+        "kind": "netem",
+        "handle": "e0a0:",
+        "root": true,
+        "refcnt": 11,
+        "options": {
+          "limit": 1000,
+          "delay": {
+            "delay": 0.035,
+            "jitter": 0,
+            "correlation": 0
+          },
+          "rate": {
+            "rate": 1000000,
+            "packetoverhead": 0,
+            "cellsize": 0,
+            "celloverhead": 0
+          },
+          "ecn": false,
+          "gap": 0
+        },
+        "bytes": 0,
+        "packets": 0,
+        "drops": 0,
+        "overlimits": 0,
+        "requeues": 0,
+        "backlog": 0,
+        "qlen": 0
+      }
+    ],
+    "links": [
+      {
+        "ifindex": 2,
+        "link_index": 37808,
+        "ifname": "eth0",
+        "flags": [
+          "BROADCAST",
+          "MULTICAST",
+          "UP",
+          "LOWER_UP"
+        ],
+        "mtu": 1500,
+        "qdisc": "netem",
+        "operstate": "UP",
+        "linkmode": "DEFAULT",
+        "group": "default",
+        "txqlen": 1000,
+        "link_type": "ether",
+        "address": "9a:12:84:2e:65:b1",
+        "broadcast": "ff:ff:ff:ff:ff:ff",
+        "link_netnsid": 0
+      }
+    ]
+  },
+  "rl-1-cli": {
+    "container": "rl-1-cli",
+    "device": "eth0",
+    "qdiscs": [
+      {
+        "kind": "netem",
+        "handle": "e0a4:",
+        "root": true,
+        "refcnt": 11,
+        "options": {
+          "limit": 1000,
+          "delay": {
+            "delay": 0.035,
+            "jitter": 0,
+            "correlation": 0
+          },
+          "rate": {
+            "rate": 250000,
+            "packetoverhead": 0,
+            "cellsize": 0,
+            "celloverhead": 0
+          },
+          "ecn": false,
+          "gap": 0
+        },
+        "bytes": 0,
+        "packets": 0,
+        "drops": 0,
+        "overlimits": 0,
+        "requeues": 0,
+        "backlog": 0,
+        "qlen": 0
+      }
+    ],
+    "links": [
+      {
+        "ifindex": 2,
+        "link_index": 37816,
+        "ifname": "eth0",
+        "flags": [
+          "BROADCAST",
+          "MULTICAST",
+          "UP",
+          "LOWER_UP"
+        ],
+        "mtu": 1500,
+        "qdisc": "netem",
+        "operstate": "UP",
+        "linkmode": "DEFAULT",
+        "group": "default",
+        "txqlen": 1000,
+        "link_type": "ether",
+        "address": "0a:dc:68:f7:6e:bf",
+        "broadcast": "ff:ff:ff:ff:ff:ff",
+        "link_netnsid": 0
+      }
+    ]
+  },
+  "rl-2-srv": {
+    "container": "rl-2-srv",
+    "device": "eth0",
+    "qdiscs": [
+      {
+        "kind": "netem",
+        "handle": "e09e:",
+        "root": true,
+        "refcnt": 11,
+        "options": {
+          "limit": 1000,
+          "delay": {
+            "delay": 0.035,
+            "jitter": 0,
+            "correlation": 0
+          },
+          "rate": {
+            "rate": 1000000,
+            "packetoverhead": 0,
+            "cellsize": 0,
+            "celloverhead": 0
+          },
+          "ecn": false,
+          "gap": 0
+        },
+        "bytes": 0,
+        "packets": 0,
+        "drops": 0,
+        "overlimits": 0,
+        "requeues": 0,
+        "backlog": 0,
+        "qlen": 0
+      }
+    ],
+    "links": [
+      {
+        "ifindex": 2,
+        "link_index": 37806,
+        "ifname": "eth0",
+        "flags": [
+          "BROADCAST",
+          "MULTICAST",
+          "UP",
+          "LOWER_UP"
+        ],
+        "mtu": 1500,
+        "qdisc": "netem",
+        "operstate": "UP",
+        "linkmode": "DEFAULT",
+        "group": "default",
+        "txqlen": 1000,
+        "link_type": "ether",
+        "address": "26:7a:9b:f7:10:11",
+        "broadcast": "ff:ff:ff:ff:ff:ff",
+        "link_netnsid": 0
+      }
+    ]
+  },
+  "rl-2-cli": {
+    "container": "rl-2-cli",
+    "device": "eth0",
+    "qdiscs": [
+      {
+        "kind": "netem",
+        "handle": "e0a2:",
+        "root": true,
+        "refcnt": 11,
+        "options": {
+          "limit": 1000,
+          "delay": {
+            "delay": 0.035,
+            "jitter": 0,
+            "correlation": 0
+          },
+          "rate": {
+            "rate": 250000,
+            "packetoverhead": 0,
+            "cellsize": 0,
+            "celloverhead": 0
+          },
+          "ecn": false,
+          "gap": 0
+        },
+        "bytes": 0,
+        "packets": 0,
+        "drops": 0,
+        "overlimits": 0,
+        "requeues": 0,
+        "backlog": 0,
+        "qlen": 0
+      }
+    ],
+    "links": [
+      {
+        "ifindex": 2,
+        "link_index": 37815,
+        "ifname": "eth0",
+        "flags": [
+          "BROADCAST",
+          "MULTICAST",
+          "UP",
+          "LOWER_UP"
+        ],
+        "mtu": 1500,
+        "qdisc": "netem",
+        "operstate": "UP",
+        "linkmode": "DEFAULT",
+        "group": "default",
+        "txqlen": 1000,
+        "link_type": "ether",
+        "address": "5e:4d:e5:c6:2d:8d",
+        "broadcast": "ff:ff:ff:ff:ff:ff",
+        "link_netnsid": 0
+      }
+    ]
+  },
+  "rl-3-srv": {
+    "container": "rl-3-srv",
+    "device": "eth0",
+    "qdiscs": [
+      {
+        "kind": "netem",
+        "handle": "e0a1:",
+        "root": true,
+        "refcnt": 11,
+        "options": {
+          "limit": 1000,
+          "delay": {
+            "delay": 0.035,
+            "jitter": 0,
+            "correlation": 0
+          },
+          "rate": {
+            "rate": 1000000,
+            "packetoverhead": 0,
+            "cellsize": 0,
+            "celloverhead": 0
+          },
+          "ecn": false,
+          "gap": 0
+        },
+        "bytes": 0,
+        "packets": 0,
+        "drops": 0,
+        "overlimits": 0,
+        "requeues": 0,
+        "backlog": 0,
+        "qlen": 0
+      }
+    ],
+    "links": [
+      {
+        "ifindex": 2,
+        "link_index": 37807,
+        "ifname": "eth0",
+        "flags": [
+          "BROADCAST",
+          "MULTICAST",
+          "UP",
+          "LOWER_UP"
+        ],
+        "mtu": 1500,
+        "qdisc": "netem",
+        "operstate": "UP",
+        "linkmode": "DEFAULT",
+        "group": "default",
+        "txqlen": 1000,
+        "link_type": "ether",
+        "address": "7a:27:79:56:bf:ee",
+        "broadcast": "ff:ff:ff:ff:ff:ff",
+        "link_netnsid": 0
+      }
+    ]
+  },
+  "rl-3-cli": {
+    "container": "rl-3-cli",
+    "device": "eth0",
+    "qdiscs": [
+      {
+        "kind": "netem",
+        "handle": "e0a3:",
+        "root": true,
+        "refcnt": 11,
+        "options": {
+          "limit": 1000,
+          "delay": {
+            "delay": 0.035,
+            "jitter": 0,
+            "correlation": 0
+          },
+          "rate": {
+            "rate": 250000,
+            "packetoverhead": 0,
+            "cellsize": 0,
+            "celloverhead": 0
+          },
+          "ecn": false,
+          "gap": 0
+        },
+        "bytes": 0,
+        "packets": 0,
+        "drops": 0,
+        "overlimits": 0,
+        "requeues": 0,
+        "backlog": 0,
+        "qlen": 0
+      }
+    ],
+    "links": [
+      {
+        "ifindex": 2,
+        "link_index": 37812,
+        "ifname": "eth0",
+        "flags": [
+          "BROADCAST",
+          "MULTICAST",
+          "UP",
+          "LOWER_UP"
+        ],
+        "mtu": 1500,
+        "qdisc": "netem",
+        "operstate": "UP",
+        "linkmode": "DEFAULT",
+        "group": "default",
+        "txqlen": 1000,
+        "link_type": "ether",
+        "address": "26:5a:d9:b7:b8:3e",
+        "broadcast": "ff:ff:ff:ff:ff:ff",
+        "link_netnsid": 0
+      }
+    ]
+  }
+}

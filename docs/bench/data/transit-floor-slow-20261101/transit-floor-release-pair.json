@@ -1,0 +1,100 @@
+{
+  "at": 1793469143.720602,
+  "artifacts": [
+    {
+      "variant": "baseline",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-transit-floor-pair-main",
+      "sha256": "9ab79c22ebd289047ffa616a5e8aef3c7d9f2498756b5974ae5a74b2d0ecb463",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/main-source",
+      "source_build_id": "6729d398d4f1",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "source_manifest_sha256": "691ce46870af026e614a960844f821580d0486ce4d7c551ee27041b3cd1d6c39",
+      "guard_output": "verified build 6729d398d4f1: rsh-transit-floor-pair-main"
+    },
+    {
+      "variant": "candidate",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-tcp-transit-floor",
+      "sha256": "d45fc85fef7e2bb9b314ad3cdd68f3af24022d344911daa02e43f28860f41a7a",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/tcp-transit-floor-source",
+      "source_build_id": "239a8181363a",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "source_manifest_sha256": "4e2dc5fa4b906ef9bc1c32e514e3b72255957d9664636522b04f558b5f00d08c",
+      "guard_output": "verified build 239a8181363a: rsh-tcp-transit-floor\nverified build 239a8181363a: tcp-transit-floor-tests"
+    }
+  ],
+  "same_container_sequential_build": true,
+  "compiler_image": "sha256:b1d5dd5a22a09404d3e798c0cf051b689077360374eb505fa5bb93c479693d87",
+  "CARGO_HOME": "/cargo",
+  "build_path": "/src",
+  "apk_manifest_sha256": "d99b2de6a1a883172b2f814cd7ca03534ae3c72bbd1111ca3604ebc3914ca185",
+  "cargo_artifacts": {
+    "transit-floor-pair-main-release-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "executable": "/target/release/rsh"
+    },
+    "transit-floor-tests-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "0",
+        "debuginfo": 2,
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "test": true
+      },
+      "executable": "/target/debug/deps/rsh-a4e873949d566604"
+    },
+    "tcp-transit-floor-release-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "executable": "/target/release/rsh"
+    },
+    "transit-floor-control-tests-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "0",
+        "debuginfo": 2,
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "test": true
+      },
+      "executable": "/target/debug/deps/rsh-a4e873949d566604"
+    }
+  },
+  "tests": {
+    "targeted_passed": 7,
+    "library_passed": 103,
+    "ignored": 2
+  },
+  "control": {
+    "policy": "oldtransit with identical7fixtures",
+    "passed": 4,
+    "expected_failed": 3,
+    "expected_failures": [
+      "proto::tcp_transit_floor_tests::transit_floor_requires_a_sample_even_with_a_modelled_rate",
+      "server::tests::tcp_transit_credit_requires_a_measured_bdp_and_keeps_excess_queued",
+      "server::tests::tcp_transit_near_sample_keeps_backlog_equal_to_main"
+    ],
+    "log_sha256": "3b83a15660d114b35e6829cc34a37ee71c4770cdbe3532443bc34948f5944d7d",
+    "guard": "verified build f84d906e8fce: tcp-transit-floor-control-tests\n"
+  },
+  "build_log_sha256": "7f0198dcfa11324333ac67f40632bb17d7f5b84d6dd38b0b919dfd0624b28368",
+  "build_script_sha256": "d04b3f1ffa89335a15031cc2d1d7f296ac6b2491adce71390baa54512f218cf6",
+  "source_reverse_proof_sha256": "325e4b47d01b6823a16bb46ca412c1758403af0d27882f3896ab35189cbd244c",
+  "scope": "Old TCP transit allowance gated on sampled floor>=20; original0.8probe retained. Only TCP callers use drain_bdp; UDP/serverprod dispatch unchanged. No global/near0.6 combined. Four newfixtures+twofarfixtures primed viaactualSender ACK. Source review rejected first_acked change concern: new0 alreadybase=first=0. Not installed/adopted; performance unrun.",
+  "preparation_failure": "attempt1 guarded-control string matcher matched both slow_rate anddrain_bdp, assertion stopped before compile; scoped correction, separatelog preserved"
+}

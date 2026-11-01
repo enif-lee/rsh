@@ -1,0 +1,10 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -26,3 +26,7 @@
+ [lib]
+ name = "rsh"
+ path = "src/lib.rs"
++
++[profile.release]
++lto = "thin"
++codegen-units = 1

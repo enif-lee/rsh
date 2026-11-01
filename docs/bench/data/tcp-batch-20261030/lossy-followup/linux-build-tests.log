@@ -1,0 +1,11 @@
+(1/6) Installing openssh-keygen (10.3_p1-r1)
+(2/6) Installing ncurses-terminfo-base (6.6_p20260516-r0)
+(3/6) Installing libncursesw (6.6_p20260516-r0)
+(4/6) Installing libedit (20260508.3.1-r1)
+(5/6) Installing openssh-client-common (10.3_p1-r1)
+(6/6) Installing openssh-client-default (10.3_p1-r1)
+Executing busybox-1.37.0-r31.trigger
+OK: 178.4 MiB in 37 packages
+   Compiling rsh v0.2.0 (/src)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.16s
+  Executable tests/session.rs (/target/debug/deps/session-7a5d2366fdc3fcc5)

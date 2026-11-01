@@ -1,0 +1,1342 @@
+{
+  "functional_valid": true,
+  "performance_eligible": false,
+  "jobs": 16,
+  "trace_endpoints": 24,
+  "rsh_server_cohorts": 12,
+  "summary_sha256": "dd259eb08f3aeb8098a2e7ce552d7bb7d031eb12903a02d9b1f6b99d6cfdd7fb",
+  "author_audit_sha256": "982c6cccabfd1ec0e820ce22d6df60c921f45428a01fc72ff290db54e81c63a6",
+  "peer_sha256": "3e9610e42bbf63b9850bcc1e7f049466e8a4e45ee20f47600fc54be0276a41c8",
+  "lifetime_commits": 2137,
+  "same_ack_probe_records": 0,
+  "same_ack_refloor_clears": 28,
+  "same_ack_refloor_clears_after23": 0,
+  "cohorts": [
+    {
+      "batch": "00-moving-compress-i0",
+      "slot": 1,
+      "variant": "main-trace-A",
+      "scene": "compress",
+      "iteration": 0,
+      "source_build_id": "d742268da4df",
+      "strict_hold_count": 180,
+      "strict_hold_window_count": 178,
+      "excluded_poll_contexts": {
+        "other_timer_poll": 2008,
+        "screen_only_eventful_or_interrupted_poll": 769
+      },
+      "lifetime": {
+        "samples": 104,
+        "median_lowerings": 52,
+        "with_strict_overlap": 33,
+        "lowerings_with_strict_overlap": 19,
+        "sample_Bps": {
+          "n": 104,
+          "min": 151.53876064044462,
+          "p50": 6846.2943959955555,
+          "p95": 14521.273521457873,
+          "max": 52713.890128146224
+        },
+        "strict_hold_overlap_ms": {
+          "n": 104,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 18.748325,
+          "max": 63.774292
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 104,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.33171363759932254,
+          "max": 0.5468031470520954
+        },
+        "fully_contained_after23": 16
+      },
+      "window": {
+        "samples": 104,
+        "median_lowerings": 52,
+        "with_strict_overlap": 33,
+        "lowerings_with_strict_overlap": 19,
+        "sample_Bps": {
+          "n": 104,
+          "min": 151.53876064044462,
+          "p50": 6846.2943959955555,
+          "p95": 14521.273521457873,
+          "max": 52713.890128146224
+        },
+        "strict_hold_overlap_ms": {
+          "n": 104,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 18.748325,
+          "max": 63.774292
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 104,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.33171363759932254,
+          "max": 0.5468031470520954
+        },
+        "fully_contained_after23": 16
+      },
+      "after23": {
+        "samples": 17,
+        "median_lowerings": 10,
+        "with_strict_overlap": 7,
+        "lowerings_with_strict_overlap": 4,
+        "sample_Bps": {
+          "n": 17,
+          "min": 5381.227257079904,
+          "p50": 8147.1024784469955,
+          "p95": 12960.391258659629,
+          "max": 12960.391258659629
+        },
+        "strict_hold_overlap_ms": {
+          "n": 17,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 16.455131,
+          "max": 16.455131
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 17,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.4515541915913917,
+          "max": 0.4515541915913917
+        },
+        "fully_contained_after23": 16
+      },
+      "after23_refresh_entry_intervals_ms": {
+        "n": 166,
+        "min": 30.069687,
+        "p50": 35.926556,
+        "p95": 51.789696,
+        "max": 84.948861
+      }
+    },
+    {
+      "batch": "00-moving-compress-i0",
+      "slot": 2,
+      "variant": "main-trace-B",
+      "scene": "compress",
+      "iteration": 0,
+      "source_build_id": "d742268da4df",
+      "strict_hold_count": 204,
+      "strict_hold_window_count": 202,
+      "excluded_poll_contexts": {
+        "other_timer_poll": 1523,
+        "screen_only_eventful_or_interrupted_poll": 935
+      },
+      "lifetime": {
+        "samples": 90,
+        "median_lowerings": 47,
+        "with_strict_overlap": 29,
+        "lowerings_with_strict_overlap": 18,
+        "sample_Bps": {
+          "n": 90,
+          "min": 155.19581582652302,
+          "p50": 6279.40631712333,
+          "p95": 12846.379750922339,
+          "max": 21676.735831813774
+        },
+        "strict_hold_overlap_ms": {
+          "n": 90,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 16.649022,
+          "max": 21.944054
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 90,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.41110319093712283,
+          "max": 0.5229884939430574
+        },
+        "fully_contained_after23": 11
+      },
+      "window": {
+        "samples": 90,
+        "median_lowerings": 47,
+        "with_strict_overlap": 29,
+        "lowerings_with_strict_overlap": 18,
+        "sample_Bps": {
+          "n": 90,
+          "min": 155.19581582652302,
+          "p50": 6279.40631712333,
+          "p95": 12846.379750922339,
+          "max": 21676.735831813774
+        },
+        "strict_hold_overlap_ms": {
+          "n": 90,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 16.649022,
+          "max": 21.944054
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 90,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.41110319093712283,
+          "max": 0.5229884939430574
+        },
+        "fully_contained_after23": 11
+      },
+      "after23": {
+        "samples": 12,
+        "median_lowerings": 6,
+        "with_strict_overlap": 4,
+        "lowerings_with_strict_overlap": 3,
+        "sample_Bps": {
+          "n": 12,
+          "min": 3092.074250641109,
+          "p50": 9077.051576055532,
+          "p95": 13926.630548646164,
+          "max": 13926.630548646164
+        },
+        "strict_hold_overlap_ms": {
+          "n": 12,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 19.329285,
+          "max": 19.329285
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 12,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.5229884939430574,
+          "max": 0.5229884939430574
+        },
+        "fully_contained_after23": 11
+      },
+      "after23_refresh_entry_intervals_ms": {
+        "n": 156,
+        "min": 29.24789,
+        "p50": 40.6998155,
+        "p95": 81.755799,
+        "max": 118.130733
+      }
+    },
+    {
+      "batch": "00-moving-compress-i0",
+      "slot": 3,
+      "variant": "combined-trace",
+      "scene": "compress",
+      "iteration": 0,
+      "source_build_id": "3031e105b1aa",
+      "strict_hold_count": 154,
+      "strict_hold_window_count": 152,
+      "excluded_poll_contexts": {
+        "other_timer_poll": 2457,
+        "screen_only_eventful_or_interrupted_poll": 770
+      },
+      "lifetime": {
+        "samples": 133,
+        "median_lowerings": 75,
+        "with_strict_overlap": 45,
+        "lowerings_with_strict_overlap": 21,
+        "sample_Bps": {
+          "n": 133,
+          "min": 348.3954056503235,
+          "p50": 9145.000447902594,
+          "p95": 26729.322211438543,
+          "max": 38826.44060662356
+        },
+        "strict_hold_overlap_ms": {
+          "n": 133,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 25.931697,
+          "max": 34.345508
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 133,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.41295851767214176,
+          "max": 0.5897048516358363
+        },
+        "fully_contained_after23": 28
+      },
+      "window": {
+        "samples": 133,
+        "median_lowerings": 75,
+        "with_strict_overlap": 45,
+        "lowerings_with_strict_overlap": 21,
+        "sample_Bps": {
+          "n": 133,
+          "min": 348.3954056503235,
+          "p50": 9145.000447902594,
+          "p95": 26729.322211438543,
+          "max": 38826.44060662356
+        },
+        "strict_hold_overlap_ms": {
+          "n": 133,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 25.931697,
+          "max": 34.345508
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 133,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.41295851767214176,
+          "max": 0.5897048516358363
+        },
+        "fully_contained_after23": 28
+      },
+      "after23": {
+        "samples": 28,
+        "median_lowerings": 17,
+        "with_strict_overlap": 15,
+        "lowerings_with_strict_overlap": 7,
+        "sample_Bps": {
+          "n": 28,
+          "min": 5975.083797545549,
+          "p50": 9712.682250207075,
+          "p95": 13244.589622343176,
+          "max": 13415.663957088396
+        },
+        "strict_hold_overlap_ms": {
+          "n": 28,
+          "min": 0.0,
+          "p50": 2.2468555,
+          "p95": 25.931697,
+          "max": 34.345508
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 28,
+          "min": 0.0,
+          "p50": 0.06509621864104374,
+          "p95": 0.5177522400042487,
+          "max": 0.5897048516358363
+        },
+        "fully_contained_after23": 28
+      },
+      "after23_refresh_entry_intervals_ms": {
+        "n": 189,
+        "min": 16.536603,
+        "p50": 33.630542,
+        "p95": 51.704738,
+        "max": 76.052764
+      }
+    },
+    {
+      "batch": "01-moving-compress-i1",
+      "slot": 0,
+      "variant": "main-trace-B",
+      "scene": "compress",
+      "iteration": 1,
+      "source_build_id": "d742268da4df",
+      "strict_hold_count": 220,
+      "strict_hold_window_count": 218,
+      "excluded_poll_contexts": {
+        "other_timer_poll": 1693,
+        "screen_only_eventful_or_interrupted_poll": 1008
+      },
+      "lifetime": {
+        "samples": 102,
+        "median_lowerings": 43,
+        "with_strict_overlap": 35,
+        "lowerings_with_strict_overlap": 14,
+        "sample_Bps": {
+          "n": 102,
+          "min": 896.3545735112012,
+          "p50": 6665.008663156543,
+          "p95": 23602.213572936962,
+          "max": 31393.953944307294
+        },
+        "strict_hold_overlap_ms": {
+          "n": 102,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 24.892842,
+          "max": 89.483256
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 102,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.41016384927194677,
+          "max": 0.5033662464256653
+        },
+        "fully_contained_after23": 7
+      },
+      "window": {
+        "samples": 102,
+        "median_lowerings": 43,
+        "with_strict_overlap": 35,
+        "lowerings_with_strict_overlap": 14,
+        "sample_Bps": {
+          "n": 102,
+          "min": 896.3545735112012,
+          "p50": 6665.008663156543,
+          "p95": 23602.213572936962,
+          "max": 31393.953944307294
+        },
+        "strict_hold_overlap_ms": {
+          "n": 102,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 24.892842,
+          "max": 89.483256
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 102,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.41016384927194677,
+          "max": 0.5033662464256653
+        },
+        "fully_contained_after23": 7
+      },
+      "after23": {
+        "samples": 7,
+        "median_lowerings": 2,
+        "with_strict_overlap": 1,
+        "lowerings_with_strict_overlap": 0,
+        "sample_Bps": {
+          "n": 7,
+          "min": 4183.200779853206,
+          "p50": 8819.596698912357,
+          "p95": 10673.116074940217,
+          "max": 10673.116074940217
+        },
+        "strict_hold_overlap_ms": {
+          "n": 7,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 16.481395,
+          "max": 16.481395
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 7,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.44898672980571147,
+          "max": 0.44898672980571147
+        },
+        "fully_contained_after23": 7
+      },
+      "after23_refresh_entry_intervals_ms": {
+        "n": 148,
+        "min": 29.5481,
+        "p50": 49.401807000000005,
+        "p95": 67.946922,
+        "max": 101.643215
+      }
+    },
+    {
+      "batch": "01-moving-compress-i1",
+      "slot": 1,
+      "variant": "combined-trace",
+      "scene": "compress",
+      "iteration": 1,
+      "source_build_id": "3031e105b1aa",
+      "strict_hold_count": 154,
+      "strict_hold_window_count": 152,
+      "excluded_poll_contexts": {
+        "other_timer_poll": 2593,
+        "screen_only_eventful_or_interrupted_poll": 639
+      },
+      "lifetime": {
+        "samples": 160,
+        "median_lowerings": 96,
+        "with_strict_overlap": 45,
+        "lowerings_with_strict_overlap": 31,
+        "sample_Bps": {
+          "n": 160,
+          "min": 406.4228932558421,
+          "p50": 9146.811953767341,
+          "p95": 26239.562281228642,
+          "max": 29647.159957432377
+        },
+        "strict_hold_overlap_ms": {
+          "n": 160,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 16.513019,
+          "max": 28.167128
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 160,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.36108145675873254,
+          "max": 0.5601709238677947
+        },
+        "fully_contained_after23": 27
+      },
+      "window": {
+        "samples": 160,
+        "median_lowerings": 96,
+        "with_strict_overlap": 45,
+        "lowerings_with_strict_overlap": 31,
+        "sample_Bps": {
+          "n": 160,
+          "min": 406.4228932558421,
+          "p50": 9146.811953767341,
+          "p95": 26239.562281228642,
+          "max": 29647.159957432377
+        },
+        "strict_hold_overlap_ms": {
+          "n": 160,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 16.513019,
+          "max": 28.167128
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 160,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.36108145675873254,
+          "max": 0.5601709238677947
+        },
+        "fully_contained_after23": 27
+      },
+      "after23": {
+        "samples": 28,
+        "median_lowerings": 18,
+        "with_strict_overlap": 14,
+        "lowerings_with_strict_overlap": 10,
+        "sample_Bps": {
+          "n": 28,
+          "min": 3012.020546765183,
+          "p50": 9961.079031910005,
+          "p95": 13985.425895254753,
+          "max": 16562.293713143576
+        },
+        "strict_hold_overlap_ms": {
+          "n": 28,
+          "min": 0.0,
+          "p50": 0.5108455,
+          "p95": 16.513019,
+          "max": 16.584639
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 28,
+          "min": 0.0,
+          "p50": 0.014811138131975607,
+          "p95": 0.4891173751932382,
+          "max": 0.4963114295274351
+        },
+        "fully_contained_after23": 27
+      },
+      "after23_refresh_entry_intervals_ms": {
+        "n": 193,
+        "min": 17.130773,
+        "p50": 33.490708,
+        "p95": 51.239485,
+        "max": 84.762235
+      }
+    },
+    {
+      "batch": "01-moving-compress-i1",
+      "slot": 3,
+      "variant": "main-trace-A",
+      "scene": "compress",
+      "iteration": 1,
+      "source_build_id": "d742268da4df",
+      "strict_hold_count": 164,
+      "strict_hold_window_count": 159,
+      "excluded_poll_contexts": {
+        "other_timer_poll": 1656,
+        "screen_only_eventful_or_interrupted_poll": 1009
+      },
+      "lifetime": {
+        "samples": 98,
+        "median_lowerings": 49,
+        "with_strict_overlap": 28,
+        "lowerings_with_strict_overlap": 16,
+        "sample_Bps": {
+          "n": 98,
+          "min": 404.72635166061707,
+          "p50": 5972.940640929288,
+          "p95": 13177.739542236335,
+          "max": 25980.593722539754
+        },
+        "strict_hold_overlap_ms": {
+          "n": 98,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 18.083112,
+          "max": 38.896051
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 98,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.2922965377648231,
+          "max": 0.49480443624557974
+        },
+        "fully_contained_after23": 14
+      },
+      "window": {
+        "samples": 98,
+        "median_lowerings": 49,
+        "with_strict_overlap": 28,
+        "lowerings_with_strict_overlap": 16,
+        "sample_Bps": {
+          "n": 98,
+          "min": 404.72635166061707,
+          "p50": 5972.940640929288,
+          "p95": 13177.739542236335,
+          "max": 25980.593722539754
+        },
+        "strict_hold_overlap_ms": {
+          "n": 98,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 18.083112,
+          "max": 38.896051
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 98,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.2922965377648231,
+          "max": 0.49480443624557974
+        },
+        "fully_contained_after23": 14
+      },
+      "after23": {
+        "samples": 15,
+        "median_lowerings": 8,
+        "with_strict_overlap": 6,
+        "lowerings_with_strict_overlap": 3,
+        "sample_Bps": {
+          "n": 15,
+          "min": 4260.797996335138,
+          "p50": 8475.443156542991,
+          "p95": 13389.588333819054,
+          "max": 13389.588333819054
+        },
+        "strict_hold_overlap_ms": {
+          "n": 15,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 19.404648,
+          "max": 19.404648
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 15,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.49480443624557974,
+          "max": 0.49480443624557974
+        },
+        "fully_contained_after23": 14
+      },
+      "after23_refresh_entry_intervals_ms": {
+        "n": 170,
+        "min": 28.640469,
+        "p50": 34.446526,
+        "p95": 65.945576,
+        "max": 68.11634
+      }
+    },
+    {
+      "batch": "02-moving-bandwidth-i0",
+      "slot": 1,
+      "variant": "main-trace-A",
+      "scene": "bandwidth",
+      "iteration": 0,
+      "source_build_id": "d742268da4df",
+      "strict_hold_count": 262,
+      "strict_hold_window_count": 260,
+      "excluded_poll_contexts": {
+        "other_timer_poll": 2121,
+        "screen_only_eventful_or_interrupted_poll": 980
+      },
+      "lifetime": {
+        "samples": 227,
+        "median_lowerings": 87,
+        "with_strict_overlap": 50,
+        "lowerings_with_strict_overlap": 23,
+        "sample_Bps": {
+          "n": 227,
+          "min": 646.5911868423024,
+          "p50": 69186.54246094728,
+          "p95": 237709.98963523045,
+          "max": 298363.4990020651
+        },
+        "strict_hold_overlap_ms": {
+          "n": 227,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 16.221977,
+          "max": 31.11287
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 227,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.3028456696909419,
+          "max": 0.5228572541923153
+        },
+        "fully_contained_after23": 60
+      },
+      "window": {
+        "samples": 226,
+        "median_lowerings": 86,
+        "with_strict_overlap": 50,
+        "lowerings_with_strict_overlap": 23,
+        "sample_Bps": {
+          "n": 226,
+          "min": 646.5911868423024,
+          "p50": 69537.21661337485,
+          "p95": 237709.98963523045,
+          "max": 298363.4990020651
+        },
+        "strict_hold_overlap_ms": {
+          "n": 226,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 16.221977,
+          "max": 31.11287
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 226,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.3028456696909419,
+          "max": 0.5228572541923153
+        },
+        "fully_contained_after23": 60
+      },
+      "after23": {
+        "samples": 61,
+        "median_lowerings": 22,
+        "with_strict_overlap": 16,
+        "lowerings_with_strict_overlap": 7,
+        "sample_Bps": {
+          "n": 61,
+          "min": 3163.8137497522353,
+          "p50": 94942.85291535349,
+          "p95": 153671.50630488762,
+          "max": 181396.2556769267
+        },
+        "strict_hold_overlap_ms": {
+          "n": 61,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 16.258069,
+          "max": 17.066898
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 61,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.3254443390505217,
+          "max": 0.4091264196529627
+        },
+        "fully_contained_after23": 60
+      },
+      "after23_refresh_entry_intervals_ms": {
+        "n": 139,
+        "min": 32.223075,
+        "p50": 50.079936,
+        "p95": 68.091465,
+        "max": 83.475768
+      }
+    },
+    {
+      "batch": "02-moving-bandwidth-i0",
+      "slot": 2,
+      "variant": "main-trace-B",
+      "scene": "bandwidth",
+      "iteration": 0,
+      "source_build_id": "d742268da4df",
+      "strict_hold_count": 191,
+      "strict_hold_window_count": 189,
+      "excluded_poll_contexts": {
+        "other_timer_poll": 2155,
+        "screen_only_eventful_or_interrupted_poll": 959
+      },
+      "lifetime": {
+        "samples": 246,
+        "median_lowerings": 93,
+        "with_strict_overlap": 45,
+        "lowerings_with_strict_overlap": 21,
+        "sample_Bps": {
+          "n": 246,
+          "min": 663.3540214155041,
+          "p50": 63912.85878730947,
+          "p95": 242140.6550253797,
+          "max": 340589.04153853224
+        },
+        "strict_hold_overlap_ms": {
+          "n": 246,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 16.237086,
+          "max": 25.06563
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 246,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.3553971300027222,
+          "max": 0.5754546566882025
+        },
+        "fully_contained_after23": 51
+      },
+      "window": {
+        "samples": 246,
+        "median_lowerings": 93,
+        "with_strict_overlap": 45,
+        "lowerings_with_strict_overlap": 21,
+        "sample_Bps": {
+          "n": 246,
+          "min": 663.3540214155041,
+          "p50": 63912.85878730947,
+          "p95": 242140.6550253797,
+          "max": 340589.04153853224
+        },
+        "strict_hold_overlap_ms": {
+          "n": 246,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 16.237086,
+          "max": 25.06563
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 246,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.3553971300027222,
+          "max": 0.5754546566882025
+        },
+        "fully_contained_after23": 51
+      },
+      "after23": {
+        "samples": 52,
+        "median_lowerings": 20,
+        "with_strict_overlap": 8,
+        "lowerings_with_strict_overlap": 4,
+        "sample_Bps": {
+          "n": 52,
+          "min": 11554.65766926332,
+          "p50": 86158.80314937397,
+          "p95": 138755.86213741594,
+          "max": 171072.28940235448
+        },
+        "strict_hold_overlap_ms": {
+          "n": 52,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 15.944508,
+          "max": 24.073277
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 52,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.29077087735037244,
+          "max": 0.42027842317707664
+        },
+        "fully_contained_after23": 51
+      },
+      "after23_refresh_entry_intervals_ms": {
+        "n": 154,
+        "min": 29.722642,
+        "p50": 48.5275095,
+        "p95": 62.244095,
+        "max": 69.438139
+      }
+    },
+    {
+      "batch": "02-moving-bandwidth-i0",
+      "slot": 3,
+      "variant": "combined-trace",
+      "scene": "bandwidth",
+      "iteration": 0,
+      "source_build_id": "3031e105b1aa",
+      "strict_hold_count": 417,
+      "strict_hold_window_count": 412,
+      "excluded_poll_contexts": {
+        "other_timer_poll": 2487,
+        "screen_only_eventful_or_interrupted_poll": 936,
+        "screen_only_nonfuture_poll": 1
+      },
+      "lifetime": {
+        "samples": 249,
+        "median_lowerings": 87,
+        "with_strict_overlap": 72,
+        "lowerings_with_strict_overlap": 22,
+        "sample_Bps": {
+          "n": 249,
+          "min": 1642.6328507935611,
+          "p50": 75598.69558240425,
+          "p95": 269405.2551076433,
+          "max": 421574.98006802227
+        },
+        "strict_hold_overlap_ms": {
+          "n": 249,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 16.370851,
+          "max": 38.249593
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 249,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.35734524486890656,
+          "max": 0.7013272230381019
+        },
+        "fully_contained_after23": 65
+      },
+      "window": {
+        "samples": 249,
+        "median_lowerings": 87,
+        "with_strict_overlap": 72,
+        "lowerings_with_strict_overlap": 22,
+        "sample_Bps": {
+          "n": 249,
+          "min": 1642.6328507935611,
+          "p50": 75598.69558240425,
+          "p95": 269405.2551076433,
+          "max": 421574.98006802227
+        },
+        "strict_hold_overlap_ms": {
+          "n": 249,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 16.370851,
+          "max": 38.249593
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 249,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.35734524486890656,
+          "max": 0.7013272230381019
+        },
+        "fully_contained_after23": 65
+      },
+      "after23": {
+        "samples": 66,
+        "median_lowerings": 30,
+        "with_strict_overlap": 18,
+        "lowerings_with_strict_overlap": 8,
+        "sample_Bps": {
+          "n": 66,
+          "min": 8656.34094849259,
+          "p50": 97909.7197620299,
+          "p95": 234702.4795498495,
+          "max": 304853.6659517546
+        },
+        "strict_hold_overlap_ms": {
+          "n": 66,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 16.319106,
+          "max": 20.008634
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 66,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.2748040588284138,
+          "max": 0.3858655196749406
+        },
+        "fully_contained_after23": 65
+      },
+      "after23_refresh_entry_intervals_ms": {
+        "n": 193,
+        "min": 16.307101,
+        "p50": 34.492339,
+        "p95": 63.074308,
+        "max": 114.679379
+      }
+    },
+    {
+      "batch": "03-moving-bandwidth-i1",
+      "slot": 0,
+      "variant": "main-trace-B",
+      "scene": "bandwidth",
+      "iteration": 1,
+      "source_build_id": "d742268da4df",
+      "strict_hold_count": 241,
+      "strict_hold_window_count": 239,
+      "excluded_poll_contexts": {
+        "other_timer_poll": 2180,
+        "screen_only_eventful_or_interrupted_poll": 1016
+      },
+      "lifetime": {
+        "samples": 242,
+        "median_lowerings": 78,
+        "with_strict_overlap": 59,
+        "lowerings_with_strict_overlap": 27,
+        "sample_Bps": {
+          "n": 242,
+          "min": 987.3741354275744,
+          "p50": 63074.45758169488,
+          "p95": 242694.04033025517,
+          "max": 389514.90850755054
+        },
+        "strict_hold_overlap_ms": {
+          "n": 242,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 16.335666,
+          "max": 27.53985
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 242,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.32949029606466673,
+          "max": 0.7302901738681367
+        },
+        "fully_contained_after23": 52
+      },
+      "window": {
+        "samples": 242,
+        "median_lowerings": 78,
+        "with_strict_overlap": 59,
+        "lowerings_with_strict_overlap": 27,
+        "sample_Bps": {
+          "n": 242,
+          "min": 987.3741354275744,
+          "p50": 63074.45758169488,
+          "p95": 242694.04033025517,
+          "max": 389514.90850755054
+        },
+        "strict_hold_overlap_ms": {
+          "n": 242,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 16.335666,
+          "max": 27.53985
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 242,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.32949029606466673,
+          "max": 0.7302901738681367
+        },
+        "fully_contained_after23": 52
+      },
+      "after23": {
+        "samples": 53,
+        "median_lowerings": 18,
+        "with_strict_overlap": 21,
+        "lowerings_with_strict_overlap": 7,
+        "sample_Bps": {
+          "n": 53,
+          "min": 26208.224952570738,
+          "p50": 93489.09602731626,
+          "p95": 160069.64308245011,
+          "max": 211191.80683966872
+        },
+        "strict_hold_overlap_ms": {
+          "n": 53,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 16.421291,
+          "max": 23.6592
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 53,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.336937539524731,
+          "max": 0.4042730543650134
+        },
+        "fully_contained_after23": 52
+      },
+      "after23_refresh_entry_intervals_ms": {
+        "n": 179,
+        "min": 16.036058,
+        "p50": 48.182591,
+        "p95": 59.070534,
+        "max": 74.120835
+      }
+    },
+    {
+      "batch": "03-moving-bandwidth-i1",
+      "slot": 1,
+      "variant": "combined-trace",
+      "scene": "bandwidth",
+      "iteration": 1,
+      "source_build_id": "3031e105b1aa",
+      "strict_hold_count": 381,
+      "strict_hold_window_count": 377,
+      "excluded_poll_contexts": {
+        "other_timer_poll": 2391,
+        "screen_only_eventful_or_interrupted_poll": 976
+      },
+      "lifetime": {
+        "samples": 251,
+        "median_lowerings": 105,
+        "with_strict_overlap": 60,
+        "lowerings_with_strict_overlap": 27,
+        "sample_Bps": {
+          "n": 251,
+          "min": 957.2373242097283,
+          "p50": 65722.32855786446,
+          "p95": 261841.71115218263,
+          "max": 318612.9234697332
+        },
+        "strict_hold_overlap_ms": {
+          "n": 251,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 16.173858,
+          "max": 32.383656
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 251,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.3609627164607749,
+          "max": 0.9636223038487253
+        },
+        "fully_contained_after23": 60
+      },
+      "window": {
+        "samples": 251,
+        "median_lowerings": 105,
+        "with_strict_overlap": 60,
+        "lowerings_with_strict_overlap": 27,
+        "sample_Bps": {
+          "n": 251,
+          "min": 957.2373242097283,
+          "p50": 65722.32855786446,
+          "p95": 261841.71115218263,
+          "max": 318612.9234697332
+        },
+        "strict_hold_overlap_ms": {
+          "n": 251,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 16.173858,
+          "max": 32.383656
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 251,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.3609627164607749,
+          "max": 0.9636223038487253
+        },
+        "fully_contained_after23": 60
+      },
+      "after23": {
+        "samples": 61,
+        "median_lowerings": 31,
+        "with_strict_overlap": 16,
+        "lowerings_with_strict_overlap": 7,
+        "sample_Bps": {
+          "n": 61,
+          "min": 19559.354015760535,
+          "p50": 93720.50706772588,
+          "p95": 141321.92151957424,
+          "max": 148013.21247236113
+        },
+        "strict_hold_overlap_ms": {
+          "n": 61,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 16.427402,
+          "max": 32.383656
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 61,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.3609627164607749,
+          "max": 0.4870144102393461
+        },
+        "fully_contained_after23": 60
+      },
+      "after23_refresh_entry_intervals_ms": {
+        "n": 184,
+        "min": 16.055683,
+        "p50": 41.495340999999996,
+        "p95": 58.949991,
+        "max": 129.722306
+      }
+    },
+    {
+      "batch": "03-moving-bandwidth-i1",
+      "slot": 3,
+      "variant": "main-trace-A",
+      "scene": "bandwidth",
+      "iteration": 1,
+      "source_build_id": "d742268da4df",
+      "strict_hold_count": 304,
+      "strict_hold_window_count": 302,
+      "excluded_poll_contexts": {
+        "other_timer_poll": 2240,
+        "screen_only_eventful_or_interrupted_poll": 956
+      },
+      "lifetime": {
+        "samples": 235,
+        "median_lowerings": 94,
+        "with_strict_overlap": 56,
+        "lowerings_with_strict_overlap": 22,
+        "sample_Bps": {
+          "n": 235,
+          "min": 818.6659897175592,
+          "p50": 64376.324883228895,
+          "p95": 265684.36385004775,
+          "max": 313001.3214427695
+        },
+        "strict_hold_overlap_ms": {
+          "n": 235,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 16.34886,
+          "max": 48.985757
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 235,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.33821750229135006,
+          "max": 0.8370707960827016
+        },
+        "fully_contained_after23": 60
+      },
+      "window": {
+        "samples": 235,
+        "median_lowerings": 94,
+        "with_strict_overlap": 56,
+        "lowerings_with_strict_overlap": 22,
+        "sample_Bps": {
+          "n": 235,
+          "min": 818.6659897175592,
+          "p50": 64376.324883228895,
+          "p95": 265684.36385004775,
+          "max": 313001.3214427695
+        },
+        "strict_hold_overlap_ms": {
+          "n": 235,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 16.34886,
+          "max": 48.985757
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 235,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.33821750229135006,
+          "max": 0.8370707960827016
+        },
+        "fully_contained_after23": 60
+      },
+      "after23": {
+        "samples": 61,
+        "median_lowerings": 24,
+        "with_strict_overlap": 13,
+        "lowerings_with_strict_overlap": 5,
+        "sample_Bps": {
+          "n": 61,
+          "min": 6946.321101440733,
+          "p50": 93901.30339234302,
+          "p95": 141550.08035193235,
+          "max": 157951.9835037653
+        },
+        "strict_hold_overlap_ms": {
+          "n": 61,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 16.399437,
+          "max": 18.188905
+        },
+        "strict_hold_overlap_fraction": {
+          "n": 61,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 0.3311273187580344,
+          "max": 0.40842989065593
+        },
+        "fully_contained_after23": 60
+      },
+      "after23_refresh_entry_intervals_ms": {
+        "n": 149,
+        "min": 30.375563,
+        "p50": 49.616891,
+        "p95": 59.941914,
+        "max": 74.083169
+      }
+    }
+  ],
+  "witnesses": [
+    {
+      "batch": "00-moving-compress-i0",
+      "iteration": 0,
+      "variant": "combined-trace",
+      "sample": {
+        "event_index": 28032,
+        "row_ns": 38141833979,
+        "gen": 1,
+        "from_ns": 38110464618,
+        "ack_now_ns": 38141815563,
+        "wire": 348,
+        "sample_Bps": 11100.143871261298,
+        "old_capacity_Bps": 16570.215169253574,
+        "new_capacity_Bps": 16395.223418933503,
+        "retained": 15,
+        "median_lowered": true,
+        "begin_s": 28.709215209278078,
+        "end_s": 28.740566154278078,
+        "row_s": 28.740584570278077,
+        "strict_hold_overlap_ms": 16.232022,
+        "strict_hold_overlap_fraction": 0.5177522400042487,
+        "strict_hold_segments": 1,
+        "refresh_entries_inside_span": 1,
+        "post_median_rate25_capacity_Bps": 16395,
+        "post_rate25_same_ack_probe": null,
+        "post_rate25_refloor_clear": false
+      }
+    },
+    {
+      "batch": "01-moving-compress-i1",
+      "iteration": 1,
+      "variant": "combined-trace",
+      "sample": {
+        "event_index": 28265,
+        "row_ns": 38117669933,
+        "gen": 1,
+        "from_ns": 38084247267,
+        "ack_now_ns": 38117663058,
+        "wire": 462,
+        "sample_Bps": 13825.79870696462,
+        "old_capacity_Bps": 17007.87020760177,
+        "new_capacity_Bps": 15974.885004843898,
+        "retained": 15,
+        "median_lowered": true,
+        "begin_s": 28.624935304872313,
+        "end_s": 28.658351095872316,
+        "row_s": 28.658357970872313,
+        "strict_hold_overlap_ms": 16.584639,
+        "strict_hold_overlap_fraction": 0.4963114295274351,
+        "strict_hold_segments": 1,
+        "refresh_entries_inside_span": 1,
+        "post_median_rate25_capacity_Bps": 15974,
+        "post_rate25_same_ack_probe": null,
+        "post_rate25_refloor_clear": false
+      }
+    }
+  ],
+  "limits": [
+    "Poll-context overlap is not evidence of physical link idle or continuous app demand, nor a sample-discard rule.",
+    "Sample interval ends at passed ACK now, row time occurs after median update; later same-ACK probe/refloor are separate.",
+    "39 refresh timing uses actual entry d; snapshots/PTY chunks do not assign full producer-frame ownership or GPU presentation.",
+    "No emulator replay/raw-source-payload regeneration/new benchmark; functional54 timing is not pooled with untraced45/53."
+  ],
+  "raw_capture_or_source_payload_replayed": false
+}

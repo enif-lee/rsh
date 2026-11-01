@@ -1,0 +1,38 @@
+{
+  "scope": "Temporary copies only; public archives and original evidence unchanged",
+  "checks": [
+    {
+      "dataset": "core",
+      "mutation": "csv_low",
+      "rejected": true,
+      "exit_code": 1,
+      "assertion_tail": [
+        "    else:assert float(csvrow[column])==want,(key(result),name)",
+        "                ^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+        "AssertionError: (('lan', 'compress', 0, 'ssh'), 'low1_fps')"
+      ]
+    },
+    {
+      "dataset": "moving",
+      "mutation": "outage_bound",
+      "rejected": true,
+      "exit_code": 1,
+      "assertion_tail": [
+        "    derived=read('moving-derived.json');assert derived['performance_eligible'] is False and derived['recovery']==independent['moving_recovery_verified'] and derived['native_blocks']==independent['native_timing_blocks']",
+        "                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+        "AssertionError"
+      ]
+    },
+    {
+      "dataset": "parity",
+      "mutation": "slot_order",
+      "rejected": true,
+      "exit_code": 1,
+      "assertion_tail": [
+        "    assert all(source['job'][k]==result[k] for k in ('slot','tool','variant','iteration','binary_sha256','scene','cols','rows','scene_fps','duration'))",
+        "           ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+        "AssertionError"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+ "accepted_host_phases": 4,
+ "completed_jobs": 16,
+ "accepted_guard_jobs": 16,
+ "expected_jobs": 16,
+ "status": "measurement_finished_analysis_pending",
+ "completed_blocks": [
+  "00-moving-compress-i0",
+  "01-moving-compress-i1",
+  "02-moving-bandwidth-i0",
+  "03-moving-bandwidth-i1"
+ ]
+}

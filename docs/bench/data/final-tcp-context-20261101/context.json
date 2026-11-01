@@ -1,0 +1,158 @@
+{
+  "performance_eligible": false,
+  "scope": "Incomplete loss screens and connection diagnostics, excluded from the 96 eligible static observations and 16 descriptive moving observations.",
+  "original_files": [
+    {
+      "path": "44-fps-final-loss-cpu30-screen/run-status.json",
+      "bytes": 416,
+      "sha256": "dd60554ba77c762c6694791c2c7574a16ccfbd9cc2499dc24658f21af32dfbee"
+    },
+    {
+      "path": "46-badmobile-retry/run-status.json",
+      "bytes": 3458,
+      "sha256": "efe994813288e5d3bad3227527f5f32359a99b88b07803e67cf3dd56b659e93f"
+    },
+    {
+      "path": "47-connect-only-badmobile/capture-01/round-0/results.json",
+      "bytes": 21722,
+      "sha256": "95584438bfa017b7ba5b4b34691285ba0ea282fe99e700f262b59ab1e6ff9207"
+    },
+    {
+      "path": "47-connect-only-badmobile/capture-01/round-1/results.json",
+      "bytes": 22453,
+      "sha256": "612a7ef208e48c18f61b057ff8e6bb7bb6c09197389b32c9fdd0ea9e9cc68ecd"
+    },
+    {
+      "path": "46-badmobile-retry/01-badmobile-compress-i1/1-failure.json",
+      "bytes": 1017,
+      "sha256": "cddb4a17e450e9423879158ac437f129892ff5a82c51cd1e2ba49ab2427e9f6a"
+    }
+  ],
+  "studies": [
+    {
+      "study": 44,
+      "planned_jobs": 48,
+      "completed_jobs": 32,
+      "status": "interrupted_or_failed",
+      "error_class": "BrokenBarrierError",
+      "completed_blocks": [
+        "00-lossy-compress-i0",
+        "01-lossy-compress-i1",
+        "02-lossy-bandwidth-i0",
+        "03-lossy-bandwidth-i1",
+        "04-mobile-compress-i0",
+        "05-mobile-compress-i1",
+        "06-mobile-bandwidth-i0",
+        "07-mobile-bandwidth-i1"
+      ],
+      "complete_matrix": false,
+      "performance_eligible": false
+    },
+    {
+      "study": 46,
+      "planned_jobs": 16,
+      "completed_jobs": 4,
+      "status": "interrupted_or_failed",
+      "error_class": "invalid block after connection/prompt failure and four-window barrier failure",
+      "completed_blocks": [
+        "00-badmobile-compress-i0"
+      ],
+      "complete_matrix": false,
+      "performance_eligible": false,
+      "first_cause": {
+        "variant": "candidate",
+        "slot": 1,
+        "iteration": 1,
+        "connect_s": null,
+        "error": "no prompt",
+        "unchanged_timeout_seconds": 30,
+        "other_closed_window_slots": [
+          0,
+          2,
+          3
+        ],
+        "secondary": "Barrier/fence errors after the initial prompt failure.",
+        "underlying_handshake_or_display_cause": "unknown"
+      }
+    }
+  ],
+  "connect_only": [
+    {
+      "iteration": 0,
+      "slot": 0,
+      "variant": "ssh",
+      "success": true,
+      "connect_s": 6.659,
+      "alive_before_finish": true,
+      "performance_eligible": false
+    },
+    {
+      "iteration": 0,
+      "slot": 1,
+      "variant": "main-A",
+      "success": true,
+      "connect_s": 3.579,
+      "alive_before_finish": true,
+      "performance_eligible": false
+    },
+    {
+      "iteration": 0,
+      "slot": 2,
+      "variant": "main-B",
+      "success": true,
+      "connect_s": 3.571,
+      "alive_before_finish": true,
+      "performance_eligible": false
+    },
+    {
+      "iteration": 0,
+      "slot": 3,
+      "variant": "candidate",
+      "success": true,
+      "connect_s": 3.58,
+      "alive_before_finish": true,
+      "performance_eligible": false
+    },
+    {
+      "iteration": 1,
+      "slot": 0,
+      "variant": "main-B",
+      "success": true,
+      "connect_s": 3.573,
+      "alive_before_finish": true,
+      "performance_eligible": false
+    },
+    {
+      "iteration": 1,
+      "slot": 1,
+      "variant": "candidate",
+      "success": true,
+      "connect_s": 3.576,
+      "alive_before_finish": true,
+      "performance_eligible": false
+    },
+    {
+      "iteration": 1,
+      "slot": 2,
+      "variant": "ssh",
+      "success": true,
+      "connect_s": 6.805,
+      "alive_before_finish": true,
+      "performance_eligible": false
+    },
+    {
+      "iteration": 1,
+      "slot": 3,
+      "variant": "main-A",
+      "success": true,
+      "connect_s": 4.638,
+      "alive_before_finish": true,
+      "performance_eligible": false
+    }
+  ],
+  "limitations": [
+    "Eight successful connection checks do not reproduce, fix or exonerate the earlier failed connection.",
+    "Study 46 global forensic snapshots cover future-exception phases; returned error records retain slot failure evidence and driver rejection.",
+    "Incomplete screen records are not imputed as zero FPS and are not counted as a passing loss matrix."
+  ]
+}

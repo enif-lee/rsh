@@ -1,0 +1,5 @@
+{
+  "scripts/check-build.sh": "58a49a8b9076717ab392387855dd47437421b7c8af80b9ebf0ea27421715adec",
+  "scripts/dist.sh": "d104fa0d355dfa725e386eba20c08300991afbbcb768252f3f1073f402577d06",
+  "scripts/test_check_build.py": "75d77c99425c175df6ec8125422ee491a107be3d70aa74bc8716e28546c7ec79"
+}

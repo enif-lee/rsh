@@ -1,0 +1,26 @@
+   Compiling rsh v0.2.0 (/Users/ed/personal/rsh)
+   Compiling zlib-rs v0.6.8
+   Compiling flate2 v1.1.10
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 8.31s
+     Running unittests src/lib.rs (target/debug/deps/rsh-41798a1609935280)
+
+running 1 test
+test client::tests::badge_and_window_come_off_cleanly ... FAILED
+
+failures:
+
+---- client::tests::badge_and_window_come_off_cleanly stdout ----
+
+thread 'client::tests::badge_and_window_come_off_cleanly' (81900482) panicked at src/client.rs:2079:9:
+assertion `left != right` failed: the badge has a background
+  left: Default
+ right: Default
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    client::tests::badge_and_window_come_off_cleanly
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 97 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--lib`

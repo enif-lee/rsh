@@ -1,0 +1,1 @@
+{"jobs": 32, "valid": false, "invalid_reasons": ["scheduled four-worker block coverage mismatch", "schedule tags do not match measured blocks", "loss screen requires forty-eight planned-profile compress/random jobs/twelve blocks", "planned job identities or iteration coverage mismatch"]}

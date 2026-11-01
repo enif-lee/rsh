@@ -1,0 +1,159 @@
+{
+  "verdict": "PASS",
+  "errors": [],
+  "traces_hashed": 24,
+  "server_csvs_reparsed": 12,
+  "results": [
+    {
+      "batch": "00-moving-compress-i0",
+      "slot": 1,
+      "variant": "main-trace-A",
+      "strict_hold_count": 180,
+      "after23": {
+        "samples": 17,
+        "median_lowerings": 10,
+        "with_strict_overlap": 7,
+        "lowerings_with_strict_overlap": 4
+      }
+    },
+    {
+      "batch": "00-moving-compress-i0",
+      "slot": 2,
+      "variant": "main-trace-B",
+      "strict_hold_count": 204,
+      "after23": {
+        "samples": 12,
+        "median_lowerings": 6,
+        "with_strict_overlap": 4,
+        "lowerings_with_strict_overlap": 3
+      }
+    },
+    {
+      "batch": "00-moving-compress-i0",
+      "slot": 3,
+      "variant": "combined-trace",
+      "strict_hold_count": 154,
+      "after23": {
+        "samples": 28,
+        "median_lowerings": 17,
+        "with_strict_overlap": 15,
+        "lowerings_with_strict_overlap": 7
+      }
+    },
+    {
+      "batch": "01-moving-compress-i1",
+      "slot": 0,
+      "variant": "main-trace-B",
+      "strict_hold_count": 220,
+      "after23": {
+        "samples": 7,
+        "median_lowerings": 2,
+        "with_strict_overlap": 1,
+        "lowerings_with_strict_overlap": 0
+      }
+    },
+    {
+      "batch": "01-moving-compress-i1",
+      "slot": 1,
+      "variant": "combined-trace",
+      "strict_hold_count": 154,
+      "after23": {
+        "samples": 28,
+        "median_lowerings": 18,
+        "with_strict_overlap": 14,
+        "lowerings_with_strict_overlap": 10
+      }
+    },
+    {
+      "batch": "01-moving-compress-i1",
+      "slot": 3,
+      "variant": "main-trace-A",
+      "strict_hold_count": 164,
+      "after23": {
+        "samples": 15,
+        "median_lowerings": 8,
+        "with_strict_overlap": 6,
+        "lowerings_with_strict_overlap": 3
+      }
+    },
+    {
+      "batch": "02-moving-bandwidth-i0",
+      "slot": 1,
+      "variant": "main-trace-A",
+      "strict_hold_count": 262,
+      "after23": {
+        "samples": 61,
+        "median_lowerings": 22,
+        "with_strict_overlap": 16,
+        "lowerings_with_strict_overlap": 7
+      }
+    },
+    {
+      "batch": "02-moving-bandwidth-i0",
+      "slot": 2,
+      "variant": "main-trace-B",
+      "strict_hold_count": 191,
+      "after23": {
+        "samples": 52,
+        "median_lowerings": 20,
+        "with_strict_overlap": 8,
+        "lowerings_with_strict_overlap": 4
+      }
+    },
+    {
+      "batch": "02-moving-bandwidth-i0",
+      "slot": 3,
+      "variant": "combined-trace",
+      "strict_hold_count": 417,
+      "after23": {
+        "samples": 66,
+        "median_lowerings": 30,
+        "with_strict_overlap": 18,
+        "lowerings_with_strict_overlap": 8
+      }
+    },
+    {
+      "batch": "03-moving-bandwidth-i1",
+      "slot": 0,
+      "variant": "main-trace-B",
+      "strict_hold_count": 241,
+      "after23": {
+        "samples": 53,
+        "median_lowerings": 18,
+        "with_strict_overlap": 21,
+        "lowerings_with_strict_overlap": 7
+      }
+    },
+    {
+      "batch": "03-moving-bandwidth-i1",
+      "slot": 1,
+      "variant": "combined-trace",
+      "strict_hold_count": 381,
+      "after23": {
+        "samples": 61,
+        "median_lowerings": 31,
+        "with_strict_overlap": 16,
+        "lowerings_with_strict_overlap": 7
+      }
+    },
+    {
+      "batch": "03-moving-bandwidth-i1",
+      "slot": 3,
+      "variant": "main-trace-A",
+      "strict_hold_count": 304,
+      "after23": {
+        "samples": 61,
+        "median_lowerings": 24,
+        "with_strict_overlap": 13,
+        "lowerings_with_strict_overlap": 5
+      }
+    }
+  ],
+  "author_audit_sha256": "982c6cccabfd1ec0e820ce22d6df60c921f45428a01fc72ff290db54e81c63a6",
+  "scope": "Independent closest-predecessor association and sweep-line union/intersection arithmetic; source predicates/tuple read; no original sourcepayload/bodyoracle replay/workload/build",
+  "limits": [
+    "Strict screen-poll context is not physical idle, continuous demand or a sample discard rule",
+    "Passed ACK interval endpoint is distinct from actual sample commit row timestamp",
+    "All-generation samples overlap only same-generation holds; full span denominator retained, not clipped to23s"
+  ]
+}

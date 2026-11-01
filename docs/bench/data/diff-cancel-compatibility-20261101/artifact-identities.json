@@ -1,0 +1,41 @@
+[
+  {
+    "variant": "main-A",
+    "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-transit-floor-cancel-pair-main",
+    "sha256": "d45fc85fef7e2bb9b314ad3cdd68f3af24022d344911daa02e43f28860f41a7a",
+    "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/tcp-transit-floor-source",
+    "source_build_id": "239a8181363a",
+    "source_build_verified": true,
+    "source_manifest_unchanged": true,
+    "manifest_entries": 25,
+    "source_manifest_sha256": "4e2dc5fa4b906ef9bc1c32e514e3b72255957d9664636522b04f558b5f00d08c",
+    "guard_output": "verified build 239a8181363a: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-transit-floor-cancel-pair-main",
+    "reference_scope": "duplicateoldfar reference; notactualmain"
+  },
+  {
+    "variant": "main-B",
+    "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-transit-floor-cancel-pair-main",
+    "sha256": "d45fc85fef7e2bb9b314ad3cdd68f3af24022d344911daa02e43f28860f41a7a",
+    "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/tcp-transit-floor-source",
+    "source_build_id": "239a8181363a",
+    "source_build_verified": true,
+    "source_manifest_unchanged": true,
+    "manifest_entries": 25,
+    "source_manifest_sha256": "4e2dc5fa4b906ef9bc1c32e514e3b72255957d9664636522b04f558b5f00d08c",
+    "guard_output": "verified build 239a8181363a: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-transit-floor-cancel-pair-main",
+    "reference_scope": "duplicateoldfar reference; notactualmain"
+  },
+  {
+    "variant": "candidate",
+    "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-transit-floor-cancel",
+    "sha256": "b63aeed9fc8af5e758b136ba5dd9c3c6438ac46241f29a66c086962269057d11",
+    "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/tcp-transit-floor-cancel-source",
+    "source_build_id": "4856e38648f4",
+    "source_build_verified": true,
+    "source_manifest_unchanged": true,
+    "manifest_entries": 31,
+    "source_manifest_sha256": "f3cb0a0e5e559d2fc47f3e5d3124e5bc26240cdf45006203893d7ef48f9232f3",
+    "guard_output": "verified build 4856e38648f4: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-transit-floor-cancel\nverified build 4856e38648f4: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/transit-floor-cancel-tests",
+    "reference_scope": "samefarcontroller plus1CAN"
+  }
+]

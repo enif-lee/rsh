@@ -1,0 +1,393 @@
+{
+  "at": 1793454859.93472,
+  "summary_sha256": "3efae38ffdc25e867171e0fbcb0f978ae9703b22a2f19bf9c4b5e052ab3acdd5",
+  "meaning": "Each observed complete-body frame ID, actual header timestamp and scene matches its recorded source payload header; this supplements body matching and is not GPU/whole-stream proof.",
+  "valid": true,
+  "checks": [
+    {
+      "batch": "00-lan-compress-i0",
+      "slot": 0,
+      "variant": "ssh",
+      "completed_frames_checked": 480,
+      "mismatch_count": 0,
+      "source_sha256": "cb88e6a1aee5069ae43455f3e4800ac3271798d62bdc39a1f60e44739e458c4f"
+    },
+    {
+      "batch": "00-lan-compress-i0",
+      "slot": 1,
+      "variant": "main-A",
+      "completed_frames_checked": 480,
+      "mismatch_count": 0,
+      "source_sha256": "465e245c89ccfffcba682456da6b4d664b915e441be0cf20b4465d9c30328d2f"
+    },
+    {
+      "batch": "00-lan-compress-i0",
+      "slot": 2,
+      "variant": "main-B",
+      "completed_frames_checked": 480,
+      "mismatch_count": 0,
+      "source_sha256": "42255258d91ca0030f8dcbe521d6cc0ba730a2e202be3e2970ab5b75d0b4e7f2"
+    },
+    {
+      "batch": "00-lan-compress-i0",
+      "slot": 3,
+      "variant": "candidate",
+      "completed_frames_checked": 480,
+      "mismatch_count": 0,
+      "source_sha256": "7bc8cf2d7b66f4d27622a09b5f98cbbccd0b78e12e0da8d73597c64e24d9bdd6"
+    },
+    {
+      "batch": "01-lan-compress-i1",
+      "slot": 0,
+      "variant": "main-B",
+      "completed_frames_checked": 479,
+      "mismatch_count": 0,
+      "source_sha256": "f44b1de3bfc17c1466491d6ba3d36f654181449a7e4aef9d593474ad2e7911d4"
+    },
+    {
+      "batch": "01-lan-compress-i1",
+      "slot": 1,
+      "variant": "candidate",
+      "completed_frames_checked": 480,
+      "mismatch_count": 0,
+      "source_sha256": "c0e3b2cad37768e5471168a38c2647aa131a0f680aa4f415c01ccdd47fe09654"
+    },
+    {
+      "batch": "01-lan-compress-i1",
+      "slot": 2,
+      "variant": "ssh",
+      "completed_frames_checked": 480,
+      "mismatch_count": 0,
+      "source_sha256": "b8f139e849cb89629326b66db8fa780f8ff5b52c8945fe4a192d01210c51f0c1"
+    },
+    {
+      "batch": "01-lan-compress-i1",
+      "slot": 3,
+      "variant": "main-A",
+      "completed_frames_checked": 480,
+      "mismatch_count": 0,
+      "source_sha256": "d8c9434c8368c44d3cbeb5820b90b6255bc0767cab106f5f3787e1dde857be95"
+    },
+    {
+      "batch": "02-lan-bandwidth-i0",
+      "slot": 0,
+      "variant": "ssh",
+      "completed_frames_checked": 480,
+      "mismatch_count": 0,
+      "source_sha256": "73028c9242909d6d99878197d16e9aa02201f76f57485ed1da4409a9dcaabcc1"
+    },
+    {
+      "batch": "02-lan-bandwidth-i0",
+      "slot": 1,
+      "variant": "main-A",
+      "completed_frames_checked": 480,
+      "mismatch_count": 0,
+      "source_sha256": "9b7b68d071a96afd5ecc58db9326970b98981741113ce0b2ba300b1722efdce5"
+    },
+    {
+      "batch": "02-lan-bandwidth-i0",
+      "slot": 2,
+      "variant": "main-B",
+      "completed_frames_checked": 480,
+      "mismatch_count": 0,
+      "source_sha256": "bffd84b7216a25b4ac8f9c0091e4202bf6d3572632276f855b4de6bc7f5bcc3d"
+    },
+    {
+      "batch": "02-lan-bandwidth-i0",
+      "slot": 3,
+      "variant": "candidate",
+      "completed_frames_checked": 480,
+      "mismatch_count": 0,
+      "source_sha256": "a3d77cf04c0cb8e00842be02f93344258d685d97a5ea1667cb1eb1bd181010e6"
+    },
+    {
+      "batch": "03-lan-bandwidth-i1",
+      "slot": 0,
+      "variant": "main-B",
+      "completed_frames_checked": 477,
+      "mismatch_count": 0,
+      "source_sha256": "e410547c914cb1157f12585fad9f5b3a2ca00d9ec9764aea7c45d1f4a4c3db56"
+    },
+    {
+      "batch": "03-lan-bandwidth-i1",
+      "slot": 1,
+      "variant": "candidate",
+      "completed_frames_checked": 479,
+      "mismatch_count": 0,
+      "source_sha256": "05ce3094dc7b81c11ebbb3a6b99855304709e13d31a8867140257c57b71b51c0"
+    },
+    {
+      "batch": "03-lan-bandwidth-i1",
+      "slot": 2,
+      "variant": "ssh",
+      "completed_frames_checked": 480,
+      "mismatch_count": 0,
+      "source_sha256": "90c4f428b56e137956124620084a5af67ccc8579e08acf297f25b868687e851d"
+    },
+    {
+      "batch": "03-lan-bandwidth-i1",
+      "slot": 3,
+      "variant": "main-A",
+      "completed_frames_checked": 480,
+      "mismatch_count": 0,
+      "source_sha256": "5a296dcc47ca4753368d1e6f8cabe7b2be8e2a8e83e571fe82cfb74a3b923fc7"
+    },
+    {
+      "batch": "04-wan-compress-i0",
+      "slot": 0,
+      "variant": "ssh",
+      "completed_frames_checked": 480,
+      "mismatch_count": 0,
+      "source_sha256": "ac90345591feb3a69d00cdfbd191ad69d218a3211e390d9975ca119e7e2e88c7"
+    },
+    {
+      "batch": "04-wan-compress-i0",
+      "slot": 1,
+      "variant": "main-A",
+      "completed_frames_checked": 450,
+      "mismatch_count": 0,
+      "source_sha256": "e6bd6dad5c773fb4b017de01f23f51b560cb770a285e1f2428217fd08ef85d86"
+    },
+    {
+      "batch": "04-wan-compress-i0",
+      "slot": 2,
+      "variant": "main-B",
+      "completed_frames_checked": 452,
+      "mismatch_count": 0,
+      "source_sha256": "41b59347154a6226cdeaa8ff3c2092abb0bd3be42c30e289249edce82f0ec863"
+    },
+    {
+      "batch": "04-wan-compress-i0",
+      "slot": 3,
+      "variant": "candidate",
+      "completed_frames_checked": 480,
+      "mismatch_count": 0,
+      "source_sha256": "0a4bd63a737dff7169db66d75e71d0b82f0f122b1f52d8081bc63066ccc36936"
+    },
+    {
+      "batch": "05-wan-compress-i1",
+      "slot": 0,
+      "variant": "main-B",
+      "completed_frames_checked": 450,
+      "mismatch_count": 0,
+      "source_sha256": "08f2f3fe3a6b553ee85fb5ca81a125c76843dbdbcfdf78ee1530ded96cc40e12"
+    },
+    {
+      "batch": "05-wan-compress-i1",
+      "slot": 1,
+      "variant": "candidate",
+      "completed_frames_checked": 480,
+      "mismatch_count": 0,
+      "source_sha256": "59dec062178357141d56a0b17fb9529355ad47cc888c3d0bf56d47ad8f38c7ea"
+    },
+    {
+      "batch": "05-wan-compress-i1",
+      "slot": 2,
+      "variant": "ssh",
+      "completed_frames_checked": 480,
+      "mismatch_count": 0,
+      "source_sha256": "c828274a8459ddd5b584c12392656fd49dec73a4580f56d0089dd729780df7e4"
+    },
+    {
+      "batch": "05-wan-compress-i1",
+      "slot": 3,
+      "variant": "main-A",
+      "completed_frames_checked": 449,
+      "mismatch_count": 0,
+      "source_sha256": "79ded8ca11aa03609cda781fea5daf6516dd565befb5479dba43bf7d46f04e97"
+    },
+    {
+      "batch": "06-wan-bandwidth-i0",
+      "slot": 0,
+      "variant": "ssh",
+      "completed_frames_checked": 480,
+      "mismatch_count": 0,
+      "source_sha256": "4ac519dc874fa6eeeefcaecfdf6538d56dc12b8b5e48f6b8fc386d5a6423f94d"
+    },
+    {
+      "batch": "06-wan-bandwidth-i0",
+      "slot": 1,
+      "variant": "main-A",
+      "completed_frames_checked": 438,
+      "mismatch_count": 0,
+      "source_sha256": "c330adf1af105d2f6c9983063fedf39b3565adfdf4d3d5f400aa3485739452ff"
+    },
+    {
+      "batch": "06-wan-bandwidth-i0",
+      "slot": 2,
+      "variant": "main-B",
+      "completed_frames_checked": 438,
+      "mismatch_count": 0,
+      "source_sha256": "33540a9e73040b5297cf65d9655725c5312fa12a53a37c2e3b3a3611ee7c69cc"
+    },
+    {
+      "batch": "06-wan-bandwidth-i0",
+      "slot": 3,
+      "variant": "candidate",
+      "completed_frames_checked": 437,
+      "mismatch_count": 0,
+      "source_sha256": "d8c14ab057aba267a54fc40f4d75edcc336ec970129971dc2f0ed09cde093537"
+    },
+    {
+      "batch": "07-wan-bandwidth-i1",
+      "slot": 0,
+      "variant": "main-B",
+      "completed_frames_checked": 442,
+      "mismatch_count": 0,
+      "source_sha256": "147f24e52009cc340aa388238670a89d08d2ec4b3cdacc7347644f03e4258c08"
+    },
+    {
+      "batch": "07-wan-bandwidth-i1",
+      "slot": 1,
+      "variant": "candidate",
+      "completed_frames_checked": 437,
+      "mismatch_count": 0,
+      "source_sha256": "c1ec359d61f462f2a9bf1f49af014b3ddde9774b6af75f493d8c6f598883d215"
+    },
+    {
+      "batch": "07-wan-bandwidth-i1",
+      "slot": 2,
+      "variant": "ssh",
+      "completed_frames_checked": 480,
+      "mismatch_count": 0,
+      "source_sha256": "f749c25b0812302266a6f49b506ea777c26c2dcb1bf9876971b67251b0cf672a"
+    },
+    {
+      "batch": "07-wan-bandwidth-i1",
+      "slot": 3,
+      "variant": "main-A",
+      "completed_frames_checked": 439,
+      "mismatch_count": 0,
+      "source_sha256": "9bfb7633f1638ee1aaeb00f5153f9860ff2467daf893266df1fe004c9b63dde2"
+    },
+    {
+      "batch": "08-highlat-compress-i0",
+      "slot": 0,
+      "variant": "ssh",
+      "completed_frames_checked": 480,
+      "mismatch_count": 0,
+      "source_sha256": "0ca3a57e171b48ba14115ee192310a1b2b5bc1dc11af34b8767db8bfb4c477cd"
+    },
+    {
+      "batch": "08-highlat-compress-i0",
+      "slot": 1,
+      "variant": "main-A",
+      "completed_frames_checked": 440,
+      "mismatch_count": 0,
+      "source_sha256": "6228191b43db6943bba1d7fdcd8ff221dd10a02d74ba696487a5fbd1f981f461"
+    },
+    {
+      "batch": "08-highlat-compress-i0",
+      "slot": 2,
+      "variant": "main-B",
+      "completed_frames_checked": 438,
+      "mismatch_count": 0,
+      "source_sha256": "a86706c1966b14b2455bf8ecbe1d2e0147e948f805050b9e55051b271cb566e7"
+    },
+    {
+      "batch": "08-highlat-compress-i0",
+      "slot": 3,
+      "variant": "candidate",
+      "completed_frames_checked": 438,
+      "mismatch_count": 0,
+      "source_sha256": "ee240fd228deda29bc1c3d9f03a402e76a7f83a6a982e58e5a48b37ddc12769a"
+    },
+    {
+      "batch": "09-highlat-compress-i1",
+      "slot": 0,
+      "variant": "main-B",
+      "completed_frames_checked": 419,
+      "mismatch_count": 0,
+      "source_sha256": "611e2636fafe31d5085812294dbb24353ece4f296463e6ad8c4930c70db2c4f0"
+    },
+    {
+      "batch": "09-highlat-compress-i1",
+      "slot": 1,
+      "variant": "candidate",
+      "completed_frames_checked": 440,
+      "mismatch_count": 0,
+      "source_sha256": "34dcd00d295b86bfe8679567aab46a0092aaf091a4660bbedef6bdb3168afd6f"
+    },
+    {
+      "batch": "09-highlat-compress-i1",
+      "slot": 2,
+      "variant": "ssh",
+      "completed_frames_checked": 480,
+      "mismatch_count": 0,
+      "source_sha256": "b9f076bbeb023d45a2662412d4701d73894777c4de1300283988daa546d2e776"
+    },
+    {
+      "batch": "09-highlat-compress-i1",
+      "slot": 3,
+      "variant": "main-A",
+      "completed_frames_checked": 440,
+      "mismatch_count": 0,
+      "source_sha256": "8ff7808e7e2050ef33463d1b9b081ff52ae2f9e3cf127acc7f71014e27455e3a"
+    },
+    {
+      "batch": "10-highlat-bandwidth-i0",
+      "slot": 0,
+      "variant": "ssh",
+      "completed_frames_checked": 480,
+      "mismatch_count": 0,
+      "source_sha256": "372f5c2aaf932e510ac288311d1eabb35849d2858a64624d8494c1611d491164"
+    },
+    {
+      "batch": "10-highlat-bandwidth-i0",
+      "slot": 1,
+      "variant": "main-A",
+      "completed_frames_checked": 402,
+      "mismatch_count": 0,
+      "source_sha256": "6c20b93d6ac307a6b41854c60e923ff49091ddb23b6f060e0b311d8a2b2f4ea1"
+    },
+    {
+      "batch": "10-highlat-bandwidth-i0",
+      "slot": 2,
+      "variant": "main-B",
+      "completed_frames_checked": 395,
+      "mismatch_count": 0,
+      "source_sha256": "701cc117e9d636392dbd9f1e801d8f2ef0778b09e1aa2ead551fe16e7044ea91"
+    },
+    {
+      "batch": "10-highlat-bandwidth-i0",
+      "slot": 3,
+      "variant": "candidate",
+      "completed_frames_checked": 403,
+      "mismatch_count": 0,
+      "source_sha256": "3fc4047384ed181fb4abbf61459f527d15a3a113c23d4ea55f070a213c15e21b"
+    },
+    {
+      "batch": "11-highlat-bandwidth-i1",
+      "slot": 0,
+      "variant": "main-B",
+      "completed_frames_checked": 403,
+      "mismatch_count": 0,
+      "source_sha256": "b15851ae1c2ffe2faa1a82c74d33c3c62706da503b37df1ad46520592987d527"
+    },
+    {
+      "batch": "11-highlat-bandwidth-i1",
+      "slot": 1,
+      "variant": "candidate",
+      "completed_frames_checked": 398,
+      "mismatch_count": 0,
+      "source_sha256": "2901fd077fe64dce5991cd612a21f53e17c444273c51ed8423b712bf44a42e76"
+    },
+    {
+      "batch": "11-highlat-bandwidth-i1",
+      "slot": 2,
+      "variant": "ssh",
+      "completed_frames_checked": 480,
+      "mismatch_count": 0,
+      "source_sha256": "cc3a751bb77576eb5f7124054f240b16c54139fe8327c37293728b7207e3acc7"
+    },
+    {
+      "batch": "11-highlat-bandwidth-i1",
+      "slot": 3,
+      "variant": "main-A",
+      "completed_frames_checked": 402,
+      "mismatch_count": 0,
+      "source_sha256": "7bea032a1255f226fbb528735ecf6ebdd56cb1d5d7a2ccde20cc6e07895cec61"
+    }
+  ],
+  "mismatches": []
+}

@@ -1,0 +1,129 @@
+--- a/src/server.rs
++++ b/src/server.rs
+@@ -2009,7 +2009,7 @@
+             // 38 ms update and 20 ms of it made gaps of 58 ms, the slowest
+             // frames shown; 1 Mbit/s random screens 1% low 8.4 to 11.4,
+             // 5% low 16.6 to 19.7, for 8 ms of age).
+-            let wait = if self.modelled() { FRESH_WAIT.min(gap / 4) } else { FRESH_WAIT };
++            let wait = if self.modelled() || is_tcp_addr(self.addr) { FRESH_WAIT.min(gap / 4) } else { FRESH_WAIT };
+             return Some(match self.output_at {
+                 Some(at) if at >= idle => at,
+                 Some(at) => {
+@@ -2617,3 +2617,117 @@
+         assert_eq!(pick_level(Some(fast), 10.0, false, short), fast);
+     }
+ }
++
++#[cfg(test)]
++mod tcp_fresh_quarter_tests {
++    use super::*;
++
++    fn with_attachment(check: impl FnOnce(&mut Attachment, Instant)) {
++        let server = Server::spawn();
++        let mut state = server.state();
++        let now = Instant::now();
++        let key = Key::from_token("fresh-quarter-test");
++        let command = vec!["sleep".into(), "30".into()];
++        let hello = crate::net::new_hello("fresh-quarter-test", Action::Default, (100, 30), &command);
++        let packet = Packet { kind: KIND_CONFIRM, session: 1, counter: 0, nonce: [0; 24], payload: Vec::new() };
++        let attached = state.carry_out(1, &key, 0, &hello, &packet, "127.0.0.1:12345".parse().unwrap(), now);
++        let attach = state.sessions.get_mut(&attached.session).unwrap().attach.as_mut().unwrap();
++        let last = now - Duration::from_secs(2);
++        attach.addr = "[fd72:7368:7463:7000::1]:12345".parse().unwrap();
++        assert!(is_tcp_addr(attach.addr));
++        attach.output = Sender::new(0);
++        attach.output.set_lossless(true);
++        attach.output.set_path(Some(208_788.0), Some(100.0));
++        attach.path = None;
++        attach.shadow = Some(Terminal::with_history(100, 30, 0));
++        attach.repaint_due = true;
++        attach.screen_at = Some(last);
++        attach.update_len = 4_258;
++        attach.output_gap = Duration::from_nanos(16_666_666);
++        attach.output_at = Some(last + attach.output_gap);
++        attach.frames = ANIMATION_FRAMES;
++        attach.mid_sequence = None;
++        attach.link_free = None;
++        check(attach, last);
++    }
++
++    #[test]
++    fn tcp_known_slow_rejects_a_next_frame_outside_the_quarter_gap() {
++        with_attachment(|attach, last| {
++            let work = Duration::from_secs_f64((4_258 + proto::WIRE_OVERHEAD) as f64 / 208_788.0);
++            assert!(work > attach.screen_gap(), "the old tcp-fresh work<=frame shortcut does not apply");
++            let gap = work + SLOW_ROOM;
++            assert!((25_930..25_950).contains(&gap.as_micros()));
++            assert_eq!(attach.screen_due_at(), Some(last + gap));
++            assert_ne!(attach.screen_due_at(), Some(last + attach.output_gap * 2));
++        });
++    }
++
++    #[test]
++    fn tcp_gap_at_least_eighty_ms_keeps_the_existing_twenty_ms_cap() {
++        with_attachment(|attach, last| {
++            attach.output.set_path(Some(50_000.0), Some(100.0));
++            attach.update_len = 4_096;
++            attach.output_at = Some(last + attach.output_gap * 5);
++            let gap = Duration::from_secs_f64((4_096 + proto::WIRE_OVERHEAD) as f64 / 50_000.0) + SLOW_ROOM;
++            assert!(gap >= Duration::from_millis(80));
++            assert_eq!(attach.screen_due_at(), Some(last + attach.output_gap * 6));
++        });
++    }
++
++    #[test]
++    fn udp_without_model_keeps_the_existing_full_fresh_wait() {
++        with_attachment(|attach, last| {
++            attach.addr = "127.0.0.1:12345".parse().unwrap();
++            attach.output.set_lossless(false);
++            assert!(!attach.modelled());
++            assert_eq!(attach.screen_due_at(), Some(last + attach.output_gap * 2));
++        });
++    }
++
++    #[test]
++    fn udp_with_model_keeps_the_existing_quarter_gap_wait() {
++        with_attachment(|attach, last| {
++            attach.addr = "127.0.0.1:12345".parse().unwrap();
++            attach.output.set_lossless(false);
++            let mut path = PathModel::new(last);
++            let arrivals = (0..2).map(|i| (path.number(last, 600, false), 100_000 + i * 10_000)).collect();
++            path.feedback(&proto::Feedback { sent_us: 110_000, arrivals }, last + Duration::from_millis(220));
++            attach.path = Some(path);
++            assert!(attach.modelled());
++            let gap = Duration::from_secs_f64((4_258 + proto::WIRE_OVERHEAD) as f64 / 208_788.0) + SLOW_ROOM;
++            attach.link_free = Some(last + gap);
++            assert_eq!(attach.screen_due_at(), Some(last + gap));
++        });
++    }
++
++    #[test]
++    fn unknown_rate_keeps_the_existing_screen_step_deadline() {
++        with_attachment(|attach, last| {
++            attach.output = Sender::new(0);
++            attach.output.set_lossless(true);
++            assert!(attach.output.slow_rate().is_none());
++            assert_eq!(attach.screen_due_at(), Some(last + attach.output_gap));
++        });
++    }
++
++    #[test]
++    fn mid_sequence_tail_wait_still_dominates_the_screen_deadline() {
++        with_attachment(|attach, last| {
++            let began = last + Duration::from_millis(40);
++            attach.mid_sequence = Some(began);
++            assert_eq!(attach.next_screen_at(), Some(began + TAIL_WAIT));
++        });
++    }
++
++    #[test]
++    fn unsent_output_or_absent_shadow_still_blocks_the_deadline() {
++        with_attachment(|attach, _| {
++            attach.output.push(b"not sent");
++            assert_eq!(attach.screen_due_at(), None);
++            attach.output = Sender::new(0);
++            attach.shadow = None;
++            assert_eq!(attach.screen_due_at(), None);
++        });
++    }
++}

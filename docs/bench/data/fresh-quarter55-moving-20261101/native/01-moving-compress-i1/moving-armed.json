@@ -1,0 +1,139 @@
+{
+  "start": 1793490112.2303345,
+  "end": 1793490142.2303345,
+  "sources": {
+    "0": {
+      "schema": 2,
+      "identity": {
+        "pid": 485,
+        "uid": 1001,
+        "starttime_ticks": 76777176,
+        "cmdline": [
+          "python3",
+          "/tmp/scene.py",
+          "compress",
+          "30",
+          "60",
+          "0",
+          "",
+          "1793490112.2303345"
+        ],
+        "scene": "compress"
+      },
+      "job": {
+        "source_token": "5e558b0796d847fa8247b4edeadec8d9",
+        "slot": 0,
+        "tool": "rsh-tcp",
+        "variant": "main-B",
+        "iteration": 1,
+        "binary_sha256": "fb04386fdfe25f25f1bfd0354f11ba7a01c954525a11634ae35caafd46c2eec4",
+        "scene": "compress",
+        "cols": 100,
+        "rows": 30,
+        "scene_fps": 60,
+        "duration": 30
+      },
+      "ready_epoch": 1793490109.3607814
+    },
+    "3": {
+      "schema": 2,
+      "identity": {
+        "pid": 456,
+        "uid": 1001,
+        "starttime_ticks": 76777176,
+        "cmdline": [
+          "python3",
+          "/tmp/scene.py",
+          "compress",
+          "30",
+          "60",
+          "0",
+          "",
+          "1793490112.2303345"
+        ],
+        "scene": "compress"
+      },
+      "job": {
+        "source_token": "759001c6fac841ff8d73b040fc6354ba",
+        "slot": 3,
+        "tool": "rsh-tcp",
+        "variant": "main-A",
+        "iteration": 1,
+        "binary_sha256": "fb04386fdfe25f25f1bfd0354f11ba7a01c954525a11634ae35caafd46c2eec4",
+        "scene": "compress",
+        "cols": 100,
+        "rows": 30,
+        "scene_fps": 60,
+        "duration": 30
+      },
+      "ready_epoch": 1793490109.3610797
+    },
+    "1": {
+      "schema": 2,
+      "identity": {
+        "pid": 455,
+        "uid": 1001,
+        "starttime_ticks": 76777176,
+        "cmdline": [
+          "python3",
+          "/tmp/scene.py",
+          "compress",
+          "30",
+          "60",
+          "0",
+          "",
+          "1793490112.2303345"
+        ],
+        "scene": "compress"
+      },
+      "job": {
+        "source_token": "a9d431669ac343c79f9eb3fd25ee2145",
+        "slot": 1,
+        "tool": "rsh-tcp",
+        "variant": "candidate",
+        "iteration": 1,
+        "binary_sha256": "6d7fc6b12db125006b61cf29f69285e5600922aa4f0fc0abc11fdc84ac68cba9",
+        "scene": "compress",
+        "cols": 100,
+        "rows": 30,
+        "scene_fps": 60,
+        "duration": 30
+      },
+      "ready_epoch": 1793490109.359534
+    },
+    "2": {
+      "schema": 2,
+      "identity": {
+        "pid": 462,
+        "uid": 1001,
+        "starttime_ticks": 76777178,
+        "cmdline": [
+          "python3",
+          "/tmp/scene.py",
+          "compress",
+          "30",
+          "60",
+          "0",
+          "",
+          "1793490112.2303345"
+        ],
+        "scene": "compress"
+      },
+      "job": {
+        "source_token": "fffc055723d244e2bc6ae2ad56cd1051",
+        "slot": 2,
+        "tool": "ssh",
+        "variant": "ssh",
+        "iteration": 1,
+        "binary_sha256": "fb04386fdfe25f25f1bfd0354f11ba7a01c954525a11634ae35caafd46c2eec4",
+        "scene": "compress",
+        "cols": 100,
+        "rows": 30,
+        "scene_fps": 60,
+        "duration": 30
+      },
+      "ready_epoch": 1793490109.3738077
+    }
+  },
+  "all_armed_confirmed_epoch": 1793490109.419733
+}

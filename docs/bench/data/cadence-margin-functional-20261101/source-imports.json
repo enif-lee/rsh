@@ -1,0 +1,46 @@
+{
+  "notes/lowbw52-mechanism-audit.py": {
+    "public": "lowbw52-mechanism-audit.py",
+    "sha256": "819dd6ca6d75ea6717e9ed717b82ae8f80ec3fc970927b93a034e986c85aa579"
+  },
+  "notes/lowbw52-mechanism-audit.json": {
+    "public": "lowbw52-mechanism-audit.json",
+    "sha256": "896f5af999055a28e8cb4d8f4caa2a8f8768502db83b3329cb1c8d4f11ad4a63"
+  },
+  "notes/lowbw52-mechanism-audit.md": {
+    "public": "lowbw52-mechanism-audit.md",
+    "sha256": "f35443d19bb47eeae967b22d461f30c18884edaea50cca729f7bbf6af8122c7f"
+  },
+  "notes/lowbw52-metrics.csv": {
+    "public": "lowbw52-metrics.csv",
+    "sha256": "85ee6c3b419f6b44c4284270150f12dd1c0e4f74969465dcd106bb9190ab4056"
+  },
+  "52-lowbw-cadence-trace/SCHEMA.md": {
+    "public": "SCHEMA.md",
+    "sha256": "d4716eb0bb8289c20a7a0878cf03093f972a5d7310ae3c74d01d18df86cc43f0"
+  },
+  "52-lowbw-cadence-trace/source-proof.json": {
+    "public": "source-proof.json",
+    "sha256": "f8921f00ccc0e919d7f3580e2d0c4a61f1d38045933a3418b15ebd3a6c717f51"
+  },
+  "52-lowbw-cadence-trace/paired-build-provenance.json": {
+    "public": "paired-build-provenance.json",
+    "sha256": "79b7b08d4ca9b0e537dfba567b69f0a8b5538f2aa12a87d2e88b11e295491acc"
+  },
+  "52-lowbw-cadence-trace/baseline-source-manifest.json": {
+    "public": "baseline-source-manifest.json",
+    "sha256": "f11743719d2b410c6879c68475e3819068d94f2fce15d2f25ff12c78145b1dfa"
+  },
+  "52-lowbw-cadence-trace/margin-source-manifest.json": {
+    "public": "margin-source-manifest.json",
+    "sha256": "6c10914513bc4779df8f9c3c082bd45ab5b16c3b6046388c25de04b46ed1d3f3"
+  },
+  "52-lowbw-cadence-trace/prepared-inputs.json": {
+    "public": "prepared-inputs.json",
+    "sha256": "f0259d85b5c8ec27217a2620c42e2fd0252169ccdc4f38a1ae4940838d1ced4d"
+  },
+  "52-lowbw-cadence-trace/fixture-manifest.json": {
+    "public": "fixture-manifest.json",
+    "sha256": "c323a324940340195b2961859cf840e2b8892afe419b3c012642502639f360d9"
+  }
+}

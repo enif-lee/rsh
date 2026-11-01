@@ -98,7 +98,264 @@ def moving_skew(scene):
                for p in window["network_trace"]) * 1000
 
 
-def write_report():
+TCP_ARCHIVES = {
+    'core': 'bounded-quiet65-reference-core-20261101',
+    'slow': 'bounded-quiet65-reference-slow-20261101',
+    'moving': 'bounded-quiet65-reference-moving-20261101',
+    'fast120': 'bounded-quiet65-reference-fast120-20261101',
+}
+
+
+def tcp_results(cohort):
+    return json.loads((DATA / TCP_ARCHIVES[cohort] / 'core-results.json').read_text())['results']
+
+
+def tcp_label(row):
+    nets = {'lan': 'LAN', 'wan': 'RTT 100 ms', 'highlat': 'RTT 300 ms',
+            'lowbw': '1 Mbit/s', 'verylow': '256 kbit/s', 'slow64k': '64 kbit/s', 'moving': 'Moving'}
+    scene = 'dashboard' if row['scene'] == 'compress' else 'random'
+    return f"{nets[row['net']]} / {scene} / {row['iteration']}"
+
+
+def tcp_cases(cohort):
+    cases = {}
+    for row in tcp_results(cohort):
+        cases.setdefault(row['batch'], {})[row['variant']] = row
+    return cases
+
+
+def tcp_fps(row):
+    body = row['complete_body']
+    return ' / '.join(fmt(body[key]) for key in ('fps', 'low1_fps', 'low5_fps'))
+
+
+def tcp_comparison(cohort):
+    return table(['Profile / scene / evaluation', 'SSH', 'Reference A', 'Reference B', 'rsh TCP'],
+                 [[tcp_label(case['candidate'])] + [tcp_fps(case[role]) for role in ('ssh', 'main-A', 'main-B', 'candidate')]
+                  for case in tcp_cases(cohort).values()])
+
+
+def tcp_readme_summary():
+    wanted = [('core', 'highlat', 'bandwidth'), ('slow', 'lowbw', 'bandwidth'),
+              ('slow', 'verylow', 'compress'), ('slow', 'slow64k', 'compress')]
+    rows = []
+    for cohort, net, scene in wanted:
+        for case in tcp_cases(cohort).values():
+            c, ssh = case['candidate'], case['ssh']
+            if c['net'] != net or c['scene'] != scene:
+                continue
+            rss = lambda r: (r['rss_client_kb'] + r['rss_server_kb']) / 1024
+            rows.append([tcp_label(c), tcp_fps(ssh), tcp_fps(c),
+                         f"{ssh['kbit_s']:.0f} / {c['kbit_s']:.0f}", f'{rss(ssh):.2f} / {rss(c):.2f}'])
+    return '''### TCP fallback
+
+The TCP implementation uses bounded transit accounting, capacity probing,
+frame-cadence alignment and a bounded wait for recent PTY output. The measured
+source is `781bbe465298`, the implementation used by main. Four parallel jobs,
+two evaluations per case, a 100×30 terminal and 60 FPS requested.
+Cells show **avg / 1% low / 5% low FPS**; RX is client kbit/s and RSS is
+client+server midpoint MiB, not peak memory.
+
+''' + table(['Profile / scene / evaluation', 'SSH FPS', 'rsh TCP FPS', 'SSH / rsh RX', 'SSH / rsh RSS'], rows) + '''
+
+1% low, 5% low and average FPS are primary; CPU/RSS are secondary.
+Low-bandwidth gains coexist with LAN tail costs, a remaining RTT 300 ms
+average-FPS gap and 120 Hz costs. See the [complete TCP comparison](BENCHMARK.md#tcp-fallback)
+for both reference sessions, all evaluations, resources and moving recovery.
+'''
+
+
+def tcp_readme_detail():
+    return '''## Performance
+
+TCP results use source `781bbe465298`; UDP and multi-tool results below use
+released **0.2.0**, build `6729d398d4f1`. These datasets use different frame
+observers and are kept separate. [Measurement scope](BENCHMARK.md#measurement-scope)
+identifies the source, workloads and aggregation for each.
+
+### TCP frame delivery
+
+The TCP comparison validates complete terminal bodies against the producer,
+with separate average, 1% low and 5% low FPS for each evaluation. LAN and
+120 Hz tail costs remain visible alongside high-RTT and bandwidth-limited gains.
+
+![TCP dashboard and random-screen FPS](docs/bench/bounded-quiet65-reference-core-fps.svg)
+
+![TCP FPS on bandwidth-limited links](docs/bench/bounded-quiet65-reference-slow-fps.svg)
+
+### TCP moving network
+
+A common 30-second delay/rate/outage schedule drives all sessions. The following
+whole-window observations are descriptive: timing fidelity remains unapproved.
+Cells are **avg / 1% low / 5% low FPS**.
+
+''' + table(['Scene / evaluation', 'SSH FPS', 'rsh TCP FPS'],
+            [[tcp_label(c['candidate']), tcp_fps(c['ssh']), tcp_fps(c['candidate'])]
+             for c in tcp_cases('moving').values()]) + '''
+
+![TCP moving recovery and fresh-frame arrival](docs/bench/bounded-quiet65-reference-moving-recovery.svg)
+
+After the impaired phases, TCP dashboard averages 42.4 / 42.7 FPS in the final
+seven seconds. SSH's 112.3 / 107.4 FPS includes backlog catch-up; it does not
+represent a steady fresh rate above the requested 60 FPS. Frame age and the
+first newly generated body are reported with FPS. The final phase still varies
+delay and includes a short outage. [Moving details](BENCHMARK.md#moving-network)
+retain all recovery phases, native timing bounds, gaps and missing values.
+
+'''
+
+
+def tcp_report():
+    blocks = ['''# Benchmark report
+
+## Measurement scope
+
+The TCP implementation used by main is measured as source **781bbe465298**.
+Its complete-body comparisons appear first. The released **0.2.0** multi-tool
+suite follows separately, identified by build **6729d398d4f1**; it supplies UDP,
+mosh, ET, input, bulk-output and session-memory comparisons, not a full-suite
+measurement of the main implementation.
+
+**1% low, 5% low and average FPS are primary; CPU/RSS are secondary.**
+Every evaluation is shown separately. Different sources, observers, requested
+rates and network schedules are never pooled into one FPS value.
+
+## TCP fallback
+
+### Method
+
+Four parallel jobs compare SSH, two identical CAN+PTY correctness-fixed
+references (source `4f98af080434`), and rsh TCP source `781bbe465298`. This is
+the complete controller-stack comparison, not an isolated effect of any one
+policy. The second evaluation reverses the slot order. Slots are not evidence
+of physical P/E-core assignment.
+
+The terminal is 100×30. Core/slow scenes request 60 FPS for an eight-second
+window; the separate fast-rate guard requests 120 FPS. Moving uses a common
+future start and a fixed 30-second receive window. There are 112 eligible
+static observations and 16 descriptive moving observations in these four
+cohorts. Each profile/scene has two evaluations; no retries select a winner.
+
+FPS counts source-matched complete terminal bodies, not header-only changes or
+GPU presentations. Lows are 1000/p99 and 1000/p95 adjacent frame gaps with
+nearest-rank percentiles; startup/end gaps are excluded from lows but retained
+in maximum gap. Sparse lows and p95 age remain missing. Actual window endpoints
+include any residual beyond complete one-second bins.
+
+RX is client interface traffic in decimal kbit/s, including overhead. RSS is a
+midpoint process sample in MiB; CPU is recorded client/server utilization.
+Age is actual source creation to complete-body observation, not RTT. Resource
+scalars are checked against saved jobs/CSV, not independent counter remeasurement.
+Host admission uses one total CPU interval below 30%; runtime load is context.
+Raw payloads remain local; compact records, hashes, source manifests, actual
+build/test logs and independent saved-data audits are committed in each archive.
+
+Correctness tests passed on Linux (149) and macOS (148), with two ignored on each.
+Release/library source guards identify the measured source. The Linux-only
+concurrency fixture runs zero tests on macOS; macOS performance is not measured.
+
+The implementation combines bounded transit accounting, capacity probing,
+TCP-local cadence margin, quarter-gap fresh alignment and bounded recent-output
+gathering. Its 20ms logical deadline cap is not a service or display-latency
+bound. LAN tails, high-RTT average deficits and 120 Hz costs remain. No universal
+SSH parity, loss-path coverage or policy-additivity claim follows.
+''']
+    headings = [('core', '### Core links', '60 FPS requested; LAN, RTT 100 ms and RTT 300 ms, with no configured loss or rate cap.'),
+                ('slow', '### Bandwidth-limited links', '60 FPS requested; RTT 100 ms with server-egress1M/256k/64kbit/s caps; client direction uncapped.'),
+                ('moving', '## Moving network', '''60 FPS requested; all sessions replay the same intended delay/rate/outage schedule.
+Moving data integrity passed, but timing fidelity remains unapproved and
+performance_eligible=False. ACK bounds do not prove identical packet losses.
+The final 23–30 s phase uses 5 Mbit/s, changing delay samples and an intended 7 ms
+outage at 27.2 s. SSH can replay backlog faster than60FPS after a stall; the
+producer can also catch up missed ticks. Compare frame age and newly produced
+body arrivals with average and low FPS.'''),
+                ('fast120', '## 120 Hz guard', '120 FPS requested; LAN/RTT 100 ms random screens. This cohort is separate from60 Hz results.')]
+    labels = {'ssh': 'SSH', 'main-A': 'CAN+PTY reference A', 'main-B': 'CAN+PTY reference B', 'candidate': 'rsh TCP'}
+    for cohort, heading, note in headings:
+        archive = f'docs/bench/data/{TCP_ARCHIVES[cohort]}'
+        blocks += [heading, note, 'Cells are **avg / 1% low / 5% low FPS**.', tcp_comparison(cohort)]
+        suffixes = ['fps', 'age', 'resources'] if cohort in ('core', 'slow') else ['fps'] if cohort == 'fast120' else ['fps', 'age', 'resources', 'recovery', 'bounds']
+        for suffix in suffixes:
+            blocks.append(image(f'bounded-quiet65-reference-{cohort}-{suffix}', f'{cohort} {suffix}'))
+        if cohort == 'moving':
+            derived = json.loads((ROOT/archive/'moving-derived.json').read_text())
+            by_batch = {}
+            for row in derived['recovery']:
+                by_batch.setdefault(row['batch'], {})[row['variant']] = row
+            phases = []
+            for batch, case in by_batch.items():
+                label = tcp_label(tcp_cases(cohort)[batch]['candidate'])
+                for index, phase in enumerate(case['candidate']['phases']):
+                    phases.append([label+' / '+phase['label']] + [tcp_fps({'complete_body':case[r]['phases'][index]['complete_body']}) for r in labels])
+            blocks += ['### Recovery phases', table(['Scene / evaluation / phase', *labels.values()], phases)]
+        resources = []
+        for r in tcp_results(cohort):
+            b = r['complete_body']
+            resources.append([tcp_label(r), labels[r['variant']], fmt(r['kbit_s'], 0),
+                              fmt(mib(r['rss_client_kb']), 2)+' / '+fmt(mib(r['rss_server_kb']), 2),
+                              fmt(r['cpu_client'], 2)+' / '+fmt(r['cpu_server'], 2),
+                              fmt(b['age_ms'], 0)+' / '+fmt(b['age_p95_ms'], 0),
+                              fmt(b['max_gap_ms'], 0), b['frames'], r['uniform_header']['frames']])
+        blocks += ['### Traffic, resources and delivery', table(['Profile / scene / evaluation', 'Role', 'RX kbit/s', 'Client / server RSS MiB', 'Client / server CPU %', 'Median / p95 age ms', 'Maxgap ms', 'Body frames', 'Header frames'], resources),
+                   f'[All saved results, source identities and verification code]({archive}/README.md).']
+    blocks += ['''## Evidence and reproduction
+
+The [full controller study](docs/bench/bounded-quiet65-20261101.md) retains all
+nine independent cohorts, including quiet-only comparisons against parent60,
+the two repeated reference roles, all adverse observations and their original
+experimental status. Those records describe the experiments; main uses the
+source identified above. The [research archive](docs/bench) also retains the
+functional controller investigations and unsuccessful alternatives.
+
+Regenerate these tables and README benchmark sections from committed data:
+
+```sh
+python3 benchmark/lab/report.py
+```
+
+Build and compare the implementation with SSH using the lab:
+
+```sh
+scripts/dist.sh
+python3 benchmark/harness/run.py build
+python3 benchmark/lab/lab.py run --tools ssh,rsh-tcp \\
+  --tests render --nets lan,wan,highlat,lowbw,verylow,slow64k \\
+  --scenes compress,bandwidth --fps 60 --duration 8 --iterations 2 --parallel 4
+python3 benchmark/lab/lab.py demo --tools ssh,rsh-tcp --events '' \\
+  --nets moving --scenes compress,bandwidth --fps 60
+```
+
+These commands run the public lab; recreating the exact compact TCP cohorts
+also requires their archived deployment/collector configuration and original
+local raw inputs for a full body-oracle replay. They do not reproduce the
+separate released0.2.0 multi-tool dataset below.
+''']
+    return '\n\n'.join(blocks)
+
+
+def release_report_text(text):
+    text = text.rstrip()
+    text = text.replace('# Benchmark report', '## Released 0.2.0 suite', 1)
+    text = text.replace('## Measurement scope', '## Release suite scope', 1)
+    text = text.replace('Static links, 2026-10-29', 'Static links').replace('Moving link, 2026-10-29', 'Moving link')
+    text = text.replace('Both datasets were freshly measured on **2026-10-29**, using the published\n**rsh 0.2.0** Linux arm64 binary', 'Both release datasets use the published **rsh 0.2.0** Linux arm64 binary')
+    text = text.replace('This is a fresh 0.2.0 measurement, not pooled into the static comparison.', 'This released0.2.0 moving dataset is separate from the static comparison.')
+    text = text.replace("they are not pooled into today's results", 'the datasets remain separate')
+    if '### Next full measurement' in text:
+        before, tail = text.split('### Next full measurement', 1)
+        tail = tail.split('Use a freshly built image', 1)[1]
+        text = before + '### Lab defaults\n\nPerformance runs use four parallel jobs and two evaluations per case, including sessions.\nThe release tables retain their original repeat counts.\n\nUse a built image' + tail
+    text = text.replace("jobs share host CPUs. Static batches used **four parallel jobs**, reduced from the old\nsnapshot's ten to limit host contention. This changes the historical host\nload, so old/new differences alone cannot establish a code regression.", "jobs share host CPUs. Static batches use **four parallel jobs**.")
+    text = text.replace('To reproduce the recorded workload and its four-job concurrency:', 'The recorded release workload uses the following options. Supply the verified 0.2.0 binary; exact replay also requires its archived harness/environment:')
+    text = text.replace('lab.py run --tools', 'lab.py run --rsh /path/to/verified/rsh-0.2.0-linux-aarch64 --tools')
+    text = text.replace('lab.py demo --tools', 'lab.py demo --rsh /path/to/verified/rsh-0.2.0-linux-aarch64 --tools')
+    for i, batch in enumerate(STATIC['batches'], 1):
+        name = Path(batch['source']).name
+        text = text.replace(name, f'Static batch {i}').replace(Path(name).stem, f'Static batch {i}')
+    return '\n'.join(('#' + line if i and line.startswith('##') else line) for i, line in enumerate(text.splitlines()))
+
+
+def write_release_report():
     blocks = ["""# Benchmark report
 
 Recorded comparisons of rsh (UDP), rsh with UDP blocked (TCP fallback),
@@ -335,7 +592,7 @@ and exposes a different bandwidth and frame-gap tradeoff than the dashboard.
                      ("Binary SHA-256", STATIC["binary_sha256"]), ("Source commit", STATIC["commit"]),
                      ("Docker image ID", STATIC["image_id"])]),
                "The [static snapshot](docs/bench/data/static-20261029.json) contains all three batches, original options, per-job results, frame gaps and errors. The [moving snapshot](docs/bench/data/moving-20261029-release.json) includes all six results, raw frame observations, window timestamps, RSS/byte counters and the complete replay trace. SHA-256 fields identify the original local files; JSON is repackaged without changing measurement values. The [environment manifest](docs/bench/data/environment-20261029.json) records host/VM resources, image and package versions, original/executed harness hashes and the binary checks on both ends of every slot. The former [static](docs/bench/data/static-20261028.json) and [development moving](docs/bench/data/moving-20261029.json) snapshots remain available as historical data; they are not pooled into today's results.",
-               r"""Regenerate this report, the README tables and all charts from committed data:
+               r"""Regenerate the report, README tables and released-suite charts from committed data. TCP figures have separate plot scripts in their linked archives:
 
 ```sh
 python3 benchmark/lab/report.py
@@ -359,14 +616,16 @@ python3 benchmark/lab/lab.py run --tools ssh,et,mosh,rsh \
 
 ### Next full measurement
 
-The current run defaults are **twelve parallel jobs**, **three repeats per
-case**, and **one sessions repeat** (`--session-iterations`). The recorded
-tables above retain their actual four-job, six-screen-repeat conditions.
+New performance measurements use **four parallel jobs** and **two evaluations
+per case**, including sessions, for both development and publication. These
+defaults reflect the host's four performance cores, without claiming physical
+core affinity. Historical datasets remain separate. The recorded tables above
+retain their actual four-job, six-screen-repeat conditions.
 For the next measurement, run the static command above once with
-`--parallel 12`; omit the extra screen-only repeat. Run the sessions command
-with `--session-iterations 1 --parallel 12`. This retains all five static
+`--iterations 2 --parallel 4`; omit the extra screen-only repeat. Run the sessions command
+with `--session-iterations 2 --parallel 4`. This retains all five static
 transports, nine links, both scenes and the same observation durations:
-750 static jobs plus four memory jobs, rather than 1,178 jobs.
+500 static jobs plus eight memory jobs, rather than 1,178 jobs.
 
 The [twelve-worker validation](docs/bench/parallel12-20261029.md) completed
 the same 750-job, three-repeat static batch in **11.02 minutes**, versus
@@ -389,16 +648,19 @@ layout; the three workload panes are narrower than the viewer:
 python3 benchmark/lab/lab.py demo --tools ssh,mosh,rsh --events '' \
   --nets moving --scenes compress,bandwidth --fps 60 --duration 60
 ```
-
-## References
-
-The [README references](README.md#references) identify the papers and
-protocol specifications considered for rsh's sender/receiver design,
-with links to the corresponding implementation. Those publications do
-not supply the measurements in this report. The benchmark uses its own
-Docker/netem/terminal collector described above.
 """]
-    (ROOT / "BENCHMARK.md").write_text("\n\n".join(blocks).rstrip() + "\n")
+    return release_report_text("\n\n".join(blocks))
+
+
+def write_report():
+    references = """## References
+
+The [README references](README.md#references) connect the sender/receiver design
+to its research sources. The benchmark data come from this repository's own
+Docker/netem/terminal collectors.
+"""
+    (ROOT / "BENCHMARK.md").write_text(tcp_report() + "\n\n" + write_release_report() + "\n\n" + references)
+
 
 
 def readme_sections():
@@ -416,8 +678,8 @@ def readme_sections():
     ]
     opening = """### Performance at a glance
 
-Freshly measured **2026-10-29**, using **rsh 0.2.0**
-(build `6729d398d4f1`). The table uses a 256 kbit/s link at RTT 100 ms,
+Released **rsh 0.2.0**, build `6729d398d4f1`, using UDP.
+The table uses a 256 kbit/s link at RTT 100 ms,
 except the ten-session memory row. Rendering requests 60 FPS in a
 100×30 terminal; four jobs run in parallel on the shared host.
 
@@ -431,10 +693,9 @@ raw measurements, aggregation rules and collection failures.
     # Keep both RSS sides while omitting repeat counts and median FPS here.
     compact = lambda row: row[:2] + row[3:4] + row[5:]
     headers = ["Link", "Tool", "Avg FPS", "1% low", "5% low", "Age ms", "RX kbit/s", "Client RSS MiB", "Server RSS MiB"]
-    detail = """## Performance
+    detail = """### Released UDP comparisons
 
-These comparisons were freshly measured on **2026-10-29** with the
-published **0.2.0** binary, build `6729d398d4f1`.
+These comparisons use the published **0.2.0** binary, build `6729d398d4f1`.
 Avg FPS is the mean of six per-run frame rates; 1%/5% lows are reciprocals
 of pooled p99/p95 frame gaps. Network is client RX including protocol
 overhead; RSS is a sampled resident size, not a peak. See
@@ -480,6 +741,8 @@ Performance varies by workload, host scheduling and loss sequence.
 No uniform FPS or 1%/5% low advantage is claimed. These synthetic tests do not establish fairness with competing
 flows or performance on every real radio network.
 """
+    opening += "\n" + tcp_readme_summary()
+    detail = tcp_readme_detail() + detail.replace("\n### ", "\n#### ")
     path = ROOT / "README.md"
     text = path.read_text()
     for name, content in [("summary", opening), ("details", detail)]:

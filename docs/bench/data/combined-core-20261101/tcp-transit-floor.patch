@@ -1,0 +1,130 @@
+--- a/src/proto.rs
++++ b/src/proto.rs
+@@ -1253,6 +1253,9 @@
+     /// delivery credit (including the existing MIN_WINDOW restart floor).
+     /// This is a queue-accounting estimate, not new send credit/capacity.
+     pub fn drain_bdp(&self, now: Instant) -> Option<u64> {
++        if !self.floor_rtt.is_some_and(|floor| floor >= 20.0) {
++            return None;
++        }
+         self.slow_bdp().or_else(|| self.recent_delivery(now).map(|(delivered, _)| delivered.max(MIN_WINDOW) / 2))
+     }
+ 
+@@ -2839,3 +2842,41 @@
+         assert_eq!(tx.drain_bdp(now), Some(3200), "measured slow BDP takes precedence");
+     }
+ }
++
++#[cfg(test)]
++mod tcp_transit_floor_tests {
++    use super::*;
++
++    #[test]
++    fn transit_floor_requires_a_sample_even_with_a_modelled_rate() {
++        let now = Instant::now();
++        for floor in [None, Some(0.0), Some(19.999)] {
++            let mut tx = Sender::new(0);
++            tx.floor_rtt = floor;
++            // A synthetic modelled rate must not bypass this TCP allowance gate.
++            tx.set_path(Some(32_000.0), Some(300.0));
++            assert_eq!(tx.drain_bdp(now), None, "floor {floor:?}");
++        }
++    }
++
++    #[test]
++    fn transit_floor_includes_twenty_and_retains_far_measured_bdp() {
++        let now = Instant::now();
++        for (floor, expected) in [(20.0, 640), (300.0, 9_600)] {
++            let mut tx = Sender::new(0);
++            tx.floor_rtt = Some(floor);
++            tx.capacity = Some(32_000.0);
++            assert_eq!(tx.drain_bdp(now), Some(expected), "floor {floor}");
++        }
++    }
++
++    #[test]
++    fn transit_floor_still_needs_delivery_or_capacity_after_the_gate() {
++        let now = Instant::now();
++        for floor in [20.0, 300.0] {
++            let mut tx = Sender::new(0);
++            tx.floor_rtt = Some(floor);
++            assert_eq!(tx.drain_bdp(now), None, "floor alone is not transit credit");
++        }
++    }
++}
+--- a/src/server.rs
++++ b/src/server.rs
+@@ -2621,7 +2621,19 @@
+         while attach.output.next_chunk(now).is_some() {}
+         assert_eq!(attach.output.in_flight(), 6_000);
+         assert_eq!(attach.drain_backlog(6_600, now), 6_600, "unknown capacity gets no transit credit");
+-        // A synthetic known rate isolates queue accounting from its estimator.
++        // A modelled rate with no sampled floor must not bypass the gate.
++        attach.output.set_path(Some(55_000.0), Some(300.0));
++        assert_eq!(attach.drain_backlog(6_600, now), 6_600, "model alone is not a sampled floor");
++        attach.output = Sender::new(0);
++        attach.output.set_lossless(true);
++        let sent_at = now - Duration::from_millis(300);
++        attach.output.push(b"x");
++        let (offset, data) = attach.output.next_chunk(sent_at).unwrap();
++        let end = offset + data.len() as u64;
++        assert!(attach.output.on_ack(0, end, now, false));
++        attach.output.push(&vec![b'x'; 6_000]);
++        while attach.output.next_chunk(now).is_some() {}
++        // Synthetic rate now isolates queue accounting after a real RTT sample.
+         attach.output.set_path(Some(55_000.0), Some(300.0));
+         assert_eq!(attach.drain_backlog(6_600, now), 600, "in-flight data fits the measured BDP");
+         attach.output.push(&vec![b'x'; 14_000]);
+@@ -2650,6 +2662,11 @@
+             attach.path = None;
+             attach.output = Sender::new(0);
+             attach.output.set_lossless(true);
++            let sent_at = now - Duration::from_millis(300);
++            attach.output.push(b"x");
++            let (offset, data) = attach.output.next_chunk(sent_at).unwrap();
++            let end = offset + data.len() as u64;
++            assert!(attach.output.on_ack(0, end, now, false));
+             attach.output.push(&vec![b'x'; 6_000]);
+             while attach.output.next_chunk(now).is_some() {}
+             attach.output.push(&vec![b'x'; unsent]);
+@@ -2673,6 +2690,40 @@
+     }
+ 
+     #[test]
++    fn tcp_transit_near_sample_keeps_backlog_equal_to_main() {
++        let server = Server::spawn();
++        let mut state = server.state();
++        let now = Instant::now();
++        let key = Key::from_token("test");
++        let command = vec!["sleep".into(), "30".into()];
++        let hello = crate::net::new_hello("test", Action::Default, (80, 24), &command);
++        let packet = Packet { kind: KIND_CONFIRM, session: 1, counter: 0, nonce: [0; 24], payload: Vec::new() };
++        let tcp = "[fd72:7368:7463:7000::1]:1".parse().unwrap();
++        let attached = state.carry_out(1, &key, 0, &hello, &packet, tcp, now);
++        let attach = state.sessions.get_mut(&attached.session).unwrap().attach.as_mut().unwrap();
++        for rtt_ms in [1, 19] {
++            attach.path = None;
++            attach.output = Sender::new(0);
++            attach.output.set_lossless(true);
++            let sent_at = now - Duration::from_millis(rtt_ms);
++            attach.output.push(b"x");
++            let (offset, data) = attach.output.next_chunk(sent_at).unwrap();
++            let end = offset + data.len() as u64;
++            assert!(attach.output.on_ack(0, end, now, false));
++            attach.output.push(&vec![b'x'; 6_000]);
++            while attach.output.next_chunk(now).is_some() {}
++            attach.output.set_path(Some(55_000.0), Some(300.0));
++            for lag in [6_600, 20_600] {
++                assert_eq!(attach.drain_backlog(lag, now), lag, "near RTT {rtt_ms}, lag {lag}");
++            }
++            // Existing UDP modelled/unmodelled selection bypasses drain_bdp.
++            attach.addr = "127.0.0.1:12345".parse().unwrap();
++            assert_eq!(attach.drain_backlog(6_600, now), 6_600, "unmodelled UDP remains unchanged");
++            attach.addr = tcp;
++        }
++    }
++
++    #[test]
+     fn the_level_follows_the_link_at_once_and_the_output_with_a_lag() {
+         let (small, fast) = (proto::SMALL_LEVEL, proto::FAST_LEVEL);
+         let long = Some(LEVEL_DWELL * 2);

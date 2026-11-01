@@ -1,0 +1,68 @@
+[
+  {
+    "label": "main",
+    "variant": "main-trace-A",
+    "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-cadence54-main",
+    "sha256": "9907990ee3496c6d5346a187e9803c4217d3c16432e1239d33ddc81e40fa696a",
+    "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/54-busy-sample-trace/main-source",
+    "source_build_id": "d742268da4df",
+    "source_build_verified": true,
+    "source_manifest_unchanged": true,
+    "source_manifest_sha256": "8b61a4b7b2ea885684288e1787363d6ed0935981949ad9cdf7186cc06fbc4666",
+    "snapshot_manifest_entries": 26,
+    "status": "ROOT_BUILT_SOURCE_GUARDED_LIBRARY_TESTED_NOT_RUN",
+    "parent_source_build_id": "8a5c64627e45",
+    "reference_scope": "Traced final CAN+PTY baseline4f98",
+    "library_tests": {
+      "passed": 101,
+      "ignored": 2,
+      "failed": 0,
+      "log_path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence54-main-library-tests.log",
+      "log_sha256": "c744975b12809bddcbc87ea209fa3f65019d390046df1ff4c535356f6b31dadf"
+    }
+  },
+  {
+    "label": "main",
+    "variant": "main-trace-B",
+    "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-cadence54-main",
+    "sha256": "9907990ee3496c6d5346a187e9803c4217d3c16432e1239d33ddc81e40fa696a",
+    "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/54-busy-sample-trace/main-source",
+    "source_build_id": "d742268da4df",
+    "source_build_verified": true,
+    "source_manifest_unchanged": true,
+    "source_manifest_sha256": "8b61a4b7b2ea885684288e1787363d6ed0935981949ad9cdf7186cc06fbc4666",
+    "snapshot_manifest_entries": 26,
+    "status": "ROOT_BUILT_SOURCE_GUARDED_LIBRARY_TESTED_NOT_RUN",
+    "parent_source_build_id": "8a5c64627e45",
+    "reference_scope": "Traced final CAN+PTY baseline4f98",
+    "library_tests": {
+      "passed": 101,
+      "ignored": 2,
+      "failed": 0,
+      "log_path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence54-main-library-tests.log",
+      "log_sha256": "c744975b12809bddcbc87ea209fa3f65019d390046df1ff4c535356f6b31dadf"
+    }
+  },
+  {
+    "label": "combined",
+    "variant": "combined-trace",
+    "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-cadence54-combined",
+    "sha256": "64aaecdcc92dde57b415fd440718a8541f577c217f6c36adbde4e133d0dec1de",
+    "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/54-busy-sample-trace/combined-source",
+    "source_build_id": "3031e105b1aa",
+    "source_build_verified": true,
+    "source_manifest_unchanged": true,
+    "source_manifest_sha256": "5d41c0496e1889736893b763183a17f16e594e07670d4c4109635bc45aad94f2",
+    "snapshot_manifest_entries": 26,
+    "status": "ROOT_BUILT_SOURCE_GUARDED_LIBRARY_TESTED_NOT_RUN",
+    "parent_source_build_id": "26996017b7da",
+    "reference_scope": "Traced final combined295f",
+    "library_tests": {
+      "passed": 112,
+      "ignored": 2,
+      "failed": 0,
+      "log_path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence54-combined-library-tests.log",
+      "log_sha256": "6e036490e558cc86fbd239a42b6ea2b42ada368b3d64426b6487175d777d0b22"
+    }
+  }
+]

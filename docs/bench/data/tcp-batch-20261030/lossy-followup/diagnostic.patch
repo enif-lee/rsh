@@ -1,0 +1,12 @@
+--- tests/session.rs
++++ tests/diagnose.rs
+@@ -405,6 +405,9 @@
+         .split("\r\n")
+         .filter_map(|line| line.rsplit('\x07').next().unwrap_or(line).trim().parse::<u32>().ok())
+         .collect();
++    eprintln!("DIAG output_len={} prefix={:?}", out.len(), String::from_utf8_lossy(&out[..out.len().min(1200)]));
++    eprintln!("DIAG number_count={} first_numbers={:?}", numbers.len(), &numbers[..numbers.len().min(12)]);
++    if let Some(path) = std::env::var_os("DIAG_CAPTURE") { std::fs::write(path, &out).unwrap(); }
+     let start = numbers.iter().position(|n| *n == 1).unwrap();
+     let run: Vec<u32> = numbers[start..start + 30000].to_vec();
+     assert_eq!(run, (1..=30000).collect::<Vec<_>>());

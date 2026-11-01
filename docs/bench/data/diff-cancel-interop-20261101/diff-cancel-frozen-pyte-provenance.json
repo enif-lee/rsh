@@ -1,0 +1,32 @@
+{
+  "scope": "Two own offline Python replay controls; no product executable or measurement",
+  "image_id": "sha256:1ecf08a7a9e16518256711157b329e5705e1e212ceff5ccc9730e4d2c7ee440b",
+  "network": "none",
+  "cpus": 1,
+  "net_admin": false,
+  "host_ports": false,
+  "original_study_mount": "read-only",
+  "output": "own notes only",
+  "own_runs": [
+    {
+      "name": "rsh-offline-diff-cancel-interop-20261101a",
+      "exit_code": 0
+    },
+    {
+      "name": "rsh-offline-diff-cancel-interop-20261101b",
+      "exit_code": 0,
+      "reason": "Report target cells directly from screen rather than deriving display string from mismatch rows"
+    }
+  ],
+  "cleanup": "Both own --rm names inspected afterward: No such object",
+  "source_logs_unchanged": true,
+  "original34_prepared_inputs_unchanged": 12,
+  "original34_capture_and_ledger_unchanged": true,
+  "evidence_sha256": {
+    "diff-cancel-interop-inputs.json": "cc018bb3b9791c6d62c527c52ba95337d021d5a26fbae69582c321ecee96434d",
+    "diff-cancel-frozen-pyte-interop.py": "fe799fcb791d84c2c76c2f56bdacf59a65a0e1e679c330f0008ded1bd60d9dfc",
+    "diff-cancel-frozen-pyte-interop.json": "19a92c985828bd9e72ae6d5320b5e6077895d11376a77c7886ff961722b4e4af",
+    "diff-cancel-frozen-pyte-interop.log": "47735d49fbf50de54272ae8d4bceec379dca74698847cf34ae1745cd9d9e0e47",
+    "diff-cancel-frozen-pyte-interop.md": "d26680a0b5b03c96479cbdbe54ae1443cdb2a70cff81752ff4684bdd7f1a7bbe"
+  }
+}

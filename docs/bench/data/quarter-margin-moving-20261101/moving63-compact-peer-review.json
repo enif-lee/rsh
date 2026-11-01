@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "scope": "Read-only compact MD/CSV/derived JSON/hash review. No raw capture/source/trace replay or reparse, tests, builds, Docker or new measurement. Saved resource scalar consistency only.",
+  "manifest_entries": 4,
+  "jobs": 16,
+  "fps_table_values": 48,
+  "body_frames": 12340,
+  "header_frames": 12393,
+  "source_records": 26684,
+  "pending_writes": 1,
+  "missing_low_jobs": 0,
+  "missing_age95_jobs": 0,
+  "performance_eligible": false,
+  "outage_bounds": 28,
+  "point_skews": 524
+}

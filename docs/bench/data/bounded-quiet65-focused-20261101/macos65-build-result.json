@@ -1,0 +1,38 @@
+{
+  "tests": [
+    {
+      "name": "pty_concurrency",
+      "executable": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/macos65-pty_concurrency-tests",
+      "sha256": "84f4505b7f625a84e1c716f326b5ff33c6a9071da5d92ab3afb5af55bc250e09",
+      "exit_code": 0
+    },
+    {
+      "name": "rsh",
+      "executable": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/macos65-rsh-tests",
+      "sha256": "fe9c7a1fbb92da3a15c8fc37a1928b99b7ad86ea2dcac468d179537b7686c529",
+      "exit_code": 0
+    },
+    {
+      "name": "binary_cli",
+      "executable": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/macos65-binary_cli-tests",
+      "sha256": "d2ead39a6fce0900699de0b807160f527b91c3832b3a6e9a3305cab5b19abf3e",
+      "exit_code": 0
+    },
+    {
+      "name": "session",
+      "executable": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/macos65-session-tests",
+      "sha256": "cc348692ba18ad0c60d8037be4d2d34e37da89dc4ad93ef309c4a73452bcde20",
+      "exit_code": 0
+    },
+    {
+      "name": "library",
+      "executable": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/macos65-library-tests",
+      "sha256": "778861258f6fb2cc27a1bc4bee5107ac3bd13e200c5bf5a123bc08dd4ef4fcdd",
+      "exit_code": 0
+    }
+  ],
+  "release_sha256": "ed52c5c3d10b9dcccb11752c7ed8eb59352051c87c3cda3ca9247b05939f5ac9",
+  "target": "aarch64-apple-darwin",
+  "no_color_removed": true,
+  "fd_limit": 4096
+}

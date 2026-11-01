@@ -1,0 +1,253 @@
+{
+  "scope": "Actual Rust client_snapshot+client_delta through frozen pyte image, characters/cursor/one-printable continuation only",
+  "valid": true,
+  "pyte_version": "0.8.0",
+  "pyte_screens_sha256": "b3316cd3a5140ef5e4fe3eaa3d88a9769d8a4c482405595411f542979b561658",
+  "pyte_streams_sha256": "f3bc002104a168d076117b73fe969f7384f14f81f9ae4a7520d800fd93e997d3",
+  "inputs_sha256": "cc018bb3b9791c6d62c527c52ba95337d021d5a26fbae69582c321ecee96434d",
+  "source_logs": {
+    "old": {
+      "file": "diff-cancel-control-tests.log",
+      "sha256": "dd15f2617f4a7854e2c77a22ed30cce56feff2fe03ec5d38854de14649a62def"
+    },
+    "new": {
+      "file": "build-diff-cancel.log",
+      "sha256": "af9d42beae2a71fb0113db3731630945a836292107872460947ce81be46cc8c8"
+    }
+  },
+  "actual_byte_difference": "Candidate delta and client_delta are exactly oneCAN followed by control bytes; snapshot/client_snapshot/expected_render equal",
+  "expected_display": [
+    "after                                                                                               ",
+    "                                                                                                    ",
+    "                                                                                                    ",
+    "                                                                                                    ",
+    "                                                                                                    ",
+    "                                                                                                    ",
+    "                                                                                                    ",
+    "                                                                                                    ",
+    "                                                                                                    ",
+    "                                                                                                    ",
+    "                                                                                                    ",
+    "                                                                                                    ",
+    "                                                                                                    ",
+    "                                                                                                    ",
+    "                                                                                                    ",
+    "                                                                                                    ",
+    "                                                                                                    ",
+    "                                                                                                    ",
+    "                                                                                                    ",
+    "                                                                                                    ",
+    "                                                                                                    ",
+    "                                                                                                    ",
+    "                                                                                                    ",
+    "                                                                                                    ",
+    "row-body                                                                                            ",
+    "                                                                                                    ",
+    "                                                                                                    ",
+    "                                                                                                    ",
+    "                                                                                                    ",
+    "                                                                                                    "
+  ],
+  "expected_cursor": [
+    94,
+    24
+  ],
+  "results": [
+    {
+      "variant": "old",
+      "feed": "whole",
+      "character_equal": false,
+      "cursor_equal": true,
+      "cursor": [
+        94,
+        24
+      ],
+      "expected_cursor": [
+        94,
+        24
+      ],
+      "different_cells": 3,
+      "differences": [
+        {
+          "row": 24,
+          "col": 94,
+          "actual": "[",
+          "expected": " ",
+          "actual_ord": 91,
+          "expected_ord": 32
+        },
+        {
+          "row": 24,
+          "col": 95,
+          "actual": "0",
+          "expected": " ",
+          "actual_ord": 48,
+          "expected_ord": 32
+        },
+        {
+          "row": 24,
+          "col": 96,
+          "actual": "m",
+          "expected": " ",
+          "actual_ord": 109,
+          "expected_ord": 32
+        }
+      ],
+      "row24_columns94_96_before_sentinel": "[0m",
+      "public_at_ground_api": false,
+      "printable_continuation_advances_at_cursor": true
+    },
+    {
+      "variant": "old",
+      "feed": "split",
+      "character_equal": false,
+      "cursor_equal": true,
+      "cursor": [
+        94,
+        24
+      ],
+      "expected_cursor": [
+        94,
+        24
+      ],
+      "different_cells": 3,
+      "differences": [
+        {
+          "row": 24,
+          "col": 94,
+          "actual": "[",
+          "expected": " ",
+          "actual_ord": 91,
+          "expected_ord": 32
+        },
+        {
+          "row": 24,
+          "col": 95,
+          "actual": "0",
+          "expected": " ",
+          "actual_ord": 48,
+          "expected_ord": 32
+        },
+        {
+          "row": 24,
+          "col": 96,
+          "actual": "m",
+          "expected": " ",
+          "actual_ord": 109,
+          "expected_ord": 32
+        }
+      ],
+      "row24_columns94_96_before_sentinel": "[0m",
+      "public_at_ground_api": false,
+      "printable_continuation_advances_at_cursor": true
+    },
+    {
+      "variant": "old",
+      "feed": "bytewise",
+      "character_equal": false,
+      "cursor_equal": true,
+      "cursor": [
+        94,
+        24
+      ],
+      "expected_cursor": [
+        94,
+        24
+      ],
+      "different_cells": 3,
+      "differences": [
+        {
+          "row": 24,
+          "col": 94,
+          "actual": "[",
+          "expected": " ",
+          "actual_ord": 91,
+          "expected_ord": 32
+        },
+        {
+          "row": 24,
+          "col": 95,
+          "actual": "0",
+          "expected": " ",
+          "actual_ord": 48,
+          "expected_ord": 32
+        },
+        {
+          "row": 24,
+          "col": 96,
+          "actual": "m",
+          "expected": " ",
+          "actual_ord": 109,
+          "expected_ord": 32
+        }
+      ],
+      "row24_columns94_96_before_sentinel": "[0m",
+      "public_at_ground_api": false,
+      "printable_continuation_advances_at_cursor": true
+    },
+    {
+      "variant": "new",
+      "feed": "whole",
+      "character_equal": true,
+      "cursor_equal": true,
+      "cursor": [
+        94,
+        24
+      ],
+      "expected_cursor": [
+        94,
+        24
+      ],
+      "different_cells": 0,
+      "differences": [],
+      "row24_columns94_96_before_sentinel": "   ",
+      "public_at_ground_api": false,
+      "printable_continuation_advances_at_cursor": true
+    },
+    {
+      "variant": "new",
+      "feed": "split",
+      "character_equal": true,
+      "cursor_equal": true,
+      "cursor": [
+        94,
+        24
+      ],
+      "expected_cursor": [
+        94,
+        24
+      ],
+      "different_cells": 0,
+      "differences": [],
+      "row24_columns94_96_before_sentinel": "   ",
+      "public_at_ground_api": false,
+      "printable_continuation_advances_at_cursor": true
+    },
+    {
+      "variant": "new",
+      "feed": "bytewise",
+      "character_equal": true,
+      "cursor_equal": true,
+      "cursor": [
+        94,
+        24
+      ],
+      "expected_cursor": [
+        94,
+        24
+      ],
+      "different_cells": 0,
+      "differences": [],
+      "row24_columns94_96_before_sentinel": "   ",
+      "public_at_ground_api": false,
+      "printable_continuation_advances_at_cursor": true
+    }
+  ],
+  "ground_limit": "Pyte has no public at_ground API here. Successful single-printable continuation is observed for both; no general internal parser-ground theorem.",
+  "limits": [
+    "No new benchmark or product executable was run in this offline control",
+    "No GPU/every-terminal/finalPacedreceivepath/performance proof",
+    "Original34capture/oracle/framecount remain unchanged"
+  ],
+  "script_sha256": "fe799fcb791d84c2c76c2f56bdacf59a65a0e1e679c330f0008ded1bd60d9dfc"
+}

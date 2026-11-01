@@ -1,0 +1,173 @@
+--- a/src/proto.rs
++++ b/src/proto.rs
+@@ -1248,6 +1248,14 @@
+         Some(delivered.max(MIN_WINDOW) as f64 / (2.0 * floor / 1000.0))
+     }
+ 
++    /// A bounded transit allowance for TCP backlog accounting. With a
++    /// measured slow rate, its BDP; otherwise half the recent two-floor
++    /// delivery credit (including the existing MIN_WINDOW restart floor).
++    /// This is a queue-accounting estimate, not new send credit/capacity.
++    pub fn drain_bdp(&self, now: Instant) -> Option<u64> {
++        self.slow_bdp().or_else(|| self.recent_delivery(now).map(|(delivered, _)| delivered.max(MIN_WINDOW) / 2))
++    }
++
+     /// Wire bytes in flight as they went (a datagram compressed on its
+     /// own carries more stream bytes than wire): up to `sent`, as after a
+     /// go-back what lies past it is to go again, not on its way.
+@@ -2809,3 +2817,25 @@
+         assert_eq!(tx.above_floor.0, 0);
+     }
+ }
++
++#[cfg(test)]
++mod tcp_transit_estimate_tests {
++    use super::*;
++    #[test]
++    fn transit_estimate_uses_measured_rate_or_half_recent_credit() {
++        let mut tx = Sender::new(0);
++        let now = Instant::now();
++        assert_eq!(tx.drain_bdp(now), None);
++        tx.floor_rtt = Some(300.0);
++        assert_eq!(tx.drain_bdp(now), None, "RTT without delivery history grants nothing");
++        tx.acked_at.push_back((now - Duration::from_millis(600), 0, 1));
++        tx.acked_at.push_back((now - Duration::from_millis(300), 6000, 1));
++        tx.acked_at.push_back((now, 12000, 0));
++        assert_eq!(tx.slow_bdp(), None, "no claimed bottleneck capacity");
++        assert_eq!(tx.drain_bdp(now), Some(6000));
++        tx.acked_at.back_mut().unwrap().1 = 6000;
++        assert_eq!(tx.drain_bdp(now), Some(MIN_WINDOW / 2), "existing delivery-credit restart floor");
++        tx.set_path(Some(32_000.0), Some(100.0));
++        assert_eq!(tx.drain_bdp(now), Some(3200), "measured slow BDP takes precedence");
++    }
++}
+--- a/src/server.rs
++++ b/src/server.rs
+@@ -2112,11 +2112,12 @@
+     /// Bytes waiting for the link, not for an ack of bytes already on
+     /// their way. Up to a bandwidth-delay product can be in flight with
+     /// no queue. Its wire overhead takes part of that allowance too.
+-    fn drain_backlog(&self, pending: usize) -> usize {
+-        if !self.modelled() {
++    fn drain_backlog(&self, pending: usize, now: Instant) -> usize {
++        if !self.modelled() && !is_tcp_addr(self.addr) {
+             return pending;
+         }
+-        let Some(bdp) = self.output.slow_bdp() else {
++        let bdp = if is_tcp_addr(self.addr) { self.output.drain_bdp(now) } else { self.output.slow_bdp() };
++        let Some(bdp) = bdp else {
+             return pending;
+         };
+         let flight = self.output.in_flight();
+@@ -2360,7 +2361,7 @@
+                 let incoming = attach.stream_len(bytes.len());
+                 // Half the limit: the first frames of an animation would
+                 // otherwise queue before the mode starts.
+-                let backlog = attach.drain_backlog(attach.output.in_flight() as usize + incoming);
++                let backlog = attach.drain_backlog(attach.output.in_flight() as usize + incoming, now);
+                 if incoming > 128 && backlog as f64 / rate > LAG_LIMIT.as_secs_f64() / 2.0 {
+                     let (cols, rows) = self.term.size();
+                     let mut shadow = Terminal::with_history(cols, rows, 0);
+@@ -2446,7 +2447,7 @@
+         // Into a compressed stream new bytes take about a ratio's share.
+         let incoming = attach.stream_len(bytes.len());
+         let lag = output.pending() + attach.stream_len(attach.zraw.len()) + incoming;
+-        let backlog = attach.drain_backlog(lag);
++        let backlog = attach.drain_backlog(lag, now);
+         // Time to drain at one window per round trip; a repaint only helps
+         // once the client has the last one.
+         let window = output.window() as f64;
+@@ -2457,11 +2458,14 @@
+         // Or a program drawing in steps that the ack clock would take
+         // longer than the limit to let through, before the rate is known.
+         let stepped = attach.animating() && !attach.modelled();
++        // A measured bandwidth-delay product can be in transit over TCP
++        // too. Unsent bytes and flight beyond that allowance remain queued.
++        let stepped_lag = if is_tcp_addr(attach.addr) { backlog } else { lag };
+         let slow = output.first_acked()
+             && ((lag > 2 * output.window() as usize && output.srtt().is_some_and(|srtt| srtt.mul_f64(lag as f64 / window) > LAG_LIMIT))
+                 || (output.pending() > 0 && attach.queue_delay() > LAG_LIMIT)
+                 || (attach.screens && attach.bottleneck_shown(now) && output.slow_rate().is_some_and(|rate| backlog > 512 && backlog as f64 / rate > LAG_LIMIT.as_secs_f64()))
+-                || (attach.screens && stepped && output.drain_rate(now).is_some_and(|rate| lag > 512 && lag as f64 / rate > LAG_LIMIT.as_secs_f64())));
++                || (attach.screens && stepped && output.drain_rate(now).is_some_and(|rate| stepped_lag > 512 && stepped_lag as f64 / rate > LAG_LIMIT.as_secs_f64())));
+         // Memory: what is held, staged bytes as they are.
+         let held = output.pending() + attach.zraw.len() + bytes.len();
+         if !(held > OUTPUT_BACKLOG || slow) {
+@@ -2598,6 +2602,77 @@
+     }
+ 
+     #[test]
++    fn tcp_transit_credit_requires_a_measured_bdp_and_keeps_excess_queued() {
++        let server = Server::spawn();
++        let mut state = server.state();
++        let now = Instant::now();
++        let key = Key::from_token("test");
++        let command = vec!["sleep".into(), "30".into()];
++        let hello = crate::net::new_hello("test", Action::Default, (80, 24), &command);
++        let packet = Packet { kind: KIND_CONFIRM, session: 1, counter: 0, nonce: [0; 24], payload: Vec::new() };
++        let tcp = "[fd72:7368:7463:7000::1]:1".parse().unwrap();
++        assert!(is_tcp_addr(tcp));
++        let attached = state.carry_out(1, &key, 0, &hello, &packet, tcp, now);
++        let attach = state.sessions.get_mut(&attached.session).unwrap().attach.as_mut().unwrap();
++        attach.path = None;
++        attach.output = Sender::new(0);
++        attach.output.set_lossless(true);
++        attach.output.push(&vec![b'x'; 6_000]);
++        while attach.output.next_chunk(now).is_some() {}
++        assert_eq!(attach.output.in_flight(), 6_000);
++        assert_eq!(attach.drain_backlog(6_600, now), 6_600, "unknown capacity gets no transit credit");
++        // A synthetic known rate isolates queue accounting from its estimator.
++        attach.output.set_path(Some(55_000.0), Some(300.0));
++        assert_eq!(attach.drain_backlog(6_600, now), 600, "in-flight data fits the measured BDP");
++        attach.output.push(&vec![b'x'; 14_000]);
++        assert_eq!(attach.drain_backlog(20_600, now), 14_600, "unsent bytes remain backlog");
++        attach.output.set_path(Some(8_000.0), Some(300.0));
++        let slow = attach.drain_backlog(20_600, now);
++        assert!(slow > 18_200, "wire overhead and flight beyond BDP remain backlog: {slow}");
++        attach.addr = "127.0.0.1:12345".parse().unwrap();
++        assert_eq!(attach.drain_backlog(20_600, now), 20_600, "unmodelled UDP is unchanged");
++    }
++
++    #[test]
++    fn tcp_transit_does_not_trigger_proactive_or_stepped_screen_modes() {
++        let server = Server::spawn();
++        let mut state = server.state();
++        let now = Instant::now();
++        let key = Key::from_token("test");
++        let command = vec!["sleep".into(), "30".into()];
++        let hello = crate::net::new_hello("test", Action::Default, (80, 24), &command);
++        let packet = Packet { kind: KIND_CONFIRM, session: 1, counter: 0, nonce: [0; 24], payload: Vec::new() };
++        let tcp = "[fd72:7368:7463:7000::1]:1".parse().unwrap();
++        let attached = state.carry_out(1, &key, 0, &hello, &packet, tcp, now);
++        let session = state.sessions.get_mut(&attached.session).unwrap();
++        for (rate, unsent, expected) in [(55_000.0, 0, false), (55_000.0, 14_000, true), (8_000.0, 0, true)] {
++            let attach = session.attach.as_mut().unwrap();
++            attach.path = None;
++            attach.output = Sender::new(0);
++            attach.output.set_lossless(true);
++            attach.output.push(&vec![b'x'; 6_000]);
++            while attach.output.next_chunk(now).is_some() {}
++            attach.output.push(&vec![b'x'; unsent]);
++            // Synthetic rate isolates both screen-entry decisions.
++            attach.output.set_path(Some(rate), Some(300.0));
++            attach.screens = true;
++            attach.zstream = false;
++            attach.z = None;
++            attach.zraw.clear();
++            attach.syncing_until = None;
++            attach.repaint_due = false;
++            attach.shadow = None;
++            attach.frames = ANIMATION_FRAMES;
++            attach.step_bytes = FRAME_BYTES;
++            attach.output_gap = Duration::from_millis(16);
++            attach.output_at = Some(Instant::now() - Duration::from_millis(16));
++            session.output(&vec![b'x'; 600]);
++            assert_eq!(session.attach.as_ref().unwrap().syncing_until.is_some(), expected,
++                       "rate {rate}, unsent {unsent}");
++        }
++    }
++
++    #[test]
+     fn the_level_follows_the_link_at_once_and_the_output_with_a_lag() {
+         let (small, fast) = (proto::SMALL_LEVEL, proto::FAST_LEVEL);
+         let long = Some(LEVEL_DWELL * 2);

@@ -1,0 +1,127 @@
+{
+  "status": "root_actual_candidate_and_expected_control_complete_before66_preparation",
+  "artifacts": [
+    {
+      "variant": "baseline",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-cadence60",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/60-tcp-quarter-margin-source",
+      "sha256": "4b5273bcb4340cfc634214c7495e6df943e6f3dfb161ce2efbbe9c09684c6c2d",
+      "source_build_id": "fa934e198646",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "source_manifest_sha256": "9946e89554ec85965743999e7f8dd4d3a9bd2387dc2434246e94fad4449e86e5",
+      "source_full_manifest_sha256": "612cb9ff860cd89f080f0fe655a3ed85d9a8049e10321d51b305e4a8cc565b3d",
+      "snapshot_manifest_entries": 25,
+      "full_inventory_entries": 32,
+      "functional_tests": {
+        "library": {
+          "passed": 116,
+          "ignored": 2,
+          "log_sha256": "a6a336fdca6b478d1070cb7c5d02e18018da0a66e546e325bea7d8e1229d8616"
+        },
+        "binary_cli": {
+          "passed": 4,
+          "ignored": 0,
+          "log_sha256": "426d6ff59576d0390b09aff34546f93e951eb8f2ba2bb9733afacf6961693f45"
+        },
+        "session": {
+          "passed": 25,
+          "ignored": 0,
+          "log_sha256": "dd2bc7e6093df0a9d002f4773f67822ae2de10dab249bc2da2ae0fff03a805bd"
+        },
+        "pty_concurrency": {
+          "passed": 1,
+          "ignored": 0,
+          "log_sha256": "5c4f37fb46e3c7d2990b5b4c82c727cb999546e0bb8288c7efda81c12815bfc1"
+        }
+      },
+      "functional_total_passed": 146,
+      "ignored": 2,
+      "cargo_root_artifacts": [
+        {
+          "log": "cadence60-all-tests-build.jsonl",
+          "sha256": "d80babcb9030fd155af8c49bdc0a04d6ad49e3635d6762fa33a1c849e79f3f8a",
+          "root_fresh_false": true,
+          "root_executable_count": 6
+        },
+        {
+          "log": "cadence60-release-build.jsonl",
+          "sha256": "55316825bfa1260ea7d6c601954ebd5758a2b3594cba65a501878136a1f71817",
+          "root_fresh_false": true,
+          "root_executable_count": 1
+        }
+      ]
+    },
+    {
+      "variant": "candidate",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-cadence65",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/65-tcp-margin-quiet-source",
+      "sha256": "3d4c5bd15f7d4e2ebe0d71f53c3bdc1fc3e21b3fdde8d396c28a8519b3795827",
+      "source_build_id": "781bbe465298",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "source_manifest_sha256": "ff3159b5eef9733c6b53938b8071d14a299821d93e219cf6ef3ab4ba55a37cc5",
+      "source_full_manifest_sha256": "bbf62aa8fd33de8f87341cbb0eb0879303eb1d66dfe8dabc20f42ce3e0c049d5",
+      "snapshot_manifest_entries": 25,
+      "full_inventory_entries": 32,
+      "functional_tests": {
+        "library": {
+          "passed": 119,
+          "ignored": 2,
+          "log_sha256": "1aed7de265f00f11286b581709860330ad581a4a978efe9561feeb47181c1a2e"
+        },
+        "binary_cli": {
+          "passed": 4,
+          "ignored": 0,
+          "log_sha256": "674ef27f7b7f7416f0a982331e913d26fcc7684a79770825a93b3ae06724e2a0"
+        },
+        "session": {
+          "passed": 25,
+          "ignored": 0,
+          "log_sha256": "28291e707fb477081278b53d654b8a58ac1ce68da6a101548f4006492eb7ffc2"
+        },
+        "pty_concurrency": {
+          "passed": 1,
+          "ignored": 0,
+          "log_sha256": "5c4f37fb46e3c7d2990b5b4c82c727cb999546e0bb8288c7efda81c12815bfc1"
+        }
+      },
+      "functional_total_passed": 149,
+      "ignored": 2,
+      "cargo_root_artifacts": [
+        {
+          "log": "cadence65-all-tests-build.jsonl",
+          "sha256": "405f18523ebeebeb3129157de3461b8d30a122ca911009b2390a6bd1126d603e",
+          "root_fresh_false": true,
+          "root_executable_count": 6
+        },
+        {
+          "log": "cadence65-release-build.jsonl",
+          "sha256": "35338ab2a3f172234f5fcca7b09cc48177a162e6c3a11e486f15b34ed5441b10",
+          "root_fresh_false": true,
+          "root_executable_count": 1
+        }
+      ]
+    }
+  ],
+  "comparison_scope": "Baseline exactsaved60fa934/4b52 plus distinct65quiet; focused increment versus60, not295f or fullmatrix/parity proof",
+  "same_container_sequential_build": false,
+  "candidate_build_script_sha256": "65049842a730387e0df3239c0210917d12ec37e3049f4514dee6661240a1bf10",
+  "candidate_build_log_sha256": "bf088de974e521baf74200f8f0a06c58e304e328b7a2380815fe59fba3b2c12a",
+  "source_guard_sha256": "4971afea45f0590df8fc2f0b14b656bc59efb0a30f5026303398fcba40f25560",
+  "source_only_parent_proof_sha256": "8e0b36074635555733d104560905bc4a0b9943da0249cadba22e50f77c1c2fab",
+  "control": {
+    "source_id": "cff9052cb78a",
+    "quiet_passed": 2,
+    "quiet_expected_failed": 1,
+    "retained_margin_passed": 3,
+    "retained_quarter_passed": 3,
+    "new_log_sha256": "84cef8f8fbbd43426511a9a67925c00ad0a6a74d2833a9963f979e981047688b",
+    "margin_log_sha256": "a83515444fbbc4251d3ddbe1b4640eed9c51a503c1342cbd5976eb4c8b71caaa",
+    "quarter_log_sha256": "63cf87ab41ec143ce39113b3288a6f795b6b6b4c4adb76dfddfe856a515336c4",
+    "guard_sha256": "622c791ac3655487359a3b70876bfe5b9bb0c958644e0324bd367ccf5b7f4fea"
+  },
+  "V1_unbuilt_fixture_snapshot_preserved": "65-margin-quiet-v1-source-prep",
+  "oldquiet18FPS_adverse_retained": true,
+  "Mac65_tested": false
+}

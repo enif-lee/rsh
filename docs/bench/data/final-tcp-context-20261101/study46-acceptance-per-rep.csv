@@ -1,0 +1,5 @@
+batch,net,scene,iteration,variant,slot,frames,fps,low1_fps,low5_fps,kbit_s,rss_client_kb,rss_server_kb,cpu_client,cpu_server,age_ms,age_p95_ms,max_gap_ms,assessment
+00-badmobile-compress-i0,badmobile,compress,0,ssh,0,46,5.7,0.3,2.1,237,7560,19660,0.07,0.37,5551,7226,3572,control
+00-badmobile-compress-i0,badmobile,compress,0,main-A,1,79,9.9,1.4,1.9,132,2868,5428,0.63,2.8,280,473,710,control
+00-badmobile-compress-i0,badmobile,compress,0,main-B,2,97,12.1,1.4,3.9,68,2936,5444,0.32,1.64,227,256,706,control
+00-badmobile-compress-i0,badmobile,compress,0,candidate,3,115,14.4,1.7,3.5,124,3000,5448,0.61,2.67,237,396,1048,invalid_evidence

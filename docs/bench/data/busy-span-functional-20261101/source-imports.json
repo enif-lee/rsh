@@ -1,0 +1,66 @@
+{
+  "notes/moving54-busy-audit.py": {
+    "public": "moving54-busy-audit.py",
+    "sha256": "a24be9f7db8761f8bd3fc25846f2ab54fb00af3e21f1901111a03a058bcf8b7a"
+  },
+  "notes/moving54-busy-audit.json": {
+    "public": "moving54-busy-audit.json",
+    "sha256": "982c6cccabfd1ec0e820ce22d6df60c921f45428a01fc72ff290db54e81c63a6"
+  },
+  "notes/moving54-busy-audit.md": {
+    "public": "moving54-busy-audit.md",
+    "sha256": "cf9b16af56728a1b8df7c18f389eb8f8d0a45fe3ea82fa9192b2718ec91b0889"
+  },
+  "notes/moving54-busy-peer-check.py": {
+    "public": "moving54-busy-peer-check.py",
+    "sha256": "ce2fede8ab60376718de022c91d395cb06fafd797893bcd85edd238b35e40451"
+  },
+  "notes/moving54-busy-peer-check.json": {
+    "public": "moving54-busy-peer-check.json",
+    "sha256": "3e9610e42bbf63b9850bcc1e7f049466e8a4e45ee20f47600fc54be0276a41c8"
+  },
+  "54-busy-sample-trace/SCHEMA.md": {
+    "public": "SCHEMA.md",
+    "sha256": "ffdc475367f1ee86ba5297792b9bc8d1c60f209ced07f7aad41859a9045c1838"
+  },
+  "54-busy-sample-trace/source-proof.json": {
+    "public": "source-proof.json",
+    "sha256": "d445c4d2a094f9c32a81e984db363084aea785d0fcce1b1adef40d8636c2470d"
+  },
+  "54-busy-sample-trace/paired-build-provenance.json": {
+    "public": "paired-build-provenance.json",
+    "sha256": "2f146d0368e087d7951cf9f95381d83a1b0ef193ac36a2e16f1907a59e46860d"
+  },
+  "54-busy-sample-trace/main-source-manifest.json": {
+    "public": "main-source-manifest.json",
+    "sha256": "8b61a4b7b2ea885684288e1787363d6ed0935981949ad9cdf7186cc06fbc4666"
+  },
+  "54-busy-sample-trace/combined-source-manifest.json": {
+    "public": "combined-source-manifest.json",
+    "sha256": "5d41c0496e1889736893b763183a17f16e594e07670d4c4109635bc45aad94f2"
+  },
+  "54-busy-sample-trace/prepared-inputs.json": {
+    "public": "prepared-inputs.json",
+    "sha256": "fd14065586d0b6e7d510e8f80c7522d675c56b45896ff03d10f9a5733a12d3d8"
+  },
+  "54-busy-sample-trace/fixture-manifest.json": {
+    "public": "fixture-manifest.json",
+    "sha256": "ee57688d59f7b007f07ae1d7577c5a7c25a7084b6ed422d1ac48ca20a2f5320b"
+  },
+  "54-busy-sample-trace/harness/manifest.json": {
+    "public": "original-harness-manifest.json",
+    "sha256": "e166e3a8d27e065ca8424b318cb0d31ca8354f65797fd77600cc87ca96212e73"
+  },
+  "54-busy-sample-trace/main.patch": {
+    "public": "main.patch",
+    "sha256": "e094aafa7167c1ca77e728aa5fbe1683aa242129a47d847d5e6cbd3f2cc93b15"
+  },
+  "54-busy-sample-trace/combined.patch": {
+    "public": "combined.patch",
+    "sha256": "b2903df5ffa2dfd182b12030f2f1701cf019e103c42d5797c9725df69b769908"
+  },
+  "54-busy-sample-trace/build-activation.json": {
+    "public": "build-activation.json",
+    "sha256": "4c63fd0157da795f74b7f47a498f991a5842366d4c18b5dd31f7862a5a301d52"
+  }
+}

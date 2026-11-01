@@ -1,0 +1,16 @@
+{
+  "stage": "ROOT_BUILD_ACTIVATED_NOT_RUN",
+  "historical_source_prepared_sha256": "2298ff2d66f6c3e8b01f1690dd28551cd970f0707df214ef9bc0b7e48184600b",
+  "source_fixtures_unchanged": true,
+  "root_builds": {
+    "main": {
+      "source_build_id": "d742268da4df",
+      "binary_sha256": "9907990ee3496c6d5346a187e9803c4217d3c16432e1239d33ddc81e40fa696a"
+    },
+    "combined": {
+      "source_build_id": "3031e105b1aa",
+      "binary_sha256": "64aaecdcc92dde57b415fd440718a8541f577c217f6c36adbde4e133d0dec1de"
+    }
+  },
+  "scope": "Actual metadata/paths/plan hashes and explicit prelock absolute path assertion only. Source Rust, parser, schema, fixtures, schedule and recordsite unchanged from final source peer. No preparer execution."
+}

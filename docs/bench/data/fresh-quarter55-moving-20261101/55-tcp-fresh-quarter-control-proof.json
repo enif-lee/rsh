@@ -1,0 +1,14 @@
+{
+  "stage": "source_only_unbuilt_untested",
+  "parent": "fps-combined-pty-account-source",
+  "parent_id": "295f81d54ea4",
+  "only_change": "exact identical55fixture suffix; old productwait retained",
+  "canonical_files": 25,
+  "full_files": 32,
+  "fixture_sha256": "f3c1503c245861a787c00608575433c96d80723daf458974780ab158e0dd0505",
+  "inverse_fixture_full32_exact": true,
+  "expected_targeted_result": "known_slow_tcp_does_not_wait_past_the_quarter_gap fails; other2tests pass",
+  "builds": 0,
+  "tests": 0,
+  "docker": 0
+}

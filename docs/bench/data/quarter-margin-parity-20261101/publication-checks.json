@@ -1,0 +1,14 @@
+{
+  "dataset": "parity",
+  "verifier_pre_manifest_passed": true,
+  "negative_checks": "Three mutated temporary copies rejected; originals unchanged",
+  "raw_payloads_reparsed": 0,
+  "new_terminal_replays": 0,
+  "new_benchmarks": 0,
+  "figures": {
+    "quarter-margin-parity-fps.svg": "b40ee4f5a755d2e56d361992671b3b75388b4fdd5d591dcc3ceb6924ccb5bc5d"
+  },
+  "visual_qa": "PNG inspected; slow title and age ylabels corrected; allage13x9 renderedtext bbox andpairwise overlaps0. Private PNGs retained in notes, not curated.",
+  "performance_eligible": true,
+  "final_selection": null
+}

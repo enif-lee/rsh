@@ -1,0 +1,19 @@
+Waiting for 60 seconds of sampled headroom
+Headroom preflight passed
+lab: 8 slots up
+00-udp-highlat 2 rsh highlat compress 60.0
+00-udp-highlat 3 rsh-b highlat compress 60.0
+00-udp-highlat 0 ssh highlat compress 60.0
+00-udp-highlat 6 rsh highlat bandwidth 56.6
+00-udp-highlat 7 rsh-b highlat bandwidth 56.6
+00-udp-highlat 4 ssh highlat bandwidth 60.0
+00-udp-highlat 1 mosh highlat compress 6.5
+00-udp-highlat 5 mosh highlat bandwidth 6.5
+Traceback (most recent call last):
+  File "/Users/ed/personal/rsh/benchmark/lab/out/paired-batch-screen-20261030/run.py", line 78, in <module>
+    if action=="run":run()
+                     ~~~^^
+  File "/Users/ed/personal/rsh/benchmark/lab/out/paired-batch-screen-20261030/run.py", line 69, in run
+    if not status["accepted"]:raise RuntimeError("Host guard rejected phase: "+str(status))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Host guard rejected phase: {'accepted': False, 'reasons': ['a competing host process >=100% CPU in two consecutive samples'], 'samples': 4, 'phase_start': 1793308193.286033, 'phase_end': 1793308210.755875, 'monotonic_elapsed': 17.46970708295703, 'rules': '5s sampling; phase includes setup/drain; guards are heuristic and do not establish CPU-core isolation'}

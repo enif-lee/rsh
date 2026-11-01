@@ -1,0 +1,25 @@
+{
+  "stage": "PREPARED_EXISTING54_ARTIFACTS_NOT_RUN",
+  "jobs": 16,
+  "blocks": 4,
+  "parallel": 4,
+  "iterations": 2,
+  "planned_trace_endpoints": 24,
+  "harness_files": 27,
+  "unchanged52_harness": 26,
+  "changed_harness": [
+    "probe_report.py"
+  ],
+  "source_fixtures": 52,
+  "reused_source54": true,
+  "new_Rust": 0,
+  "new_builds": 0,
+  "imports": 0,
+  "tests": 0,
+  "Docker": 0,
+  "actual_jobs": 0,
+  "copied_schema_fixtures": 3,
+  "copied_routing_fixtures": 2,
+  "performance_eligible": false,
+  "final_selection": null
+}

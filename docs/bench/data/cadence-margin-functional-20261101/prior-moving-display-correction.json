@@ -1,0 +1,28 @@
+{
+  "prior_commit": "42c9bdfe674c327f817dff7b6889f456b30f5a2a",
+  "reason": "8-inch moving FPS/age figures clipped legend/caption and age ylabels overlapped; corrected layout only.",
+  "changed_public_assets": [
+    "../../final-tcp-moving-age.svg",
+    "../../final-tcp-moving-fps.svg",
+    "plot.py"
+  ],
+  "old_manifest_sha256": "ed1371477fca9e3ee8d649590efa162c76c137b5b18eeee1e63765b59a4b212f",
+  "new_manifest_sha256": "dd624d91381fea34aa5d12c4a4d76b2530dbce75b6f4ba108054b28529aac385",
+  "before_after": {
+    "../../final-tcp-moving-age.svg": {
+      "before": "e0d72683fb887d4af6b79bf548f66d6bbacadf8dd9824869137e39d14540fc07",
+      "after": "6263460638b0622687a64216341d00a70b38fa0770027e7c9586b482ada491b7"
+    },
+    "../../final-tcp-moving-fps.svg": {
+      "before": "65ad6011b99b00deda493160ff6dad403ec00889047216a623d40012953bcda2",
+      "after": "c4a870d9d75a095679bc9879161e5303114f7d272f9093e64bbb68fa8ced758f"
+    },
+    "plot.py": {
+      "before": "e11d04cc4f562ecbb6fa705f169d0cc345d41663648e6432160a6bdda1fb3e3e",
+      "after": "82a99df171186cdc26d334508bee121d865ce70b927f00298fe1884d4ccd0a55"
+    }
+  },
+  "unchanged_manifest_entries": 152,
+  "data_metrics_captures_and_original_sources_unchanged": true,
+  "new_measurements": 0
+}

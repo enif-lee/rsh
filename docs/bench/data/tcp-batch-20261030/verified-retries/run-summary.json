@@ -1,0 +1,73 @@
+{
+  "performance_jobs": 0,
+  "diagnostic_only": true,
+  "max_attempts": 4,
+  "builds": [
+    {
+      "variant": "candidate",
+      "build_id": "2886152b78a2",
+      "fixture_sha256": "16c0d3154ddab541495538f3a4fe35960bfcf30263992c54b500a06aaae1ea0e",
+      "executable_sha256": "96979645261c55ee1a9fc8a4d95b33cc907139bab843c09080a09be651b4d1a4",
+      "root_artifact_fresh": false,
+      "source_unchanged": true
+    },
+    {
+      "variant": "baseline",
+      "build_id": "05bc993b2e40",
+      "fixture_sha256": "16c0d3154ddab541495538f3a4fe35960bfcf30263992c54b500a06aaae1ea0e",
+      "executable_sha256": "9d6e35a93c16e20957b5b8ea4b78c0de16d0bf829f7fd65d3e0b9aafb4b346df",
+      "root_artifact_fresh": false,
+      "source_unchanged": true
+    }
+  ],
+  "results": [
+    {
+      "run": 0,
+      "variant": "candidate",
+      "exit_code": 0,
+      "totals": [
+        "test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.94s"
+      ],
+      "target_failed": false,
+      "fallback": [
+        "DIAG fallback_result session=122947 marked=true tail_numbers=true output_bytes=200094"
+      ]
+    },
+    {
+      "run": 1,
+      "variant": "baseline",
+      "exit_code": 0,
+      "totals": [
+        "test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.86s"
+      ],
+      "target_failed": false,
+      "fallback": [
+        "DIAG fallback_result session=495834 marked=true tail_numbers=true output_bytes=200093"
+      ]
+    },
+    {
+      "run": 2,
+      "variant": "baseline",
+      "exit_code": 0,
+      "totals": [
+        "test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.90s"
+      ],
+      "target_failed": false,
+      "fallback": [
+        "DIAG fallback_result session=450474 marked=true tail_numbers=true output_bytes=200093"
+      ]
+    },
+    {
+      "run": 3,
+      "variant": "candidate",
+      "exit_code": 0,
+      "totals": [
+        "test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.69s"
+      ],
+      "target_failed": false,
+      "fallback": [
+        "DIAG fallback_result session=175982 marked=true tail_numbers=true output_bytes=200093"
+      ]
+    }
+  ]
+}

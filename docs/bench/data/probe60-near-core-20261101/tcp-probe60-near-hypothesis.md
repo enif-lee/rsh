@@ -1,0 +1,7 @@
+# Near-floor-only extra TCP exploration — unvalidated prototype
+
+Starts from probe60. It retains existing0.8 growth for all paths/ACKs; extra0.6 exploration is allowed only for the lossless server-output TCP Sender when every packet popped by the current ACK has elapsed<=floor_rtt+wire/selected_rate. No new Sender fields/API or queue/rate sampling change. UDP/client input remain existing0.8. This is a current-ACK near-floor witness, not continuous interval demand, physical spare capacity or proof of zero queue. The floor includes prior processing/serialization; the rate can be wrong, ACKs compressed or sparse, so residual false growth remains possible. Timing calculations use the existing ACK now and selected rate.
+
+Motivation: uninstrumented27 had core recovery positives but mixed lows;28 true1M/random23.0/22.6FPS versusmain19.6-20.2 coincided with bodyp95age176/131ms versus114-116. This motivates restricting extra exploration, but no recorded per-packet current-ACK witness establishes this as the actual cause. Newnear tests exercise actual cumulative ACKs and confirm fallback0.8 preserved; tests are not benefit/safety evidence.
+
+Actual performance unrun, no main/PR product change or install, no adoption. Compare same pipeline/mainAA/SSH at4x2, retain all repeats and age/network/RSS/CPU costs. Must check true slow links, moving/loss/input/bulk/reconnect/memory/UDP before promotion.

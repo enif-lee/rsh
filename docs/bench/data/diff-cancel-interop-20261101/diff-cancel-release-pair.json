@@ -1,0 +1,97 @@
+{
+  "at": 1793472875.2036538,
+  "artifacts": [
+    {
+      "variant": "baseline",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-diff-cancel-pair-main",
+      "sha256": "9ab79c22ebd289047ffa616a5e8aef3c7d9f2498756b5974ae5a74b2d0ecb463",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/main-source",
+      "source_build_id": "6729d398d4f1",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "manifest_entries": 31,
+      "source_manifest_sha256": "691ce46870af026e614a960844f821580d0486ce4d7c551ee27041b3cd1d6c39",
+      "guard_output": "verified build 6729d398d4f1: rsh-diff-cancel-pair-main"
+    },
+    {
+      "variant": "candidate",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-diff-cancel",
+      "sha256": "c68e0f735c3015813bbdea4588d994a21a6d3fdb863b0e4ea8cfb91ea384a136",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/diff-cancel-source",
+      "source_build_id": "93533574fffa",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "manifest_entries": 31,
+      "source_manifest_sha256": "bbe5381a50213758ccdf0ccb1cc2872a1ffa4157dca0399c5bc2ab4ea74e9103",
+      "guard_output": "verified build 93533574fffa: rsh-diff-cancel\nverified build 93533574fffa: diff-cancel-tests"
+    }
+  ],
+  "same_container_sequential_build": true,
+  "compiler_image": "sha256:b1d5dd5a22a09404d3e798c0cf051b689077360374eb505fa5bb93c479693d87",
+  "CARGO_HOME": "/cargo",
+  "build_path": "/src",
+  "apk_manifest_sha256": "d99b2de6a1a883172b2f814cd7ca03534ae3c72bbd1111ca3604ebc3914ca185",
+  "cargo_artifacts": {
+    "diff-cancel-pair-main-release-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "executable": "/target/release/rsh"
+    },
+    "diff-cancel-tests-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "0",
+        "debuginfo": 2,
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "test": true
+      },
+      "executable": "/target/debug/deps/rsh-a4e873949d566604"
+    },
+    "diff-cancel-release-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "executable": "/target/release/rsh"
+    },
+    "diff-cancel-control-tests-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "0",
+        "debuginfo": 2,
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "test": true
+      },
+      "executable": "/target/debug/deps/rsh-a4e873949d566604"
+    }
+  },
+  "tests": {
+    "targeted_passed": 3,
+    "library_passed": 99,
+    "ignored": 2
+  },
+  "control": {
+    "policy": "main with identical3fixtures",
+    "passed": 2,
+    "expected_failed": 1,
+    "expected_failure": "client::diff_cancel_interop_tests::diff_cancel_prefix_explicitly_cancels_unfinished_sequence",
+    "log_sha256": "dd15f2617f4a7854e2c77a22ed30cce56feff2fe03ec5d38854de14649a62def",
+    "guard": "verified build 3d466cc78c83: diff-cancel-control-tests\n"
+  },
+  "build_log_sha256": "af9d42beae2a71fb0113db3731630945a836292107872460947ce81be46cc8c8",
+  "build_script_sha256": "e5d9678953408d4b6cf48b35efa2a19e5c60e716951abd7eb2f6f30662382f6c",
+  "source_reverse_proof_sha256": "abd70464a389764d951c667e4a77a3cd9ea5484c06553ac12e4e6ec328592a44",
+  "scope": "One emittedCAN in screen-diff prefix, clientproduction/rawpipe untouched; same3fixtures testRustparser+prefix+actualsnapshot/diff/without_sync vectors. Does not runfullPaced/receiveorGPU; nativebackendcontrols andactual4x2capture stillneeded. Not installed/adopted."
+}

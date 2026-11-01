@@ -1,0 +1,87 @@
+[
+  {
+    "target": {
+      "kind": [
+        "bin"
+      ],
+      "crate_types": [
+        "bin"
+      ],
+      "name": "rsh",
+      "src_path": "/Users/ed/personal/rsh/benchmark/lab/out/verification-20261030-resume-01/source/src/main.rs",
+      "edition": "2021",
+      "doc": true,
+      "doctest": false,
+      "test": true
+    },
+    "sha256": "83641d64a06fbda09062292cd5f210685593777245ac05a68d9f36999ca6b29c",
+    "fresh": false,
+    "binary": "/Users/ed/personal/rsh/benchmark/lab/out/verification-20261030-resume-01/rsh-b93d759d474a3ef0",
+    "embedded_source_check": "not applicable: CLI driver or empty binary unit target; compiled product checked separately"
+  },
+  {
+    "target": {
+      "kind": [
+        "test"
+      ],
+      "crate_types": [
+        "bin"
+      ],
+      "name": "binary_cli",
+      "src_path": "/Users/ed/personal/rsh/benchmark/lab/out/verification-20261030-resume-01/source/tests/binary_cli.rs",
+      "edition": "2021",
+      "doc": false,
+      "doctest": false,
+      "test": true
+    },
+    "sha256": "021cab9d2298452e1ec130e7cabb53dffce0a63fef92ba6a59ef5a98319589aa",
+    "fresh": false,
+    "binary": "/Users/ed/personal/rsh/benchmark/lab/out/verification-20261030-resume-01/binary_cli-734d1846f7fe40cf",
+    "embedded_source_check": "passed"
+  },
+  {
+    "target": {
+      "kind": [
+        "test"
+      ],
+      "crate_types": [
+        "bin"
+      ],
+      "name": "session",
+      "src_path": "/Users/ed/personal/rsh/benchmark/lab/out/verification-20261030-resume-01/source/tests/session.rs",
+      "edition": "2021",
+      "doc": false,
+      "doctest": false,
+      "test": true
+    },
+    "sha256": "85cc2e9093f13bc38339ef7ddd7b71b16c57575a290f7d12861f9c33f085afaa",
+    "fresh": false,
+    "binary": "/Users/ed/personal/rsh/benchmark/lab/out/verification-20261030-resume-01/session-371236ec8408b706",
+    "embedded_source_check": "passed"
+  },
+  {
+    "target": {
+      "kind": [
+        "lib"
+      ],
+      "crate_types": [
+        "lib"
+      ],
+      "name": "rsh",
+      "src_path": "/Users/ed/personal/rsh/benchmark/lab/out/verification-20261030-resume-01/source/src/lib.rs",
+      "edition": "2021",
+      "doc": true,
+      "doctest": true,
+      "test": true
+    },
+    "sha256": "ef9760405f91085cd6b2beb5a7d5fa103c02a551f460c2300b24b529db50ef82",
+    "fresh": false,
+    "binary": "/Users/ed/personal/rsh/benchmark/lab/out/verification-20261030-resume-01/rsh-41798a1609935280",
+    "embedded_source_check": "passed"
+  },
+  {
+    "target": "product-rsh",
+    "sha256": "bef33075efe6bccf86ea006080e9d5996c944f2d758ef079271532fa22bf702f",
+    "binary": "/Users/ed/personal/rsh/benchmark/lab/out/verification-20261030-resume-01/target/debug/rsh"
+  }
+]

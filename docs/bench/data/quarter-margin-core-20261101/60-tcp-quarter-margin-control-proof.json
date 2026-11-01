@@ -1,0 +1,19 @@
+{
+  "stage": "SOURCE_ONLY_UNBUILT_UNTESTED",
+  "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/60-tcp-quarter-margin-control-source",
+  "parent": "48-tcp-cadence-margin-source",
+  "parent_source_build_id": "ea6c0df76a70",
+  "only_change": "Same adapted quarter3 fixture suffix; production unchanged48",
+  "canonical_files": 25,
+  "full_files": 32,
+  "reverse48_full32_exact": true,
+  "quarter_fixture_sha256": "edf3fe15aedec88b02f5a236cc107d290f63d95dc5a50058bdaec47f352e6661",
+  "quarter_control_plan": "known_slow_tcp target1 expected fail, UDP/cap-gates2 expected pass; existing margin3 expected pass; all unrun",
+  "source_manifest_sha256": "42b07fc4c314de3fa3f76ead35056d964edc3c9d7f3456b897942920023b07e2",
+  "full_manifest_sha256": "7c53f90f14a937c238d8b47799538b942dba81ca552fd77bb0eb54213c7e0013",
+  "patch_sha256": "97cb21ed23da27959765fe36eedc8007c2a256f4e2f613aaa44e2bdf5b4ce0d3",
+  "builds": 0,
+  "tests": 0,
+  "Docker": 0,
+  "capture": 0
+}

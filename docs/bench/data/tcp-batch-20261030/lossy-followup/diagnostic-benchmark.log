@@ -1,0 +1,16 @@
+
+running 1 test
+test output_is_exact_through_loss_duplication_and_reordering ... DIAG output_len=199587 prefix="\u{18}\u{1b}[?2026h\u{1b}[0m\u{1b}(B\u{f}\u{1b}[r\u{1b}[?6l\u{1b}[?7h\u{1b}[4l\u{1b}[?1049l\u{1b}[H\u{1b}[2J\u{1b}[1;1H\u{1b}[0m\u{1b}[0m\u{1b}[K\u{1b}[2;1H\u{1b}[0m\u{1b}[0m\u{1b}[K\u{1b}[3;1H\u{1b}[0m\u{1b}[0m\u{1b}[K\u{1b}[4;1H\u{1b}[0m\u{1b}[0m\u{1b}[K\u{1b}[5;1H\u{1b}[0m\u{1b}[0m\u{1b}[K\u{1b}[6;1H\u{1b}[0m\u{1b}[0m\u{1b}[K\u{1b}[7;1H\u{1b}[0m\u{1b}[0m\u{1b}[K\u{1b}[8;1H\u{1b}[0m\u{1b}[0m\u{1b}[K\u{1b}[9;1H\u{1b}[0m\u{1b}[0m\u{1b}[K\u{1b}[10;1H\u{1b}[0m\u{1b}[0m\u{1b}[K\u{1b}[11;1H\u{1b}[0m\u{1b}[0m\u{1b}[K\u{1b}[12;1H\u{1b}[0m\u{1b}[0m\u{1b}[K\u{1b}[13;1H\u{1b}[0m\u{1b}[0m\u{1b}[K\u{1b}[14;1H\u{1b}[0m\u{1b}[0m\u{1b}[K\u{1b}[15;1H\u{1b}[0m\u{1b}[0m\u{1b}[K\u{1b}[16;1H\u{1b}[0m\u{1b}[0m\u{1b}[K\u{1b}[17;1H\u{1b}[0m\u{1b}[0m\u{1b}[K\u{1b}[18;1H\u{1b}[0m\u{1b}[0m\u{1b}[K\u{1b}[19;1H\u{1b}[0m\u{1b}[0m\u{1b}[K\u{1b}[20;1H\u{1b}[0m\u{1b}[0m\u{1b}[K\u{1b}[21;1H\u{1b}[0m\u{1b}[0m\u{1b}[K\u{1b}[22;1H\u{1b}[0m\u{1b}[0m\u{1b}[K\u{1b}[23;1H\u{1b}[0m\u{1b}[0m\u{1b}[K\u{1b}[24;1H\u{1b}[0m\u{1b}[0m\u{1b}[K\u{1b}(B\u{f}\u{1b}[1;1H\u{1b}[0m\u{1b}(B\u{1b})B\u{f}\u{1b}[?2026lseq 1 30000; echo DONE-$((6*7))\r\n\u{1b}[?2004h\u{1b}]0;root@31cd1eb275f6: ~\u{7}root@31cd1eb275f6:~# seq 1 30000; echo DONE-$((6*7))\r\n\u{1b}[?2004l\r1\r\n2\r\n3\r\n4\r\n5\r\n6\r\n7\r\n8\r\n9\r\n10\r\n11\r\n12\r\n13\r\n14\r\n15\r\n16\r\n17\r\n18\r\n19\r\n20\r\n21\r\n22\r\n23\r\n24\r\n25\r\n26\r\n27\r\n28\r\n29\r\n30\r\n31\r\n32\r\n33\r\n34\r\n35\r\n36\r\n37\r\n38\r\n39\r\n40\r\n41\r\n42\r\n43\r\n44\r\n45\r\n46\r\n47\r\n48\r\n49\r\n50\r\n51\r\n52\r\n53\r\n54\r\n55\r\n56\r\n57\r\n58\r\n59\r\n60\r\n61\r\n62\r\n63\r\n64\r\n65\r\n66\r\n67\r\n68\r\n69\r\n70\r\n71\r\n72\r\n73\r\n74\r\n75\r\n76\r\n77\r\n78\r\n79\r\n80\r\n81\r\n82\r\n83\r\n84\r\n85\r\n86\r\n87\r\n88\r\n89\r\n90\r\n91\r\n92\r\n93\r\n94\r\n95\r\n96\r\n97\r\n98\r\n99\r\n100\r\n101\r\n102\r\n103\r\n104\r\n105\r\n106\r\n107\r\n108\r\n109\r\n110\r\n111\r\n112\r\n113\r\n114\r\n115\r\n116\r\n117\r\n118\r\n119\r\n120\r\n121\r\n122\r\n123\r\n124\r\n125\r\n126\r\n127\r\n128\r\n129\r\n130\r\n131\r\n132\r\n133\r\n134\r\n135\r\n136"
+DIAG number_count=29999 first_numbers=[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+
+thread 'output_is_exact_through_loss_duplication_and_reordering' (6) panicked at tests/diagnose.rs:411:54:
+called `Option::unwrap()` on a `None` value
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+FAILED
+
+failures:
+
+failures:
+    output_is_exact_through_loss_duplication_and_reordering
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 24 filtered out; finished in 4.43s

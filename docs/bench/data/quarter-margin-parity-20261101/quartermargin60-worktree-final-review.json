@@ -1,0 +1,55 @@
+{
+  "verdict": "PASS",
+  "errors": [],
+  "checks": {
+    "source-manifest": {
+      "files": 25,
+      "mismatches": []
+    },
+    "source-full-manifest": {
+      "files": 32,
+      "mismatches": []
+    },
+    "status": "M src/server.rs",
+    "base_head": "5ca55dac919c4409d12bd8426f0739d2ea77792b",
+    "head_server_exact48": true,
+    "inverse_head_exact48": true,
+    "actual_tests": {
+      "library": {
+        "passed": 116,
+        "ignored": 2,
+        "log_sha256": "a6a336fdca6b478d1070cb7c5d02e18018da0a66e546e325bea7d8e1229d8616"
+      },
+      "binary_cli": {
+        "passed": 4,
+        "ignored": 0,
+        "log_sha256": "426d6ff59576d0390b09aff34546f93e951eb8f2ba2bb9733afacf6961693f45"
+      },
+      "session": {
+        "passed": 25,
+        "ignored": 0,
+        "log_sha256": "dd2bc7e6093df0a9d002f4773f67822ae2de10dab249bc2da2ae0fff03a805bd"
+      },
+      "pty_concurrency": {
+        "passed": 1,
+        "ignored": 0,
+        "log_sha256": "5c4f37fb46e3c7d2990b5b4c82c727cb999546e0bb8288c7efda81c12815bfc1"
+      }
+    },
+    "control": {
+      "source_id": "653e6d050510",
+      "parent": "48margin production unchanged; sameadaptedquarter3fixture",
+      "quarter_passed": 2,
+      "quarter_expected_failed": 1,
+      "quarter_failure": "known_slow_tcp_does_not_wait_past_the_quarter_gap",
+      "existing_margin_passed": 3,
+      "quarter_log_sha256": "f0a13112adc978970753aa3cad405a42efef2a51caeac836942b9de5ef9a2994",
+      "margin_log_sha256": "44cefb507b77af0ff413ed14f40781a9383fdc2a1929616371bed651c37b9700",
+      "guard_sha256": "fd91e62f832df27be00d57818391e09bd4f33ea7635dc0def1bd26e9b670e092"
+    },
+    "worktree_guard_sha256": "99548fec0c3d133eb93951de27d9bb21fb36d128c730986648e0b36761746f47",
+    "diff_stat": "src/server.rs | 96 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-\n 1 file changed, 95 insertions(+), 1 deletion(-)",
+    "build_scope": "Root built release/library source60 fa934/4b52 and outsideCargo worktree guards; reviewer did not rebuild or execute tests."
+  },
+  "scope": "Read/hash/git metadata only; no edits/commit/push/import/tests/build/Docker/capture"
+}

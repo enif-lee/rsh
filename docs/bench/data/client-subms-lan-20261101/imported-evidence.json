@@ -1,0 +1,74 @@
+{
+  "prepared-inputs.json": {
+    "original_name": "prepared-inputs.json",
+    "original_sha256": "2e706d6fbf2f9d54c5190bafc2ea9ae41ad70ef50dcb4291519ab1a1b1a78a21"
+  },
+  "artifact-identities.json": {
+    "original_name": "artifact-identities.json",
+    "original_sha256": "aece85bff562fe056f7180c51f1d6b5d099c39e5e5a8eb2b50290af31442fe81"
+  },
+  "plan.json": {
+    "original_name": "plan.json",
+    "original_sha256": "d306abf15c89454a23803dd37450b3ee27a26b66a72e7b37f470496ef3f6222f"
+  },
+  "runtime-platform.json": {
+    "original_name": "runtime-platform.json",
+    "original_sha256": "eedd45a1ba109024ad4062e7712b07307a243cfb7d0a6b0b1bd674ae1c5e9505"
+  },
+  "run-status.json": {
+    "original_name": "run-status.json",
+    "original_sha256": "dfdff4a83288492841cbebe3194e2a7de75f7f7d65feab97bf196cde662f26ae"
+  },
+  "analysis-manifest.json": {
+    "original_name": "analysis-manifest.json",
+    "original_sha256": "2708297bf5a52a492509379787a6c6b175991243cba503ff572545ed4c9aca2a"
+  },
+  "original-harness-manifest.json": {
+    "original_name": "original-harness-manifest.json",
+    "original_sha256": "262ce39eb908186a735801c55767aa008c9c90cd7e708f09a39684ebe8bd9868"
+  },
+  "saved-data-audit.json": {
+    "original_name": "saved-data-audit.json",
+    "original_sha256": "530b0c549cf6a89544f01e7fef5202f252f6793e13e9076d3c1d978a3d78af4d"
+  },
+  "saved-data-audit.md": {
+    "original_name": "saved-data-audit.md",
+    "original_sha256": "6a5c3651811f3a63f00dd79e59afbb9ff42c902672e696091c3ba930324d7f77"
+  },
+  "saved-data-audit.py": {
+    "original_name": "saved-data-audit.py",
+    "original_sha256": "8d0cfa20e0cc50006716ce60eadec2e81a39db3559ae412b9cee370bd2fbf5ef"
+  },
+  "client-subms-wait-release-pair.json": {
+    "original_name": "client-subms-wait-release-pair.json",
+    "original_sha256": "15aa0300a7b9b526a204fc8890a1cb1650476bad9bc43684bb3ca18caf1bdb59"
+  },
+  "client-subms-wait.patch": {
+    "original_name": "client-subms-wait.patch",
+    "original_sha256": "614fdaaa2040229f358a29fcf3ad3dbb103e489cf316bdeeeff2980a988b2c05"
+  },
+  "client-subms-wait-proof.json": {
+    "original_name": "client-subms-wait-proof.json",
+    "original_sha256": "8bc7aa08682c015a980e684d49f728ebdbfd5b69cff7935c6486947d92b54047"
+  },
+  "client-subms-wait-source-manifest.json": {
+    "original_name": "client-subms-wait-source-manifest.json",
+    "original_sha256": "e176d8d53bf98927fa276d667ad79b280e8b1d2f374dde8b1e876b7e6013943d"
+  },
+  "client-subms-wait-hypothesis.md": {
+    "original_name": "client-subms-wait-hypothesis.md",
+    "original_sha256": "908c6ababe27c62ba9e3dbc896c1c42deb56ff8d5a390bd3bcdafc848140ccf2"
+  },
+  "build-client-subms-wait.log.gz": {
+    "original_name": "build-client-subms-wait.log",
+    "original_sha256": "8bbd134d73aabb49757e561d2e19b1834fef089e36c40249c050cb402eadb342"
+  },
+  "client-subms-wait-baseline-guard.log.gz": {
+    "original_name": "client-subms-wait-baseline-guard.log",
+    "original_sha256": "efb0994ee44aa957140412ed7fda7ce282dcfdaf547e09253a28b7ca96079ccf"
+  },
+  "client-subms-wait-candidate-guard.log.gz": {
+    "original_name": "client-subms-wait-candidate-guard.log",
+    "original_sha256": "726308ed85a4dd81cd38687f13acb04db4530a193af7610ea597ececae105674"
+  }
+}

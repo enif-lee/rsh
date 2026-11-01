@@ -1,0 +1,8 @@
+   Compiling rsh v0.2.0 (/Users/ed/personal/rsh-parity)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.81s
+     Running tests/session.rs (target/debug/deps/session-371236ec8408b706)
+
+running 1 test
+test output_is_exact_through_loss_duplication_and_reordering ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 24 filtered out; finished in 6.62s

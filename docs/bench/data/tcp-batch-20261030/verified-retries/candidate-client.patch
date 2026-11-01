@@ -1,0 +1,10 @@
+--- src/client.rs
++++ src/client.rs
+@@ -1148,6 +1148,7 @@
+         if let Some(eof) = stdin_eof {
+             let quiet = now.duration_since(last_output) >= SCRIPT_IDLE && now.duration_since(eof) >= SCRIPT_IDLE;
+             if (tx.pending() == 0 && !behind && quiet) || now.duration_since(eof) >= SCRIPT_LIMIT {
++                eprintln!("DIAG detach session={} peer={} quiet={quiet} input_pending={} behind={behind} last_output_ms={} eof_ms={} rx_gen={} rx_next={} pending_output={} held_bytes={}", attached.session, attached.peer, tx.pending(), now.duration_since(last_output).as_millis(), now.duration_since(eof).as_millis(), rx.gen, rx.next, out.pending.len(), held.len());
+                 detach(&mut link, &rx, size, now);
+                 return Ok(Outcome::Detached);
+             }

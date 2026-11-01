@@ -1,0 +1,15 @@
+{
+  "identical_fixture_body": true,
+  "fixture_sha256": "9c46f9e7382f385c38bed51d3143320968f82f457ce4e2a684976cb483eee428",
+  "candidate_targeted_passed": 4,
+  "control_passed": 3,
+  "control_expected_failures": [
+    "tcp_probe60_grows_at_seventy_percent_only_on_tcp"
+  ],
+  "control_expected_exit_status": 101,
+  "actual_log_sha256": "8f9a17dd1ba018e6f147fd954d65ab4aa66764d5878739a5689527881e037842",
+  "control_binary_sha256": "d46f969e072e2897448950ac669d0fff5fb33c5a381cdb1ef3917e956acd375b",
+  "control_root_fresh": false,
+  "control_guard": "verified build 6976358f024b: tcp-probe60-control-tests\n",
+  "scope": "Untouched main policy with identical4 testfixtures. Expectedactivationfailureprovespolicyseparation,notbenefitorsafety."
+}

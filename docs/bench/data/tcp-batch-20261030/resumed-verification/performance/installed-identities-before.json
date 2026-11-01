@@ -1,0 +1,114 @@
+[
+ {
+  "container": "rl-0-cli",
+  "checks": [
+   "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23  /usr/local/bin/rsh",
+   "a7e669e1eb8632a70e46594cc55d73f7d76de3840abf0d1fc2d24ee989e73121  /usr/local/bin/rsh-b"
+  ]
+ },
+ {
+  "container": "rl-0-srv",
+  "checks": [
+   "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23  /usr/local/bin/rsh",
+   "a7e669e1eb8632a70e46594cc55d73f7d76de3840abf0d1fc2d24ee989e73121  /usr/local/bin/rsh-b"
+  ]
+ },
+ {
+  "container": "rl-1-cli",
+  "checks": [
+   "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23  /usr/local/bin/rsh",
+   "a7e669e1eb8632a70e46594cc55d73f7d76de3840abf0d1fc2d24ee989e73121  /usr/local/bin/rsh-b"
+  ]
+ },
+ {
+  "container": "rl-1-srv",
+  "checks": [
+   "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23  /usr/local/bin/rsh",
+   "a7e669e1eb8632a70e46594cc55d73f7d76de3840abf0d1fc2d24ee989e73121  /usr/local/bin/rsh-b"
+  ]
+ },
+ {
+  "container": "rl-2-cli",
+  "checks": [
+   "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23  /usr/local/bin/rsh",
+   "a7e669e1eb8632a70e46594cc55d73f7d76de3840abf0d1fc2d24ee989e73121  /usr/local/bin/rsh-b"
+  ]
+ },
+ {
+  "container": "rl-2-srv",
+  "checks": [
+   "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23  /usr/local/bin/rsh",
+   "a7e669e1eb8632a70e46594cc55d73f7d76de3840abf0d1fc2d24ee989e73121  /usr/local/bin/rsh-b"
+  ]
+ },
+ {
+  "container": "rl-3-cli",
+  "checks": [
+   "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23  /usr/local/bin/rsh",
+   "a7e669e1eb8632a70e46594cc55d73f7d76de3840abf0d1fc2d24ee989e73121  /usr/local/bin/rsh-b"
+  ]
+ },
+ {
+  "container": "rl-3-srv",
+  "checks": [
+   "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23  /usr/local/bin/rsh",
+   "a7e669e1eb8632a70e46594cc55d73f7d76de3840abf0d1fc2d24ee989e73121  /usr/local/bin/rsh-b"
+  ]
+ },
+ {
+  "container": "rl-4-cli",
+  "checks": [
+   "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23  /usr/local/bin/rsh",
+   "a7e669e1eb8632a70e46594cc55d73f7d76de3840abf0d1fc2d24ee989e73121  /usr/local/bin/rsh-b"
+  ]
+ },
+ {
+  "container": "rl-4-srv",
+  "checks": [
+   "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23  /usr/local/bin/rsh",
+   "a7e669e1eb8632a70e46594cc55d73f7d76de3840abf0d1fc2d24ee989e73121  /usr/local/bin/rsh-b"
+  ]
+ },
+ {
+  "container": "rl-5-cli",
+  "checks": [
+   "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23  /usr/local/bin/rsh",
+   "a7e669e1eb8632a70e46594cc55d73f7d76de3840abf0d1fc2d24ee989e73121  /usr/local/bin/rsh-b"
+  ]
+ },
+ {
+  "container": "rl-5-srv",
+  "checks": [
+   "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23  /usr/local/bin/rsh",
+   "a7e669e1eb8632a70e46594cc55d73f7d76de3840abf0d1fc2d24ee989e73121  /usr/local/bin/rsh-b"
+  ]
+ },
+ {
+  "container": "rl-6-cli",
+  "checks": [
+   "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23  /usr/local/bin/rsh",
+   "a7e669e1eb8632a70e46594cc55d73f7d76de3840abf0d1fc2d24ee989e73121  /usr/local/bin/rsh-b"
+  ]
+ },
+ {
+  "container": "rl-6-srv",
+  "checks": [
+   "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23  /usr/local/bin/rsh",
+   "a7e669e1eb8632a70e46594cc55d73f7d76de3840abf0d1fc2d24ee989e73121  /usr/local/bin/rsh-b"
+  ]
+ },
+ {
+  "container": "rl-7-cli",
+  "checks": [
+   "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23  /usr/local/bin/rsh",
+   "a7e669e1eb8632a70e46594cc55d73f7d76de3840abf0d1fc2d24ee989e73121  /usr/local/bin/rsh-b"
+  ]
+ },
+ {
+  "container": "rl-7-srv",
+  "checks": [
+   "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23  /usr/local/bin/rsh",
+   "a7e669e1eb8632a70e46594cc55d73f7d76de3840abf0d1fc2d24ee989e73121  /usr/local/bin/rsh-b"
+  ]
+ }
+]

@@ -1,0 +1,4 @@
+DIAG delayed elapsed=4.805385083s outcome=Detached delivered=false bytes=936
+DIAG delayed late_output_after=1.511093917s
+DIAG delayed late=true
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 25 filtered out; finished in 6.36s

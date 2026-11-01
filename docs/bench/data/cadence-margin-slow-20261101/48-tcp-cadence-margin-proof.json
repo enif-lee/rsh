@@ -1,0 +1,22 @@
+{
+  "status": "source_only_unbuilt_untested",
+  "parent": "fps-combined-pty-account-source",
+  "parent_build_id": "295f81d54ea4",
+  "canonical_files": 25,
+  "full_files": 32,
+  "only_changed_file": "src/server.rs",
+  "only_production_change": "screen_due_at no-slow low-queue branch TCP+animating rawoutputgap*0.9 before existing8..20ms clamp",
+  "fixtures": 3,
+  "fixture_sha256": "08c1e0a9bb5eecd34bd04819b5d12bea8cef39667d992a898a2fbe175f293783",
+  "reverse_all_parent_bytes_exact": true,
+  "proto_client_global_screen_gap_unchanged": true,
+  "source_manifest_sha256": "594b013cad77bdf779b1a236140b782d296fd90da8832da288d82250aa64674d",
+  "full_manifest_sha256": "2cb6be544a37f7c4c9e19c022eeac172e033fd75aac56af282b05d0ac0148c7c",
+  "patch_sha256": "1ce77515e98066b6f45749141a0aeb3a158da274af56ca39fbe58e5a10582138",
+  "tests": 0,
+  "builds": 0,
+  "Docker": 0,
+  "performance": 0,
+  "planned_unsalted_build_id": "ea6c0df76a70",
+  "adopted_peer_defect": "Removed redundant18ms assertion from third unchanged-gates test; control plan1fail2pass now structurally consistent. Production change unchanged."
+}

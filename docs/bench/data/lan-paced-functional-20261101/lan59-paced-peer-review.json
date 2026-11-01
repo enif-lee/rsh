@@ -1,0 +1,118 @@
+{
+  "verdict": "PASS_BOUNDED_SOURCE_DERIVED_REVIEW",
+  "adopted_defects": [],
+  "remaining_blockers": [],
+  "derived_recalculation": {
+    "rows": 16,
+    "traced_rows": 12,
+    "performance_eligible": false,
+    "functional_valid": true,
+    "robust": 0,
+    "possible_only": 0,
+    "topgap_categories": {
+      "later": 57,
+      "first_half_second": 1,
+      "crossing_half_second": 2
+    },
+    "gate_reasons_by_scene": {
+      "compress": {
+        "0": 2877
+      },
+      "bandwidth": {
+        "2": 1418,
+        "0": 2882
+      }
+    },
+    "refill_medians_ms": [
+      [
+        "compress",
+        0,
+        "main-trace-A",
+        14.889598
+      ],
+      [
+        "compress",
+        0,
+        "main-trace-B",
+        14.893326
+      ],
+      [
+        "compress",
+        0,
+        "combined-trace",
+        14.869846
+      ],
+      [
+        "compress",
+        1,
+        "main-trace-B",
+        14.880578
+      ],
+      [
+        "compress",
+        1,
+        "combined-trace",
+        14.878722
+      ],
+      [
+        "compress",
+        1,
+        "main-trace-A",
+        14.922306
+      ],
+      [
+        "bandwidth",
+        0,
+        "main-trace-A",
+        14.803205
+      ],
+      [
+        "bandwidth",
+        0,
+        "main-trace-B",
+        14.784119
+      ],
+      [
+        "bandwidth",
+        0,
+        "combined-trace",
+        14.82983
+      ],
+      [
+        "bandwidth",
+        1,
+        "main-trace-B",
+        14.83753
+      ],
+      [
+        "bandwidth",
+        1,
+        "combined-trace",
+        14.816649
+      ],
+      [
+        "bandwidth",
+        1,
+        "main-trace-A",
+        14.8194385
+      ]
+    ],
+    "source_analysis_sha256": "04585edde86ec3d22f43ac6ac396e96e0b6219720e91deedbeade31ef42e8dde",
+    "script_sha256": "de8a483619707e56ba12d54cbd38a83ba64d91bcffdfaff820fd43797342fb05"
+  },
+  "source_contract": [
+    "54 main-source/src/client.rs:1300 refill(now) before record7:1329",
+    "trace_mask:1324 token/catch lower2bits; flush gate:1332",
+    "Token decrement:1333 before write_out record8:1374",
+    "poll1:671 records requestedms/passednow/due/pending; poll2:677 elapsed+network/stdin only, no rc/allFD"
+  ],
+  "algebra": "For positive tokens, T=floor(1000*tokens); ideal linear rowtime lower credit reaches1 iff T*every+1000*delta>=1000*every; upper-open possibly reaches1 iff (T+1)*every+1000*delta>1000*every. This is record-bound algebra, not an actual prototype timestamp or complete f64 rounding equivalence proof.",
+  "scope": "Source scripts+311KiB derivedJSON only; no 15.5MB scalarcache or24rawCSV reparsing, new measurement/replay/tests/build/Docker.",
+  "limits": [
+    "Raw\u2192cache event counts/order/hashes remain executor-provided proof, not independently re-extracted here",
+    "Observed gate tokenbit1/3 absence makes all proposed fresh-token cases unexercised regardless threshold algebra",
+    "Recorded row time is later than arguments passed to record7 and only a counterfactual upper-time, not a hypothetical callInstant",
+    "Ready/catch poll brackets cannot prove strict timeout/allFDs or continuous demand/frame ownership/GPU",
+    "Window-only negative evidence does not exclude unrecorded/pre-anchor or other workloads"
+  ]
+}

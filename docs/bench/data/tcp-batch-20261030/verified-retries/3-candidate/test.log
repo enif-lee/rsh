@@ -1,0 +1,49 @@
+
+running 26 tests
+DIAG identity build=2886152b78a2 fixture_sha256=16c0d3154ddab541495538f3a4fe35960bfcf30263992c54b500a06aaae1ea0e
+test diagnostic_identity ... ok
+test command_session_reports_exit_code_and_is_removed ... ok
+test end_offset_follows_a_repaint_after_exit ... ok
+test ipv6_peer_works ... ok
+test ctrl_c_drops_a_large_unacked_backlog ... ok
+test one_udp_socket_per_host ... ok
+test attach_in_the_middle_of_an_escape_sequence ... ok
+DIAG detach session=324406 peer=127.0.0.1:55766 quiet=true input_pending=0 behind=false last_output_ms=1520 eof_ms=1863 rx_gen=1 rx_next=740 pending_output=0 held_bytes=0
+DIAG detach session=329733 peer=127.0.0.1:63963 quiet=true input_pending=0 behind=false last_output_ms=1517 eof_ms=1778 rx_gen=1 rx_next=740 pending_output=0 held_bytes=0
+test backlog_is_bounded_for_silent_client_and_dropped_when_detached ... ok
+DIAG detach session=429594 peer=127.0.0.1:59841 quiet=true input_pending=0 behind=false last_output_ms=1519 eof_ms=2884 rx_gen=1 rx_next=1113 pending_output=0 held_bytes=0
+test disconnect_timeout_hangs_up_abandoned_sessions ... ok
+test compression_asked_for_works_on_a_fast_link_too ... ok
+test reflected_server_packets_are_not_input ... ok
+DIAG detach session=561513 peer=127.0.0.1:63963 quiet=true input_pending=0 behind=false last_output_ms=1519 eof_ms=1732 rx_gen=1 rx_next=740 pending_output=0 held_bytes=0
+test second_client_takes_over_and_first_is_kicked ... ok
+DIAG detach session=251896 peer=127.0.0.1:49320 quiet=true input_pending=0 behind=false last_output_ms=1519 eof_ms=1744 rx_gen=1 rx_next=1197 pending_output=0 held_bytes=0
+test server_adopts_new_client_address ... ok
+DIAG detach session=228259 peer=127.0.0.1:61783 quiet=true input_pending=0 behind=false last_output_ms=1518 eof_ms=2803 rx_gen=2 rx_next=405 pending_output=0 held_bytes=0
+test output_over_a_slow_round_trip_is_compressed_and_exact ... ok
+DIAG detach session=200514 peer=127.0.0.1:58331 quiet=true input_pending=0 behind=false last_output_ms=1520 eof_ms=1748 rx_gen=1 rx_next=1117 pending_output=0 held_bytes=0
+test idle_tcp_connections_do_not_shut_out_clients ... ok
+DIAG detach session=760160 peer=127.0.0.1:58368 quiet=true input_pending=0 behind=false last_output_ms=1518 eof_ms=3838 rx_gen=1 rx_next=200077 pending_output=0 held_bytes=0
+test output_is_exact_through_loss_duplication_and_reordering ... ok
+DIAG detach session=251896 peer=127.0.0.1:63283 quiet=true input_pending=0 behind=false last_output_ms=1519 eof_ms=1534 rx_gen=1 rx_next=1065 pending_output=0 held_bytes=0
+DIAG detach session=795583 peer=127.0.0.1:60559 quiet=true input_pending=0 behind=false last_output_ms=1519 eof_ms=1743 rx_gen=1 rx_next=1133 pending_output=0 held_bytes=0
+test reattach_after_server_moves_port ... ok
+test input_past_the_pty_backlog_arrives_whole_over_tcp ... ok
+DIAG detach session=468753 peer=127.0.0.1:64528 quiet=true input_pending=0 behind=false last_output_ms=1521 eof_ms=5852 rx_gen=1 rx_next=1380 pending_output=0 held_bytes=0
+test local_and_remote_port_forwarding ... ok
+test wrong_token_gets_no_reply_and_replayed_hello_does_nothing ... ok
+DIAG detach session=795583 peer=127.0.0.1:60559 quiet=true input_pending=0 behind=false last_output_ms=1516 eof_ms=1516 rx_gen=1 rx_next=688 pending_output=0 held_bytes=0
+rsh: /var/folders/_2/khxph2bs3yvcs9sl6l656g_80000gn/T/rsh-revoke-76868/authorized: /var/folders/_2/khxph2bs3yvcs9sl6l656g_80000gn/T/rsh-revoke-76868/authorized is accessible by others (mode 644); run chmod 600 on it; no token is accepted until it is fixed
+test shell_output_and_resume_redraws_screen ... ok
+DIAG detach session=175982 peer=127.0.0.1:58600 quiet=true input_pending=0 behind=false last_output_ms=1521 eof_ms=1856 rx_gen=1 rx_next=200093 pending_output=0 held_bytes=0
+DIAG fallback_result session=175982 marked=true tail_numbers=true output_bytes=200093
+test stale_attachment_is_told_after_server_restart ... ok
+DIAG detach session=175982 peer=127.0.0.1:58600 quiet=true input_pending=0 behind=false last_output_ms=1524 eof_ms=1527 rx_gen=1 rx_next=18722 pending_output=0 held_bytes=0
+test where_udp_is_blocked_the_session_goes_over_tcp ... ok
+test revoked_token_ends_its_attachment_and_bad_permissions_fail_closed ... ok
+test kill_by_name_and_list ... ok
+DIAG detach session=584130 peer=127.0.0.1:57547 quiet=true input_pending=0 behind=false last_output_ms=1516 eof_ms=10652 rx_gen=1 rx_next=1873 pending_output=0 held_bytes=0
+test a_broken_tcp_connection_is_made_again ... ok
+
+test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.69s
+

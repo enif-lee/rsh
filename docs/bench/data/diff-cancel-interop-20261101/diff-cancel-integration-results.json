@@ -1,0 +1,21 @@
+{
+  "at": 1793474135.410635,
+  "scope": "CAN-main functionalintegration; actual source935 crate exact, tests/sessionfixtureonlyBashprefixfix. No performance selection. OutsideCargo guardappliesreleasedbinary notintegrationtestexes, whichwerecompiledfreshfromcopiedmanifest.",
+  "source_manifest_unchanged": true,
+  "manifest_entries": 90,
+  "source_manifest_sha256": "2b75f757347715e2ceaf7d4692e75e0541e3570fc62ce442e4513262c1e91851",
+  "library_prior": {
+    "passed": 99,
+    "ignored": 2
+  },
+  "integration": {
+    "cli_passed": 4,
+    "session_passed": 25,
+    "failed": 0
+  },
+  "fresh_false_integration_artifacts": 2,
+  "log_sha256": "4e9bd223075a5b5af4edfc08adc70b54e76e8622cda1504cbef67aba1889895c",
+  "script_sha256": "cc79d4f5ff9d9abb305f681bb415dfa981cbfb85d3176a4900c25661bbaa7721",
+  "build_json_sha256": "13a970defc4eb4eb4c5b2f6e023e0a96092471d8bd30d86490bf45118770361e",
+  "production_worktree_guard": "verified build 93533574fffa: rsh-diff-cancel"
+}

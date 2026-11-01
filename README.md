@@ -17,14 +17,15 @@ networks and return to the same session. It predicts keystrokes locally,
 adapts output to the available link, and sends the current screen when
 sending every byte would leave you behind.
 
-Version **0.2.0** supports Linux and macOS on x86_64 and arm64. It uses UDP
-with TCP fallback on the same port.
+rsh supports Linux and macOS on x86_64 and arm64. It uses UDP with TCP
+fallback on the same port. The published release is **0.2.0**; the benchmark
+sections identify the source used by each comparison.
 
 <!-- benchmark-summary:start -->
 ### Performance at a glance
 
-Freshly measured **2026-10-29**, using **rsh 0.2.0**
-(build `6729d398d4f1`). The table uses a 256 kbit/s link at RTT 100 ms,
+Released **rsh 0.2.0**, build `6729d398d4f1`, using UDP.
+The table uses a 256 kbit/s link at RTT 100 ms,
 except the ten-session memory row. Rendering requests 60 FPS in a
 100×30 terminal; four jobs run in parallel on the shared host.
 
@@ -42,6 +43,31 @@ except the ten-session memory row. Rendering requests 60 FPS in a
 Six render attempts; pooled frame-gap lows; three echo/bulk attempts; two memory
 runs. The [full report](BENCHMARK.md) includes rsh TCP fallback, all links,
 raw measurements, aggregation rules and collection failures.
+
+### TCP fallback
+
+The TCP implementation uses bounded transit accounting, capacity probing,
+frame-cadence alignment and a bounded wait for recent PTY output. The measured
+source is `781bbe465298`, the implementation used by main. Four parallel jobs,
+two evaluations per case, a 100×30 terminal and 60 FPS requested.
+Cells show **avg / 1% low / 5% low FPS**; RX is client kbit/s and RSS is
+client+server midpoint MiB, not peak memory.
+
+| Profile / scene / evaluation | SSH FPS | rsh TCP FPS | SSH / rsh RX | SSH / rsh RSS |
+| --- | --- | --- | --- | --- |
+| RTT 300 ms / random / 0 | 60.0 / 12.1 / 44.2 | 53.5 / 27.6 / 47.3 | 5796 / 2129 | 26.29 / 8.05 |
+| RTT 300 ms / random / 1 | 60.0 / 14.9 / 45.0 | 53.4 / 14.5 / 47.4 | 5792 / 2130 | 26.36 / 8.70 |
+| 1 Mbit/s / random / 0 | 9.7 / 6.3 / 6.5 | 24.4 / 19.2 / 20.9 | 977 / 966 | 27.06 / 8.45 |
+| 1 Mbit/s / random / 1 | 9.9 / 5.4 / 6.3 | 24.1 / 14.8 / 19.5 | 979 / 956 | 27.08 / 8.38 |
+| 256 kbit/s / dashboard / 0 | 6.0 / 2.1 / 5.1 | 60.0 / 43.8 / 47.1 | 249 / 229 | 26.70 / 8.13 |
+| 256 kbit/s / dashboard / 1 | 6.1 / 2.4 / 4.1 | 60.0 / 38.7 / 44.6 | 250 / 228 | 26.80 / 8.17 |
+| 64 kbit/s / dashboard / 0 | 1.5 / 1.3 / 1.3 | 15.6 / 6.9 / 12.6 | 62 / 64 | 26.76 / 8.39 |
+| 64 kbit/s / dashboard / 1 | 1.4 / 1.3 / 1.3 | 15.7 / 8.9 / 12.5 | 60 / 63 | 26.71 / 7.69 |
+
+1% low, 5% low and average FPS are primary; CPU/RSS are secondary.
+Low-bandwidth gains coexist with LAN tail costs, a remaining RTT 300 ms
+average-FPS gap and 120 Hz costs. See the [complete TCP comparison](BENCHMARK.md#tcp-fallback)
+for both reference sessions, all evaluations, resources and moving recovery.
 <!-- benchmark-summary:end -->
 
 ## Installation
@@ -82,6 +108,11 @@ scripts/dist.sh
 Rebuild them after changing the source so the client can install a matching
 build on remote hosts. Binaries stored outside `~/.rsh/bin` do not
 auto-update themselves.
+
+Distribution builds rebuild the `rsh` release package and verify each binary's
+source build ID before writing checksums. Check an externally built binary
+against its source tree with `scripts/check-build.sh /path/to/source /path/to/binary`.
+The check reads the embedded ID, so the binary can target another platform.
 
 ## Usage
 
@@ -177,14 +208,52 @@ The implementation is in [`src/server.rs`](src/server.rs),
 <!-- benchmark-details:start -->
 ## Performance
 
-These comparisons were freshly measured on **2026-10-29** with the
-published **0.2.0** binary, build `6729d398d4f1`.
+TCP results use source `781bbe465298`; UDP and multi-tool results below use
+released **0.2.0**, build `6729d398d4f1`. These datasets use different frame
+observers and are kept separate. [Measurement scope](BENCHMARK.md#measurement-scope)
+identifies the source, workloads and aggregation for each.
+
+### TCP frame delivery
+
+The TCP comparison validates complete terminal bodies against the producer,
+with separate average, 1% low and 5% low FPS for each evaluation. LAN and
+120 Hz tail costs remain visible alongside high-RTT and bandwidth-limited gains.
+
+![TCP dashboard and random-screen FPS](docs/bench/bounded-quiet65-reference-core-fps.svg)
+
+![TCP FPS on bandwidth-limited links](docs/bench/bounded-quiet65-reference-slow-fps.svg)
+
+### TCP moving network
+
+A common 30-second delay/rate/outage schedule drives all sessions. The following
+whole-window observations are descriptive: timing fidelity remains unapproved.
+Cells are **avg / 1% low / 5% low FPS**.
+
+| Scene / evaluation | SSH FPS | rsh TCP FPS |
+| --- | --- | --- |
+| Moving / dashboard / 0 | 47.9 / 3.6 / 32.5 | 26.9 / 3.2 / 8.4 |
+| Moving / dashboard / 1 | 48.2 / 6.3 / 27.0 | 28.2 / 3.4 / 9.8 |
+| Moving / random / 0 | 16.5 / 3.5 / 16.6 | 21.7 / 2.5 / 6.5 |
+| Moving / random / 1 | 27.2 / 2.6 / 12.8 | 20.3 / 2.6 / 7.1 |
+
+![TCP moving recovery and fresh-frame arrival](docs/bench/bounded-quiet65-reference-moving-recovery.svg)
+
+After the impaired phases, TCP dashboard averages 42.4 / 42.7 FPS in the final
+seven seconds. SSH's 112.3 / 107.4 FPS includes backlog catch-up; it does not
+represent a steady fresh rate above the requested 60 FPS. Frame age and the
+first newly generated body are reported with FPS. The final phase still varies
+delay and includes a short outage. [Moving details](BENCHMARK.md#moving-network)
+retain all recovery phases, native timing bounds, gaps and missing values.
+
+### Released UDP comparisons
+
+These comparisons use the published **0.2.0** binary, build `6729d398d4f1`.
 Avg FPS is the mean of six per-run frame rates; 1%/5% lows are reciprocals
 of pooled p99/p95 frame gaps. Network is client RX including protocol
 overhead; RSS is a sampled resident size, not a peak. See
 [methodology and version scope](BENCHMARK.md#measurement-scope).
 
-### Dashboard on slow, distant and lossy links
+#### Dashboard on slow, distant and lossy links
 
 ![Dashboard frame rates with 1% and 5% lows for all five transports](docs/bench/fps-dashboard.svg)
 
@@ -206,7 +275,7 @@ overhead; RSS is a sampled resident size, not a peak. See
 | 256 kbit/s · RTT 400 ms · 2% loss | OpenSSH | 5.2 | 1.7 | 1.8 | 3882 | 249 | 7.52 | 19.33 |
 | 256 kbit/s · RTT 400 ms · 2% loss | mosh | 4.3 | 1.2 | 4.6 | 233 | 25 | 14.34 | 10.36 |
 
-### Random full screen
+#### Random full screen
 
 All cells change each frame. These results expose frame-gap and bandwidth
 limits that a compressible dashboard can hide.
@@ -228,7 +297,7 @@ limits that a compressible dashboard can hide.
 | 256 kbit/s · RTT 400 ms · 2% loss | OpenSSH | 2.3 | 0.6 | 1.0 | 4146 | 250 | 7.47 | 19.51 |
 | 256 kbit/s · RTT 400 ms · 2% loss | mosh | 4.1 | 1.6 | 2.3 | 385 | 188 | 14.42 | 10.42 |
 
-### Network and memory
+#### Network and memory
 
 ![Received KiB per displayed dashboard frame](docs/bench/network.svg)
 
@@ -239,7 +308,7 @@ for both workloads on every link, packet counts, all five transports,
 connection/echo, bulk output, link changes and session recovery, each with
 comparison tables and charts. Raw job results are committed with the report.
 
-### Moving network
+#### Moving network
 
 The same **0.2.0** binary was measured with a **158×43 viewer**, for
 60 s per scene and two shared 30 s impairment cycles. The three workload
@@ -276,22 +345,33 @@ Run render and link-switch tests:
 python3 benchmark/lab/lab.py run --tools ssh,mosh,rsh \
   --tests render,switch --nets lan,wan,lowbw,highlat \
   --switches lan:lowbw,lowbw:highlat \
-  --scenes compress,bandwidth --fps 60 --duration 8 --iterations 3 --parallel 12
+  --scenes compress,bandwidth --fps 60 --duration 8 --iterations 2 --parallel 4
 ```
 
-The run defaults are twelve parallel jobs and three repeats per case.
-The `sessions` test defaults to one repeat; `--session-iterations` overrides it.
-
-The [twelve-worker validation](docs/bench/parallel12-20261029.md) shortened
-the matched 750-job batch from 33.17 to 11.02 minutes. It compares the same
-three repeats per case: mean FPS is close on lossless rsh UDP links, while
-frame-gap lows, lossy-link results and RSS vary between runs.
+Performance measurements use four parallel jobs and two evaluations per case,
+including session memory, in both development and published comparisons.
+These defaults reflect the measurement host's four performance cores; they do
+not pin processes to physical cores. Historical measurements retain their
+recorded concurrency and repeat counts and are kept separate from new runs.
+`--session-iterations` overrides the session-memory repeat count.
 
 Run the moving-network demo:
 
 ```sh
 python3 benchmark/lab/lab.py demo --tools ssh,mosh,rsh --events '' \
   --nets moving --scenes compress,bandwidth --fps 60 --duration 60
+```
+
+To compare two Linux builds, pass `--rsh /path/to/baseline` and
+`--rsh-b /path/to/candidate`. Select `rsh,rsh-b` for UDP or
+`rsh-tcp,rsh-b-tcp` for TCP. Both `run` and `demo` install the requested
+builds; the second uses port 2223. For example, a four-pane moving demo:
+
+```sh
+python3 benchmark/lab/lab.py demo \
+  --rsh /path/to/baseline --rsh-b /path/to/candidate \
+  --tools ssh,mosh,rsh-tcp,rsh-b-tcp --events '' \
+  --nets moving --scenes compress,bandwidth --fps 60
 ```
 
 The moving profile repeats a 30-second sequence of congestion, weak

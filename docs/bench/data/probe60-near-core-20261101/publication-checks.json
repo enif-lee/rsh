@@ -1,0 +1,27 @@
+{
+  "original_summary_sha256": "18412e8f57fa9a99541a73bd05702a1b3153b84e6e179f7cf12e2a69942f091e",
+  "compact_fields_exact": true,
+  "cases": 48,
+  "body_frames": 21617,
+  "source_records": 23040,
+  "raw_file_hashes_archived": 96,
+  "source_hashes_compared_to_independent_audit": 48,
+  "pending_writes": null,
+  "pending_body_joins": null,
+  "run_imports_exact": 10,
+  "source_build_imports_exact": 13,
+  "independent_audit_exact": true,
+  "host_context_sidecar_exact": true,
+  "host_context_timing_and_impact_unknown": true,
+  "resource_check_scope": "saved-derived consistency and units; no underlying resource counters retained",
+  "python_ast_files": 3,
+  "svg_point_counts": {
+    "fps": 144,
+    "resources": 144,
+    "age": 96
+  },
+  "previews_removed": true,
+  "trailing_whitespace_findings": 0,
+  "raw_body_replay_performed": false,
+  "performance_accepted": false
+}

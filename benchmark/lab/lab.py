@@ -16,8 +16,9 @@ remove them when they end (`--keep` keeps them); slots brought up with
 Each slot is a server and a client container on a network of their own
 (`rl-<k>-srv`, `rl-<k>-cli`, `rshlab-<k>`), shaped with `tc netem` (delay
 and loss both ways, the rate from the server), so jobs in different slots
-do not share a link; they share the machine's CPUs. The default is twelve
-parallel jobs; reduce `--parallel` if host contention affects frame timing.
+do not share a link; they share the machine's CPUs. New performance measurements
+use four parallel jobs and two evaluations per case, including sessions, for
+both development and publication. Historical measurements remain separate.
 The image is the harness's (`benchmark/harness/
 run.py build`); `--rsh` swaps in another rsh build without rebuilding it.
 
@@ -43,7 +44,7 @@ Tests (`run --tests`), each job a fresh connection of one tool:
   reattach  the client killed and started again: same shell or not
   udpblock  the server drops UDP silently: connect time
 The connect time of every job is kept too. Each test runs `--iterations`
-times, except sessions, which uses `--session-iterations` (one by default);
+times, except sessions, which uses `--session-iterations` (two by default);
 the summary shows the median (and the range of the main figure).
 The events run on `--event-net`. Results go to `out/run-<time>.json`.
 
@@ -71,13 +72,14 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 IMAGE = "rsh-bench"
 # `rsh-tcp` is rsh over TCP: its slot's server drops UDP, so the client
 # goes over TCP as on a network that lets only TCP through.
-TOOLS = ["ssh", "et", "mosh", "rsh", "rsh-tcp", "rsh-b"]
-LABEL = {"ssh": "OpenSSH", "et": "ET", "mosh": "mosh", "rsh": "rsh (UDP)", "rsh-tcp": "rsh (TCP)", "rsh-b": "rsh (B)"}
-PROCESS = {"ssh": "ssh", "et": "et", "mosh": "mosh-client", "rsh": "rsh", "rsh-tcp": "rsh", "rsh-b": "rsh-b"}
+TOOLS = ["ssh", "et", "mosh", "rsh", "rsh-tcp", "rsh-b", "rsh-b-tcp"]
+LABEL = {"ssh": "OpenSSH", "et": "ET", "mosh": "mosh", "rsh": "rsh (UDP)", "rsh-tcp": "rsh (TCP)", "rsh-b": "rsh (B UDP)", "rsh-b-tcp": "rsh (B TCP)"}
+PROCESS = {"ssh": "ssh", "et": "et", "mosh": "mosh-client", "rsh": "rsh", "rsh-tcp": "rsh", "rsh-b": "rsh-b", "rsh-b-tcp": "rsh-b"}
 # Each tool's server side, as `ps -C` names it (sshd: the listener too).
-SERVER_PROCESS = {"ssh": "sshd", "et": "etserver,etterminal", "mosh": "mosh-server", "rsh": "rsh", "rsh-tcp": "rsh", "rsh-b": "rsh-b"}
+SERVER_PROCESS = {"ssh": "sshd", "et": "etserver,etterminal", "mosh": "mosh-server", "rsh": "rsh", "rsh-tcp": "rsh", "rsh-b": "rsh-b", "rsh-b-tcp": "rsh-b"}
 CLIENT = {"ssh": "ssh -tt dev@server", "et": "et dev@server:2022", "mosh": "mosh dev@server", "rsh": "rsh server demo", "rsh-tcp": "rsh server demo",
-          "rsh-b": "env RSH_PEER=server:2223 rsh-b server demo"}
+          "rsh-b": "env RSH_PEER=server:2223 rsh-b server demo",
+          "rsh-b-tcp": "env RSH_PEER=server:2223 rsh-b server demo"}
 # One-way delay (ms, both ways), loss (%, both ways), server-to-client rate.
 NETS = {
     "lan": (0, 0, None, "LAN"),
@@ -350,7 +352,7 @@ def run_job(k, job):
     began = time.time()
     # What the job leaves behind the next one's `prepare` (or the end of
     # the run) takes away.
-    prepare(k, job["net"], job["test"] == "udpblock" or job["tool"] == "rsh-tcp")
+    prepare(k, job["net"], job["test"] == "udpblock" or job["tool"] in ("rsh-tcp", "rsh-b-tcp"))
     proc = subprocess.Popen(["docker", "exec", "-i", cli(k), "python3", "/tmp/agent.py", "run", json.dumps(job)],
                             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     other = []
@@ -905,6 +907,8 @@ def demo(opts):
         sys.exit("lab: the demo needs slots 0-%d; `lab.py down`, or `lab.py up --slots %d`" % (len(tools) - 1, len(tools)))
     if opts.rsh:
         install_rsh(opts.rsh, range(len(tools)))
+    if opts.rsh_b:
+        install_rsh_b(opts.rsh_b, range(len(tools)))
     # Retained slots may predate the scheduled-start argument used below.
     for k in range(len(tools)):
         sh("docker", "cp", os.path.join(HERE, "scene.py"), "%s:/tmp/scene.py" % srv(k))
@@ -914,7 +918,7 @@ def demo(opts):
         dexec(srv(k), "sh", "-c", "pkill -f '[s]cene.py'; true", check=False)
         dexec(cli(k), "iptables", "-F", check=False)
         dexec(srv(k), "iptables", "-F", check=False)
-        if tool == "rsh-tcp":
+        if tool in ("rsh-tcp", "rsh-b-tcp"):
             dexec(srv(k), "iptables", "-I", "INPUT", "-p", "udp", "-j", "DROP")
         # A slot kept from an earlier run may still have its last network
         # (over RTT 300 ms ET takes 5 s to connect): every client starts
@@ -1005,7 +1009,7 @@ def control(opts):
 
 # The demo's results leave out each scene's first second.
 DEMO_SKIP = 1.0
-COLOR = {"ssh": 245, "et": 214, "mosh": 39, "rsh": 42, "rsh-tcp": 141, "rsh-b": 208}
+COLOR = {"ssh": 245, "et": 214, "mosh": 39, "rsh": 42, "rsh-tcp": 141, "rsh-b": 208, "rsh-b-tcp": 208}
 
 
 def bar(value, most, width):
@@ -1180,8 +1184,8 @@ def main():
     p.add_argument("path", nargs="?", help="rsh build (action rsh)")
     p.add_argument("--slots", type=int, default=4, help="up: container pairs")
     p.add_argument("--rsh", help="an rsh Linux build to test instead of the image's")
-    p.add_argument("--rsh-b", help="a second rsh Linux build, as the tool rsh-b (compare two builds in one run)")
-    p.add_argument("--tools", default=",".join(t for t in TOOLS if t != "rsh-b"))
+    p.add_argument("--rsh-b", help="a second rsh Linux build, as rsh-b (UDP) or rsh-b-tcp (TCP)")
+    p.add_argument("--tools", default=",".join(t for t in TOOLS if t not in ("rsh-b", "rsh-b-tcp")))
     p.add_argument("--tests", default="render,switch", help="run: " + ",".join(COLUMNS))
     p.add_argument("--nets", default="lowbw,highlat,lossy", help=",".join(NETS))
     p.add_argument("--scenes", default="compress,bandwidth", help=",".join(SCENES) + ' ("" for none in a demo)')
@@ -1189,8 +1193,8 @@ def main():
     p.add_argument("--switch-at", type=float, default=2, help="run switch: seconds before the change")
     p.add_argument("--events", default="outage,roam,reattach,udpblock", help="demo: " + ",".join(EVENTS) + ' ("" for none)')
     p.add_argument("--event-net", default="wan")
-    p.add_argument("--iterations", type=int, default=3, help="run: repeats per case except sessions (default: 3)")
-    p.add_argument("--session-iterations", type=int, default=1, help="run: repeats of the sessions test (default: 1)")
+    p.add_argument("--iterations", type=int, default=2, help="run: repeats per case except sessions (default: 2)")
+    p.add_argument("--session-iterations", type=int, default=2, help="run: repeats of the sessions test (default: 2)")
     p.add_argument("--duration", type=float, default=4, help="seconds of each scene (after the change, for switch); moving demo: at least 30 s")
     p.add_argument("--warmup", type=float, default=3, help="demo: seconds each scene runs unmeasured first, under its label and a count down")
     p.add_argument("--fps", type=float, default=30)
@@ -1198,7 +1202,7 @@ def main():
     p.add_argument("--lines", type=int, default=100000, help="flood: seq length")
     p.add_argument("--sessions", type=int, default=10, help="sessions: how many at once")
     p.add_argument("--down", type=float, default=5, help="outage: seconds the link is down")
-    p.add_argument("--parallel", type=int, default=12, help="run: jobs at once (default: 12)")
+    p.add_argument("--parallel", type=int, default=4, help="run: jobs at once (default: 4)")
     p.add_argument("--cols", type=int, default=100)
     p.add_argument("--rows", type=int, default=30)
     p.add_argument("--no-attach", action="store_true")

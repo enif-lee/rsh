@@ -1,0 +1,16 @@
+{
+  "at": 1793449823.108288,
+  "fixture_sha256": "ef2ece83cdacd379660290e7a5d0948625ad25f1c4ba40e5ca05ef00748f03b9",
+  "fixtures_byte_identical": true,
+  "expected_behavior_failures": [
+    "tcp_known_slow_rejects_a_next_frame_outside_the_quarter_gap"
+  ],
+  "unexpected_failures": [],
+  "control_passed": 6,
+  "expected_failed": 1,
+  "cargo_root_fresh": false,
+  "source_manifest_unchanged": true,
+  "control_binary_sha256": "0233f87375875d1a35d5e8e4f4276e32f82267f8f71bc647584b4517f5a99271",
+  "candidate_binary_sha256": "d3b0435e49fde0194f9ef733b5cb63805911460d220693fac7852a16976d5acb",
+  "performance_eligible": false
+}

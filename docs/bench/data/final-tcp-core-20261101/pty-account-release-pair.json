@@ -1,0 +1,337 @@
+{
+  "at": 1793480775.434314,
+  "artifacts": [
+    {
+      "variant": "baseline",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-pty-name-account",
+      "sha256": "c25f94dd9fb4b3b694fefa5f3b024bc600c38a7b382eeb3a2726399f8fb51a33",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/pty-name-account-source",
+      "source_build_id": "4f98af080434",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "snapshot_manifest_entries": 31,
+      "source_manifest_sha256": "63fc7bb537988d9517be0c9b3f1a001c94ccfb5aa7d7ea8776d43f18df506b1d",
+      "full_inventory_entries": 91,
+      "source_full_manifest_sha256": "90e464b42ec1ea612fc531ca6f1dcb3a25ab2fd467cbb1206465ab674dcc5005",
+      "guard_output": "verified build 4f98af080434: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-pty-name-account\nverified build 4f98af080434: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/pty-name-account-library-tests",
+      "functional_tests": {
+        "library": {
+          "passed": 99,
+          "ignored": 2,
+          "log_sha256": "ff52a724e2c47c5e604869bb82266fb89674cf37dc6c10be658a0069b548e347"
+        },
+        "binary_cli": {
+          "passed": 4,
+          "ignored": 0,
+          "log_sha256": "4a010cb91f02ae81019964bc8ea02c13fa665d0899f40f4bbc81f865753eeaae"
+        },
+        "session": {
+          "passed": 25,
+          "ignored": 0,
+          "log_sha256": "08a09cb9c92c503f8b5cffb53c3c14c6623844c2603406a5d030e2a12cec70a2"
+        },
+        "pty_concurrency": {
+          "passed": 1,
+          "ignored": 0,
+          "log_sha256": "5c4f37fb46e3c7d2990b5b4c82c727cb999546e0bb8288c7efda81c12815bfc1"
+        }
+      },
+      "functional_total_passed": 129,
+      "concurrency_child_spawns": 64,
+      "cargo_root_artifacts": {
+        "all-tests-build.jsonl": [
+          {
+            "name": "rsh",
+            "kind": [
+              "bin"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": true
+            },
+            "fresh": false,
+            "executable": "/target/debug/deps/rsh-ffba42ccfca42a15"
+          },
+          {
+            "name": "rsh",
+            "kind": [
+              "bin"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            },
+            "fresh": false,
+            "executable": "/target/debug/rsh"
+          },
+          {
+            "name": "binary_cli",
+            "kind": [
+              "test"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": true
+            },
+            "fresh": false,
+            "executable": "/target/debug/deps/binary_cli-499ca979f2f3fc6b"
+          },
+          {
+            "name": "session",
+            "kind": [
+              "test"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": true
+            },
+            "fresh": false,
+            "executable": "/target/debug/deps/session-7a5d2366fdc3fcc5"
+          },
+          {
+            "name": "pty_concurrency",
+            "kind": [
+              "test"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": true
+            },
+            "fresh": false,
+            "executable": "/target/debug/deps/pty_concurrency-72e082953d31c37e"
+          },
+          {
+            "name": "rsh",
+            "kind": [
+              "lib"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": true
+            },
+            "fresh": false,
+            "executable": "/target/debug/deps/rsh-a4e873949d566604"
+          }
+        ],
+        "release-build.jsonl": [
+          {
+            "name": "rsh",
+            "kind": [
+              "bin"
+            ],
+            "profile": {
+              "opt_level": "3",
+              "debuginfo": 0,
+              "debug_assertions": false,
+              "overflow_checks": false,
+              "test": false
+            },
+            "fresh": false,
+            "executable": "/target/release/rsh"
+          }
+        ]
+      }
+    },
+    {
+      "variant": "candidate",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-fps-combined-pty-account",
+      "sha256": "fb04386fdfe25f25f1bfd0354f11ba7a01c954525a11634ae35caafd46c2eec4",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/fps-combined-pty-account-source",
+      "source_build_id": "295f81d54ea4",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "snapshot_manifest_entries": 25,
+      "source_manifest_sha256": "bcb90ebadd5770b6659c5fb6107772db5738e30426c38355dc4a26ebc37a796c",
+      "full_inventory_entries": 32,
+      "source_full_manifest_sha256": "27320c01d284830245feed20138497347f233bf55ceac2c148c742b3bac12235",
+      "guard_output": "verified build 295f81d54ea4: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-fps-combined-pty-account\nverified build 295f81d54ea4: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/fps-combined-pty-account-library-tests",
+      "functional_tests": {
+        "library": {
+          "passed": 110,
+          "ignored": 2,
+          "log_sha256": "938c179b887ec81d9d5b1b67d90de6728551b7755d8124234e3527fc4d2c81a1"
+        },
+        "binary_cli": {
+          "passed": 4,
+          "ignored": 0,
+          "log_sha256": "b7bb262b666b33b93b120d5d1298944dbe89c87c69e8a9acaa778f532ca2b63c"
+        },
+        "session": {
+          "passed": 25,
+          "ignored": 0,
+          "log_sha256": "fe442769b7c431babd9c9923d476c68a4b6f781a4743250f68eaa807810c0739"
+        },
+        "pty_concurrency": {
+          "passed": 1,
+          "ignored": 0,
+          "log_sha256": "5c4f37fb46e3c7d2990b5b4c82c727cb999546e0bb8288c7efda81c12815bfc1"
+        }
+      },
+      "functional_total_passed": 140,
+      "concurrency_child_spawns": 64,
+      "cargo_root_artifacts": {
+        "all-tests-build.jsonl": [
+          {
+            "name": "pty_concurrency",
+            "kind": [
+              "test"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": true
+            },
+            "fresh": false,
+            "executable": "/target/debug/deps/pty_concurrency-72e082953d31c37e"
+          },
+          {
+            "name": "rsh",
+            "kind": [
+              "bin"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": true
+            },
+            "fresh": false,
+            "executable": "/target/debug/deps/rsh-ffba42ccfca42a15"
+          },
+          {
+            "name": "binary_cli",
+            "kind": [
+              "test"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": true
+            },
+            "fresh": false,
+            "executable": "/target/debug/deps/binary_cli-499ca979f2f3fc6b"
+          },
+          {
+            "name": "session",
+            "kind": [
+              "test"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": true
+            },
+            "fresh": false,
+            "executable": "/target/debug/deps/session-7a5d2366fdc3fcc5"
+          },
+          {
+            "name": "rsh",
+            "kind": [
+              "bin"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            },
+            "fresh": false,
+            "executable": "/target/debug/rsh"
+          },
+          {
+            "name": "rsh",
+            "kind": [
+              "lib"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": true
+            },
+            "fresh": false,
+            "executable": "/target/debug/deps/rsh-a4e873949d566604"
+          }
+        ],
+        "release-build.jsonl": [
+          {
+            "name": "rsh",
+            "kind": [
+              "bin"
+            ],
+            "profile": {
+              "opt_level": "3",
+              "debuginfo": 0,
+              "debug_assertions": false,
+              "overflow_checks": false,
+              "test": false
+            },
+            "fresh": false,
+            "executable": "/target/release/rsh"
+          }
+        ]
+      }
+    }
+  ],
+  "compiler_image": "sha256:b1d5dd5a22a09404d3e798c0cf051b689077360374eb505fa5bb93c479693d87",
+  "same_container_sequential_build": true,
+  "CARGO_HOME": "/cargo",
+  "build_path": "/src",
+  "flags_asserted_empty": true,
+  "apk_manifest_sha256": "d99b2de6a1a883172b2f814cd7ca03534ae3c72bbd1111ca3604ebc3914ca185",
+  "build_log_sha256": "68b6af31e727f015066fdfe2317c20659ea71646ad0728ca313325ba59e4556b",
+  "build_script_sha256": "38e7e927e562504849d3bdd1938c5523e06c7237416ee2d7e48356ca56119c12",
+  "prior_functional_failures": {
+    "combined_unmodified_session": "24passed/1attachDetached-vs-Exited0;cause/transportunrecorded;alllogsretained",
+    "paired_original_target": "CAN10/10+combined10/10passed",
+    "paired_diagnostic_fullsession": "CAN25/25twice+combined25/25twice;observedreattachUDPall4",
+    "ptsname_only_v1": "library99+CLI4+session25pass;64childstress1failure sync-c/status256,originalfailurecausalityunproven"
+  },
+  "scope": "BothbaselineandcandidateuseprivateLinuxPTYnameandportablepasswdlookup. OldFPSdata38/39usedCAN935/combined94f BEFOREtheseindependentlookupfixes;controllerbytesunchanged,butnoexact-final-binaryFPSclaim. Fresh4x2/loss/moving stillrequired. Notinstalled/adopted.",
+  "macos_baseline_validation": {
+    "source_build_id": "4f98af080434",
+    "target": "aarch64-apple-darwin",
+    "rustc": "1.99.1",
+    "library_passed": 99,
+    "binary_cli_passed": 4,
+    "session_passed": 25,
+    "total_passed": 128,
+    "ignored": 2,
+    "linux_only_concurrency_test_skipped": true,
+    "log_sha256": "bb7718168dec6582ff2e0964d91141eccd317e15f56a51d4c2412e218691f5b6",
+    "setup": "test subprocess only: NO_COLOR unset,fdlimit4096;RSH flags empty; target outside source snapshots",
+    "prior_setup_failures": [
+      "NO_COLOR=1 badgebackground assertion; existing documentedbaseline behavior",
+      "softFD256 causedEMFILEwhileconstructing300idleTCP sockets; beforeresponsivenessassertion"
+    ],
+    "process_note": "Final log has all successful target results and no matching cargo process remained; stale tool session unavailable onlaterpoll."
+  },
+  "metadata_updated_at": 1793481168.755192
+}

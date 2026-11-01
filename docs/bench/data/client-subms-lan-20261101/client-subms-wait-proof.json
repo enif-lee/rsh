@@ -1,0 +1,30 @@
+{
+  "status": "source_only_unbuilt_untested",
+  "parent": "diff-cancel-source",
+  "parent_production_build_id": "93533574fffa",
+  "changed_files": [
+    "src/client.rs"
+  ],
+  "canonical_inventory": 31,
+  "full_inventory": 90,
+  "production_delta": "client hot poll only:Linux positive sub-ms ppoll/nullmask;zero/due and >=1ms oldpoll;non-Linux oldpoll",
+  "reverse_to_parent_full_exact": true,
+  "server_eligibility_FD_EINTR_source_unchanged": true,
+  "default_nonLinux_poll_exact": true,
+  "CAN3fixtures_exact": true,
+  "CANfixture_sha256": "014fa9f3171aa13fd0b2b99f7c4b3888b6bcdf86d9b3c9eee1c8254afbc7b6d2",
+  "new_dependencies": 0,
+  "new_options": 0,
+  "new_state": 0,
+  "new_abstractions": 0,
+  "tests_executed": 0,
+  "builds": 0,
+  "Docker_calls": 0,
+  "source_manifest_sha256": "e176d8d53bf98927fa276d667ad79b280e8b1d2f374dde8b1e876b7e6013943d",
+  "source_full_manifest_sha256": "090df56e85d4919ff6288ef6c21954b06de10c1d32545ae92202c16f27e5a569",
+  "patch_sha256": "614fdaaa2040229f358a29fcf3ad3dbb103e489cf316bdeeeff2980a988b2c05",
+  "parent_full_manifest_sha256": "075d079f34761f7c1c82277c14ed4e9ee8bb5d5086fe192a4d454b40263222a7",
+  "parent_release_pair_sha256": "613c056a338b5ba15beda9a60eed3acd512fb4d9be0aa1f69130b5af7d255d74",
+  "hypothesis_sha256": "908c6ababe27c62ba9e3dbc896c1c42deb56ff8d5a390bd3bcdafc848140ccf2",
+  "readiness": "source prepared; independent review pending; root build only after resource handoff"
+}

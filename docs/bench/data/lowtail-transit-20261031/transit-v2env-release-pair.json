@@ -1,0 +1,73 @@
+{
+  "at": 1793452617.177013,
+  "artifacts": [
+    {
+      "variant": "baseline",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-transit-pair-main",
+      "sha256": "9ab79c22ebd289047ffa616a5e8aef3c7d9f2498756b5974ae5a74b2d0ecb463",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/main-source",
+      "source_build_id": "6729d398d4f1",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "guard_output": "verified build 6729d398d4f1: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-transit-pair-main"
+    },
+    {
+      "variant": "candidate",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-tcp-transit-v2env",
+      "sha256": "777aa6baa0f6cc8de42e664560b3fa76a62a733cd7f6607f32646381f90b2280",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/tcp-transit-source",
+      "source_build_id": "37ca62d0e0b5",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "guard_output": "verified build 37ca62d0e0b5: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-tcp-transit-v2env\nverified build 37ca62d0e0b5: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/tcp-transit-v2env-tests"
+    }
+  ],
+  "same_container_sequential_build": true,
+  "compiler_image": "sha256:b1d5dd5a22a09404d3e798c0cf051b689077360374eb505fa5bb93c479693d87",
+  "CARGO_HOME": "/cargo",
+  "build_path": "/src",
+  "apk_manifest_sha256": "d99b2de6a1a883172b2f814cd7ca03534ae3c72bbd1111ca3604ebc3914ca185",
+  "cargo_artifacts": {
+    "transit-pair-main-release-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "executable": "/target/release/rsh"
+    },
+    "transit-v2env-tests-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "0",
+        "debuginfo": 2,
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "test": true
+      },
+      "executable": "/target/debug/deps/rsh-a4e873949d566604"
+    },
+    "tcp-transit-v2env-release-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "executable": "/target/release/rsh"
+    }
+  },
+  "tests": {
+    "targeted_passed": 3,
+    "library_passed": 99,
+    "ignored": 2
+  },
+  "performance_status": "not_measured",
+  "build_log_sha256": "bd77aaa223765e3720cfea37f9b3620bdaa8097cc2e089ebf69c206f462d94f4",
+  "build_script_sha256": "35d90cd1ac745744cdf4410c2b961e3a67d4324aa0e2b7d148517af1007c723c"
+}

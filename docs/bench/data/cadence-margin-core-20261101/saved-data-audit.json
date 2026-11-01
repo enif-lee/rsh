@@ -1,0 +1,4017 @@
+{
+  "valid_saved_audit": true,
+  "errors": [],
+  "study": 50,
+  "performance_eligible": true,
+  "focused_performance_screen": true,
+  "final_selection": null,
+  "reference_scope": "main-A/main-B are duplicated COMBINED295f/fb04 controls, not actualmain4f98; candidatecadence48ea6c/e34a",
+  "geometry_method": "36-inheritedchildfd0 SET/GETassertbeforeexec; sourceflow andsuccessfulcapture only, notretainednativeioctl result orlaterproductgeometry",
+  "capture_details": [
+    {
+      "batch": "00-lan-compress-i0",
+      "slot": 0,
+      "variant": "ssh",
+      "capture": "00-lan-compress-i0/0.bin",
+      "sha256": "6fe571196e342554ebdc5a5c21a95d9fa5f9a236f28327116c316fd378bac7ad",
+      "bytes": 2391869,
+      "read_records": 977,
+      "tty_bytes": 2380145,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "00-lan-compress-i0",
+      "slot": 1,
+      "variant": "main-A",
+      "capture": "00-lan-compress-i0/1.bin",
+      "sha256": "ce6533d73f89a4fb0d0b7b02e7d046321400d3b1d678d46f673654b09c50a00a",
+      "bytes": 2480586,
+      "read_records": 974,
+      "tty_bytes": 2468898,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "00-lan-compress-i0",
+      "slot": 2,
+      "variant": "main-B",
+      "capture": "00-lan-compress-i0/2.bin",
+      "sha256": "9c65d2ba7dede14293495a4aca0b303816d8ac8354ac93c571765875bc7f4ebd",
+      "bytes": 2480565,
+      "read_records": 973,
+      "tty_bytes": 2468889,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "00-lan-compress-i0",
+      "slot": 3,
+      "variant": "candidate",
+      "capture": "00-lan-compress-i0/3.bin",
+      "sha256": "73baed8182034034cb3bb95d8883278921bda4d7ad9ffd683c579001806692b6",
+      "bytes": 2480565,
+      "read_records": 973,
+      "tty_bytes": 2468889,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "01-lan-compress-i1",
+      "slot": 0,
+      "variant": "main-B",
+      "capture": "01-lan-compress-i1/0.bin",
+      "sha256": "30748e4130620e952c02917a2a9d513edb609a24d79fdece6ee1b12bd2ffdbff",
+      "bytes": 2480403,
+      "read_records": 973,
+      "tty_bytes": 2468727,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "01-lan-compress-i1",
+      "slot": 1,
+      "variant": "candidate",
+      "capture": "01-lan-compress-i1/1.bin",
+      "sha256": "ad1774f186e6de9d36d590f9f0b8c7031cd1e2033325ada7e940338876b7c550",
+      "bytes": 2480346,
+      "read_records": 969,
+      "tty_bytes": 2468718,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "01-lan-compress-i1",
+      "slot": 2,
+      "variant": "ssh",
+      "capture": "01-lan-compress-i1/2.bin",
+      "sha256": "33eca9bcf1b1f49c5e41376205f0083486ae262d0ee3eaceefb03dc10f52d11e",
+      "bytes": 2391869,
+      "read_records": 977,
+      "tty_bytes": 2380145,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "01-lan-compress-i1",
+      "slot": 3,
+      "variant": "main-A",
+      "capture": "01-lan-compress-i1/3.bin",
+      "sha256": "092ff688b1e3a9c8b15ced08fff14330d977334a03dd2b79b4c5bfce51969484",
+      "bytes": 2480394,
+      "read_records": 973,
+      "tty_bytes": 2468718,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "02-lan-bandwidth-i0",
+      "slot": 0,
+      "variant": "ssh",
+      "capture": "02-lan-bandwidth-i0/0.bin",
+      "sha256": "67ae1ced1cf739a6bc6c7f694e4d79df0471824fd7b2e22293e4460e2b47b3a8",
+      "bytes": 5664262,
+      "read_records": 1462,
+      "tty_bytes": 5646718,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "02-lan-bandwidth-i0",
+      "slot": 1,
+      "variant": "main-A",
+      "capture": "02-lan-bandwidth-i0/1.bin",
+      "sha256": "c4a3f3106ecdc474f47473d9ed26eb41329a070cb203944e0929db5665437bd3",
+      "bytes": 5792292,
+      "read_records": 1515,
+      "tty_bytes": 5774112,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "02-lan-bandwidth-i0",
+      "slot": 2,
+      "variant": "main-B",
+      "capture": "02-lan-bandwidth-i0/2.bin",
+      "sha256": "48398ca4be263b6a3b813473cdc05e6eed3bcf28a4609fce0e3017a4bed2388d",
+      "bytes": 5796315,
+      "read_records": 1515,
+      "tty_bytes": 5778135,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "02-lan-bandwidth-i0",
+      "slot": 3,
+      "variant": "candidate",
+      "capture": "02-lan-bandwidth-i0/3.bin",
+      "sha256": "cc928a9bd1fac71e2e13cebcc1fa36e16de549e26ba0d22a6798327096dee2db",
+      "bytes": 5785116,
+      "read_records": 1508,
+      "tty_bytes": 5767020,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "03-lan-bandwidth-i1",
+      "slot": 0,
+      "variant": "main-B",
+      "capture": "03-lan-bandwidth-i1/0.bin",
+      "sha256": "81c599929af6c71f0cb4214e3b6f7c44f1e49fd3ba74e32569e5f6947ac7caa4",
+      "bytes": 5788576,
+      "read_records": 1508,
+      "tty_bytes": 5770480,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "03-lan-bandwidth-i1",
+      "slot": 1,
+      "variant": "candidate",
+      "capture": "03-lan-bandwidth-i1/1.bin",
+      "sha256": "958b2fe77432f92d6d53db32872515526b4e7832bb47419f977428d04649e82d",
+      "bytes": 5783621,
+      "read_records": 1509,
+      "tty_bytes": 5765513,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "03-lan-bandwidth-i1",
+      "slot": 2,
+      "variant": "ssh",
+      "capture": "03-lan-bandwidth-i1/2.bin",
+      "sha256": "19ef84370d5b1e3ae221850c1f2dbaaafdbe09e2ab33e74675611d2351f38ec6",
+      "bytes": 5664310,
+      "read_records": 1466,
+      "tty_bytes": 5646718,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "03-lan-bandwidth-i1",
+      "slot": 3,
+      "variant": "main-A",
+      "capture": "03-lan-bandwidth-i1/3.bin",
+      "sha256": "11ef727955ad55076cc265575f627df90009ff64dad5256fb5273e6c42e1c02a",
+      "bytes": 5808390,
+      "read_records": 1537,
+      "tty_bytes": 5789946,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "04-wan-compress-i0",
+      "slot": 0,
+      "variant": "ssh",
+      "capture": "04-wan-compress-i0/0.bin",
+      "sha256": "99754b9bb149d3803ae8cf3eb60de66681d5a199829eca5b1307869637070814",
+      "bytes": 2391506,
+      "read_records": 965,
+      "tty_bytes": 2379926,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "04-wan-compress-i0",
+      "slot": 1,
+      "variant": "main-A",
+      "capture": "04-wan-compress-i0/1.bin",
+      "sha256": "51235d00cfb0b5e34a28289cba0e5fd252adfb2ca4921e830b3ba78c006feae4",
+      "bytes": 2480211,
+      "read_records": 972,
+      "tty_bytes": 2468547,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "04-wan-compress-i0",
+      "slot": 2,
+      "variant": "main-B",
+      "capture": "04-wan-compress-i0/2.bin",
+      "sha256": "1165e6db7e3ccc4a4bead76e7fe87d698ef617a76123656a8eca7ef9d1ca09b7",
+      "bytes": 2480406,
+      "read_records": 974,
+      "tty_bytes": 2468718,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "04-wan-compress-i0",
+      "slot": 3,
+      "variant": "candidate",
+      "capture": "04-wan-compress-i0/3.bin",
+      "sha256": "96b3c37e2c17292b69f014ae520a85f274c112d4797d655f298dc9bb133244eb",
+      "bytes": 2480220,
+      "read_records": 972,
+      "tty_bytes": 2468556,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "05-wan-compress-i1",
+      "slot": 0,
+      "variant": "main-B",
+      "capture": "05-wan-compress-i1/0.bin",
+      "sha256": "0ad1e0e50dd4a0d6f3280c6786f9cbcd7492eb4a7f8bd693fa889f39accc2e83",
+      "bytes": 2480235,
+      "read_records": 974,
+      "tty_bytes": 2468547,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "05-wan-compress-i1",
+      "slot": 1,
+      "variant": "candidate",
+      "capture": "05-wan-compress-i1/1.bin",
+      "sha256": "c7df882197ed80d4e9fd66446ab2ca129330cd0911c53a553a71dc47a3f50531",
+      "bytes": 2480334,
+      "read_records": 968,
+      "tty_bytes": 2468718,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "05-wan-compress-i1",
+      "slot": 2,
+      "variant": "ssh",
+      "capture": "05-wan-compress-i1/2.bin",
+      "sha256": "9b17e396527b19bfa0925e50303ba2a1c87908bfed934f0eb49436670a696671",
+      "bytes": 2391518,
+      "read_records": 966,
+      "tty_bytes": 2379926,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "05-wan-compress-i1",
+      "slot": 3,
+      "variant": "main-A",
+      "capture": "05-wan-compress-i1/3.bin",
+      "sha256": "9a5bc1bb3e5f4ab1f1987daa74f288704e291edef3f2a3c6fbb1a82f34a30bc4",
+      "bytes": 2480199,
+      "read_records": 971,
+      "tty_bytes": 2468547,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "06-wan-bandwidth-i0",
+      "slot": 0,
+      "variant": "ssh",
+      "capture": "06-wan-bandwidth-i0/0.bin",
+      "sha256": "d72cb30bbf98283ef47994fc2fdd724d66627d43d074cf90741c4eae575620b8",
+      "bytes": 5664406,
+      "read_records": 1474,
+      "tty_bytes": 5646718,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "06-wan-bandwidth-i0",
+      "slot": 1,
+      "variant": "main-A",
+      "capture": "06-wan-bandwidth-i0/1.bin",
+      "sha256": "9460b936eec0f3c489d3a9df4a7553d535d2d9218125de104360d2201f04683a",
+      "bytes": 5123859,
+      "read_records": 1326,
+      "tty_bytes": 5107947,
+      "can_delta_prefix_count": 436,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "06-wan-bandwidth-i0",
+      "slot": 2,
+      "variant": "main-B",
+      "capture": "06-wan-bandwidth-i0/2.bin",
+      "sha256": "663b8389adaf653d229f2a1138cc4adafb4a45794df4591d4a4bc478493aa5b8",
+      "bytes": 5228609,
+      "read_records": 1348,
+      "tty_bytes": 5212433,
+      "can_delta_prefix_count": 445,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "06-wan-bandwidth-i0",
+      "slot": 3,
+      "variant": "candidate",
+      "capture": "06-wan-bandwidth-i0/3.bin",
+      "sha256": "f688bab8fc5c6f0f79bf5159d62c27efa0cfff85b8a4ff0209324fdaeb2b0c7c",
+      "bytes": 5508378,
+      "read_records": 1416,
+      "tty_bytes": 5491386,
+      "can_delta_prefix_count": 471,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "07-wan-bandwidth-i1",
+      "slot": 0,
+      "variant": "main-B",
+      "capture": "07-wan-bandwidth-i1/0.bin",
+      "sha256": "21f277db5cd164e1ec317af543e6d1f1c912541d8fc85f0d28008545b225e1df",
+      "bytes": 5231384,
+      "read_records": 1350,
+      "tty_bytes": 5215184,
+      "can_delta_prefix_count": 444,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "07-wan-bandwidth-i1",
+      "slot": 1,
+      "variant": "candidate",
+      "capture": "07-wan-bandwidth-i1/1.bin",
+      "sha256": "7348b8dfbb5a46b9e47f6bdd80ab31c5c38a9fad7db278fcad2efa2677c9122c",
+      "bytes": 5477216,
+      "read_records": 1408,
+      "tty_bytes": 5460320,
+      "can_delta_prefix_count": 470,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "07-wan-bandwidth-i1",
+      "slot": 2,
+      "variant": "ssh",
+      "capture": "07-wan-bandwidth-i1/2.bin",
+      "sha256": "d3c46b6dbc4aed05269ef49b01b072964bef8176726e27f137ba4b8a839a8b0e",
+      "bytes": 5664286,
+      "read_records": 1464,
+      "tty_bytes": 5646718,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "07-wan-bandwidth-i1",
+      "slot": 3,
+      "variant": "main-A",
+      "capture": "07-wan-bandwidth-i1/3.bin",
+      "sha256": "f8134fe547d3bc395d0909c76158082b1734a08b3a77940950f540f03df5f39f",
+      "bytes": 5231073,
+      "read_records": 1354,
+      "tty_bytes": 5214825,
+      "can_delta_prefix_count": 445,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "08-highlat-compress-i0",
+      "slot": 0,
+      "variant": "ssh",
+      "capture": "08-highlat-compress-i0/0.bin",
+      "sha256": "63bac95721ae3c2c982731ce90c5444a4e8560007270ce78c0b73506cc394301",
+      "bytes": 2391386,
+      "read_records": 955,
+      "tty_bytes": 2379926,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "08-highlat-compress-i0",
+      "slot": 1,
+      "variant": "main-A",
+      "capture": "08-highlat-compress-i0/1.bin",
+      "sha256": "99c59497f82f6000284fe001eff90f8b4eb0dba84db2cd303d769f0ae7e306a9",
+      "bytes": 2564402,
+      "read_records": 889,
+      "tty_bytes": 2553734,
+      "can_delta_prefix_count": 433,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 11,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "08-highlat-compress-i0",
+      "slot": 2,
+      "variant": "main-B",
+      "capture": "08-highlat-compress-i0/2.bin",
+      "sha256": "86fe0101ae2202a30ce24a95f4f408881b672f5a93babe152fcff14f35e1f36b",
+      "bytes": 2480609,
+      "read_records": 864,
+      "tty_bytes": 2470241,
+      "can_delta_prefix_count": 419,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 11,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "08-highlat-compress-i0",
+      "slot": 3,
+      "variant": "candidate",
+      "capture": "08-highlat-compress-i0/3.bin",
+      "sha256": "135447f9aa044d8459afc4b5ef36a9a2e0eb373d5703134a5115308953e8316c",
+      "bytes": 2414914,
+      "read_records": 931,
+      "tty_bytes": 2403742,
+      "can_delta_prefix_count": 43,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 419,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "09-highlat-compress-i1",
+      "slot": 0,
+      "variant": "main-B",
+      "capture": "09-highlat-compress-i1/0.bin",
+      "sha256": "a339ecf883579635dada4e91c8df46f0ec5cf21e2358f9110ad8d51e128ce06a",
+      "bytes": 2564157,
+      "read_records": 892,
+      "tty_bytes": 2553453,
+      "can_delta_prefix_count": 433,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 11,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "09-highlat-compress-i1",
+      "slot": 1,
+      "variant": "candidate",
+      "capture": "09-highlat-compress-i1/1.bin",
+      "sha256": "df6f7380842739038396d501b21ba8357ef563aecc63150aabf3554df1c4340a",
+      "bytes": 2771655,
+      "read_records": 961,
+      "tty_bytes": 2760123,
+      "can_delta_prefix_count": 469,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 11,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "09-highlat-compress-i1",
+      "slot": 2,
+      "variant": "ssh",
+      "capture": "09-highlat-compress-i1/2.bin",
+      "sha256": "565d7de71fc3e116e4bdf059aa2ebd7c0cc000aa9b671ea15e9f02f43bc4f08e",
+      "bytes": 2391422,
+      "read_records": 958,
+      "tty_bytes": 2379926,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "09-highlat-compress-i1",
+      "slot": 3,
+      "variant": "main-A",
+      "capture": "09-highlat-compress-i1/3.bin",
+      "sha256": "61009f6e4fa76e89e6086b16beea55693ecd9ace34dfc3aa5324f3a4ecb54f12",
+      "bytes": 2575957,
+      "read_records": 897,
+      "tty_bytes": 2565193,
+      "can_delta_prefix_count": 435,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 11,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "10-highlat-bandwidth-i0",
+      "slot": 0,
+      "variant": "ssh",
+      "capture": "10-highlat-bandwidth-i0/0.bin",
+      "sha256": "6982f5f9a56d9f9d55bda925d664a780b8af3a7fd5f2a46f60ac32d5b4be4758",
+      "bytes": 5664370,
+      "read_records": 1471,
+      "tty_bytes": 5646718,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "10-highlat-bandwidth-i0",
+      "slot": 1,
+      "variant": "main-A",
+      "capture": "10-highlat-bandwidth-i0/1.bin",
+      "sha256": "1f0df1de528967ecd75d23500239f0dbcdab20f81240d8f8be59d5718ce3aabb",
+      "bytes": 4852491,
+      "read_records": 1255,
+      "tty_bytes": 4837431,
+      "can_delta_prefix_count": 408,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "10-highlat-bandwidth-i0",
+      "slot": 2,
+      "variant": "main-B",
+      "capture": "10-highlat-bandwidth-i0/2.bin",
+      "sha256": "900bc422732e853285963db8d7d15ce8b0bf405b85c74fc7b46617f6bf09ec22",
+      "bytes": 4863299,
+      "read_records": 1248,
+      "tty_bytes": 4848323,
+      "can_delta_prefix_count": 408,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "10-highlat-bandwidth-i0",
+      "slot": 3,
+      "variant": "candidate",
+      "capture": "10-highlat-bandwidth-i0/3.bin",
+      "sha256": "609c42706ca62f4a0b1de059f98112a18bca6abc48c0ed89fa421ee21639cb04",
+      "bytes": 5208492,
+      "read_records": 1340,
+      "tty_bytes": 5192412,
+      "can_delta_prefix_count": 438,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "11-highlat-bandwidth-i1",
+      "slot": 0,
+      "variant": "main-B",
+      "capture": "11-highlat-bandwidth-i1/0.bin",
+      "sha256": "e7bf79dcff7b88259c7425e497b29f129cd6dabbaff5e861afb54586dfade960",
+      "bytes": 4877101,
+      "read_records": 1256,
+      "tty_bytes": 4862029,
+      "can_delta_prefix_count": 410,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "11-highlat-bandwidth-i1",
+      "slot": 1,
+      "variant": "candidate",
+      "capture": "11-highlat-bandwidth-i1/1.bin",
+      "sha256": "26654d173aef828e3754f7e8dfda2f8b6075403cb86d80c407f45d7b0d3aa25f",
+      "bytes": 5222176,
+      "read_records": 1343,
+      "tty_bytes": 5206060,
+      "can_delta_prefix_count": 439,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "11-highlat-bandwidth-i1",
+      "slot": 2,
+      "variant": "ssh",
+      "capture": "11-highlat-bandwidth-i1/2.bin",
+      "sha256": "4947af1dbc445fea66bb8b06da816ea399f6c4983b614a267a04299cce5e2689",
+      "bytes": 5664358,
+      "read_records": 1470,
+      "tty_bytes": 5646718,
+      "can_delta_prefix_count": 0,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 480,
+      "raw_header_source_matches": true
+    },
+    {
+      "batch": "11-highlat-bandwidth-i1",
+      "slot": 3,
+      "variant": "main-A",
+      "capture": "11-highlat-bandwidth-i1/3.bin",
+      "sha256": "61ed2838b2ee4c4a7c695672efcd04480b195d274592715c21b05da17b011d14",
+      "bytes": 4874635,
+      "read_records": 1253,
+      "tty_bytes": 4859599,
+      "can_delta_prefix_count": 409,
+      "known_old_nested_csi_sgr_count": 0,
+      "can_after_partial_csi_count": 0,
+      "contiguous_raw_headers": 1,
+      "raw_header_source_matches": true
+    }
+  ],
+  "jobs": 48,
+  "blocks": 12,
+  "body_frames": 22164,
+  "source_records": 23040,
+  "retained_payload_bytes": 192593640,
+  "source_json_bytes": 264004003,
+  "source_schema": 2,
+  "pending_writes_saved": 0,
+  "pending_body_joins": 0,
+  "zero_body_jobs": 0,
+  "missing_low_jobs": [],
+  "generated_source_sha256": {
+    "scene-ledger.py": "cde0a45bde766e044108e8bb27248a28659cdcdcfdda8552eb70802b4c2907f8",
+    "agent.py": "54fab62fa8c5683ca0b7e23f3acb50f510170131974e9f1ea66d6c487e0d4abe"
+  },
+  "actual_source_manifest_checks": 33,
+  "saved_analysis_manifest_sha256": "72c863b521a41c4bc4435f3f1cfc6cd35eb79a3b41253e7d7745baefd40303c7",
+  "saved_summary_sha256": "e85476ed574ea8bbaa459539a1292277c90f9cd962e7253a38d2952589f0994c",
+  "run_status_note": "run-status retains measurement_finished_analysis_pending; actual analysis outputs/manifest and root reported actual and analysis terminal0; independently saved outputs/manifest checked here",
+  "missing_age_p95_jobs": [],
+  "hash_scopes": {
+    "prepared-inputs.json": 11,
+    "harness/manifest.json": 33,
+    "parent-input-identities.json": 28,
+    "analysis": 6
+  },
+  "source_sha256": {
+    "00-lan-compress-i0/0-source.json": "4a8bddd5e4447fa3f6e4838d9254ef0c05de6bad04a24ea1021a5d63c303a024",
+    "00-lan-compress-i0/1-source.json": "bf60bb997ae6bf2242a310d7acf4e2396fb72fc0ee4c20c265da02832f8cb3ef",
+    "00-lan-compress-i0/2-source.json": "f206ea9aa0379a862d4f364f19d857f55d1d0de1ec398d2f7930ae81a53027c1",
+    "00-lan-compress-i0/3-source.json": "64bb20b16f3aac6d7af4101a824720dbea565014c31734115dd2322c9194e9d0",
+    "01-lan-compress-i1/0-source.json": "4e288805c30e18ff3a80ecb95502059a3d6861f9e331ee7aaf4ac2df3cae1ad0",
+    "01-lan-compress-i1/1-source.json": "9a120cc04d9d63509e24af3652d82c027e473352d9a94050b3aa962fe95ce751",
+    "01-lan-compress-i1/2-source.json": "0eb5c5e53cafa40b1089ea41899a77d4f3fadd830e2c5e3019bcac89d39b1b7c",
+    "01-lan-compress-i1/3-source.json": "51a85ee36717bebc497892fb906fa7833dfba5115ce147a4acee954980be68f1",
+    "02-lan-bandwidth-i0/0-source.json": "fca5925d3eb2f966bca77be1e08da300f57962a54c6ddced96b4bff3b2784cae",
+    "02-lan-bandwidth-i0/1-source.json": "e808bd1beebda68b2d7b62753302324e31143f28179bc30d86bcaf198bd8f77b",
+    "02-lan-bandwidth-i0/2-source.json": "08232b7c6b547707e75c2277750851aac4756ee56233c021227066ec5ac3c9b5",
+    "02-lan-bandwidth-i0/3-source.json": "58cb0e802fa37a0b8f7d7eac2431680cd0d9aeac7cd9f42fe9ca34fce68687a0",
+    "03-lan-bandwidth-i1/0-source.json": "963381a910cddfbacdb517f9d731fd175bafccb901ef882985541b431419d7b3",
+    "03-lan-bandwidth-i1/1-source.json": "cf7633a5e2d71594c8736841257d07bf696c424562c86a22624d03ad9834c7c9",
+    "03-lan-bandwidth-i1/2-source.json": "04bffab5948b9bc5514300d11c04f1cc32cc4477754c1e90bf06d6410f6c6ea7",
+    "03-lan-bandwidth-i1/3-source.json": "a172a694d6c8c2275f894a9650379135cd24e0be1f03f7602f164f204c65d42a",
+    "04-wan-compress-i0/0-source.json": "04107efd518cc4f14d277531d6059e46c6c6ef2f66e723b2ea144af3a6ff5763",
+    "04-wan-compress-i0/1-source.json": "1eaa21644bd7be98fb3352eed1fbda754e5595a39471941ca910fe834f05e7cc",
+    "04-wan-compress-i0/2-source.json": "49c39a9d26e5d4407522f63ac725513ee40425a5142ec7a2645a73f74dfbd96f",
+    "04-wan-compress-i0/3-source.json": "c7c85058db7cadd43ec875e095de3f71474ccc156435574ff2b16d952246874c",
+    "05-wan-compress-i1/0-source.json": "f30e6398584b6a549d72892704d856e8ebbc9b74f3cd56a336d6d8b30228987a",
+    "05-wan-compress-i1/1-source.json": "28217083c4aa9739949cfb0bf9cae59c00a55feecf3a8f4887b81b27c2c204e5",
+    "05-wan-compress-i1/2-source.json": "2e1561fbf40fd5ac328477a3f0b82421882ed5fbaba4eab31d0f969423e5c87f",
+    "05-wan-compress-i1/3-source.json": "50bb88c59baefa4b99dc7378d3e46777ecf7ffe4f95494f0cbb057384cad444a",
+    "06-wan-bandwidth-i0/0-source.json": "75f0bfa1218fa3cdd18c5855fd02be02999fd1880dda3e0713d97d47f776198c",
+    "06-wan-bandwidth-i0/1-source.json": "a064c72bd89df0b26d99ee21f7db588e4f5c271be0a3b081ab66342f59960feb",
+    "06-wan-bandwidth-i0/2-source.json": "94bbe060b0d687a990e13e56311bdea12cf637d2257311666c7ef0da40e14a9d",
+    "06-wan-bandwidth-i0/3-source.json": "157dcbb2134f7fbf731345c68c211e9defa12fabe8bf646f8d0e51028be5a6d4",
+    "07-wan-bandwidth-i1/0-source.json": "67c3e6ad2abf846ffc7198946e20d8b825fb7c4026c45282cc2b7aa4b9b4fa3d",
+    "07-wan-bandwidth-i1/1-source.json": "a58f87dd03eaee9179da92de6573fd8d0902d1491b043a1d537d45fe3bdc8f62",
+    "07-wan-bandwidth-i1/2-source.json": "0dac8dd3f7f06bc2c60f846e602c7f37b693f10b2544d59fb1c5d9117dfd4a39",
+    "07-wan-bandwidth-i1/3-source.json": "3acc2395eba3cd8bdca44f58657e04cd8ea5c287d193df0e43daf94739d31b74",
+    "08-highlat-compress-i0/0-source.json": "ca8a8e156516b83a77d3fca12cc8d44fd23b039e496b9117a1b57393d43366bf",
+    "08-highlat-compress-i0/1-source.json": "45aaaf14940394fae38f77dd872f152fad79e7503eda1fcb515fdbd0cfe39639",
+    "08-highlat-compress-i0/2-source.json": "c5647290ca56633d89631647b6000961dbbfe333a31c7f38e5943cc5721d77d3",
+    "08-highlat-compress-i0/3-source.json": "ad0c76777192e55066b7ed9658f50840984b873d005517fdf4ee563a92d58b1f",
+    "09-highlat-compress-i1/0-source.json": "c6a38ba53b4d3444e065d2024cb3743576707f0367d91ed4a655172f05e792fd",
+    "09-highlat-compress-i1/1-source.json": "296f6bc58ffb266dff9da38183576bcf954d7d341429514c56da423453ea81c9",
+    "09-highlat-compress-i1/2-source.json": "581afe75ee91f4f80e86f1362394cbd7b7bc51bd200039dbcf74f8961288b19e",
+    "09-highlat-compress-i1/3-source.json": "d330886ed2851c34d2cddcf41d91316331f4de6ad3bcd6ec9f24f529bec3af09",
+    "10-highlat-bandwidth-i0/0-source.json": "48c118305bafbd07b0bc00c2d501f30d9a7b634f4306c390f862005f222e5663",
+    "10-highlat-bandwidth-i0/1-source.json": "5422c88a48bac84b3fda4680b4c55033f5eb07f5f981cb2ef64fb6ef08a5eab9",
+    "10-highlat-bandwidth-i0/2-source.json": "47d07c769d2129b14c33c930a5847bca519cd62b7da52cfbea090cd2c94906d8",
+    "10-highlat-bandwidth-i0/3-source.json": "54e625b5a9d9df400d718de21923f2b9728f1967acb01201f377a7ab4924bf0e",
+    "11-highlat-bandwidth-i1/0-source.json": "b3da416efa37824097d84d719946b58790e8b38321ab0975a18b5134ab2108eb",
+    "11-highlat-bandwidth-i1/1-source.json": "ceb27713810f15036bfb5a3998f580c55c67e4d106f2159638b9d7ee36c329ae",
+    "11-highlat-bandwidth-i1/2-source.json": "6d71a87fb58d8837d6b7aeaba873ebd49f4fc052e588cfb4a336902cc4738e44",
+    "11-highlat-bandwidth-i1/3-source.json": "4e5b64f5011920c94dc8ecd530396469739d4b886e910197bff8cab4c582a14d"
+  },
+  "strict_network_checks": 96,
+  "endpoint_file_checks": 192,
+  "live_server_checks": 96,
+  "source_details": [
+    {
+      "path": "00-lan-compress-i0/0-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "00-lan-compress-i0/1-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "00-lan-compress-i0/2-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 41
+    },
+    {
+      "path": "00-lan-compress-i0/3-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 41
+    },
+    {
+      "path": "01-lan-compress-i1/0-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "01-lan-compress-i1/1-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "01-lan-compress-i1/2-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "01-lan-compress-i1/3-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "02-lan-bandwidth-i0/0-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "02-lan-bandwidth-i0/1-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "02-lan-bandwidth-i0/2-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "02-lan-bandwidth-i0/3-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "03-lan-bandwidth-i1/0-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "03-lan-bandwidth-i1/1-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "03-lan-bandwidth-i1/2-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "03-lan-bandwidth-i1/3-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "04-wan-compress-i0/0-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 41
+    },
+    {
+      "path": "04-wan-compress-i0/1-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "04-wan-compress-i0/2-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 41
+    },
+    {
+      "path": "04-wan-compress-i0/3-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 41
+    },
+    {
+      "path": "05-wan-compress-i1/0-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "05-wan-compress-i1/1-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 41
+    },
+    {
+      "path": "05-wan-compress-i1/2-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "05-wan-compress-i1/3-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 41
+    },
+    {
+      "path": "06-wan-bandwidth-i0/0-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "06-wan-bandwidth-i0/1-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "06-wan-bandwidth-i0/2-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "06-wan-bandwidth-i0/3-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "07-wan-bandwidth-i1/0-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "07-wan-bandwidth-i1/1-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "07-wan-bandwidth-i1/2-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "07-wan-bandwidth-i1/3-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "08-highlat-compress-i0/0-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "08-highlat-compress-i0/1-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 41
+    },
+    {
+      "path": "08-highlat-compress-i0/2-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "08-highlat-compress-i0/3-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "09-highlat-compress-i1/0-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "09-highlat-compress-i1/1-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 82
+    },
+    {
+      "path": "09-highlat-compress-i1/2-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "09-highlat-compress-i1/3-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 2378972,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "10-highlat-bandwidth-i0/0-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "10-highlat-bandwidth-i0/1-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "10-highlat-bandwidth-i0/2-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "10-highlat-bandwidth-i0/3-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "11-highlat-bandwidth-i1/0-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "11-highlat-bandwidth-i1/1-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "11-highlat-bandwidth-i1/2-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    },
+    {
+      "path": "11-highlat-bandwidth-i1/3-source.json",
+      "records": 480,
+      "pending": 0,
+      "payload_bytes": 5645763,
+      "offset_intersection_ns": 0
+    }
+  ],
+  "startup": {
+    "attempts": 1,
+    "admission_cpu": 14.0
+  },
+  "phases": [
+    {
+      "batch": "00-lan-compress-i0",
+      "admission_cpu": 21.0,
+      "admission_attempts": 1,
+      "runtime_cpu": {
+        "max": 52.0,
+        "mean": 35.0,
+        "samples_ge30": 1
+      },
+      "external_max": 130.5
+    },
+    {
+      "batch": "01-lan-compress-i1",
+      "admission_cpu": 22.0,
+      "admission_attempts": 1,
+      "runtime_cpu": {
+        "max": 32.0,
+        "mean": 30.666666666666668,
+        "samples_ge30": 2
+      },
+      "external_max": 99.3
+    },
+    {
+      "batch": "02-lan-bandwidth-i0",
+      "admission_cpu": 19.0,
+      "admission_attempts": 2,
+      "runtime_cpu": {
+        "max": 37.0,
+        "mean": 31.666666666666668,
+        "samples_ge30": 1
+      },
+      "external_max": 112.1
+    },
+    {
+      "batch": "03-lan-bandwidth-i1",
+      "admission_cpu": 16.0,
+      "admission_attempts": 1,
+      "runtime_cpu": {
+        "max": 29.0,
+        "mean": 28.0,
+        "samples_ge30": 0
+      },
+      "external_max": 76.8
+    },
+    {
+      "batch": "04-wan-compress-i0",
+      "admission_cpu": 15.0,
+      "admission_attempts": 1,
+      "runtime_cpu": {
+        "max": 36.0,
+        "mean": 31.0,
+        "samples_ge30": 1
+      },
+      "external_max": 98.4
+    },
+    {
+      "batch": "05-wan-compress-i1",
+      "admission_cpu": 20.0,
+      "admission_attempts": 2,
+      "runtime_cpu": {
+        "max": 33.0,
+        "mean": 28.666666666666668,
+        "samples_ge30": 1
+      },
+      "external_max": 114.9
+    },
+    {
+      "batch": "06-wan-bandwidth-i0",
+      "admission_cpu": 18.0,
+      "admission_attempts": 1,
+      "runtime_cpu": {
+        "max": 33.0,
+        "mean": 31.0,
+        "samples_ge30": 2
+      },
+      "external_max": 65.8
+    },
+    {
+      "batch": "07-wan-bandwidth-i1",
+      "admission_cpu": 18.0,
+      "admission_attempts": 1,
+      "runtime_cpu": {
+        "max": 26.0,
+        "mean": 22.333333333333332,
+        "samples_ge30": 0
+      },
+      "external_max": 24.9
+    },
+    {
+      "batch": "08-highlat-compress-i0",
+      "admission_cpu": 14.0,
+      "admission_attempts": 2,
+      "runtime_cpu": {
+        "max": 42.0,
+        "mean": 32.25,
+        "samples_ge30": 3
+      },
+      "external_max": 118.6
+    },
+    {
+      "batch": "09-highlat-compress-i1",
+      "admission_cpu": 25.0,
+      "admission_attempts": 2,
+      "runtime_cpu": {
+        "max": 36.0,
+        "mean": 27.5,
+        "samples_ge30": 2
+      },
+      "external_max": 45.5
+    },
+    {
+      "batch": "10-highlat-bandwidth-i0",
+      "admission_cpu": 20.0,
+      "admission_attempts": 1,
+      "runtime_cpu": {
+        "max": 27.0,
+        "mean": 23.75,
+        "samples_ge30": 0
+      },
+      "external_max": 75.5
+    },
+    {
+      "batch": "11-highlat-bandwidth-i1",
+      "admission_cpu": 20.0,
+      "admission_attempts": 1,
+      "runtime_cpu": {
+        "max": 31.0,
+        "mean": 23.75,
+        "samples_ge30": 1
+      },
+      "external_max": 87.8
+    }
+  ],
+  "uniform_header_total": 22185,
+  "partial_header_body_jobs": [
+    {
+      "batch": "06-wan-bandwidth-i0",
+      "variant": "main-A",
+      "slot": 1,
+      "frames": 428,
+      "uniform_header_frames": 429,
+      "online_frames": 429,
+      "online_fps": 53.6,
+      "visible_state": {
+        "incomplete_pct": 0.16669352804494783,
+        "unknown_pct": 0.0,
+        "complete_pct": 99.83330647195505
+      },
+      "boundary_gaps": {
+        "first_ms": 0.0,
+        "last_ms": 8.870601654052734,
+        "adjacent_max_ms": 95.63779830932617
+      },
+      "max_gap_ms": 96
+    },
+    {
+      "batch": "06-wan-bandwidth-i0",
+      "variant": "main-B",
+      "slot": 2,
+      "frames": 436,
+      "uniform_header_frames": 438,
+      "online_frames": 438,
+      "online_fps": 54.7,
+      "visible_state": {
+        "incomplete_pct": 0.48460335854993064,
+        "unknown_pct": 0.0,
+        "complete_pct": 99.51539664145007
+      },
+      "boundary_gaps": {
+        "first_ms": 0.0,
+        "last_ms": 8.032083511352539,
+        "adjacent_max_ms": 90.72613716125488
+      },
+      "max_gap_ms": 91
+    },
+    {
+      "batch": "06-wan-bandwidth-i0",
+      "variant": "candidate",
+      "slot": 3,
+      "frames": 459,
+      "uniform_header_frames": 462,
+      "online_frames": 462,
+      "online_fps": 57.7,
+      "visible_state": {
+        "incomplete_pct": 1.1407868419681035,
+        "unknown_pct": 0.0,
+        "complete_pct": 98.8592131580319
+      },
+      "boundary_gaps": {
+        "first_ms": 0.0,
+        "last_ms": 12.859106063842773,
+        "adjacent_max_ms": 98.37746620178223
+      },
+      "max_gap_ms": 98
+    },
+    {
+      "batch": "07-wan-bandwidth-i1",
+      "variant": "main-B",
+      "slot": 0,
+      "frames": 436,
+      "uniform_header_frames": 437,
+      "online_frames": 437,
+      "online_fps": 54.6,
+      "visible_state": {
+        "incomplete_pct": 0.2297110271156334,
+        "unknown_pct": 0.022381687482688907,
+        "complete_pct": 99.74790728540168
+      },
+      "boundary_gaps": {
+        "first_ms": 0.0,
+        "last_ms": 17.833471298217773,
+        "adjacent_max_ms": 88.70100975036621
+      },
+      "max_gap_ms": 89
+    },
+    {
+      "batch": "07-wan-bandwidth-i1",
+      "variant": "candidate",
+      "slot": 1,
+      "frames": 457,
+      "uniform_header_frames": 459,
+      "online_frames": 459,
+      "online_fps": 57.4,
+      "visible_state": {
+        "incomplete_pct": 1.2198605906815405,
+        "unknown_pct": 0.07328502594685651,
+        "complete_pct": 98.7068543833716
+      },
+      "boundary_gaps": {
+        "first_ms": 0.0,
+        "last_ms": 21.900415420532227,
+        "adjacent_max_ms": 92.83328056335449
+      },
+      "max_gap_ms": 93
+    },
+    {
+      "batch": "07-wan-bandwidth-i1",
+      "variant": "main-A",
+      "slot": 3,
+      "frames": 435,
+      "uniform_header_frames": 437,
+      "online_frames": 437,
+      "online_fps": 54.6,
+      "visible_state": {
+        "incomplete_pct": 0.37181560532519214,
+        "unknown_pct": 0.0,
+        "complete_pct": 99.62818439467482
+      },
+      "boundary_gaps": {
+        "first_ms": 0.0,
+        "last_ms": 14.116764068603516,
+        "adjacent_max_ms": 94.24638748168945
+      },
+      "max_gap_ms": 94
+    },
+    {
+      "batch": "10-highlat-bandwidth-i0",
+      "variant": "main-A",
+      "slot": 1,
+      "frames": 398,
+      "uniform_header_frames": 399,
+      "online_frames": 399,
+      "online_fps": 49.9,
+      "visible_state": {
+        "incomplete_pct": 3.7293701972465065,
+        "unknown_pct": 0.02173926518363257,
+        "complete_pct": 96.24889053756986
+      },
+      "boundary_gaps": {
+        "first_ms": 283.34856033325195,
+        "last_ms": 15.567302703857422,
+        "adjacent_max_ms": 292.96040534973145
+      },
+      "max_gap_ms": 293
+    },
+    {
+      "batch": "10-highlat-bandwidth-i0",
+      "variant": "main-B",
+      "slot": 2,
+      "frames": 396,
+      "uniform_header_frames": 400,
+      "online_frames": 400,
+      "online_fps": 50.0,
+      "visible_state": {
+        "incomplete_pct": 4.4475568424231104,
+        "unknown_pct": 0.0,
+        "complete_pct": 95.55244315757689
+      },
+      "boundary_gaps": {
+        "first_ms": 300.25482177734375,
+        "last_ms": 9.188652038574219,
+        "adjacent_max_ms": 268.48459243774414
+      },
+      "max_gap_ms": 300
+    },
+    {
+      "batch": "10-highlat-bandwidth-i0",
+      "variant": "candidate",
+      "slot": 3,
+      "frames": 429,
+      "uniform_header_frames": 431,
+      "online_frames": 431,
+      "online_fps": 53.9,
+      "visible_state": {
+        "incomplete_pct": 6.7491173078272295,
+        "unknown_pct": 0.0,
+        "complete_pct": 93.25088269217277
+      },
+      "boundary_gaps": {
+        "first_ms": 524.7666835784912,
+        "last_ms": 16.260623931884766,
+        "adjacent_max_ms": 131.73961639404297
+      },
+      "max_gap_ms": 525
+    },
+    {
+      "batch": "11-highlat-bandwidth-i1",
+      "variant": "candidate",
+      "slot": 1,
+      "frames": 427,
+      "uniform_header_frames": 428,
+      "online_frames": 427,
+      "online_fps": 53.4,
+      "visible_state": {
+        "incomplete_pct": 3.9219210463089285,
+        "unknown_pct": 0.0,
+        "complete_pct": 96.07807895369108
+      },
+      "boundary_gaps": {
+        "first_ms": 291.63479804992676,
+        "last_ms": 18.401622772216797,
+        "adjacent_max_ms": 317.80409812927246
+      },
+      "max_gap_ms": 318
+    },
+    {
+      "batch": "11-highlat-bandwidth-i1",
+      "variant": "ssh",
+      "slot": 2,
+      "frames": 480,
+      "uniform_header_frames": 479,
+      "online_frames": 479,
+      "online_fps": 59.9,
+      "visible_state": {
+        "incomplete_pct": 16.552560970864448,
+        "unknown_pct": 0.022929789497024223,
+        "complete_pct": 83.42450923963852
+      },
+      "boundary_gaps": {
+        "first_ms": 2.845287322998047,
+        "last_ms": 13.464689254760742,
+        "adjacent_max_ms": 104.74061965942383
+      },
+      "max_gap_ms": 105
+    },
+    {
+      "batch": "11-highlat-bandwidth-i1",
+      "variant": "main-A",
+      "slot": 3,
+      "frames": 399,
+      "uniform_header_frames": 402,
+      "online_frames": 402,
+      "online_fps": 50.2,
+      "visible_state": {
+        "incomplete_pct": 0.7511703485943898,
+        "unknown_pct": 0.0,
+        "complete_pct": 99.24882965140561
+      },
+      "boundary_gaps": {
+        "first_ms": 28.924226760864258,
+        "last_ms": 17.33875274658203,
+        "adjacent_max_ms": 266.0801410675049
+      },
+      "max_gap_ms": 266
+    }
+  ],
+  "comparisons": [
+    {
+      "batch": "00-lan-compress-i0",
+      "roles": {
+        "ssh": {
+          "batch": "00-lan-compress-i0",
+          "net": "lan",
+          "scene": "compress",
+          "iteration": 0,
+          "variant": "ssh",
+          "slot": 0,
+          "online_fps": 60.0,
+          "online_frames": 480,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 1.606194913250705,
+            "unknown_pct": 0.0,
+            "complete_pct": 98.3938050867493
+          },
+          "per_s": [
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.025510787963867188,
+            "last_ms": 15.723228454589844,
+            "adjacent_max_ms": 22.66693115234375
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 47.2,
+          "low5_fps": 51.1,
+          "age_ms": 1,
+          "age_p95_ms": 3,
+          "max_gap_ms": 23,
+          "kbit_s": 2484,
+          "rss_client_kb": 7524,
+          "rss_server_kb": 18792,
+          "cpu_client": 0.26,
+          "cpu_server": 0.31
+        },
+        "main-A": {
+          "batch": "00-lan-compress-i0",
+          "net": "lan",
+          "scene": "compress",
+          "iteration": 0,
+          "variant": "main-A",
+          "slot": 1,
+          "online_fps": 60.0,
+          "online_frames": 480,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.015697563806023752,
+            "complete_pct": 99.98430243619397
+          },
+          "per_s": [
+            60,
+            60,
+            60,
+            60,
+            60,
+            61,
+            59,
+            60
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 16.984939575195312,
+            "adjacent_max_ms": 24.434328079223633
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 43.2,
+          "low5_fps": 46.9,
+          "age_ms": 3,
+          "age_p95_ms": 6,
+          "max_gap_ms": 24,
+          "kbit_s": 228,
+          "rss_client_kb": 2700,
+          "rss_server_kb": 5652,
+          "cpu_client": 0.82,
+          "cpu_server": 1.13
+        },
+        "main-B": {
+          "batch": "00-lan-compress-i0",
+          "net": "lan",
+          "scene": "compress",
+          "iteration": 0,
+          "variant": "main-B",
+          "slot": 2,
+          "online_fps": 60.0,
+          "online_frames": 480,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.045157230403409555,
+            "complete_pct": 99.95484276959658
+          },
+          "per_s": [
+            61,
+            59,
+            61,
+            60,
+            60,
+            59,
+            61,
+            59
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 18.81575584411621,
+            "adjacent_max_ms": 26.502132415771484
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 42.4,
+          "low5_fps": 47.1,
+          "age_ms": 4,
+          "age_p95_ms": 6,
+          "max_gap_ms": 27,
+          "kbit_s": 227,
+          "rss_client_kb": 2692,
+          "rss_server_kb": 5684,
+          "cpu_client": 0.82,
+          "cpu_server": 1.16
+        },
+        "candidate": {
+          "batch": "00-lan-compress-i0",
+          "net": "lan",
+          "scene": "compress",
+          "iteration": 0,
+          "variant": "candidate",
+          "slot": 3,
+          "online_fps": 60.0,
+          "online_frames": 480,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.07928031889166484,
+            "complete_pct": 99.92071968110834
+          },
+          "per_s": [
+            61,
+            59,
+            61,
+            60,
+            59,
+            61,
+            59,
+            60
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 20.29585838317871,
+            "adjacent_max_ms": 24.87659454345703
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 42.5,
+          "low5_fps": 47.4,
+          "age_ms": 4,
+          "age_p95_ms": 7,
+          "max_gap_ms": 25,
+          "kbit_s": 228,
+          "rss_client_kb": 2624,
+          "rss_server_kb": 5680,
+          "cpu_client": 0.84,
+          "cpu_server": 1.17
+        }
+      },
+      "observed_fps_deficits": [
+        {
+          "control": "ssh",
+          "metric": "low1_fps",
+          "candidate": 42.5,
+          "reference": 47.2
+        },
+        {
+          "control": "ssh",
+          "metric": "low5_fps",
+          "candidate": 47.4,
+          "reference": 51.1
+        },
+        {
+          "control": "main-A",
+          "metric": "low1_fps",
+          "candidate": 42.5,
+          "reference": 43.2
+        }
+      ]
+    },
+    {
+      "batch": "01-lan-compress-i1",
+      "roles": {
+        "main-B": {
+          "batch": "01-lan-compress-i1",
+          "net": "lan",
+          "scene": "compress",
+          "iteration": 1,
+          "variant": "main-B",
+          "slot": 0,
+          "online_fps": 60.0,
+          "online_frames": 480,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.05936166282247815,
+            "complete_pct": 99.94063833717752
+          },
+          "per_s": [
+            61,
+            60,
+            59,
+            60,
+            60,
+            61,
+            59,
+            60
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 18.94998550415039,
+            "adjacent_max_ms": 24.336814880371094
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 43.9,
+          "low5_fps": 47.0,
+          "age_ms": 4,
+          "age_p95_ms": 6,
+          "max_gap_ms": 24,
+          "kbit_s": 227,
+          "rss_client_kb": 2700,
+          "rss_server_kb": 5680,
+          "cpu_client": 0.81,
+          "cpu_server": 1.12
+        },
+        "candidate": {
+          "batch": "01-lan-compress-i1",
+          "net": "lan",
+          "scene": "compress",
+          "iteration": 1,
+          "variant": "candidate",
+          "slot": 1,
+          "online_fps": 60.0,
+          "online_frames": 480,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.030147143508240104,
+            "complete_pct": 99.96985285649176
+          },
+          "per_s": [
+            60,
+            61,
+            60,
+            60,
+            60,
+            59,
+            61,
+            59
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 22.51577377319336,
+            "adjacent_max_ms": 26.105403900146484
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 42.4,
+          "low5_fps": 45.8,
+          "age_ms": 3,
+          "age_p95_ms": 7,
+          "max_gap_ms": 26,
+          "kbit_s": 227,
+          "rss_client_kb": 2636,
+          "rss_server_kb": 5652,
+          "cpu_client": 0.87,
+          "cpu_server": 1.17
+        },
+        "ssh": {
+          "batch": "01-lan-compress-i1",
+          "net": "lan",
+          "scene": "compress",
+          "iteration": 1,
+          "variant": "ssh",
+          "slot": 2,
+          "online_fps": 60.0,
+          "online_frames": 480,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 1.9426635546173858,
+            "unknown_pct": 0.0,
+            "complete_pct": 98.05733644538262
+          },
+          "per_s": [
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.022172927856445312,
+            "last_ms": 14.621734619140625,
+            "adjacent_max_ms": 23.59795570373535
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 44.6,
+          "low5_fps": 48.7,
+          "age_ms": 1,
+          "age_p95_ms": 4,
+          "max_gap_ms": 24,
+          "kbit_s": 2478,
+          "rss_client_kb": 7544,
+          "rss_server_kb": 18804,
+          "cpu_client": 0.25,
+          "cpu_server": 0.32
+        },
+        "main-A": {
+          "batch": "01-lan-compress-i1",
+          "net": "lan",
+          "scene": "compress",
+          "iteration": 1,
+          "variant": "main-A",
+          "slot": 3,
+          "online_fps": 60.0,
+          "online_frames": 480,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.0,
+            "complete_pct": 100.0
+          },
+          "per_s": [
+            60,
+            60,
+            61,
+            60,
+            59,
+            61,
+            59,
+            60
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 19.913434982299805,
+            "adjacent_max_ms": 23.888349533081055
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 43.3,
+          "low5_fps": 46.9,
+          "age_ms": 4,
+          "age_p95_ms": 6,
+          "max_gap_ms": 24,
+          "kbit_s": 227,
+          "rss_client_kb": 2700,
+          "rss_server_kb": 5664,
+          "cpu_client": 0.83,
+          "cpu_server": 1.16
+        }
+      },
+      "observed_fps_deficits": [
+        {
+          "control": "ssh",
+          "metric": "low1_fps",
+          "candidate": 42.4,
+          "reference": 44.6
+        },
+        {
+          "control": "ssh",
+          "metric": "low5_fps",
+          "candidate": 45.8,
+          "reference": 48.7
+        },
+        {
+          "control": "main-A",
+          "metric": "low1_fps",
+          "candidate": 42.4,
+          "reference": 43.3
+        },
+        {
+          "control": "main-A",
+          "metric": "low5_fps",
+          "candidate": 45.8,
+          "reference": 46.9
+        },
+        {
+          "control": "main-B",
+          "metric": "low1_fps",
+          "candidate": 42.4,
+          "reference": 43.9
+        },
+        {
+          "control": "main-B",
+          "metric": "low5_fps",
+          "candidate": 45.8,
+          "reference": 47.0
+        }
+      ]
+    },
+    {
+      "batch": "02-lan-bandwidth-i0",
+      "roles": {
+        "ssh": {
+          "batch": "02-lan-bandwidth-i0",
+          "net": "lan",
+          "scene": "bandwidth",
+          "iteration": 0,
+          "variant": "ssh",
+          "slot": 0,
+          "online_fps": 60.0,
+          "online_frames": 480,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 4.747192598204236,
+            "unknown_pct": 0.0,
+            "complete_pct": 95.25280740179576
+          },
+          "per_s": [
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
+          "boundary_gaps": {
+            "first_ms": 1.6551017761230469,
+            "last_ms": 16.1745548248291,
+            "adjacent_max_ms": 23.283004760742188
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 46.6,
+          "low5_fps": 50.4,
+          "age_ms": 2,
+          "age_p95_ms": 4,
+          "max_gap_ms": 23,
+          "kbit_s": 5776,
+          "rss_client_kb": 7376,
+          "rss_server_kb": 18632,
+          "cpu_client": 0.2,
+          "cpu_server": 0.26
+        },
+        "main-A": {
+          "batch": "02-lan-bandwidth-i0",
+          "net": "lan",
+          "scene": "bandwidth",
+          "iteration": 0,
+          "variant": "main-A",
+          "slot": 1,
+          "online_fps": 59.6,
+          "online_frames": 477,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.06471467073688121,
+            "complete_pct": 99.93528532926312
+          },
+          "per_s": [
+            61,
+            59,
+            60,
+            61,
+            60,
+            60,
+            59,
+            60
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 16.364336013793945,
+            "adjacent_max_ms": 28.530120849609375
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 42.3,
+          "low5_fps": 46.6,
+          "age_ms": 5,
+          "age_p95_ms": 8,
+          "max_gap_ms": 29,
+          "kbit_s": 2717,
+          "rss_client_kb": 2716,
+          "rss_server_kb": 5696,
+          "cpu_client": 1.21,
+          "cpu_server": 1.57
+        },
+        "main-B": {
+          "batch": "02-lan-bandwidth-i0",
+          "net": "lan",
+          "scene": "bandwidth",
+          "iteration": 0,
+          "variant": "main-B",
+          "slot": 2,
+          "online_fps": 59.7,
+          "online_frames": 478,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.029852597547020673,
+            "complete_pct": 99.97014740245298
+          },
+          "per_s": [
+            61,
+            59,
+            61,
+            59,
+            61,
+            60,
+            60,
+            59
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 17.073392868041992,
+            "adjacent_max_ms": 25.778532028198242
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 41.5,
+          "low5_fps": 45.7,
+          "age_ms": 5,
+          "age_p95_ms": 9,
+          "max_gap_ms": 26,
+          "kbit_s": 2717,
+          "rss_client_kb": 2724,
+          "rss_server_kb": 5700,
+          "cpu_client": 1.22,
+          "cpu_server": 1.56
+        },
+        "candidate": {
+          "batch": "02-lan-bandwidth-i0",
+          "net": "lan",
+          "scene": "bandwidth",
+          "iteration": 0,
+          "variant": "candidate",
+          "slot": 3,
+          "online_fps": 59.7,
+          "online_frames": 478,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.08432489076621744,
+            "complete_pct": 99.91567510923377
+          },
+          "per_s": [
+            61,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            59
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 22.10235595703125,
+            "adjacent_max_ms": 28.01966667175293
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 41.5,
+          "low5_fps": 46.5,
+          "age_ms": 5,
+          "age_p95_ms": 8,
+          "max_gap_ms": 28,
+          "kbit_s": 2716,
+          "rss_client_kb": 2636,
+          "rss_server_kb": 5748,
+          "cpu_client": 1.23,
+          "cpu_server": 1.57
+        }
+      },
+      "observed_fps_deficits": [
+        {
+          "control": "ssh",
+          "metric": "low1_fps",
+          "candidate": 41.5,
+          "reference": 46.6
+        },
+        {
+          "control": "ssh",
+          "metric": "low5_fps",
+          "candidate": 46.5,
+          "reference": 50.4
+        },
+        {
+          "control": "main-A",
+          "metric": "low1_fps",
+          "candidate": 41.5,
+          "reference": 42.3
+        },
+        {
+          "control": "main-A",
+          "metric": "low5_fps",
+          "candidate": 46.5,
+          "reference": 46.6
+        }
+      ]
+    },
+    {
+      "batch": "03-lan-bandwidth-i1",
+      "roles": {
+        "main-B": {
+          "batch": "03-lan-bandwidth-i1",
+          "net": "lan",
+          "scene": "bandwidth",
+          "iteration": 1,
+          "variant": "main-B",
+          "slot": 0,
+          "online_fps": 59.9,
+          "online_frames": 479,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 0.028394837652240087,
+            "unknown_pct": 0.09545600056163911,
+            "complete_pct": 99.87614916178612
+          },
+          "per_s": [
+            61,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            59
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 22.498130798339844,
+            "adjacent_max_ms": 25.71582794189453
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 43.8,
+          "low5_fps": 47.6,
+          "age_ms": 5,
+          "age_p95_ms": 8,
+          "max_gap_ms": 26,
+          "kbit_s": 2717,
+          "rss_client_kb": 2704,
+          "rss_server_kb": 5752,
+          "cpu_client": 1.19,
+          "cpu_server": 1.48
+        },
+        "candidate": {
+          "batch": "03-lan-bandwidth-i1",
+          "net": "lan",
+          "scene": "bandwidth",
+          "iteration": 1,
+          "variant": "candidate",
+          "slot": 1,
+          "online_fps": 60.0,
+          "online_frames": 480,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.04425935517372825,
+            "complete_pct": 99.95574064482628
+          },
+          "per_s": [
+            60,
+            61,
+            59,
+            61,
+            59,
+            60,
+            60,
+            60
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 17.63916015625,
+            "adjacent_max_ms": 25.94780921936035
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 43.0,
+          "low5_fps": 46.2,
+          "age_ms": 5,
+          "age_p95_ms": 8,
+          "max_gap_ms": 26,
+          "kbit_s": 2722,
+          "rss_client_kb": 2656,
+          "rss_server_kb": 5732,
+          "cpu_client": 1.17,
+          "cpu_server": 1.51
+        },
+        "ssh": {
+          "batch": "03-lan-bandwidth-i1",
+          "net": "lan",
+          "scene": "bandwidth",
+          "iteration": 1,
+          "variant": "ssh",
+          "slot": 2,
+          "online_fps": 60.0,
+          "online_frames": 480,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 4.446037653846642,
+            "unknown_pct": 0.013311953943917428,
+            "complete_pct": 95.54065039220944
+          },
+          "per_s": [
+            61,
+            59,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
+          "boundary_gaps": {
+            "first_ms": 1.5666484832763672,
+            "last_ms": 16.164302825927734,
+            "adjacent_max_ms": 22.814512252807617
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 46.4,
+          "low5_fps": 49.7,
+          "age_ms": 2,
+          "age_p95_ms": 4,
+          "max_gap_ms": 23,
+          "kbit_s": 5794,
+          "rss_client_kb": 7552,
+          "rss_server_kb": 18900,
+          "cpu_client": 0.21,
+          "cpu_server": 0.24
+        },
+        "main-A": {
+          "batch": "03-lan-bandwidth-i1",
+          "net": "lan",
+          "scene": "bandwidth",
+          "iteration": 1,
+          "variant": "main-A",
+          "slot": 3,
+          "online_fps": 59.9,
+          "online_frames": 479,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.07898674760682432,
+            "complete_pct": 99.92101325239318
+          },
+          "per_s": [
+            61,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            59
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 16.3571834564209,
+            "adjacent_max_ms": 27.24909782409668
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 41.3,
+          "low5_fps": 46.5,
+          "age_ms": 5,
+          "age_p95_ms": 9,
+          "max_gap_ms": 27,
+          "kbit_s": 2717,
+          "rss_client_kb": 2720,
+          "rss_server_kb": 5700,
+          "cpu_client": 1.2,
+          "cpu_server": 1.53
+        }
+      },
+      "observed_fps_deficits": [
+        {
+          "control": "ssh",
+          "metric": "low1_fps",
+          "candidate": 43.0,
+          "reference": 46.4
+        },
+        {
+          "control": "ssh",
+          "metric": "low5_fps",
+          "candidate": 46.2,
+          "reference": 49.7
+        },
+        {
+          "control": "main-A",
+          "metric": "low5_fps",
+          "candidate": 46.2,
+          "reference": 46.5
+        },
+        {
+          "control": "main-B",
+          "metric": "low1_fps",
+          "candidate": 43.0,
+          "reference": 43.8
+        },
+        {
+          "control": "main-B",
+          "metric": "low5_fps",
+          "candidate": 46.2,
+          "reference": 47.6
+        }
+      ]
+    },
+    {
+      "batch": "04-wan-compress-i0",
+      "roles": {
+        "ssh": {
+          "batch": "04-wan-compress-i0",
+          "net": "wan",
+          "scene": "compress",
+          "iteration": 0,
+          "variant": "ssh",
+          "slot": 0,
+          "online_fps": 60.0,
+          "online_frames": 480,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 2.580715276740795,
+            "unknown_pct": 0.0,
+            "complete_pct": 97.41928472325921
+          },
+          "per_s": [
+            61,
+            59,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
+          "boundary_gaps": {
+            "first_ms": 2.9840469360351562,
+            "last_ms": 14.125347137451172,
+            "adjacent_max_ms": 30.579090118408203
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 42.4,
+          "low5_fps": 46.5,
+          "age_ms": 52,
+          "age_p95_ms": 55,
+          "max_gap_ms": 31,
+          "kbit_s": 2512,
+          "rss_client_kb": 7556,
+          "rss_server_kb": 18888,
+          "cpu_client": 0.25,
+          "cpu_server": 0.3
+        },
+        "main-A": {
+          "batch": "04-wan-compress-i0",
+          "net": "wan",
+          "scene": "compress",
+          "iteration": 0,
+          "variant": "main-A",
+          "slot": 1,
+          "online_fps": 60.0,
+          "online_frames": 480,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.004082477244808221,
+            "complete_pct": 99.99591752275519
+          },
+          "per_s": [
+            61,
+            59,
+            60,
+            61,
+            60,
+            59,
+            60,
+            60
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 13.271093368530273,
+            "adjacent_max_ms": 26.948928833007812
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 42.4,
+          "low5_fps": 47.6,
+          "age_ms": 55,
+          "age_p95_ms": 59,
+          "max_gap_ms": 27,
+          "kbit_s": 228,
+          "rss_client_kb": 2692,
+          "rss_server_kb": 5688,
+          "cpu_client": 0.87,
+          "cpu_server": 1.17
+        },
+        "main-B": {
+          "batch": "04-wan-compress-i0",
+          "net": "wan",
+          "scene": "compress",
+          "iteration": 0,
+          "variant": "main-B",
+          "slot": 2,
+          "online_fps": 60.0,
+          "online_frames": 480,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.14248453793412494,
+            "complete_pct": 99.85751546206588
+          },
+          "per_s": [
+            61,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            59
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 25.85601806640625,
+            "adjacent_max_ms": 26.452302932739258
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 40.9,
+          "low5_fps": 46.1,
+          "age_ms": 55,
+          "age_p95_ms": 59,
+          "max_gap_ms": 26,
+          "kbit_s": 228,
+          "rss_client_kb": 2696,
+          "rss_server_kb": 5688,
+          "cpu_client": 0.87,
+          "cpu_server": 1.17
+        },
+        "candidate": {
+          "batch": "04-wan-compress-i0",
+          "net": "wan",
+          "scene": "compress",
+          "iteration": 0,
+          "variant": "candidate",
+          "slot": 3,
+          "online_fps": 60.0,
+          "online_frames": 480,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.0,
+            "complete_pct": 100.0
+          },
+          "per_s": [
+            60,
+            61,
+            59,
+            60,
+            60,
+            60,
+            61,
+            59
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 17.3799991607666,
+            "adjacent_max_ms": 26.510238647460938
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 42.1,
+          "low5_fps": 45.8,
+          "age_ms": 54,
+          "age_p95_ms": 58,
+          "max_gap_ms": 27,
+          "kbit_s": 228,
+          "rss_client_kb": 2628,
+          "rss_server_kb": 5684,
+          "cpu_client": 0.87,
+          "cpu_server": 1.2
+        }
+      },
+      "observed_fps_deficits": [
+        {
+          "control": "ssh",
+          "metric": "low1_fps",
+          "candidate": 42.1,
+          "reference": 42.4
+        },
+        {
+          "control": "ssh",
+          "metric": "low5_fps",
+          "candidate": 45.8,
+          "reference": 46.5
+        },
+        {
+          "control": "main-A",
+          "metric": "low1_fps",
+          "candidate": 42.1,
+          "reference": 42.4
+        },
+        {
+          "control": "main-A",
+          "metric": "low5_fps",
+          "candidate": 45.8,
+          "reference": 47.6
+        },
+        {
+          "control": "main-B",
+          "metric": "low5_fps",
+          "candidate": 45.8,
+          "reference": 46.1
+        }
+      ]
+    },
+    {
+      "batch": "05-wan-compress-i1",
+      "roles": {
+        "main-B": {
+          "batch": "05-wan-compress-i1",
+          "net": "wan",
+          "scene": "compress",
+          "iteration": 1,
+          "variant": "main-B",
+          "slot": 0,
+          "online_fps": 60.0,
+          "online_frames": 480,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.13226746290727892,
+            "complete_pct": 99.86773253709272
+          },
+          "per_s": [
+            61,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            59
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 22.315025329589844,
+            "adjacent_max_ms": 24.880170822143555
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 43.2,
+          "low5_fps": 47.1,
+          "age_ms": 55,
+          "age_p95_ms": 58,
+          "max_gap_ms": 25,
+          "kbit_s": 228,
+          "rss_client_kb": 2700,
+          "rss_server_kb": 5660,
+          "cpu_client": 0.77,
+          "cpu_server": 1.04
+        },
+        "candidate": {
+          "batch": "05-wan-compress-i1",
+          "net": "wan",
+          "scene": "compress",
+          "iteration": 1,
+          "variant": "candidate",
+          "slot": 1,
+          "online_fps": 60.0,
+          "online_frames": 480,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.11825811913070158,
+            "complete_pct": 99.8817418808693
+          },
+          "per_s": [
+            61,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60,
+            59
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 19.288301467895508,
+            "adjacent_max_ms": 24.796009063720703
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 42.7,
+          "low5_fps": 46.0,
+          "age_ms": 54,
+          "age_p95_ms": 57,
+          "max_gap_ms": 25,
+          "kbit_s": 228,
+          "rss_client_kb": 2628,
+          "rss_server_kb": 5680,
+          "cpu_client": 0.78,
+          "cpu_server": 1.06
+        },
+        "ssh": {
+          "batch": "05-wan-compress-i1",
+          "net": "wan",
+          "scene": "compress",
+          "iteration": 1,
+          "variant": "ssh",
+          "slot": 2,
+          "online_fps": 60.0,
+          "online_frames": 480,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 2.015740032364349,
+            "unknown_pct": 0.0,
+            "complete_pct": 97.98425996763565
+          },
+          "per_s": [
+            60,
+            60,
+            60,
+            61,
+            60,
+            59,
+            60,
+            60
+          ],
+          "boundary_gaps": {
+            "first_ms": 3.204345703125,
+            "last_ms": 12.601852416992188,
+            "adjacent_max_ms": 33.327579498291016
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 41.9,
+          "low5_fps": 47.1,
+          "age_ms": 52,
+          "age_p95_ms": 55,
+          "max_gap_ms": 33,
+          "kbit_s": 2510,
+          "rss_client_kb": 7552,
+          "rss_server_kb": 18816,
+          "cpu_client": 0.24,
+          "cpu_server": 0.25
+        },
+        "main-A": {
+          "batch": "05-wan-compress-i1",
+          "net": "wan",
+          "scene": "compress",
+          "iteration": 1,
+          "variant": "main-A",
+          "slot": 3,
+          "online_fps": 60.0,
+          "online_frames": 480,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.00940541701357089,
+            "complete_pct": 99.99059458298643
+          },
+          "per_s": [
+            61,
+            60,
+            59,
+            61,
+            60,
+            59,
+            61,
+            59
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 17.808914184570312,
+            "adjacent_max_ms": 27.260541915893555
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 41.3,
+          "low5_fps": 45.4,
+          "age_ms": 55,
+          "age_p95_ms": 59,
+          "max_gap_ms": 27,
+          "kbit_s": 228,
+          "rss_client_kb": 2688,
+          "rss_server_kb": 5720,
+          "cpu_client": 0.77,
+          "cpu_server": 1.06
+        }
+      },
+      "observed_fps_deficits": [
+        {
+          "control": "ssh",
+          "metric": "low5_fps",
+          "candidate": 46.0,
+          "reference": 47.1
+        },
+        {
+          "control": "main-B",
+          "metric": "low1_fps",
+          "candidate": 42.7,
+          "reference": 43.2
+        },
+        {
+          "control": "main-B",
+          "metric": "low5_fps",
+          "candidate": 46.0,
+          "reference": 47.1
+        }
+      ]
+    },
+    {
+      "batch": "06-wan-bandwidth-i0",
+      "roles": {
+        "ssh": {
+          "batch": "06-wan-bandwidth-i0",
+          "net": "wan",
+          "scene": "bandwidth",
+          "iteration": 0,
+          "variant": "ssh",
+          "slot": 0,
+          "online_fps": 60.0,
+          "online_frames": 480,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 7.383681570549223,
+            "unknown_pct": 0.05613402695285298,
+            "complete_pct": 92.56018440249792
+          },
+          "per_s": [
+            61,
+            59,
+            60,
+            60,
+            61,
+            59,
+            61,
+            59
+          ],
+          "boundary_gaps": {
+            "first_ms": 4.250288009643555,
+            "last_ms": 18.151044845581055,
+            "adjacent_max_ms": 74.76520538330078
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 40.7,
+          "low5_fps": 46.5,
+          "age_ms": 54,
+          "age_p95_ms": 58,
+          "max_gap_ms": 75,
+          "kbit_s": 5795,
+          "rss_client_kb": 7656,
+          "rss_server_kb": 18832,
+          "cpu_client": 0.25,
+          "cpu_server": 0.26
+        },
+        "main-A": {
+          "batch": "06-wan-bandwidth-i0",
+          "net": "wan",
+          "scene": "bandwidth",
+          "iteration": 0,
+          "variant": "main-A",
+          "slot": 1,
+          "online_fps": 53.6,
+          "online_frames": 429,
+          "uniform_header_frames": 429,
+          "uniform_header_fps": 53.6,
+          "visible_state": {
+            "incomplete_pct": 0.16669352804494783,
+            "unknown_pct": 0.0,
+            "complete_pct": 99.83330647195505
+          },
+          "per_s": [
+            36,
+            56,
+            56,
+            56,
+            57,
+            56,
+            55,
+            56
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 8.870601654052734,
+            "adjacent_max_ms": 95.63779830932617
+          },
+          "frames": 428,
+          "fps": 53.5,
+          "low1_fps": 20.8,
+          "low5_fps": 44.1,
+          "age_ms": 62,
+          "age_p95_ms": 72,
+          "max_gap_ms": 96,
+          "kbit_s": 2087,
+          "rss_client_kb": 2764,
+          "rss_server_kb": 6000,
+          "cpu_client": 1.11,
+          "cpu_server": 4.83
+        },
+        "main-B": {
+          "batch": "06-wan-bandwidth-i0",
+          "net": "wan",
+          "scene": "bandwidth",
+          "iteration": 0,
+          "variant": "main-B",
+          "slot": 2,
+          "online_fps": 54.7,
+          "online_frames": 438,
+          "uniform_header_frames": 438,
+          "uniform_header_fps": 54.7,
+          "visible_state": {
+            "incomplete_pct": 0.48460335854993064,
+            "unknown_pct": 0.0,
+            "complete_pct": 99.51539664145007
+          },
+          "per_s": [
+            46,
+            56,
+            56,
+            54,
+            57,
+            56,
+            56,
+            55
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 8.032083511352539,
+            "adjacent_max_ms": 90.72613716125488
+          },
+          "frames": 436,
+          "fps": 54.5,
+          "low1_fps": 29.7,
+          "low5_fps": 45.4,
+          "age_ms": 62,
+          "age_p95_ms": 71,
+          "max_gap_ms": 91,
+          "kbit_s": 2130,
+          "rss_client_kb": 2768,
+          "rss_server_kb": 5956,
+          "cpu_client": 1.16,
+          "cpu_server": 4.86
+        },
+        "candidate": {
+          "batch": "06-wan-bandwidth-i0",
+          "net": "wan",
+          "scene": "bandwidth",
+          "iteration": 0,
+          "variant": "candidate",
+          "slot": 3,
+          "online_fps": 57.7,
+          "online_frames": 462,
+          "uniform_header_frames": 462,
+          "uniform_header_fps": 57.7,
+          "visible_state": {
+            "incomplete_pct": 1.1407868419681035,
+            "unknown_pct": 0.0,
+            "complete_pct": 98.8592131580319
+          },
+          "per_s": [
+            44,
+            60,
+            58,
+            60,
+            59,
+            61,
+            57,
+            60
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 12.859106063842773,
+            "adjacent_max_ms": 98.37746620178223
+          },
+          "frames": 459,
+          "fps": 57.4,
+          "low1_fps": 28.2,
+          "low5_fps": 44.1,
+          "age_ms": 56,
+          "age_p95_ms": 67,
+          "max_gap_ms": 98,
+          "kbit_s": 2248,
+          "rss_client_kb": 2672,
+          "rss_server_kb": 5956,
+          "cpu_client": 1.25,
+          "cpu_server": 5.05
+        }
+      },
+      "observed_fps_deficits": [
+        {
+          "control": "ssh",
+          "metric": "fps",
+          "candidate": 57.4,
+          "reference": 60.0
+        },
+        {
+          "control": "ssh",
+          "metric": "low1_fps",
+          "candidate": 28.2,
+          "reference": 40.7
+        },
+        {
+          "control": "ssh",
+          "metric": "low5_fps",
+          "candidate": 44.1,
+          "reference": 46.5
+        },
+        {
+          "control": "main-B",
+          "metric": "low1_fps",
+          "candidate": 28.2,
+          "reference": 29.7
+        },
+        {
+          "control": "main-B",
+          "metric": "low5_fps",
+          "candidate": 44.1,
+          "reference": 45.4
+        }
+      ]
+    },
+    {
+      "batch": "07-wan-bandwidth-i1",
+      "roles": {
+        "main-B": {
+          "batch": "07-wan-bandwidth-i1",
+          "net": "wan",
+          "scene": "bandwidth",
+          "iteration": 1,
+          "variant": "main-B",
+          "slot": 0,
+          "online_fps": 54.6,
+          "online_frames": 437,
+          "uniform_header_frames": 437,
+          "uniform_header_fps": 54.6,
+          "visible_state": {
+            "incomplete_pct": 0.2297110271156334,
+            "unknown_pct": 0.022381687482688907,
+            "complete_pct": 99.74790728540168
+          },
+          "per_s": [
+            46,
+            56,
+            57,
+            56,
+            54,
+            56,
+            55,
+            56
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 17.833471298217773,
+            "adjacent_max_ms": 88.70100975036621
+          },
+          "frames": 436,
+          "fps": 54.5,
+          "low1_fps": 39.9,
+          "low5_fps": 43.9,
+          "age_ms": 62,
+          "age_p95_ms": 71,
+          "max_gap_ms": 89,
+          "kbit_s": 2131,
+          "rss_client_kb": 2760,
+          "rss_server_kb": 5956,
+          "cpu_client": 1.14,
+          "cpu_server": 4.87
+        },
+        "candidate": {
+          "batch": "07-wan-bandwidth-i1",
+          "net": "wan",
+          "scene": "bandwidth",
+          "iteration": 1,
+          "variant": "candidate",
+          "slot": 1,
+          "online_fps": 57.4,
+          "online_frames": 459,
+          "uniform_header_frames": 459,
+          "uniform_header_fps": 57.4,
+          "visible_state": {
+            "incomplete_pct": 1.2198605906815405,
+            "unknown_pct": 0.07328502594685651,
+            "complete_pct": 98.7068543833716
+          },
+          "per_s": [
+            45,
+            60,
+            59,
+            56,
+            59,
+            59,
+            61,
+            58
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 21.900415420532227,
+            "adjacent_max_ms": 92.83328056335449
+          },
+          "frames": 457,
+          "fps": 57.1,
+          "low1_fps": 28.8,
+          "low5_fps": 44.6,
+          "age_ms": 56,
+          "age_p95_ms": 65,
+          "max_gap_ms": 93,
+          "kbit_s": 2231,
+          "rss_client_kb": 2676,
+          "rss_server_kb": 5960,
+          "cpu_client": 1.18,
+          "cpu_server": 4.94
+        },
+        "ssh": {
+          "batch": "07-wan-bandwidth-i1",
+          "net": "wan",
+          "scene": "bandwidth",
+          "iteration": 1,
+          "variant": "ssh",
+          "slot": 2,
+          "online_fps": 60.0,
+          "online_frames": 480,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 6.932838358429261,
+            "unknown_pct": 0.0366463016499925,
+            "complete_pct": 93.03051533992075
+          },
+          "per_s": [
+            60,
+            61,
+            60,
+            60,
+            59,
+            60,
+            61,
+            59
+          ],
+          "boundary_gaps": {
+            "first_ms": 1.7452239990234375,
+            "last_ms": 14.688730239868164,
+            "adjacent_max_ms": 68.66836547851562
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 31.1,
+          "low5_fps": 46.8,
+          "age_ms": 53,
+          "age_p95_ms": 57,
+          "max_gap_ms": 69,
+          "kbit_s": 5790,
+          "rss_client_kb": 7700,
+          "rss_server_kb": 18820,
+          "cpu_client": 0.22,
+          "cpu_server": 0.23
+        },
+        "main-A": {
+          "batch": "07-wan-bandwidth-i1",
+          "net": "wan",
+          "scene": "bandwidth",
+          "iteration": 1,
+          "variant": "main-A",
+          "slot": 3,
+          "online_fps": 54.6,
+          "online_frames": 437,
+          "uniform_header_frames": 437,
+          "uniform_header_fps": 54.6,
+          "visible_state": {
+            "incomplete_pct": 0.37181560532519214,
+            "unknown_pct": 0.0,
+            "complete_pct": 99.62818439467482
+          },
+          "per_s": [
+            45,
+            56,
+            55,
+            56,
+            56,
+            56,
+            56,
+            55
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 14.116764068603516,
+            "adjacent_max_ms": 94.24638748168945
+          },
+          "frames": 435,
+          "fps": 54.4,
+          "low1_fps": 29.7,
+          "low5_fps": 45.0,
+          "age_ms": 62,
+          "age_p95_ms": 72,
+          "max_gap_ms": 94,
+          "kbit_s": 2131,
+          "rss_client_kb": 2764,
+          "rss_server_kb": 5960,
+          "cpu_client": 1.13,
+          "cpu_server": 4.84
+        }
+      },
+      "observed_fps_deficits": [
+        {
+          "control": "ssh",
+          "metric": "fps",
+          "candidate": 57.1,
+          "reference": 60.0
+        },
+        {
+          "control": "ssh",
+          "metric": "low1_fps",
+          "candidate": 28.8,
+          "reference": 31.1
+        },
+        {
+          "control": "ssh",
+          "metric": "low5_fps",
+          "candidate": 44.6,
+          "reference": 46.8
+        },
+        {
+          "control": "main-A",
+          "metric": "low1_fps",
+          "candidate": 28.8,
+          "reference": 29.7
+        },
+        {
+          "control": "main-A",
+          "metric": "low5_fps",
+          "candidate": 44.6,
+          "reference": 45.0
+        },
+        {
+          "control": "main-B",
+          "metric": "low1_fps",
+          "candidate": 28.8,
+          "reference": 39.9
+        }
+      ]
+    },
+    {
+      "batch": "08-highlat-compress-i0",
+      "roles": {
+        "ssh": {
+          "batch": "08-highlat-compress-i0",
+          "net": "highlat",
+          "scene": "compress",
+          "iteration": 0,
+          "variant": "ssh",
+          "slot": 0,
+          "online_fps": 60.0,
+          "online_frames": 480,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 3.791566834522374,
+            "unknown_pct": 0.043351646065426346,
+            "complete_pct": 96.1650815194122
+          },
+          "per_s": [
+            61,
+            60,
+            60,
+            60,
+            60,
+            60,
+            59,
+            60
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.03218650817871094,
+            "last_ms": 14.548540115356445,
+            "adjacent_max_ms": 64.50271606445312
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 24.2,
+          "low5_fps": 46.9,
+          "age_ms": 152,
+          "age_p95_ms": 243,
+          "max_gap_ms": 65,
+          "kbit_s": 2509,
+          "rss_client_kb": 7616,
+          "rss_server_kb": 18804,
+          "cpu_client": 0.25,
+          "cpu_server": 0.28
+        },
+        "main-A": {
+          "batch": "08-highlat-compress-i0",
+          "net": "highlat",
+          "scene": "compress",
+          "iteration": 0,
+          "variant": "main-A",
+          "slot": 1,
+          "online_fps": 54.6,
+          "online_frames": 437,
+          "uniform_header_frames": 437,
+          "uniform_header_fps": 54.6,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.0,
+            "complete_pct": 100.0
+          },
+          "per_s": [
+            50,
+            56,
+            56,
+            55,
+            55,
+            55,
+            56,
+            54
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 17.492294311523438,
+            "adjacent_max_ms": 82.46588706970215
+          },
+          "frames": 437,
+          "fps": 54.6,
+          "low1_fps": 39.4,
+          "low5_fps": 45.5,
+          "age_ms": 161,
+          "age_p95_ms": 170,
+          "max_gap_ms": 82,
+          "kbit_s": 218,
+          "rss_client_kb": 2760,
+          "rss_server_kb": 5900,
+          "cpu_client": 0.84,
+          "cpu_server": 2.97
+        },
+        "main-B": {
+          "batch": "08-highlat-compress-i0",
+          "net": "highlat",
+          "scene": "compress",
+          "iteration": 0,
+          "variant": "main-B",
+          "slot": 2,
+          "online_fps": 52.7,
+          "online_frames": 422,
+          "uniform_header_frames": 422,
+          "uniform_header_fps": 52.7,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.0,
+            "complete_pct": 100.0
+          },
+          "per_s": [
+            48,
+            41,
+            56,
+            55,
+            56,
+            55,
+            56,
+            55
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 15.391349792480469,
+            "adjacent_max_ms": 90.52228927612305
+          },
+          "frames": 422,
+          "fps": 52.7,
+          "low1_fps": 29.5,
+          "low5_fps": 36.1,
+          "age_ms": 161,
+          "age_p95_ms": 171,
+          "max_gap_ms": 91,
+          "kbit_s": 212,
+          "rss_client_kb": 2756,
+          "rss_server_kb": 5956,
+          "cpu_client": 0.82,
+          "cpu_server": 3.0
+        },
+        "candidate": {
+          "batch": "08-highlat-compress-i0",
+          "net": "highlat",
+          "scene": "compress",
+          "iteration": 0,
+          "variant": "candidate",
+          "slot": 3,
+          "online_fps": 56.9,
+          "online_frames": 455,
+          "uniform_header_frames": 455,
+          "uniform_header_fps": 56.9,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.008681077414058972,
+            "complete_pct": 99.99131892258593
+          },
+          "per_s": [
+            39,
+            57,
+            59,
+            60,
+            60,
+            60,
+            61,
+            59
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 21.209001541137695,
+            "adjacent_max_ms": 81.56824111938477
+          },
+          "frames": 455,
+          "fps": 56.9,
+          "low1_fps": 29.6,
+          "low5_fps": 41.4,
+          "age_ms": 156,
+          "age_p95_ms": 160,
+          "max_gap_ms": 82,
+          "kbit_s": 220,
+          "rss_client_kb": 2688,
+          "rss_server_kb": 5768,
+          "cpu_client": 0.8,
+          "cpu_server": 1.29
+        }
+      },
+      "observed_fps_deficits": [
+        {
+          "control": "ssh",
+          "metric": "fps",
+          "candidate": 56.9,
+          "reference": 60.0
+        },
+        {
+          "control": "ssh",
+          "metric": "low5_fps",
+          "candidate": 41.4,
+          "reference": 46.9
+        },
+        {
+          "control": "main-A",
+          "metric": "low1_fps",
+          "candidate": 29.6,
+          "reference": 39.4
+        },
+        {
+          "control": "main-A",
+          "metric": "low5_fps",
+          "candidate": 41.4,
+          "reference": 45.5
+        }
+      ]
+    },
+    {
+      "batch": "09-highlat-compress-i1",
+      "roles": {
+        "main-B": {
+          "batch": "09-highlat-compress-i1",
+          "net": "highlat",
+          "scene": "compress",
+          "iteration": 1,
+          "variant": "main-B",
+          "slot": 0,
+          "online_fps": 54.5,
+          "online_frames": 436,
+          "uniform_header_frames": 436,
+          "uniform_header_fps": 54.5,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.06539023123697245,
+            "complete_pct": 99.93460976876302
+          },
+          "per_s": [
+            49,
+            55,
+            55,
+            55,
+            56,
+            56,
+            55,
+            55
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 23.012161254882812,
+            "adjacent_max_ms": 103.28888893127441
+          },
+          "frames": 436,
+          "fps": 54.5,
+          "low1_fps": 43.0,
+          "low5_fps": 46.7,
+          "age_ms": 161,
+          "age_p95_ms": 169,
+          "max_gap_ms": 103,
+          "kbit_s": 218,
+          "rss_client_kb": 2776,
+          "rss_server_kb": 5924,
+          "cpu_client": 0.84,
+          "cpu_server": 3.08
+        },
+        "candidate": {
+          "batch": "09-highlat-compress-i1",
+          "net": "highlat",
+          "scene": "compress",
+          "iteration": 1,
+          "variant": "candidate",
+          "slot": 1,
+          "online_fps": 59.0,
+          "online_frames": 472,
+          "uniform_header_frames": 472,
+          "uniform_header_fps": 59.0,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.0,
+            "complete_pct": 100.0
+          },
+          "per_s": [
+            52,
+            61,
+            59,
+            61,
+            60,
+            59,
+            60,
+            60
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 11.372804641723633,
+            "adjacent_max_ms": 92.00525283813477
+          },
+          "frames": 472,
+          "fps": 59.0,
+          "low1_fps": 45.6,
+          "low5_fps": 49.4,
+          "age_ms": 154,
+          "age_p95_ms": 161,
+          "max_gap_ms": 92,
+          "kbit_s": 235,
+          "rss_client_kb": 2736,
+          "rss_server_kb": 5916,
+          "cpu_client": 0.88,
+          "cpu_server": 3.36
+        },
+        "ssh": {
+          "batch": "09-highlat-compress-i1",
+          "net": "highlat",
+          "scene": "compress",
+          "iteration": 1,
+          "variant": "ssh",
+          "slot": 2,
+          "online_fps": 60.0,
+          "online_frames": 480,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 4.256906409210675,
+            "unknown_pct": 0.0,
+            "complete_pct": 95.74309359078933
+          },
+          "per_s": [
+            61,
+            59,
+            61,
+            59,
+            60,
+            60,
+            60,
+            60
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.06866455078125,
+            "last_ms": 18.02372932434082,
+            "adjacent_max_ms": 44.852256774902344
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 23.7,
+          "low5_fps": 45.6,
+          "age_ms": 152,
+          "age_p95_ms": 239,
+          "max_gap_ms": 45,
+          "kbit_s": 2501,
+          "rss_client_kb": 7608,
+          "rss_server_kb": 18820,
+          "cpu_client": 0.24,
+          "cpu_server": 0.26
+        },
+        "main-A": {
+          "batch": "09-highlat-compress-i1",
+          "net": "highlat",
+          "scene": "compress",
+          "iteration": 1,
+          "variant": "main-A",
+          "slot": 3,
+          "online_fps": 54.7,
+          "online_frames": 438,
+          "uniform_header_frames": 438,
+          "uniform_header_fps": 54.7,
+          "visible_state": {
+            "incomplete_pct": 0.0,
+            "unknown_pct": 0.0,
+            "complete_pct": 100.0
+          },
+          "per_s": [
+            49,
+            56,
+            55,
+            55,
+            56,
+            56,
+            56,
+            55
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.0,
+            "last_ms": 6.782054901123047,
+            "adjacent_max_ms": 88.16957473754883
+          },
+          "frames": 438,
+          "fps": 54.7,
+          "low1_fps": 41.3,
+          "low5_fps": 45.4,
+          "age_ms": 161,
+          "age_p95_ms": 170,
+          "max_gap_ms": 88,
+          "kbit_s": 219,
+          "rss_client_kb": 2772,
+          "rss_server_kb": 5924,
+          "cpu_client": 0.82,
+          "cpu_server": 3.09
+        }
+      },
+      "observed_fps_deficits": [
+        {
+          "control": "ssh",
+          "metric": "fps",
+          "candidate": 59.0,
+          "reference": 60.0
+        }
+      ]
+    },
+    {
+      "batch": "10-highlat-bandwidth-i0",
+      "roles": {
+        "ssh": {
+          "batch": "10-highlat-bandwidth-i0",
+          "net": "highlat",
+          "scene": "bandwidth",
+          "iteration": 0,
+          "variant": "ssh",
+          "slot": 0,
+          "online_fps": 60.0,
+          "online_frames": 480,
+          "uniform_header_frames": 480,
+          "uniform_header_fps": 60.0,
+          "visible_state": {
+            "incomplete_pct": 17.356104120479046,
+            "unknown_pct": 0.0,
+            "complete_pct": 82.64389587952095
+          },
+          "per_s": [
+            48,
+            72,
+            60,
+            60,
+            60,
+            60,
+            60,
+            60
+          ],
+          "boundary_gaps": {
+            "first_ms": 0.056743621826171875,
+            "last_ms": 10.818719863891602,
+            "adjacent_max_ms": 119.06194686889648
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 11.9,
+          "low5_fps": 44.0,
+          "age_ms": 154,
+          "age_p95_ms": 487,
+          "max_gap_ms": 119,
+          "kbit_s": 5797,
+          "rss_client_kb": 8056,
+          "rss_server_kb": 19140,
+          "cpu_client": 0.24,
+          "cpu_server": 0.25
+        },
+        "main-A": {
+          "batch": "10-highlat-bandwidth-i0",
+          "net": "highlat",
+          "scene": "bandwidth",
+          "iteration": 0,
+          "variant": "main-A",
+          "slot": 1,
+          "online_fps": 49.9,
+          "online_frames": 399,
+          "uniform_header_frames": 399,
+          "uniform_header_fps": 49.9,
+          "visible_state": {
+            "incomplete_pct": 3.7293701972465065,
+            "unknown_pct": 0.02173926518363257,
+            "complete_pct": 96.24889053756986
+          },
+          "per_s": [
+            15,
+            51,
+            55,
+            55,
+            56,
+            55,
+            56,
+            55
+          ],
+          "boundary_gaps": {
+            "first_ms": 283.34856033325195,
+            "last_ms": 15.567302703857422,
+            "adjacent_max_ms": 292.96040534973145
+          },
+          "frames": 398,
+          "fps": 49.7,
+          "low1_fps": 11.4,
+          "low5_fps": 44.6,
+          "age_ms": 163,
+          "age_p95_ms": 172,
+          "max_gap_ms": 293,
+          "kbit_s": 1976,
+          "rss_client_kb": 2808,
+          "rss_server_kb": 6056,
+          "cpu_client": 1.05,
+          "cpu_server": 4.56
+        },
+        "main-B": {
+          "batch": "10-highlat-bandwidth-i0",
+          "net": "highlat",
+          "scene": "bandwidth",
+          "iteration": 0,
+          "variant": "main-B",
+          "slot": 2,
+          "online_fps": 50.0,
+          "online_frames": 400,
+          "uniform_header_frames": 400,
+          "uniform_header_fps": 50.0,
+          "visible_state": {
+            "incomplete_pct": 4.4475568424231104,
+            "unknown_pct": 0.0,
+            "complete_pct": 95.55244315757689
+          },
+          "per_s": [
+            14,
+            51,
+            55,
+            56,
+            53,
+            56,
+            56,
+            55
+          ],
+          "boundary_gaps": {
+            "first_ms": 300.25482177734375,
+            "last_ms": 9.188652038574219,
+            "adjacent_max_ms": 268.48459243774414
+          },
+          "frames": 396,
+          "fps": 49.5,
+          "low1_fps": 24.2,
+          "low5_fps": 44.7,
+          "age_ms": 163,
+          "age_p95_ms": 171,
+          "max_gap_ms": 300,
+          "kbit_s": 1984,
+          "rss_client_kb": 2824,
+          "rss_server_kb": 6040,
+          "cpu_client": 1.05,
+          "cpu_server": 4.47
+        },
+        "candidate": {
+          "batch": "10-highlat-bandwidth-i0",
+          "net": "highlat",
+          "scene": "bandwidth",
+          "iteration": 0,
+          "variant": "candidate",
+          "slot": 3,
+          "online_fps": 53.9,
+          "online_frames": 431,
+          "uniform_header_frames": 431,
+          "uniform_header_fps": 53.9,
+          "visible_state": {
+            "incomplete_pct": 6.7491173078272295,
+            "unknown_pct": 0.0,
+            "complete_pct": 93.25088269217277
+          },
+          "per_s": [
+            15,
+            54,
+            61,
+            59,
+            60,
+            61,
+            59,
+            60
+          ],
+          "boundary_gaps": {
+            "first_ms": 524.7666835784912,
+            "last_ms": 16.260623931884766,
+            "adjacent_max_ms": 131.73961639404297
+          },
+          "frames": 429,
+          "fps": 53.6,
+          "low1_fps": 23.2,
+          "low5_fps": 46.2,
+          "age_ms": 155,
+          "age_p95_ms": 167,
+          "max_gap_ms": 525,
+          "kbit_s": 2119,
+          "rss_client_kb": 2776,
+          "rss_server_kb": 6064,
+          "cpu_client": 1.13,
+          "cpu_server": 4.75
+        }
+      },
+      "observed_fps_deficits": [
+        {
+          "control": "ssh",
+          "metric": "fps",
+          "candidate": 53.6,
+          "reference": 60.0
+        },
+        {
+          "control": "main-B",
+          "metric": "low1_fps",
+          "candidate": 23.2,
+          "reference": 24.2
+        }
+      ]
+    },
+    {
+      "batch": "11-highlat-bandwidth-i1",
+      "roles": {
+        "main-B": {
+          "batch": "11-highlat-bandwidth-i1",
+          "net": "highlat",
+          "scene": "bandwidth",
+          "iteration": 1,
+          "variant": "main-B",
+          "slot": 0,
+          "online_fps": 50.5,
+          "online_frames": 404,
+          "uniform_header_frames": 404,
+          "uniform_header_fps": 50.5,
+          "visible_state": {
+            "incomplete_pct": 0.2061714463096831,
+            "unknown_pct": 0.0,
+            "complete_pct": 99.79382855369032
+          },
+          "per_s": [
+            18,
+            51,
+            56,
+            56,
+            55,
+            56,
+            56,
+            56
+          ],
+          "boundary_gaps": {
+            "first_ms": 16.493797302246094,
+            "last_ms": 5.94639778137207,
+            "adjacent_max_ms": 264.04452323913574
+          },
+          "frames": 404,
+          "fps": 50.5,
+          "low1_fps": 10.2,
+          "low5_fps": 45.1,
+          "age_ms": 162,
+          "age_p95_ms": 171,
+          "max_gap_ms": 264,
+          "kbit_s": 1990,
+          "rss_client_kb": 2780,
+          "rss_server_kb": 6032,
+          "cpu_client": 1.13,
+          "cpu_server": 4.59
+        },
+        "candidate": {
+          "batch": "11-highlat-bandwidth-i1",
+          "net": "highlat",
+          "scene": "bandwidth",
+          "iteration": 1,
+          "variant": "candidate",
+          "slot": 1,
+          "online_fps": 53.4,
+          "online_frames": 427,
+          "uniform_header_frames": 428,
+          "uniform_header_fps": 53.5,
+          "visible_state": {
+            "incomplete_pct": 3.9219210463089285,
+            "unknown_pct": 0.0,
+            "complete_pct": 96.07807895369108
+          },
+          "per_s": [
+            15,
+            52,
+            60,
+            61,
+            60,
+            59,
+            60,
+            60
+          ],
+          "boundary_gaps": {
+            "first_ms": 291.63479804992676,
+            "last_ms": 18.401622772216797,
+            "adjacent_max_ms": 317.80409812927246
+          },
+          "frames": 427,
+          "fps": 53.4,
+          "low1_fps": 16.1,
+          "low5_fps": 46.9,
+          "age_ms": 160,
+          "age_p95_ms": 169,
+          "max_gap_ms": 318,
+          "kbit_s": 2129,
+          "rss_client_kb": 2768,
+          "rss_server_kb": 6044,
+          "cpu_client": 1.2,
+          "cpu_server": 5.02
+        },
+        "ssh": {
+          "batch": "11-highlat-bandwidth-i1",
+          "net": "highlat",
+          "scene": "bandwidth",
+          "iteration": 1,
+          "variant": "ssh",
+          "slot": 2,
+          "online_fps": 59.9,
+          "online_frames": 479,
+          "uniform_header_frames": 479,
+          "uniform_header_fps": 59.9,
+          "visible_state": {
+            "incomplete_pct": 16.552560970864448,
+            "unknown_pct": 0.022929789497024223,
+            "complete_pct": 83.42450923963852
+          },
+          "per_s": [
+            37,
+            83,
+            60,
+            60,
+            60,
+            60,
+            61,
+            59
+          ],
+          "boundary_gaps": {
+            "first_ms": 2.845287322998047,
+            "last_ms": 13.464689254760742,
+            "adjacent_max_ms": 104.74061965942383
+          },
+          "frames": 480,
+          "fps": 60.0,
+          "low1_fps": 12.6,
+          "low5_fps": 44.8,
+          "age_ms": 154,
+          "age_p95_ms": 573,
+          "max_gap_ms": 105,
+          "kbit_s": 5794,
+          "rss_client_kb": 7764,
+          "rss_server_kb": 19008,
+          "cpu_client": 0.23,
+          "cpu_server": 0.25
+        },
+        "main-A": {
+          "batch": "11-highlat-bandwidth-i1",
+          "net": "highlat",
+          "scene": "bandwidth",
+          "iteration": 1,
+          "variant": "main-A",
+          "slot": 3,
+          "online_fps": 50.2,
+          "online_frames": 402,
+          "uniform_header_frames": 402,
+          "uniform_header_fps": 50.2,
+          "visible_state": {
+            "incomplete_pct": 0.7511703485943898,
+            "unknown_pct": 0.0,
+            "complete_pct": 99.24882965140561
+          },
+          "per_s": [
+            16,
+            51,
+            56,
+            54,
+            56,
+            56,
+            54,
+            56
+          ],
+          "boundary_gaps": {
+            "first_ms": 28.924226760864258,
+            "last_ms": 17.33875274658203,
+            "adjacent_max_ms": 266.0801410675049
+          },
+          "frames": 399,
+          "fps": 49.9,
+          "low1_fps": 8.4,
+          "low5_fps": 44.5,
+          "age_ms": 163,
+          "age_p95_ms": 172,
+          "max_gap_ms": 266,
+          "kbit_s": 1988,
+          "rss_client_kb": 2780,
+          "rss_server_kb": 6064,
+          "cpu_client": 1.1,
+          "cpu_server": 4.6
+        }
+      },
+      "observed_fps_deficits": [
+        {
+          "control": "ssh",
+          "metric": "fps",
+          "candidate": 53.4,
+          "reference": 60.0
+        }
+      ]
+    }
+  ],
+  "actual_window_kst": [
+    "2026-11-01T07:10:36.125170+09:00",
+    "2026-11-01T07:14:03.263157+09:00"
+  ],
+  "resource_units": {
+    "kbit_s": "whole client non-loopback received bytes / scene seconds, decimal kbit/s; not bidirectional sum",
+    "rss": "midpoint process-name sums in KiB; not peak/session total",
+    "cpu": "transport process/thread scheduler percent of one core; source/observer Python excluded"
+  },
+  "limits": [
+    "No independent whole48terminal/emulator replay; saved oracle validity and complete-frame arithmetic audited, not GPU/allterminal presentation proof",
+    "Uninstrumented cadence candidate: no direct branch activation or causal attribution; traced52 is separate and cannot establish51 cause",
+    "Separate core50/slow51 and predeclared focused1M replication53; two evaluations each, no pooling oldruns or fixed acceptance tolerance",
+    "Raw transport RX/CPU counter endpoints and RSS samples are not separately saved: resource verification covers raw-result-to-summary-to-CSV identity and formula/unit source review, not independent counter remeasurement",
+    "Data validity and artifact isolation do not establish final candidate selection",
+    "Age is conditional on completed body frames, not input/held-screen/GPU latency",
+    "CPU30 is admission only; runtime CPU/process values retained context; no P-core affinity proof"
+  ],
+  "script_sha256": "3f53295915fa1766557d310c3079034f7d5893bcd33db19cb6fb36f893c2c509"
+}

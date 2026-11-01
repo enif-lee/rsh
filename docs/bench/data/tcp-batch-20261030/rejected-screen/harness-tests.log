@@ -1,0 +1,45 @@
+Frozen harness identity verified
+test_tcp_aliases_keep_their_binary_port_session_and_screen_observer (test_agent.ClientCommandTests.test_tcp_aliases_keep_their_binary_port_session_and_screen_observer) ... ok
+test_default_duration_contains_a_full_cycle_for_each_scene (test_lab.MovingDemoTests.test_default_duration_contains_a_full_cycle_for_each_scene) ... ok
+test_ending_during_handover_restores_a_working_link (test_lab.MovingDemoTests.test_ending_during_handover_restores_a_working_link) ... ok
+test_interrupt_restores_the_link_before_propagating (test_lab.MovingDemoTests.test_interrupt_restores_the_link_before_propagating) ... ok
+test_phase_changes_keep_the_qdisc_and_set_both_rates (test_lab.MovingDemoTests.test_phase_changes_keep_the_qdisc_and_set_both_rates) ... ok
+test_static_run_cannot_silently_use_only_the_first_phase (test_lab.MovingDemoTests.test_static_run_cannot_silently_use_only_the_first_phase) ... ok
+test_trace_repeats_identically_and_loss_is_a_common_time_interval (test_lab.MovingDemoTests.test_trace_repeats_identically_and_loss_is_a_common_time_interval) ... ok
+test_two_cycles_share_a_clock_without_accumulating_apply_time (test_lab.MovingDemoTests.test_two_cycles_share_a_clock_without_accumulating_apply_time) ... ok
+test_late_scene_start_keeps_the_scheduled_end (test_lab.MovingSummaryTests.test_late_scene_start_keeps_the_scheduled_end) ... ok
+test_stalled_tool_does_not_shift_its_window_into_the_drain (test_lab.MovingSummaryTests.test_stalled_tool_does_not_shift_its_window_into_the_drain) ... ok
+test_disconnect_stops_worker_and_restores_link (test_lab.MovingWorkerTests.test_disconnect_stops_worker_and_restores_link) ... ok
+test_default_full_matrix_has_three_repeats_and_one_memory_sample (test_lab.RunScheduleTests.test_default_full_matrix_has_three_repeats_and_one_memory_sample) ... ok
+test_memory_repeats_can_exceed_the_other_repeats (test_lab.RunScheduleTests.test_memory_repeats_can_exceed_the_other_repeats) ... ok
+test_demo_installs_both_builds_and_forces_second_tcp_before_launch (test_lab.SecondBuildTests.test_demo_installs_both_builds_and_forces_second_tcp_before_launch) ... ok
+test_run_forces_tcp_for_both_builds_only_when_requested (test_lab.SecondBuildTests.test_run_forces_tcp_for_both_builds_only_when_requested) ... ok
+test_busy_process_or_cpu_and_missing_sampling_fail_the_guard (test_load_watch.HostLoadTests.test_busy_process_or_cpu_and_missing_sampling_fail_the_guard) ... ok
+test_phase_edges_and_sleep_gap_cannot_pass (test_load_watch.HostLoadTests.test_phase_edges_and_sleep_gap_cannot_pass) ... ok
+test_quiet_streak_restarts_after_a_sampling_gap (test_load_watch.HostLoadTests.test_quiet_streak_restarts_after_a_sampling_gap) ... ok
+test_since_boot_row_is_not_used_as_interval_idle (test_load_watch.HostLoadTests.test_since_boot_row_is_not_used_as_interval_idle) ... ok
+test_declared_build_identity_survives_barrier_batch (test_pair_harness.PairedProbeTests.test_declared_build_identity_survives_barrier_batch) ... paired 0 rsh wan - None
+paired 3 rsh-b wan - None
+paired 7 rsh-b wan - None
+paired 4 rsh wan - None
+paired 1 rsh-b wan - None
+paired 6 rsh wan - None
+paired 2 rsh wan - None
+paired 5 rsh-b wan - None
+ok
+test_second_tcp_build_is_actually_forced_to_tcp (test_pair_harness.PairedProbeTests.test_second_tcp_build_is_actually_forced_to_tcp) ... ok
+test_agent_hooks_compile_for_both_trace_states (test_probe.LedgerTests.test_agent_hooks_compile_for_both_trace_states) ... ok
+test_byte_identical_and_exact_draw_payload (test_probe.LedgerTests.test_byte_identical_and_exact_draw_payload) ... ok
+test_overflow_is_explicit (test_probe.LedgerTests.test_overflow_is_explicit) ... ok
+test_gate_poll_interval_and_clock_validation (test_probe.TraceAnalysisTests.test_gate_poll_interval_and_clock_validation) ... ok
+test_actual_ledger_handles_a_late_source_that_skips_frame_ids (test_replay.ReplayTests.test_actual_ledger_handles_a_late_source_that_skips_frame_ids) ... ok
+test_complete_body_and_fragmented_sync (test_replay.ReplayTests.test_complete_body_and_fragmented_sync) ... ok
+test_complete_erase_is_not_delayed_until_the_next_read (test_replay.ReplayTests.test_complete_erase_is_not_delayed_until_the_next_read) ... ok
+test_header_alone_is_not_a_complete_body (test_replay.ReplayTests.test_header_alone_is_not_a_complete_body) ... ok
+test_state_time_is_clipped_to_the_post_switch_window (test_replay.ReplayTests.test_state_time_is_clipped_to_the_post_switch_window) ... ok
+test_two_complete_frames_in_one_read_are_both_retained (test_replay.ReplayTests.test_two_complete_frames_in_one_read_are_both_retained) ... ok
+
+----------------------------------------------------------------------
+Ran 31 tests in 0.171s
+
+OK

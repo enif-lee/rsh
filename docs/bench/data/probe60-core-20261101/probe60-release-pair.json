@@ -1,0 +1,77 @@
+{
+  "at": 1793464811.391945,
+  "artifacts": [
+    {
+      "variant": "baseline",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-probe60-pair-main",
+      "sha256": "9ab79c22ebd289047ffa616a5e8aef3c7d9f2498756b5974ae5a74b2d0ecb463",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/main-source",
+      "source_build_id": "6729d398d4f1",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "guard_output": "verified build 6729d398d4f1: rsh-probe60-pair-main"
+    },
+    {
+      "variant": "candidate",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-tcp-probe60",
+      "sha256": "40a052633245007fc65e9aa119b1ec613f375890ed5f35245c97becc8983166a",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/tcp-probe60-source",
+      "source_build_id": "7b3c0aa515be",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "guard_output": "verified build 7b3c0aa515be: rsh-tcp-probe60\nverified build 7b3c0aa515be: tcp-probe60-tests"
+    }
+  ],
+  "same_container_sequential_build": true,
+  "compiler_image": "sha256:b1d5dd5a22a09404d3e798c0cf051b689077360374eb505fa5bb93c479693d87",
+  "CARGO_HOME": "/cargo",
+  "build_path": "/src",
+  "apk_manifest_sha256": "d99b2de6a1a883172b2f814cd7ca03534ae3c72bbd1111ca3604ebc3914ca185",
+  "cargo_artifacts": {
+    "probe60-pair-main-release-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "executable": "/target/release/rsh"
+    },
+    "probe60-v1-tests-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "0",
+        "debuginfo": 2,
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "test": true
+      },
+      "executable": "/target/debug/deps/rsh-a4e873949d566604"
+    },
+    "tcp-probe60-release-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "executable": "/target/release/rsh"
+    }
+  },
+  "tests": {
+    "targeted_passed": 4,
+    "library_passed": 100,
+    "ignored": 2,
+    "fixture_sha256": "9c46f9e7382f385c38bed51d3143320968f82f457ce4e2a684976cb483eee428"
+  },
+  "build_script_sha256": "e1987228ab52831ba0e34c9b80fa3ef48a8a906a9ae87017b0c133d29ec4b499",
+  "build_log_sha256": "f03a69d2280fde950e707cd497a75cd07c70a768285ab6090af602ebf8d8c0d1",
+  "source_files_total": 90,
+  "canonical_product_files": 31,
+  "scope": "Only lossless server-output TCP probe utilization0.8\u21920.6 plus4unitfixtures. Production set_lossless call sites only server output785/1225/1448; client input staysfalse/default0.8. Not deployed, no performance conclusion.",
+  "adopted_review_correction": "Prior prose incorrectly included input TCP Sender; rg confirms no client set_lossless opt-in. Source code unchanged; scope corrected."
+}

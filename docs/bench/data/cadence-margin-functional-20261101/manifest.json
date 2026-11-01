@@ -1,0 +1,17 @@
+{
+  "README.md": "2193e8b56ef759df04e8fa16f2f54696543268ef8ba965df6e3fe95a4bf8e727",
+  "SCHEMA.md": "d4716eb0bb8289c20a7a0878cf03093f972a5d7310ae3c74d01d18df86cc43f0",
+  "baseline-source-manifest.json": "f11743719d2b410c6879c68475e3819068d94f2fce15d2f25ff12c78145b1dfa",
+  "fixture-manifest.json": "c323a324940340195b2961859cf840e2b8892afe419b3c012642502639f360d9",
+  "lowbw52-mechanism-audit.json": "896f5af999055a28e8cb4d8f4caa2a8f8768502db83b3329cb1c8d4f11ad4a63",
+  "lowbw52-mechanism-audit.md": "f35443d19bb47eeae967b22d461f30c18884edaea50cca729f7bbf6af8122c7f",
+  "lowbw52-mechanism-audit.py": "819dd6ca6d75ea6717e9ed717b82ae8f80ec3fc970927b93a034e986c85aa579",
+  "lowbw52-metrics.csv": "85ee6c3b419f6b44c4284270150f12dd1c0e4f74969465dcd106bb9190ab4056",
+  "margin-source-manifest.json": "6c10914513bc4779df8f9c3c082bd45ab5b16c3b6046388c25de04b46ed1d3f3",
+  "paired-build-provenance.json": "79b7b08d4ca9b0e537dfba567b69f0a8b5538f2aa12a87d2e88b11e295491acc",
+  "prepared-inputs.json": "f0259d85b5c8ec27217a2620c42e2fd0252169ccdc4f38a1ae4940838d1ced4d",
+  "prior-moving-display-correction.json": "8d723ae700bff1634b3bb5233956bf03d93afdf2bb3fe094ae4106a5b86df1b9",
+  "source-imports.json": "0a94d5ed1c82d1040e891417f47a600359ed3c7f31c2bfe3744ba59439bdadcf",
+  "source-proof.json": "f8921f00ccc0e919d7f3580e2d0c4a61f1d38045933a3418b15ebd3a6c717f51",
+  "verify-imports.py": "755b1916b732011319ca8546aa6103fb33547f5daa5b763d220c39967afd388d"
+}

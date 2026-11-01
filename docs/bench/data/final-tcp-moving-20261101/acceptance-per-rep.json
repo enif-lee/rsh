@@ -1,0 +1,710 @@
+[
+  {
+    "batch": "00-moving-compress-i0",
+    "net": "moving",
+    "scene": "compress",
+    "iteration": 0,
+    "status": "moving_profile_fidelity_pending_manual_review",
+    "accepted": null,
+    "candidate_zero_delivery": false,
+    "missing_metrics": [],
+    "observed_fps_gaps": [
+      {
+        "control": "ssh",
+        "metric": "fps",
+        "candidate": 23.8,
+        "reference": 48.2
+      },
+      {
+        "control": "ssh",
+        "metric": "low1_fps",
+        "candidate": 3.0,
+        "reference": 6.8
+      },
+      {
+        "control": "ssh",
+        "metric": "low5_fps",
+        "candidate": 7.6,
+        "reference": 26.3
+      }
+    ],
+    "resource_increases_requiring_review": [
+      {
+        "control": "ssh",
+        "metric": "cpu_client",
+        "candidate": 0.46,
+        "reference": 0.24
+      },
+      {
+        "control": "ssh",
+        "metric": "cpu_server",
+        "candidate": 1.56,
+        "reference": 0.41
+      },
+      {
+        "control": "main-A",
+        "metric": "kbit_s",
+        "candidate": 97,
+        "reference": 69
+      },
+      {
+        "control": "main-A",
+        "metric": "rss_client_kb",
+        "candidate": 2800,
+        "reference": 2652
+      },
+      {
+        "control": "main-A",
+        "metric": "rss_server_kb",
+        "candidate": 5920,
+        "reference": 5896
+      },
+      {
+        "control": "main-A",
+        "metric": "cpu_client",
+        "candidate": 0.46,
+        "reference": 0.35
+      },
+      {
+        "control": "main-A",
+        "metric": "cpu_server",
+        "candidate": 1.56,
+        "reference": 1.47
+      },
+      {
+        "control": "main-B",
+        "metric": "kbit_s",
+        "candidate": 97,
+        "reference": 72
+      },
+      {
+        "control": "main-B",
+        "metric": "rss_client_kb",
+        "candidate": 2800,
+        "reference": 2720
+      },
+      {
+        "control": "main-B",
+        "metric": "rss_server_kb",
+        "candidate": 5920,
+        "reference": 5880
+      },
+      {
+        "control": "main-B",
+        "metric": "cpu_client",
+        "candidate": 0.46,
+        "reference": 0.35
+      },
+      {
+        "control": "main-B",
+        "metric": "cpu_server",
+        "candidate": 1.56,
+        "reference": 1.4
+      }
+    ],
+    "roles": [
+      {
+        "variant": "ssh",
+        "slot": 0,
+        "frames": 1445,
+        "fps": 48.2,
+        "low1_fps": 6.8,
+        "low5_fps": 26.3,
+        "age_ms": 1778,
+        "age_p95_ms": 11274,
+        "max_gap_ms": 2361,
+        "kbit_s": 1987,
+        "rss_client_kb": 8040,
+        "rss_server_kb": 20032,
+        "cpu_client": 0.24,
+        "cpu_server": 0.41
+      },
+      {
+        "variant": "main-A",
+        "slot": 1,
+        "frames": 534,
+        "fps": 17.8,
+        "low1_fps": 2.4,
+        "low5_fps": 6.4,
+        "age_ms": 45,
+        "age_p95_ms": 132,
+        "max_gap_ms": 1612,
+        "kbit_s": 69,
+        "rss_client_kb": 2652,
+        "rss_server_kb": 5896,
+        "cpu_client": 0.35,
+        "cpu_server": 1.47
+      },
+      {
+        "variant": "main-B",
+        "slot": 2,
+        "frames": 537,
+        "fps": 17.9,
+        "low1_fps": 2.5,
+        "low5_fps": 6.5,
+        "age_ms": 45,
+        "age_p95_ms": 159,
+        "max_gap_ms": 2749,
+        "kbit_s": 72,
+        "rss_client_kb": 2720,
+        "rss_server_kb": 5880,
+        "cpu_client": 0.35,
+        "cpu_server": 1.4
+      },
+      {
+        "variant": "candidate",
+        "slot": 3,
+        "frames": 715,
+        "fps": 23.8,
+        "low1_fps": 3.0,
+        "low5_fps": 7.6,
+        "age_ms": 47,
+        "age_p95_ms": 146,
+        "max_gap_ms": 1526,
+        "kbit_s": 97,
+        "rss_client_kb": 2800,
+        "rss_server_kb": 5920,
+        "cpu_client": 0.46,
+        "cpu_server": 1.56
+      }
+    ],
+    "identity_valid": true,
+    "comparison_eligible": true,
+    "final_selection": null,
+    "raw_jobs_preserved": null,
+    "interpretation": "Qualitative1%low/5%low/avgFPSgroupfirst; no singlemetricveto/automaticpass/weight/tolerance. CAN-fixedmain andSSH gapsseparate; CPU/RSSsecondary.",
+    "performance_eligible": false,
+    "data_integrity_valid": true
+  },
+  {
+    "batch": "01-moving-compress-i1",
+    "net": "moving",
+    "scene": "compress",
+    "iteration": 1,
+    "status": "moving_profile_fidelity_pending_manual_review",
+    "accepted": null,
+    "candidate_zero_delivery": false,
+    "missing_metrics": [],
+    "observed_fps_gaps": [
+      {
+        "control": "ssh",
+        "metric": "fps",
+        "candidate": 21.9,
+        "reference": 47.9
+      },
+      {
+        "control": "ssh",
+        "metric": "low1_fps",
+        "candidate": 2.6,
+        "reference": 7.3
+      },
+      {
+        "control": "ssh",
+        "metric": "low5_fps",
+        "candidate": 8.3,
+        "reference": 24.5
+      }
+    ],
+    "resource_increases_requiring_review": [
+      {
+        "control": "ssh",
+        "metric": "cpu_client",
+        "candidate": 0.45,
+        "reference": 0.25
+      },
+      {
+        "control": "ssh",
+        "metric": "cpu_server",
+        "candidate": 1.69,
+        "reference": 0.39
+      },
+      {
+        "control": "main-A",
+        "metric": "kbit_s",
+        "candidate": 89,
+        "reference": 83
+      },
+      {
+        "control": "main-A",
+        "metric": "rss_client_kb",
+        "candidate": 2828,
+        "reference": 2692
+      },
+      {
+        "control": "main-A",
+        "metric": "rss_server_kb",
+        "candidate": 5920,
+        "reference": 5896
+      },
+      {
+        "control": "main-A",
+        "metric": "cpu_client",
+        "candidate": 0.45,
+        "reference": 0.42
+      },
+      {
+        "control": "main-A",
+        "metric": "cpu_server",
+        "candidate": 1.69,
+        "reference": 1.61
+      },
+      {
+        "control": "main-B",
+        "metric": "kbit_s",
+        "candidate": 89,
+        "reference": 71
+      },
+      {
+        "control": "main-B",
+        "metric": "rss_client_kb",
+        "candidate": 2828,
+        "reference": 2656
+      },
+      {
+        "control": "main-B",
+        "metric": "rss_server_kb",
+        "candidate": 5920,
+        "reference": 5896
+      },
+      {
+        "control": "main-B",
+        "metric": "cpu_client",
+        "candidate": 0.45,
+        "reference": 0.38
+      },
+      {
+        "control": "main-B",
+        "metric": "cpu_server",
+        "candidate": 1.69,
+        "reference": 1.4
+      }
+    ],
+    "roles": [
+      {
+        "variant": "ssh",
+        "slot": 2,
+        "frames": 1438,
+        "fps": 47.9,
+        "low1_fps": 7.3,
+        "low5_fps": 24.5,
+        "age_ms": 1776,
+        "age_p95_ms": 11430,
+        "max_gap_ms": 1328,
+        "kbit_s": 1976,
+        "rss_client_kb": 7724,
+        "rss_server_kb": 20020,
+        "cpu_client": 0.25,
+        "cpu_server": 0.39
+      },
+      {
+        "variant": "main-A",
+        "slot": 3,
+        "frames": 621,
+        "fps": 20.7,
+        "low1_fps": 2.2,
+        "low5_fps": 7.0,
+        "age_ms": 48,
+        "age_p95_ms": 151,
+        "max_gap_ms": 1160,
+        "kbit_s": 83,
+        "rss_client_kb": 2692,
+        "rss_server_kb": 5896,
+        "cpu_client": 0.42,
+        "cpu_server": 1.61
+      },
+      {
+        "variant": "main-B",
+        "slot": 0,
+        "frames": 548,
+        "fps": 18.3,
+        "low1_fps": 2.4,
+        "low5_fps": 6.0,
+        "age_ms": 45,
+        "age_p95_ms": 143,
+        "max_gap_ms": 1632,
+        "kbit_s": 71,
+        "rss_client_kb": 2656,
+        "rss_server_kb": 5896,
+        "cpu_client": 0.38,
+        "cpu_server": 1.4
+      },
+      {
+        "variant": "candidate",
+        "slot": 1,
+        "frames": 658,
+        "fps": 21.9,
+        "low1_fps": 2.6,
+        "low5_fps": 8.3,
+        "age_ms": 47,
+        "age_p95_ms": 239,
+        "max_gap_ms": 1252,
+        "kbit_s": 89,
+        "rss_client_kb": 2828,
+        "rss_server_kb": 5920,
+        "cpu_client": 0.45,
+        "cpu_server": 1.69
+      }
+    ],
+    "identity_valid": true,
+    "comparison_eligible": true,
+    "final_selection": null,
+    "raw_jobs_preserved": null,
+    "interpretation": "Qualitative1%low/5%low/avgFPSgroupfirst; no singlemetricveto/automaticpass/weight/tolerance. CAN-fixedmain andSSH gapsseparate; CPU/RSSsecondary.",
+    "performance_eligible": false,
+    "data_integrity_valid": true
+  },
+  {
+    "batch": "02-moving-bandwidth-i0",
+    "net": "moving",
+    "scene": "bandwidth",
+    "iteration": 0,
+    "status": "moving_profile_fidelity_pending_manual_review",
+    "accepted": null,
+    "candidate_zero_delivery": false,
+    "missing_metrics": [],
+    "observed_fps_gaps": [
+      {
+        "control": "ssh",
+        "metric": "fps",
+        "candidate": 20.4,
+        "reference": 27.3
+      },
+      {
+        "control": "ssh",
+        "metric": "low1_fps",
+        "candidate": 2.3,
+        "reference": 2.6
+      },
+      {
+        "control": "ssh",
+        "metric": "low5_fps",
+        "candidate": 6.0,
+        "reference": 13.6
+      },
+      {
+        "control": "main-A",
+        "metric": "low5_fps",
+        "candidate": 6.0,
+        "reference": 6.5
+      },
+      {
+        "control": "main-B",
+        "metric": "low1_fps",
+        "candidate": 2.3,
+        "reference": 2.4
+      },
+      {
+        "control": "main-B",
+        "metric": "low5_fps",
+        "candidate": 6.0,
+        "reference": 7.1
+      }
+    ],
+    "resource_increases_requiring_review": [
+      {
+        "control": "ssh",
+        "metric": "cpu_client",
+        "candidate": 0.75,
+        "reference": 0.21
+      },
+      {
+        "control": "ssh",
+        "metric": "cpu_server",
+        "candidate": 2.98,
+        "reference": 0.21
+      },
+      {
+        "control": "main-A",
+        "metric": "kbit_s",
+        "candidate": 862,
+        "reference": 601
+      },
+      {
+        "control": "main-A",
+        "metric": "rss_client_kb",
+        "candidate": 2872,
+        "reference": 2748
+      },
+      {
+        "control": "main-A",
+        "metric": "rss_server_kb",
+        "candidate": 5936,
+        "reference": 5920
+      },
+      {
+        "control": "main-A",
+        "metric": "cpu_client",
+        "candidate": 0.75,
+        "reference": 0.54
+      },
+      {
+        "control": "main-A",
+        "metric": "cpu_server",
+        "candidate": 2.98,
+        "reference": 2.41
+      },
+      {
+        "control": "main-B",
+        "metric": "kbit_s",
+        "candidate": 862,
+        "reference": 826
+      },
+      {
+        "control": "main-B",
+        "metric": "rss_client_kb",
+        "candidate": 2872,
+        "reference": 2812
+      },
+      {
+        "control": "main-B",
+        "metric": "cpu_client",
+        "candidate": 0.75,
+        "reference": 0.71
+      },
+      {
+        "control": "main-B",
+        "metric": "cpu_server",
+        "candidate": 2.98,
+        "reference": 2.82
+      }
+    ],
+    "roles": [
+      {
+        "variant": "ssh",
+        "slot": 0,
+        "frames": 818,
+        "fps": 27.3,
+        "low1_fps": 2.6,
+        "low5_fps": 13.6,
+        "age_ms": 1685,
+        "age_p95_ms": 13779,
+        "max_gap_ms": 1490,
+        "kbit_s": 2658,
+        "rss_client_kb": 7704,
+        "rss_server_kb": 20196,
+        "cpu_client": 0.21,
+        "cpu_server": 0.21
+      },
+      {
+        "variant": "main-A",
+        "slot": 1,
+        "frames": 429,
+        "fps": 14.3,
+        "low1_fps": 1.5,
+        "low5_fps": 6.5,
+        "age_ms": 61,
+        "age_p95_ms": 332,
+        "max_gap_ms": 2409,
+        "kbit_s": 601,
+        "rss_client_kb": 2748,
+        "rss_server_kb": 5920,
+        "cpu_client": 0.54,
+        "cpu_server": 2.41
+      },
+      {
+        "variant": "main-B",
+        "slot": 2,
+        "frames": 606,
+        "fps": 20.2,
+        "low1_fps": 2.4,
+        "low5_fps": 7.1,
+        "age_ms": 58,
+        "age_p95_ms": 229,
+        "max_gap_ms": 1598,
+        "kbit_s": 826,
+        "rss_client_kb": 2812,
+        "rss_server_kb": 5964,
+        "cpu_client": 0.71,
+        "cpu_server": 2.82
+      },
+      {
+        "variant": "candidate",
+        "slot": 3,
+        "frames": 613,
+        "fps": 20.4,
+        "low1_fps": 2.3,
+        "low5_fps": 6.0,
+        "age_ms": 57,
+        "age_p95_ms": 291,
+        "max_gap_ms": 1751,
+        "kbit_s": 862,
+        "rss_client_kb": 2872,
+        "rss_server_kb": 5936,
+        "cpu_client": 0.75,
+        "cpu_server": 2.98
+      }
+    ],
+    "identity_valid": true,
+    "comparison_eligible": true,
+    "final_selection": null,
+    "raw_jobs_preserved": null,
+    "interpretation": "Qualitative1%low/5%low/avgFPSgroupfirst; no singlemetricveto/automaticpass/weight/tolerance. CAN-fixedmain andSSH gapsseparate; CPU/RSSsecondary.",
+    "performance_eligible": false,
+    "data_integrity_valid": true
+  },
+  {
+    "batch": "03-moving-bandwidth-i1",
+    "net": "moving",
+    "scene": "bandwidth",
+    "iteration": 1,
+    "status": "moving_profile_fidelity_pending_manual_review",
+    "accepted": null,
+    "candidate_zero_delivery": false,
+    "missing_metrics": [],
+    "observed_fps_gaps": [
+      {
+        "control": "ssh",
+        "metric": "fps",
+        "candidate": 19.3,
+        "reference": 27.2
+      },
+      {
+        "control": "ssh",
+        "metric": "low1_fps",
+        "candidate": 2.1,
+        "reference": 3.2
+      },
+      {
+        "control": "ssh",
+        "metric": "low5_fps",
+        "candidate": 6.7,
+        "reference": 12.9
+      }
+    ],
+    "resource_increases_requiring_review": [
+      {
+        "control": "ssh",
+        "metric": "cpu_client",
+        "candidate": 0.7,
+        "reference": 0.21
+      },
+      {
+        "control": "ssh",
+        "metric": "cpu_server",
+        "candidate": 2.86,
+        "reference": 0.21
+      },
+      {
+        "control": "main-A",
+        "metric": "kbit_s",
+        "candidate": 804,
+        "reference": 582
+      },
+      {
+        "control": "main-A",
+        "metric": "rss_client_kb",
+        "candidate": 2808,
+        "reference": 2688
+      },
+      {
+        "control": "main-A",
+        "metric": "cpu_client",
+        "candidate": 0.7,
+        "reference": 0.51
+      },
+      {
+        "control": "main-A",
+        "metric": "cpu_server",
+        "candidate": 2.86,
+        "reference": 2.29
+      },
+      {
+        "control": "main-B",
+        "metric": "kbit_s",
+        "candidate": 804,
+        "reference": 628
+      },
+      {
+        "control": "main-B",
+        "metric": "rss_client_kb",
+        "candidate": 2808,
+        "reference": 2708
+      },
+      {
+        "control": "main-B",
+        "metric": "cpu_client",
+        "candidate": 0.7,
+        "reference": 0.57
+      },
+      {
+        "control": "main-B",
+        "metric": "cpu_server",
+        "candidate": 2.86,
+        "reference": 2.38
+      }
+    ],
+    "roles": [
+      {
+        "variant": "ssh",
+        "slot": 2,
+        "frames": 816,
+        "fps": 27.2,
+        "low1_fps": 3.2,
+        "low5_fps": 12.9,
+        "age_ms": 1682,
+        "age_p95_ms": 13729,
+        "max_gap_ms": 2070,
+        "kbit_s": 2651,
+        "rss_client_kb": 7704,
+        "rss_server_kb": 20176,
+        "cpu_client": 0.21,
+        "cpu_server": 0.21
+      },
+      {
+        "variant": "main-A",
+        "slot": 3,
+        "frames": 423,
+        "fps": 14.1,
+        "low1_fps": 1.9,
+        "low5_fps": 4.9,
+        "age_ms": 59,
+        "age_p95_ms": 290,
+        "max_gap_ms": 2037,
+        "kbit_s": 582,
+        "rss_client_kb": 2688,
+        "rss_server_kb": 5940,
+        "cpu_client": 0.51,
+        "cpu_server": 2.29
+      },
+      {
+        "variant": "main-B",
+        "slot": 0,
+        "frames": 458,
+        "fps": 15.3,
+        "low1_fps": 1.8,
+        "low5_fps": 5.9,
+        "age_ms": 61,
+        "age_p95_ms": 324,
+        "max_gap_ms": 2478,
+        "kbit_s": 628,
+        "rss_client_kb": 2708,
+        "rss_server_kb": 5968,
+        "cpu_client": 0.57,
+        "cpu_server": 2.38
+      },
+      {
+        "variant": "candidate",
+        "slot": 1,
+        "frames": 580,
+        "fps": 19.3,
+        "low1_fps": 2.1,
+        "low5_fps": 6.7,
+        "age_ms": 56,
+        "age_p95_ms": 260,
+        "max_gap_ms": 1288,
+        "kbit_s": 804,
+        "rss_client_kb": 2808,
+        "rss_server_kb": 5924,
+        "cpu_client": 0.7,
+        "cpu_server": 2.86
+      }
+    ],
+    "identity_valid": true,
+    "comparison_eligible": true,
+    "final_selection": null,
+    "raw_jobs_preserved": null,
+    "interpretation": "Qualitative1%low/5%low/avgFPSgroupfirst; no singlemetricveto/automaticpass/weight/tolerance. CAN-fixedmain andSSH gapsseparate; CPU/RSSsecondary.",
+    "performance_eligible": false,
+    "data_integrity_valid": true
+  }
+]

@@ -1,0 +1,11 @@
+{
+ "accepted": false,
+ "reasons": [
+  "a competing host process >=100% CPU in two consecutive samples"
+ ],
+ "samples": 4,
+ "phase_start": 1793308193.286033,
+ "phase_end": 1793308210.755875,
+ "monotonic_elapsed": 17.46970708295703,
+ "rules": "5s sampling; phase includes setup/drain; guards are heuristic and do not establish CPU-core isolation"
+}

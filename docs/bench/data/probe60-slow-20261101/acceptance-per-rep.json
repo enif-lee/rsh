@@ -1,0 +1,1733 @@
+[
+  {
+    "batch": "00-lowbw-compress-i0",
+    "net": "lowbw",
+    "scene": "compress",
+    "iteration": 0,
+    "status": "observed_fps_gap_not_accepted",
+    "accepted": false,
+    "candidate_zero_delivery": false,
+    "missing_metrics": [],
+    "observed_fps_gaps": [
+      {
+        "control": "main-A",
+        "metric": "low5_fps",
+        "candidate": 46.2,
+        "reference": 46.3
+      },
+      {
+        "control": "main-B",
+        "metric": "fps",
+        "candidate": 56.1,
+        "reference": 57.1
+      }
+    ],
+    "resource_increases_requiring_review": [
+      {
+        "control": "ssh",
+        "metric": "cpu_client",
+        "candidate": 0.91,
+        "reference": 0.18
+      },
+      {
+        "control": "ssh",
+        "metric": "cpu_server",
+        "candidate": 3.55,
+        "reference": 0.54
+      },
+      {
+        "control": "main-A",
+        "metric": "kbit_s",
+        "candidate": 224,
+        "reference": 223
+      },
+      {
+        "control": "main-A",
+        "metric": "rss_client_kb",
+        "candidate": 2656,
+        "reference": 2644
+      },
+      {
+        "control": "main-A",
+        "metric": "rss_server_kb",
+        "candidate": 6080,
+        "reference": 6044
+      },
+      {
+        "control": "main-A",
+        "metric": "cpu_server",
+        "candidate": 3.55,
+        "reference": 3.43
+      },
+      {
+        "control": "main-B",
+        "metric": "kbit_s",
+        "candidate": 224,
+        "reference": 218
+      },
+      {
+        "control": "main-B",
+        "metric": "rss_client_kb",
+        "candidate": 2656,
+        "reference": 2636
+      },
+      {
+        "control": "main-B",
+        "metric": "rss_server_kb",
+        "candidate": 6080,
+        "reference": 5892
+      },
+      {
+        "control": "main-B",
+        "metric": "cpu_client",
+        "candidate": 0.91,
+        "reference": 0.87
+      },
+      {
+        "control": "main-B",
+        "metric": "cpu_server",
+        "candidate": 3.55,
+        "reference": 1.38
+      }
+    ],
+    "roles": [
+      {
+        "variant": "ssh",
+        "slot": 0,
+        "frames": 189,
+        "fps": 23.6,
+        "low1_fps": 6.3,
+        "low5_fps": 7.1,
+        "age_ms": 2536,
+        "age_p95_ms": 4716,
+        "max_gap_ms": 180,
+        "kbit_s": 977,
+        "rss_client_kb": 7656,
+        "rss_server_kb": 19676,
+        "cpu_client": 0.18,
+        "cpu_server": 0.54
+      },
+      {
+        "variant": "main-A",
+        "slot": 1,
+        "frames": 448,
+        "fps": 56.0,
+        "low1_fps": 43.0,
+        "low5_fps": 46.3,
+        "age_ms": 64,
+        "age_p95_ms": 73,
+        "max_gap_ms": 25,
+        "kbit_s": 223,
+        "rss_client_kb": 2644,
+        "rss_server_kb": 6044,
+        "cpu_client": 0.94,
+        "cpu_server": 3.43
+      },
+      {
+        "variant": "main-B",
+        "slot": 2,
+        "frames": 457,
+        "fps": 57.1,
+        "low1_fps": 28.9,
+        "low5_fps": 35.2,
+        "age_ms": 60,
+        "age_p95_ms": 64,
+        "max_gap_ms": 38,
+        "kbit_s": 218,
+        "rss_client_kb": 2636,
+        "rss_server_kb": 5892,
+        "cpu_client": 0.87,
+        "cpu_server": 1.38
+      },
+      {
+        "variant": "candidate",
+        "slot": 3,
+        "frames": 449,
+        "fps": 56.1,
+        "low1_fps": 43.3,
+        "low5_fps": 46.2,
+        "age_ms": 65,
+        "age_p95_ms": 74,
+        "max_gap_ms": 24,
+        "kbit_s": 224,
+        "rss_client_kb": 2656,
+        "rss_server_kb": 6080,
+        "cpu_client": 0.91,
+        "cpu_server": 3.55
+      }
+    ],
+    "identity_valid": true,
+    "raw_jobs_preserved": null,
+    "interpretation": "Per-repetition raw comparisons only. A deficit does not identify policy causality; local A/A supplies no automatic tolerance or pass. Resources require joint review."
+  },
+  {
+    "batch": "01-lowbw-compress-i1",
+    "net": "lowbw",
+    "scene": "compress",
+    "iteration": 1,
+    "status": "observed_fps_gap_not_accepted",
+    "accepted": false,
+    "candidate_zero_delivery": false,
+    "missing_metrics": [],
+    "observed_fps_gaps": [
+      {
+        "control": "main-A",
+        "metric": "low5_fps",
+        "candidate": 47.2,
+        "reference": 47.3
+      },
+      {
+        "control": "main-B",
+        "metric": "fps",
+        "candidate": 56.2,
+        "reference": 56.4
+      },
+      {
+        "control": "main-B",
+        "metric": "low1_fps",
+        "candidate": 43.3,
+        "reference": 45.0
+      },
+      {
+        "control": "main-B",
+        "metric": "low5_fps",
+        "candidate": 47.2,
+        "reference": 47.3
+      }
+    ],
+    "resource_increases_requiring_review": [
+      {
+        "control": "ssh",
+        "metric": "cpu_client",
+        "candidate": 0.8,
+        "reference": 0.18
+      },
+      {
+        "control": "ssh",
+        "metric": "cpu_server",
+        "candidate": 3.31,
+        "reference": 0.47
+      },
+      {
+        "control": "main-A",
+        "metric": "rss_client_kb",
+        "candidate": 2652,
+        "reference": 2640
+      },
+      {
+        "control": "main-A",
+        "metric": "rss_server_kb",
+        "candidate": 6052,
+        "reference": 6008
+      },
+      {
+        "control": "main-A",
+        "metric": "cpu_server",
+        "candidate": 3.31,
+        "reference": 3.24
+      },
+      {
+        "control": "main-B",
+        "metric": "rss_client_kb",
+        "candidate": 2652,
+        "reference": 2640
+      },
+      {
+        "control": "main-B",
+        "metric": "rss_server_kb",
+        "candidate": 6052,
+        "reference": 5988
+      },
+      {
+        "control": "main-B",
+        "metric": "cpu_server",
+        "candidate": 3.31,
+        "reference": 3.19
+      }
+    ],
+    "roles": [
+      {
+        "variant": "ssh",
+        "slot": 2,
+        "frames": 189,
+        "fps": 23.6,
+        "low1_fps": 5.9,
+        "low5_fps": 7.1,
+        "age_ms": 2585,
+        "age_p95_ms": 4686,
+        "max_gap_ms": 171,
+        "kbit_s": 977,
+        "rss_client_kb": 7552,
+        "rss_server_kb": 19768,
+        "cpu_client": 0.18,
+        "cpu_server": 0.47
+      },
+      {
+        "variant": "main-A",
+        "slot": 3,
+        "frames": 449,
+        "fps": 56.1,
+        "low1_fps": 43.3,
+        "low5_fps": 47.3,
+        "age_ms": 64,
+        "age_p95_ms": 73,
+        "max_gap_ms": 24,
+        "kbit_s": 224,
+        "rss_client_kb": 2640,
+        "rss_server_kb": 6008,
+        "cpu_client": 0.8,
+        "cpu_server": 3.24
+      },
+      {
+        "variant": "main-B",
+        "slot": 0,
+        "frames": 451,
+        "fps": 56.4,
+        "low1_fps": 45.0,
+        "low5_fps": 47.3,
+        "age_ms": 64,
+        "age_p95_ms": 73,
+        "max_gap_ms": 24,
+        "kbit_s": 224,
+        "rss_client_kb": 2640,
+        "rss_server_kb": 5988,
+        "cpu_client": 0.8,
+        "cpu_server": 3.19
+      },
+      {
+        "variant": "candidate",
+        "slot": 1,
+        "frames": 450,
+        "fps": 56.2,
+        "low1_fps": 43.3,
+        "low5_fps": 47.2,
+        "age_ms": 65,
+        "age_p95_ms": 73,
+        "max_gap_ms": 36,
+        "kbit_s": 224,
+        "rss_client_kb": 2652,
+        "rss_server_kb": 6052,
+        "cpu_client": 0.8,
+        "cpu_server": 3.31
+      }
+    ],
+    "identity_valid": true,
+    "raw_jobs_preserved": null,
+    "interpretation": "Per-repetition raw comparisons only. A deficit does not identify policy causality; local A/A supplies no automatic tolerance or pass. Resources require joint review."
+  },
+  {
+    "batch": "02-lowbw-bandwidth-i0",
+    "net": "lowbw",
+    "scene": "bandwidth",
+    "iteration": 0,
+    "status": "observed_fps_gap_not_accepted",
+    "accepted": false,
+    "candidate_zero_delivery": false,
+    "missing_metrics": [],
+    "observed_fps_gaps": [
+      {
+        "control": "main-B",
+        "metric": "low1_fps",
+        "candidate": 12.8,
+        "reference": 14.2
+      }
+    ],
+    "resource_increases_requiring_review": [
+      {
+        "control": "ssh",
+        "metric": "cpu_client",
+        "candidate": 0.87,
+        "reference": 0.12
+      },
+      {
+        "control": "ssh",
+        "metric": "cpu_server",
+        "candidate": 2.97,
+        "reference": 0.31
+      },
+      {
+        "control": "main-A",
+        "metric": "kbit_s",
+        "candidate": 922,
+        "reference": 788
+      },
+      {
+        "control": "main-A",
+        "metric": "rss_server_kb",
+        "candidate": 5720,
+        "reference": 5624
+      },
+      {
+        "control": "main-A",
+        "metric": "cpu_client",
+        "candidate": 0.87,
+        "reference": 0.78
+      },
+      {
+        "control": "main-A",
+        "metric": "cpu_server",
+        "candidate": 2.97,
+        "reference": 2.54
+      },
+      {
+        "control": "main-B",
+        "metric": "kbit_s",
+        "candidate": 922,
+        "reference": 799
+      },
+      {
+        "control": "main-B",
+        "metric": "rss_server_kb",
+        "candidate": 5720,
+        "reference": 5608
+      },
+      {
+        "control": "main-B",
+        "metric": "cpu_client",
+        "candidate": 0.87,
+        "reference": 0.77
+      },
+      {
+        "control": "main-B",
+        "metric": "cpu_server",
+        "candidate": 2.97,
+        "reference": 2.63
+      }
+    ],
+    "roles": [
+      {
+        "variant": "ssh",
+        "slot": 0,
+        "frames": 80,
+        "fps": 10.0,
+        "low1_fps": 5.5,
+        "low5_fps": 6.5,
+        "age_ms": 3533,
+        "age_p95_ms": 6488,
+        "max_gap_ms": 181,
+        "kbit_s": 978,
+        "rss_client_kb": 7576,
+        "rss_server_kb": 20068,
+        "cpu_client": 0.12,
+        "cpu_server": 0.31
+      },
+      {
+        "variant": "main-A",
+        "slot": 1,
+        "frames": 157,
+        "fps": 19.6,
+        "low1_fps": 10.2,
+        "low5_fps": 17.4,
+        "age_ms": 96,
+        "age_p95_ms": 116,
+        "max_gap_ms": 101,
+        "kbit_s": 788,
+        "rss_client_kb": 2648,
+        "rss_server_kb": 5624,
+        "cpu_client": 0.78,
+        "cpu_server": 2.54
+      },
+      {
+        "variant": "main-B",
+        "slot": 2,
+        "frames": 160,
+        "fps": 20.0,
+        "low1_fps": 14.2,
+        "low5_fps": 18.1,
+        "age_ms": 96,
+        "age_p95_ms": 114,
+        "max_gap_ms": 93,
+        "kbit_s": 799,
+        "rss_client_kb": 2660,
+        "rss_server_kb": 5608,
+        "cpu_client": 0.77,
+        "cpu_server": 2.63
+      },
+      {
+        "variant": "candidate",
+        "slot": 3,
+        "frames": 184,
+        "fps": 23.0,
+        "low1_fps": 12.8,
+        "low5_fps": 18.9,
+        "age_ms": 115,
+        "age_p95_ms": 176,
+        "max_gap_ms": 94,
+        "kbit_s": 922,
+        "rss_client_kb": 2636,
+        "rss_server_kb": 5720,
+        "cpu_client": 0.87,
+        "cpu_server": 2.97
+      }
+    ],
+    "identity_valid": true,
+    "raw_jobs_preserved": null,
+    "interpretation": "Per-repetition raw comparisons only. A deficit does not identify policy causality; local A/A supplies no automatic tolerance or pass. Resources require joint review."
+  },
+  {
+    "batch": "03-lowbw-bandwidth-i1",
+    "net": "lowbw",
+    "scene": "bandwidth",
+    "iteration": 1,
+    "status": "observed_fps_gap_not_accepted",
+    "accepted": false,
+    "candidate_zero_delivery": false,
+    "missing_metrics": [],
+    "observed_fps_gaps": [
+      {
+        "control": "main-A",
+        "metric": "low1_fps",
+        "candidate": 12.7,
+        "reference": 13.9
+      }
+    ],
+    "resource_increases_requiring_review": [
+      {
+        "control": "ssh",
+        "metric": "cpu_client",
+        "candidate": 0.87,
+        "reference": 0.15
+      },
+      {
+        "control": "ssh",
+        "metric": "cpu_server",
+        "candidate": 2.96,
+        "reference": 0.36
+      },
+      {
+        "control": "main-A",
+        "metric": "kbit_s",
+        "candidate": 910,
+        "reference": 807
+      },
+      {
+        "control": "main-A",
+        "metric": "rss_client_kb",
+        "candidate": 2648,
+        "reference": 2636
+      },
+      {
+        "control": "main-A",
+        "metric": "rss_server_kb",
+        "candidate": 6056,
+        "reference": 6052
+      },
+      {
+        "control": "main-A",
+        "metric": "cpu_client",
+        "candidate": 0.87,
+        "reference": 0.77
+      },
+      {
+        "control": "main-A",
+        "metric": "cpu_server",
+        "candidate": 2.96,
+        "reference": 2.68
+      },
+      {
+        "control": "main-B",
+        "metric": "kbit_s",
+        "candidate": 910,
+        "reference": 798
+      },
+      {
+        "control": "main-B",
+        "metric": "rss_client_kb",
+        "candidate": 2648,
+        "reference": 2640
+      },
+      {
+        "control": "main-B",
+        "metric": "rss_server_kb",
+        "candidate": 6056,
+        "reference": 6052
+      },
+      {
+        "control": "main-B",
+        "metric": "cpu_client",
+        "candidate": 0.87,
+        "reference": 0.76
+      },
+      {
+        "control": "main-B",
+        "metric": "cpu_server",
+        "candidate": 2.96,
+        "reference": 2.64
+      }
+    ],
+    "roles": [
+      {
+        "variant": "ssh",
+        "slot": 2,
+        "frames": 79,
+        "fps": 9.9,
+        "low1_fps": 5.4,
+        "low5_fps": 6.4,
+        "age_ms": 3504,
+        "age_p95_ms": 6475,
+        "max_gap_ms": 184,
+        "kbit_s": 979,
+        "rss_client_kb": 7576,
+        "rss_server_kb": 20156,
+        "cpu_client": 0.15,
+        "cpu_server": 0.36
+      },
+      {
+        "variant": "main-A",
+        "slot": 3,
+        "frames": 162,
+        "fps": 20.2,
+        "low1_fps": 13.9,
+        "low5_fps": 18.0,
+        "age_ms": 97,
+        "age_p95_ms": 115,
+        "max_gap_ms": 102,
+        "kbit_s": 807,
+        "rss_client_kb": 2636,
+        "rss_server_kb": 6052,
+        "cpu_client": 0.77,
+        "cpu_server": 2.68
+      },
+      {
+        "variant": "main-B",
+        "slot": 0,
+        "frames": 159,
+        "fps": 19.9,
+        "low1_fps": 10.6,
+        "low5_fps": 17.9,
+        "age_ms": 97,
+        "age_p95_ms": 116,
+        "max_gap_ms": 101,
+        "kbit_s": 798,
+        "rss_client_kb": 2640,
+        "rss_server_kb": 6052,
+        "cpu_client": 0.76,
+        "cpu_server": 2.64
+      },
+      {
+        "variant": "candidate",
+        "slot": 1,
+        "frames": 181,
+        "fps": 22.6,
+        "low1_fps": 12.7,
+        "low5_fps": 18.9,
+        "age_ms": 100,
+        "age_p95_ms": 131,
+        "max_gap_ms": 104,
+        "kbit_s": 910,
+        "rss_client_kb": 2648,
+        "rss_server_kb": 6056,
+        "cpu_client": 0.87,
+        "cpu_server": 2.96
+      }
+    ],
+    "identity_valid": true,
+    "raw_jobs_preserved": null,
+    "interpretation": "Per-repetition raw comparisons only. A deficit does not identify policy causality; local A/A supplies no automatic tolerance or pass. Resources require joint review."
+  },
+  {
+    "batch": "04-verylow-compress-i0",
+    "net": "verylow",
+    "scene": "compress",
+    "iteration": 0,
+    "status": "observed_fps_gap_not_accepted",
+    "accepted": false,
+    "candidate_zero_delivery": false,
+    "missing_metrics": [],
+    "observed_fps_gaps": [
+      {
+        "control": "main-B",
+        "metric": "low1_fps",
+        "candidate": 26.4,
+        "reference": 26.6
+      }
+    ],
+    "resource_increases_requiring_review": [
+      {
+        "control": "ssh",
+        "metric": "cpu_client",
+        "candidate": 0.95,
+        "reference": 0.12
+      },
+      {
+        "control": "ssh",
+        "metric": "cpu_server",
+        "candidate": 3.43,
+        "reference": 0.49
+      },
+      {
+        "control": "main-A",
+        "metric": "kbit_s",
+        "candidate": 169,
+        "reference": 152
+      },
+      {
+        "control": "main-A",
+        "metric": "rss_server_kb",
+        "candidate": 5440,
+        "reference": 5084
+      },
+      {
+        "control": "main-A",
+        "metric": "cpu_client",
+        "candidate": 0.95,
+        "reference": 0.84
+      },
+      {
+        "control": "main-A",
+        "metric": "cpu_server",
+        "candidate": 3.43,
+        "reference": 3.2
+      },
+      {
+        "control": "main-B",
+        "metric": "kbit_s",
+        "candidate": 169,
+        "reference": 166
+      },
+      {
+        "control": "main-B",
+        "metric": "cpu_client",
+        "candidate": 0.95,
+        "reference": 0.9
+      },
+      {
+        "control": "main-B",
+        "metric": "cpu_server",
+        "candidate": 3.43,
+        "reference": 3.27
+      }
+    ],
+    "roles": [
+      {
+        "variant": "ssh",
+        "slot": 0,
+        "frames": 48,
+        "fps": 6.0,
+        "low1_fps": 4.2,
+        "low5_fps": 5.1,
+        "age_ms": 3796,
+        "age_p95_ms": 6996,
+        "max_gap_ms": 237,
+        "kbit_s": 249,
+        "rss_client_kb": 7540,
+        "rss_server_kb": 19816,
+        "cpu_client": 0.12,
+        "cpu_server": 0.49
+      },
+      {
+        "variant": "main-A",
+        "slot": 1,
+        "frames": 305,
+        "fps": 38.1,
+        "low1_fps": 25.9,
+        "low5_fps": 27.2,
+        "age_ms": 69,
+        "age_p95_ms": 87,
+        "max_gap_ms": 40,
+        "kbit_s": 152,
+        "rss_client_kb": 2012,
+        "rss_server_kb": 5084,
+        "cpu_client": 0.84,
+        "cpu_server": 3.2
+      },
+      {
+        "variant": "main-B",
+        "slot": 2,
+        "frames": 327,
+        "fps": 40.9,
+        "low1_fps": 26.6,
+        "low5_fps": 27.8,
+        "age_ms": 70,
+        "age_p95_ms": 87,
+        "max_gap_ms": 39,
+        "kbit_s": 166,
+        "rss_client_kb": 2012,
+        "rss_server_kb": 5444,
+        "cpu_client": 0.9,
+        "cpu_server": 3.27
+      },
+      {
+        "variant": "candidate",
+        "slot": 3,
+        "frames": 333,
+        "fps": 41.6,
+        "low1_fps": 26.4,
+        "low5_fps": 28.3,
+        "age_ms": 69,
+        "age_p95_ms": 88,
+        "max_gap_ms": 40,
+        "kbit_s": 169,
+        "rss_client_kb": 1576,
+        "rss_server_kb": 5440,
+        "cpu_client": 0.95,
+        "cpu_server": 3.43
+      }
+    ],
+    "identity_valid": true,
+    "raw_jobs_preserved": null,
+    "interpretation": "Per-repetition raw comparisons only. A deficit does not identify policy causality; local A/A supplies no automatic tolerance or pass. Resources require joint review."
+  },
+  {
+    "batch": "05-verylow-compress-i1",
+    "net": "verylow",
+    "scene": "compress",
+    "iteration": 1,
+    "status": "review_required_no_automatic_pass",
+    "accepted": null,
+    "candidate_zero_delivery": false,
+    "missing_metrics": [],
+    "observed_fps_gaps": [],
+    "resource_increases_requiring_review": [
+      {
+        "control": "ssh",
+        "metric": "cpu_client",
+        "candidate": 1.0,
+        "reference": 0.1
+      },
+      {
+        "control": "ssh",
+        "metric": "cpu_server",
+        "candidate": 3.55,
+        "reference": 0.53
+      },
+      {
+        "control": "main-A",
+        "metric": "kbit_s",
+        "candidate": 165,
+        "reference": 161
+      },
+      {
+        "control": "main-A",
+        "metric": "rss_client_kb",
+        "candidate": 2652,
+        "reference": 2636
+      },
+      {
+        "control": "main-A",
+        "metric": "cpu_client",
+        "candidate": 1.0,
+        "reference": 0.96
+      },
+      {
+        "control": "main-A",
+        "metric": "cpu_server",
+        "candidate": 3.55,
+        "reference": 3.42
+      },
+      {
+        "control": "main-B",
+        "metric": "kbit_s",
+        "candidate": 165,
+        "reference": 144
+      },
+      {
+        "control": "main-B",
+        "metric": "rss_client_kb",
+        "candidate": 2652,
+        "reference": 2640
+      },
+      {
+        "control": "main-B",
+        "metric": "cpu_client",
+        "candidate": 1.0,
+        "reference": 0.85
+      },
+      {
+        "control": "main-B",
+        "metric": "cpu_server",
+        "candidate": 3.55,
+        "reference": 3.07
+      }
+    ],
+    "roles": [
+      {
+        "variant": "ssh",
+        "slot": 2,
+        "frames": 48,
+        "fps": 6.0,
+        "low1_fps": 4.3,
+        "low5_fps": 5.1,
+        "age_ms": 3775,
+        "age_p95_ms": 6922,
+        "max_gap_ms": 234,
+        "kbit_s": 249,
+        "rss_client_kb": 7552,
+        "rss_server_kb": 19732,
+        "cpu_client": 0.1,
+        "cpu_server": 0.53
+      },
+      {
+        "variant": "main-A",
+        "slot": 3,
+        "frames": 321,
+        "fps": 40.1,
+        "low1_fps": 26.2,
+        "low5_fps": 27.6,
+        "age_ms": 69,
+        "age_p95_ms": 86,
+        "max_gap_ms": 41,
+        "kbit_s": 161,
+        "rss_client_kb": 2636,
+        "rss_server_kb": 6032,
+        "cpu_client": 0.96,
+        "cpu_server": 3.42
+      },
+      {
+        "variant": "main-B",
+        "slot": 0,
+        "frames": 292,
+        "fps": 36.5,
+        "low1_fps": 24.3,
+        "low5_fps": 27.3,
+        "age_ms": 69,
+        "age_p95_ms": 88,
+        "max_gap_ms": 41,
+        "kbit_s": 144,
+        "rss_client_kb": 2640,
+        "rss_server_kb": 6052,
+        "cpu_client": 0.85,
+        "cpu_server": 3.07
+      },
+      {
+        "variant": "candidate",
+        "slot": 1,
+        "frames": 327,
+        "fps": 40.9,
+        "low1_fps": 26.6,
+        "low5_fps": 28.1,
+        "age_ms": 69,
+        "age_p95_ms": 87,
+        "max_gap_ms": 39,
+        "kbit_s": 165,
+        "rss_client_kb": 2652,
+        "rss_server_kb": 6028,
+        "cpu_client": 1.0,
+        "cpu_server": 3.55
+      }
+    ],
+    "identity_valid": true,
+    "raw_jobs_preserved": null,
+    "interpretation": "Per-repetition raw comparisons only. A deficit does not identify policy causality; local A/A supplies no automatic tolerance or pass. Resources require joint review."
+  },
+  {
+    "batch": "06-verylow-bandwidth-i0",
+    "net": "verylow",
+    "scene": "bandwidth",
+    "iteration": 0,
+    "status": "observed_fps_gap_not_accepted",
+    "accepted": false,
+    "candidate_zero_delivery": false,
+    "missing_metrics": [],
+    "observed_fps_gaps": [
+      {
+        "control": "main-A",
+        "metric": "low1_fps",
+        "candidate": 5.3,
+        "reference": 5.4
+      }
+    ],
+    "resource_increases_requiring_review": [
+      {
+        "control": "ssh",
+        "metric": "kbit_s",
+        "candidate": 255,
+        "reference": 248
+      },
+      {
+        "control": "ssh",
+        "metric": "cpu_client",
+        "candidate": 0.83,
+        "reference": 0.15
+      },
+      {
+        "control": "ssh",
+        "metric": "cpu_server",
+        "candidate": 2.51,
+        "reference": 0.35
+      },
+      {
+        "control": "main-A",
+        "metric": "cpu_client",
+        "candidate": 0.83,
+        "reference": 0.8
+      },
+      {
+        "control": "main-A",
+        "metric": "cpu_server",
+        "candidate": 2.51,
+        "reference": 2.43
+      },
+      {
+        "control": "main-B",
+        "metric": "cpu_client",
+        "candidate": 0.83,
+        "reference": 0.81
+      },
+      {
+        "control": "main-B",
+        "metric": "cpu_server",
+        "candidate": 2.51,
+        "reference": 2.42
+      }
+    ],
+    "roles": [
+      {
+        "variant": "ssh",
+        "slot": 0,
+        "frames": 20,
+        "fps": 2.5,
+        "low1_fps": 1.5,
+        "low5_fps": 1.5,
+        "age_ms": 4024,
+        "age_p95_ms": 7715,
+        "max_gap_ms": 667,
+        "kbit_s": 248,
+        "rss_client_kb": 7580,
+        "rss_server_kb": 19892,
+        "cpu_client": 0.15,
+        "cpu_server": 0.35
+      },
+      {
+        "variant": "main-A",
+        "slot": 1,
+        "frames": 47,
+        "fps": 5.9,
+        "low1_fps": 5.4,
+        "low5_fps": 5.5,
+        "age_ms": 385,
+        "age_p95_ms": 414,
+        "max_gap_ms": 184,
+        "kbit_s": 256,
+        "rss_client_kb": 2632,
+        "rss_server_kb": 6092,
+        "cpu_client": 0.8,
+        "cpu_server": 2.43
+      },
+      {
+        "variant": "main-B",
+        "slot": 2,
+        "frames": 47,
+        "fps": 5.9,
+        "low1_fps": 5.3,
+        "low5_fps": 5.5,
+        "age_ms": 388,
+        "age_p95_ms": 406,
+        "max_gap_ms": 187,
+        "kbit_s": 256,
+        "rss_client_kb": 2652,
+        "rss_server_kb": 6092,
+        "cpu_client": 0.81,
+        "cpu_server": 2.42
+      },
+      {
+        "variant": "candidate",
+        "slot": 3,
+        "frames": 47,
+        "fps": 5.9,
+        "low1_fps": 5.3,
+        "low5_fps": 5.5,
+        "age_ms": 384,
+        "age_p95_ms": 413,
+        "max_gap_ms": 188,
+        "kbit_s": 255,
+        "rss_client_kb": 2632,
+        "rss_server_kb": 6036,
+        "cpu_client": 0.83,
+        "cpu_server": 2.51
+      }
+    ],
+    "identity_valid": true,
+    "raw_jobs_preserved": null,
+    "interpretation": "Per-repetition raw comparisons only. A deficit does not identify policy causality; local A/A supplies no automatic tolerance or pass. Resources require joint review."
+  },
+  {
+    "batch": "07-verylow-bandwidth-i1",
+    "net": "verylow",
+    "scene": "bandwidth",
+    "iteration": 1,
+    "status": "review_required_no_automatic_pass",
+    "accepted": null,
+    "candidate_zero_delivery": false,
+    "missing_metrics": [],
+    "observed_fps_gaps": [],
+    "resource_increases_requiring_review": [
+      {
+        "control": "ssh",
+        "metric": "kbit_s",
+        "candidate": 256,
+        "reference": 248
+      },
+      {
+        "control": "ssh",
+        "metric": "cpu_client",
+        "candidate": 0.77,
+        "reference": 0.11
+      },
+      {
+        "control": "ssh",
+        "metric": "cpu_server",
+        "candidate": 2.5,
+        "reference": 0.38
+      },
+      {
+        "control": "main-A",
+        "metric": "cpu_server",
+        "candidate": 2.5,
+        "reference": 2.37
+      },
+      {
+        "control": "main-B",
+        "metric": "kbit_s",
+        "candidate": 256,
+        "reference": 255
+      },
+      {
+        "control": "main-B",
+        "metric": "cpu_client",
+        "candidate": 0.77,
+        "reference": 0.75
+      },
+      {
+        "control": "main-B",
+        "metric": "cpu_server",
+        "candidate": 2.5,
+        "reference": 2.45
+      }
+    ],
+    "roles": [
+      {
+        "variant": "ssh",
+        "slot": 2,
+        "frames": 19,
+        "fps": 2.4,
+        "low1_fps": 1.3,
+        "low5_fps": 1.3,
+        "age_ms": 3845,
+        "age_p95_ms": null,
+        "max_gap_ms": 754,
+        "kbit_s": 248,
+        "rss_client_kb": 7568,
+        "rss_server_kb": 19932,
+        "cpu_client": 0.11,
+        "cpu_server": 0.38
+      },
+      {
+        "variant": "main-A",
+        "slot": 3,
+        "frames": 47,
+        "fps": 5.9,
+        "low1_fps": 5.4,
+        "low5_fps": 5.5,
+        "age_ms": 385,
+        "age_p95_ms": 411,
+        "max_gap_ms": 184,
+        "kbit_s": 256,
+        "rss_client_kb": 2628,
+        "rss_server_kb": 6056,
+        "cpu_client": 0.78,
+        "cpu_server": 2.37
+      },
+      {
+        "variant": "main-B",
+        "slot": 0,
+        "frames": 47,
+        "fps": 5.9,
+        "low1_fps": 5.4,
+        "low5_fps": 5.5,
+        "age_ms": 382,
+        "age_p95_ms": 406,
+        "max_gap_ms": 184,
+        "kbit_s": 255,
+        "rss_client_kb": 2628,
+        "rss_server_kb": 6048,
+        "cpu_client": 0.75,
+        "cpu_server": 2.45
+      },
+      {
+        "variant": "candidate",
+        "slot": 1,
+        "frames": 47,
+        "fps": 5.9,
+        "low1_fps": 5.4,
+        "low5_fps": 5.5,
+        "age_ms": 382,
+        "age_p95_ms": 417,
+        "max_gap_ms": 184,
+        "kbit_s": 256,
+        "rss_client_kb": 2628,
+        "rss_server_kb": 6040,
+        "cpu_client": 0.77,
+        "cpu_server": 2.5
+      }
+    ],
+    "identity_valid": true,
+    "raw_jobs_preserved": null,
+    "interpretation": "Per-repetition raw comparisons only. A deficit does not identify policy causality; local A/A supplies no automatic tolerance or pass. Resources require joint review."
+  },
+  {
+    "batch": "08-slow64k-compress-i0",
+    "net": "slow64k",
+    "scene": "compress",
+    "iteration": 0,
+    "status": "observed_fps_gap_not_accepted",
+    "accepted": false,
+    "candidate_zero_delivery": false,
+    "missing_metrics": [],
+    "observed_fps_gaps": [
+      {
+        "control": "main-A",
+        "metric": "fps",
+        "candidate": 15.9,
+        "reference": 16.0
+      },
+      {
+        "control": "main-A",
+        "metric": "low5_fps",
+        "candidate": 12.1,
+        "reference": 12.4
+      },
+      {
+        "control": "main-B",
+        "metric": "low5_fps",
+        "candidate": 12.1,
+        "reference": 12.5
+      }
+    ],
+    "resource_increases_requiring_review": [
+      {
+        "control": "ssh",
+        "metric": "kbit_s",
+        "candidate": 63,
+        "reference": 62
+      },
+      {
+        "control": "ssh",
+        "metric": "cpu_client",
+        "candidate": 0.64,
+        "reference": 0.12
+      },
+      {
+        "control": "ssh",
+        "metric": "cpu_server",
+        "candidate": 2.65,
+        "reference": 0.79
+      },
+      {
+        "control": "main-A",
+        "metric": "cpu_client",
+        "candidate": 0.64,
+        "reference": 0.62
+      },
+      {
+        "control": "main-A",
+        "metric": "cpu_server",
+        "candidate": 2.65,
+        "reference": 2.53
+      },
+      {
+        "control": "main-B",
+        "metric": "cpu_client",
+        "candidate": 0.64,
+        "reference": 0.61
+      },
+      {
+        "control": "main-B",
+        "metric": "cpu_server",
+        "candidate": 2.65,
+        "reference": 2.56
+      }
+    ],
+    "roles": [
+      {
+        "variant": "ssh",
+        "slot": 0,
+        "frames": 11,
+        "fps": 1.4,
+        "low1_fps": 1.0,
+        "low5_fps": 1.0,
+        "age_ms": 4417,
+        "age_p95_ms": null,
+        "max_gap_ms": 996,
+        "kbit_s": 62,
+        "rss_client_kb": 7552,
+        "rss_server_kb": 19832,
+        "cpu_client": 0.12,
+        "cpu_server": 0.79
+      },
+      {
+        "variant": "main-A",
+        "slot": 1,
+        "frames": 128,
+        "fps": 16.0,
+        "low1_fps": 8.5,
+        "low5_fps": 12.4,
+        "age_ms": 166,
+        "age_p95_ms": 381,
+        "max_gap_ms": 133,
+        "kbit_s": 64,
+        "rss_client_kb": 2672,
+        "rss_server_kb": 6000,
+        "cpu_client": 0.62,
+        "cpu_server": 2.53
+      },
+      {
+        "variant": "main-B",
+        "slot": 2,
+        "frames": 125,
+        "fps": 15.6,
+        "low1_fps": 8.8,
+        "low5_fps": 12.5,
+        "age_ms": 173,
+        "age_p95_ms": 387,
+        "max_gap_ms": 131,
+        "kbit_s": 64,
+        "rss_client_kb": 2660,
+        "rss_server_kb": 6048,
+        "cpu_client": 0.61,
+        "cpu_server": 2.56
+      },
+      {
+        "variant": "candidate",
+        "slot": 3,
+        "frames": 127,
+        "fps": 15.9,
+        "low1_fps": 11.3,
+        "low5_fps": 12.1,
+        "age_ms": 188,
+        "age_p95_ms": 379,
+        "max_gap_ms": 128,
+        "kbit_s": 63,
+        "rss_client_kb": 2652,
+        "rss_server_kb": 5996,
+        "cpu_client": 0.64,
+        "cpu_server": 2.65
+      }
+    ],
+    "identity_valid": true,
+    "raw_jobs_preserved": null,
+    "interpretation": "Per-repetition raw comparisons only. A deficit does not identify policy causality; local A/A supplies no automatic tolerance or pass. Resources require joint review."
+  },
+  {
+    "batch": "09-slow64k-compress-i1",
+    "net": "slow64k",
+    "scene": "compress",
+    "iteration": 1,
+    "status": "observed_fps_gap_not_accepted",
+    "accepted": false,
+    "candidate_zero_delivery": false,
+    "missing_metrics": [],
+    "observed_fps_gaps": [
+      {
+        "control": "main-A",
+        "metric": "fps",
+        "candidate": 15.6,
+        "reference": 16.0
+      },
+      {
+        "control": "main-A",
+        "metric": "low1_fps",
+        "candidate": 11.2,
+        "reference": 11.4
+      },
+      {
+        "control": "main-A",
+        "metric": "low5_fps",
+        "candidate": 12.3,
+        "reference": 12.9
+      },
+      {
+        "control": "main-B",
+        "metric": "fps",
+        "candidate": 15.6,
+        "reference": 15.9
+      },
+      {
+        "control": "main-B",
+        "metric": "low1_fps",
+        "candidate": 11.2,
+        "reference": 11.6
+      },
+      {
+        "control": "main-B",
+        "metric": "low5_fps",
+        "candidate": 12.3,
+        "reference": 12.9
+      }
+    ],
+    "resource_increases_requiring_review": [
+      {
+        "control": "ssh",
+        "metric": "kbit_s",
+        "candidate": 63,
+        "reference": 62
+      },
+      {
+        "control": "ssh",
+        "metric": "cpu_client",
+        "candidate": 0.72,
+        "reference": 0.12
+      },
+      {
+        "control": "ssh",
+        "metric": "cpu_server",
+        "candidate": 2.98,
+        "reference": 0.8
+      },
+      {
+        "control": "main-A",
+        "metric": "rss_server_kb",
+        "candidate": 6044,
+        "reference": 6000
+      },
+      {
+        "control": "main-A",
+        "metric": "cpu_client",
+        "candidate": 0.72,
+        "reference": 0.71
+      },
+      {
+        "control": "main-A",
+        "metric": "cpu_server",
+        "candidate": 2.98,
+        "reference": 2.78
+      },
+      {
+        "control": "main-B",
+        "metric": "rss_server_kb",
+        "candidate": 6044,
+        "reference": 6004
+      },
+      {
+        "control": "main-B",
+        "metric": "cpu_client",
+        "candidate": 0.72,
+        "reference": 0.71
+      },
+      {
+        "control": "main-B",
+        "metric": "cpu_server",
+        "candidate": 2.98,
+        "reference": 2.75
+      }
+    ],
+    "roles": [
+      {
+        "variant": "ssh",
+        "slot": 2,
+        "frames": 11,
+        "fps": 1.4,
+        "low1_fps": 1.1,
+        "low5_fps": 1.1,
+        "age_ms": 4194,
+        "age_p95_ms": null,
+        "max_gap_ms": 947,
+        "kbit_s": 62,
+        "rss_client_kb": 7556,
+        "rss_server_kb": 20276,
+        "cpu_client": 0.12,
+        "cpu_server": 0.8
+      },
+      {
+        "variant": "main-A",
+        "slot": 3,
+        "frames": 128,
+        "fps": 16.0,
+        "low1_fps": 11.4,
+        "low5_fps": 12.9,
+        "age_ms": 171,
+        "age_p95_ms": 426,
+        "max_gap_ms": 146,
+        "kbit_s": 64,
+        "rss_client_kb": 2644,
+        "rss_server_kb": 6000,
+        "cpu_client": 0.71,
+        "cpu_server": 2.78
+      },
+      {
+        "variant": "main-B",
+        "slot": 0,
+        "frames": 127,
+        "fps": 15.9,
+        "low1_fps": 11.6,
+        "low5_fps": 12.9,
+        "age_ms": 174,
+        "age_p95_ms": 371,
+        "max_gap_ms": 124,
+        "kbit_s": 63,
+        "rss_client_kb": 2644,
+        "rss_server_kb": 6004,
+        "cpu_client": 0.71,
+        "cpu_server": 2.75
+      },
+      {
+        "variant": "candidate",
+        "slot": 1,
+        "frames": 125,
+        "fps": 15.6,
+        "low1_fps": 11.2,
+        "low5_fps": 12.3,
+        "age_ms": 180,
+        "age_p95_ms": 347,
+        "max_gap_ms": 140,
+        "kbit_s": 63,
+        "rss_client_kb": 2644,
+        "rss_server_kb": 6044,
+        "cpu_client": 0.72,
+        "cpu_server": 2.98
+      }
+    ],
+    "identity_valid": true,
+    "raw_jobs_preserved": null,
+    "interpretation": "Per-repetition raw comparisons only. A deficit does not identify policy causality; local A/A supplies no automatic tolerance or pass. Resources require joint review."
+  },
+  {
+    "batch": "10-slow64k-bandwidth-i0",
+    "net": "slow64k",
+    "scene": "bandwidth",
+    "iteration": 0,
+    "status": "missing_metrics_not_accepted",
+    "accepted": false,
+    "candidate_zero_delivery": false,
+    "missing_metrics": [
+      "ssh:low1_fps",
+      "ssh:low5_fps"
+    ],
+    "observed_fps_gaps": [],
+    "resource_increases_requiring_review": [
+      {
+        "control": "ssh",
+        "metric": "kbit_s",
+        "candidate": 63,
+        "reference": 61
+      },
+      {
+        "control": "ssh",
+        "metric": "cpu_client",
+        "candidate": 0.25,
+        "reference": 0.13
+      },
+      {
+        "control": "ssh",
+        "metric": "cpu_server",
+        "candidate": 2.13,
+        "reference": 0.28
+      },
+      {
+        "control": "main-A",
+        "metric": "cpu_server",
+        "candidate": 2.13,
+        "reference": 1.97
+      },
+      {
+        "control": "main-B",
+        "metric": "cpu_server",
+        "candidate": 2.13,
+        "reference": 2.11
+      }
+    ],
+    "roles": [
+      {
+        "variant": "ssh",
+        "slot": 0,
+        "frames": 5,
+        "fps": 0.6,
+        "low1_fps": null,
+        "low5_fps": null,
+        "age_ms": 4869,
+        "age_p95_ms": null,
+        "max_gap_ms": 1937,
+        "kbit_s": 61,
+        "rss_client_kb": 7808,
+        "rss_server_kb": 19964,
+        "cpu_client": 0.13,
+        "cpu_server": 0.28
+      },
+      {
+        "variant": "main-A",
+        "slot": 1,
+        "frames": 13,
+        "fps": 1.6,
+        "low1_fps": 1.4,
+        "low5_fps": 1.4,
+        "age_ms": 2040,
+        "age_p95_ms": null,
+        "max_gap_ms": 730,
+        "kbit_s": 63,
+        "rss_client_kb": 2640,
+        "rss_server_kb": 6072,
+        "cpu_client": 0.25,
+        "cpu_server": 1.97
+      },
+      {
+        "variant": "main-B",
+        "slot": 2,
+        "frames": 13,
+        "fps": 1.6,
+        "low1_fps": 1.4,
+        "low5_fps": 1.4,
+        "age_ms": 1592,
+        "age_p95_ms": null,
+        "max_gap_ms": 733,
+        "kbit_s": 63,
+        "rss_client_kb": 2640,
+        "rss_server_kb": 6072,
+        "cpu_client": 0.28,
+        "cpu_server": 2.11
+      },
+      {
+        "variant": "candidate",
+        "slot": 3,
+        "frames": 13,
+        "fps": 1.6,
+        "low1_fps": 1.4,
+        "low5_fps": 1.4,
+        "age_ms": 2035,
+        "age_p95_ms": null,
+        "max_gap_ms": 729,
+        "kbit_s": 63,
+        "rss_client_kb": 2624,
+        "rss_server_kb": 6068,
+        "cpu_client": 0.25,
+        "cpu_server": 2.13
+      }
+    ],
+    "identity_valid": true,
+    "raw_jobs_preserved": null,
+    "interpretation": "Per-repetition raw comparisons only. A deficit does not identify policy causality; local A/A supplies no automatic tolerance or pass. Resources require joint review."
+  },
+  {
+    "batch": "11-slow64k-bandwidth-i1",
+    "net": "slow64k",
+    "scene": "bandwidth",
+    "iteration": 1,
+    "status": "missing_metrics_not_accepted",
+    "accepted": false,
+    "candidate_zero_delivery": false,
+    "missing_metrics": [
+      "ssh:low1_fps",
+      "ssh:low5_fps"
+    ],
+    "observed_fps_gaps": [
+      {
+        "control": "main-A",
+        "metric": "fps",
+        "candidate": 1.4,
+        "reference": 1.5
+      },
+      {
+        "control": "main-A",
+        "metric": "low1_fps",
+        "candidate": 1.3,
+        "reference": 1.4
+      },
+      {
+        "control": "main-A",
+        "metric": "low5_fps",
+        "candidate": 1.3,
+        "reference": 1.4
+      }
+    ],
+    "resource_increases_requiring_review": [
+      {
+        "control": "ssh",
+        "metric": "cpu_client",
+        "candidate": 0.32,
+        "reference": 0.13
+      },
+      {
+        "control": "ssh",
+        "metric": "cpu_server",
+        "candidate": 1.8,
+        "reference": 0.38
+      },
+      {
+        "control": "main-A",
+        "metric": "cpu_client",
+        "candidate": 0.32,
+        "reference": 0.24
+      },
+      {
+        "control": "main-A",
+        "metric": "cpu_server",
+        "candidate": 1.8,
+        "reference": 1.78
+      },
+      {
+        "control": "main-B",
+        "metric": "rss_server_kb",
+        "candidate": 6076,
+        "reference": 6064
+      }
+    ],
+    "roles": [
+      {
+        "variant": "ssh",
+        "slot": 2,
+        "frames": 5,
+        "fps": 0.6,
+        "low1_fps": null,
+        "low5_fps": null,
+        "age_ms": 4802,
+        "age_p95_ms": null,
+        "max_gap_ms": 1870,
+        "kbit_s": 63,
+        "rss_client_kb": 7564,
+        "rss_server_kb": 19984,
+        "cpu_client": 0.13,
+        "cpu_server": 0.38
+      },
+      {
+        "variant": "main-A",
+        "slot": 3,
+        "frames": 12,
+        "fps": 1.5,
+        "low1_fps": 1.4,
+        "low5_fps": 1.4,
+        "age_ms": 1726,
+        "age_p95_ms": null,
+        "max_gap_ms": 726,
+        "kbit_s": 63,
+        "rss_client_kb": 2640,
+        "rss_server_kb": 6084,
+        "cpu_client": 0.24,
+        "cpu_server": 1.78
+      },
+      {
+        "variant": "main-B",
+        "slot": 0,
+        "frames": 11,
+        "fps": 1.4,
+        "low1_fps": 1.3,
+        "low5_fps": 1.3,
+        "age_ms": 1041,
+        "age_p95_ms": null,
+        "max_gap_ms": 767,
+        "kbit_s": 64,
+        "rss_client_kb": 2648,
+        "rss_server_kb": 6064,
+        "cpu_client": 0.32,
+        "cpu_server": 1.81
+      },
+      {
+        "variant": "candidate",
+        "slot": 1,
+        "frames": 11,
+        "fps": 1.4,
+        "low1_fps": 1.3,
+        "low5_fps": 1.3,
+        "age_ms": 1014,
+        "age_p95_ms": null,
+        "max_gap_ms": 791,
+        "kbit_s": 63,
+        "rss_client_kb": 2616,
+        "rss_server_kb": 6076,
+        "cpu_client": 0.32,
+        "cpu_server": 1.8
+      }
+    ],
+    "identity_valid": true,
+    "raw_jobs_preserved": null,
+    "interpretation": "Per-repetition raw comparisons only. A deficit does not identify policy causality; local A/A supplies no automatic tolerance or pass. Resources require joint review."
+  }
+]

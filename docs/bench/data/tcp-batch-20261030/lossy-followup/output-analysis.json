@@ -1,0 +1,46 @@
+{
+  "alpine": {
+    "bytes": 199477,
+    "sha256": "1176f3f1e1380dcb30364a8c2305bad32580e15a56b1c9b321abfc4469771b03",
+    "exact_block_offset": 554,
+    "exact_block_bytes": 198894,
+    "old_parser_count": 30000,
+    "old_parser_first": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "prefix_before_block_hex": "30303b206563686f20444f4e452d242828362a3729290d0a",
+    "fixed_parser_count": 30000,
+    "fixed_order_assertion": true
+  },
+  "benchmark": {
+    "bytes": 199587,
+    "sha256": "e3b06e3ec69ca5389235a6a049eca0b0ce009515abffbd26d6d736d9f9388da0",
+    "exact_block_offset": 630,
+    "exact_block_bytes": 198894,
+    "old_parser_count": 29999,
+    "old_parser_first": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "prefix_before_block_hex": "444f4e452d242828362a3729290d0a1b5b3f323030346c0d",
+    "fixed_parser_count": 30000,
+    "fixed_order_assertion": true
+  },
+  "final_fix": "Preserve first-1 and 30000-number order assertions; remove only the known leading bracketed-paste reset before numeric parsing.",
+  "diagnostic_full_block_search_negative_checks": [
+    "missing_first_line",
+    "missing_middle_line",
+    "duplicated_middle_line",
+    "swapped_lines",
+    "inserted_non_numeric_bytes"
+  ]
+}

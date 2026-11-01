@@ -1,0 +1,71 @@
+{
+  "at": 1793449420.704256,
+  "artifacts": [
+    {
+      "variant": "baseline",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-fresh-quarter-main",
+      "sha256": "9ab79c22ebd289047ffa616a5e8aef3c7d9f2498756b5974ae5a74b2d0ecb463",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/main-source",
+      "source_build_id": "6729d398d4f1",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "guard_output": "verified build 6729d398d4f1: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-current-main"
+    },
+    {
+      "variant": "candidate",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-tcp-fresh-quarter",
+      "sha256": "86d95511114268945945bb8891574c2c60e50f459707eb493ae6d9117ec6a3b8",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/tcp-fresh-quarter-source",
+      "source_build_id": "f200617535a4",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "guard_output": "verified build f200617535a4: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/tcp-fresh-quarter-tests\nverified build f200617535a4: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-tcp-fresh-quarter"
+    }
+  ],
+  "same_container_sequential_build": true,
+  "compiler_image": "sha256:b1d5dd5a22a09404d3e798c0cf051b689077360374eb505fa5bb93c479693d87",
+  "CARGO_HOME": "/cargo",
+  "build_path": "/src",
+  "apk_manifest_sha256": "d99b2de6a1a883172b2f814cd7ca03534ae3c72bbd1111ca3604ebc3914ca185",
+  "cargo_artifacts": {
+    "fresh-quarter-tests-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "0",
+        "debuginfo": 2,
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "test": true
+      },
+      "executable": "/target/debug/deps/rsh-a4e873949d566604"
+    },
+    "fresh-quarter-main-release-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "executable": "/target/release/rsh"
+    },
+    "tcp-fresh-quarter-release-build.jsonl": {
+      "fresh": false,
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "executable": "/target/release/rsh"
+    }
+  },
+  "tests": {
+    "targeted_passed": 7,
+    "library_passed": 103,
+    "ignored": 2
+  },
+  "performance_status": "not_measured"
+}

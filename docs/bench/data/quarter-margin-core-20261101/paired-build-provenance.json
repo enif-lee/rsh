@@ -1,0 +1,223 @@
+{
+  "status": "root_actual_candidate_and_expected_negative_control_complete",
+  "artifacts": [
+    {
+      "variant": "baseline",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-fps-combined-pty-account",
+      "sha256": "fb04386fdfe25f25f1bfd0354f11ba7a01c954525a11634ae35caafd46c2eec4",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/fps-combined-pty-account-source",
+      "source_build_id": "295f81d54ea4",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "snapshot_manifest_entries": 25,
+      "source_manifest_sha256": "bcb90ebadd5770b6659c5fb6107772db5738e30426c38355dc4a26ebc37a796c",
+      "full_inventory_entries": 32,
+      "source_full_manifest_sha256": "27320c01d284830245feed20138497347f233bf55ceac2c148c742b3bac12235",
+      "guard_output": "verified build 295f81d54ea4: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-fps-combined-pty-account\nverified build 295f81d54ea4: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/fps-combined-pty-account-library-tests",
+      "functional_tests": {
+        "library": {
+          "passed": 110,
+          "ignored": 2,
+          "log_sha256": "938c179b887ec81d9d5b1b67d90de6728551b7755d8124234e3527fc4d2c81a1"
+        },
+        "binary_cli": {
+          "passed": 4,
+          "ignored": 0,
+          "log_sha256": "b7bb262b666b33b93b120d5d1298944dbe89c87c69e8a9acaa778f532ca2b63c"
+        },
+        "session": {
+          "passed": 25,
+          "ignored": 0,
+          "log_sha256": "fe442769b7c431babd9c9923d476c68a4b6f781a4743250f68eaa807810c0739"
+        },
+        "pty_concurrency": {
+          "passed": 1,
+          "ignored": 0,
+          "log_sha256": "5c4f37fb46e3c7d2990b5b4c82c727cb999546e0bb8288c7efda81c12815bfc1"
+        }
+      },
+      "functional_total_passed": 140,
+      "concurrency_child_spawns": 64,
+      "cargo_root_artifacts": {
+        "all-tests-build.jsonl": [
+          {
+            "name": "pty_concurrency",
+            "kind": [
+              "test"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": true
+            },
+            "fresh": false,
+            "executable": "/target/debug/deps/pty_concurrency-72e082953d31c37e"
+          },
+          {
+            "name": "rsh",
+            "kind": [
+              "bin"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": true
+            },
+            "fresh": false,
+            "executable": "/target/debug/deps/rsh-ffba42ccfca42a15"
+          },
+          {
+            "name": "binary_cli",
+            "kind": [
+              "test"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": true
+            },
+            "fresh": false,
+            "executable": "/target/debug/deps/binary_cli-499ca979f2f3fc6b"
+          },
+          {
+            "name": "session",
+            "kind": [
+              "test"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": true
+            },
+            "fresh": false,
+            "executable": "/target/debug/deps/session-7a5d2366fdc3fcc5"
+          },
+          {
+            "name": "rsh",
+            "kind": [
+              "bin"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            },
+            "fresh": false,
+            "executable": "/target/debug/rsh"
+          },
+          {
+            "name": "rsh",
+            "kind": [
+              "lib"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": true
+            },
+            "fresh": false,
+            "executable": "/target/debug/deps/rsh-a4e873949d566604"
+          }
+        ],
+        "release-build.jsonl": [
+          {
+            "name": "rsh",
+            "kind": [
+              "bin"
+            ],
+            "profile": {
+              "opt_level": "3",
+              "debuginfo": 0,
+              "debug_assertions": false,
+              "overflow_checks": false,
+              "test": false
+            },
+            "fresh": false,
+            "executable": "/target/release/rsh"
+          }
+        ]
+      }
+    },
+    {
+      "variant": "candidate",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-cadence60",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/60-tcp-quarter-margin-source",
+      "sha256": "4b5273bcb4340cfc634214c7495e6df943e6f3dfb161ce2efbbe9c09684c6c2d",
+      "source_build_id": "fa934e198646",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "source_manifest_sha256": "9946e89554ec85965743999e7f8dd4d3a9bd2387dc2434246e94fad4449e86e5",
+      "source_full_manifest_sha256": "612cb9ff860cd89f080f0fe655a3ed85d9a8049e10321d51b305e4a8cc565b3d",
+      "snapshot_manifest_entries": 25,
+      "full_inventory_entries": 32,
+      "functional_tests": {
+        "library": {
+          "passed": 116,
+          "ignored": 2,
+          "log_sha256": "a6a336fdca6b478d1070cb7c5d02e18018da0a66e546e325bea7d8e1229d8616"
+        },
+        "binary_cli": {
+          "passed": 4,
+          "ignored": 0,
+          "log_sha256": "426d6ff59576d0390b09aff34546f93e951eb8f2ba2bb9733afacf6961693f45"
+        },
+        "session": {
+          "passed": 25,
+          "ignored": 0,
+          "log_sha256": "dd2bc7e6093df0a9d002f4773f67822ae2de10dab249bc2da2ae0fff03a805bd"
+        },
+        "pty_concurrency": {
+          "passed": 1,
+          "ignored": 0,
+          "log_sha256": "5c4f37fb46e3c7d2990b5b4c82c727cb999546e0bb8288c7efda81c12815bfc1"
+        }
+      },
+      "functional_total_passed": 146,
+      "ignored": 2,
+      "cargo_root_artifacts": [
+        {
+          "log": "cadence60-all-tests-build.jsonl",
+          "sha256": "d80babcb9030fd155af8c49bdc0a04d6ad49e3635d6762fa33a1c849e79f3f8a",
+          "root_fresh_false": true,
+          "root_executable_count": 6
+        },
+        {
+          "log": "cadence60-release-build.jsonl",
+          "sha256": "55316825bfa1260ea7d6c601954ebd5758a2b3594cba65a501878136a1f71817",
+          "root_fresh_false": true,
+          "root_executable_count": 1
+        }
+      ]
+    }
+  ],
+  "comparison_scope": "Exact saved COMBINED295f/fb04 baseline versus two-policy60 candidate built separately; not a fresh same-container rebuild of both and not quarter increment versus48",
+  "same_container_sequential_build": false,
+  "candidate_build_script_sha256": "503810cbb4131c14cbf9ca89dd181826df1a817e781d227c7aac7d8718d78748",
+  "candidate_build_log_sha256": "06297f2f0e186e4b78e3d9391083ff3f6c47e0edfb0b9fa397c4e15ab10a55d4",
+  "source_guard_sha256": "99548fec0c3d133eb93951de27d9bb21fb36d128c730986648e0b36761746f47",
+  "source_only_parent_proof_sha256": "3999393831b3ff232eef420e6c8b8a3de6004058411aa7dc4efa089d2c868b24",
+  "control": {
+    "source_id": "653e6d050510",
+    "parent": "48margin production unchanged; sameadaptedquarter3fixture",
+    "quarter_passed": 2,
+    "quarter_expected_failed": 1,
+    "quarter_failure": "known_slow_tcp_does_not_wait_past_the_quarter_gap",
+    "existing_margin_passed": 3,
+    "quarter_log_sha256": "f0a13112adc978970753aa3cad405a42efef2a51caeac836942b9de5ef9a2994",
+    "margin_log_sha256": "44cefb507b77af0ff413ed14f40781a9383fdc2a1929616371bed651c37b9700",
+    "guard_sha256": "fd91e62f832df27be00d57818391e09bd4f33ea7635dc0def1bd26e9b670e092"
+  },
+  "historical_adverse19_51_53_57_preserved": true
+}

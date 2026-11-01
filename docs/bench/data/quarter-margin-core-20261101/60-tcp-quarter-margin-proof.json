@@ -1,0 +1,32 @@
+{
+  "stage": "SOURCE_ONLY_UNBUILT_UNTESTED",
+  "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/60-tcp-quarter-margin-source",
+  "planned_unsalted_build_id": "fa934e198646",
+  "actual_sha256": null,
+  "source_build_verified": false,
+  "parent48_source_build_id": "ea6c0df76a70",
+  "parent55_source_build_id": "515db0475a03",
+  "common_parent295_build_id": "295f81d54ea4",
+  "canonical_files": 25,
+  "full_files": 32,
+  "only_changed_file": "src/server.rs",
+  "production_changes": [
+    "55 known-slow TCP fresh wait min(FRESH_WAIT,gap/4)",
+    "48 no-slow low-queue animating TCP raw output_gap*0.9 then existing8..20ms clamp"
+  ],
+  "margin_fixture_exact": true,
+  "quarter_fixture_methods": 3,
+  "quarter_fixture_adapted_assertions": 1,
+  "adopted_fixture_conflict": "55 third fixture resets slow_rate, so the unknown-rate low-queue TCP deadline intentionally follows margin branch; only that expectation is updated. All known-slow, UDP, cap and tail checks retained.",
+  "inverse48_full32_exact": true,
+  "inverse55_full32_exact_after_restoring_original_quarter_assertion": true,
+  "inverse295_full32_exact": true,
+  "no_new_state_api_options_deps": true,
+  "no_build_tests_Docker_capture": true,
+  "canonical_manifest_sha256": "9946e89554ec85965743999e7f8dd4d3a9bd2387dc2434246e94fad4449e86e5",
+  "full_manifest_sha256": "612cb9ff860cd89f080f0fe655a3ed85d9a8049e10321d51b305e4a8cc565b3d",
+  "patch_sha256": "e0d625ead4774393ffd06980c39b73b566e693d0cbcd278ac539acd7fb4228f4",
+  "quarter_fixture_sha256": "edf3fe15aedec88b02f5a236cc107d290f63d95dc5a50058bdaec47f352e6661",
+  "original_quarter_fixture_sha256": "f3c1503c245861a787c00608575433c96d80723daf458974780ab158e0dd0505",
+  "exact_margin_fixture_sha256": "08c1e0a9bb5eecd34bd04819b5d12bea8cef39667d992a898a2fbe175f293783"
+}

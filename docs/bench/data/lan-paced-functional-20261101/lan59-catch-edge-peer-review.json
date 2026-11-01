@@ -1,0 +1,19 @@
+{
+  "verdict": "PASS_BOUNDED_SOURCE_DERIVED",
+  "adopted_defects": [],
+  "errors": [],
+  "total": 1418,
+  "crossings": 0,
+  "then_poll_crossings": 0,
+  "budget_10ms": 1418,
+  "budget_300ms": 0,
+  "per_role_counts_match_prior_analysis": true,
+  "script_sha256": "7f5c2cabedc385e3ebec0c59e98949e653e15584a01744d9dc3742570d771f73",
+  "analysis_sha256": "1e35b25a7c2ad30e8b55f7311304a46308deea95cba7b9e2d6bfa9d3e178a5b7",
+  "scope": "Source and2.6KB JSON only. No15.5MB scalarcache or24CSV reparse; raw-to-cache and ns comparisons executor-provided.",
+  "source_contract": "catching_up(now) strict elapsed<catch_up(); maskbits3/4=clears/updates select300ms else10ms; crossing oldnow<deadline<=row.ns matches equality expiry.",
+  "limits": [
+    "Recorded row time only bounds the counterfactual fresh call if it is placed before gate recording on the same observed timeline",
+    "No prototype/future timing, pollrc/allFD timeout, body ownership/GPU or policy causality proof"
+  ]
+}

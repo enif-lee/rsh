@@ -1,0 +1,35 @@
+[
+  {
+    "dataset": "core",
+    "figure_inches": [
+      13.0,
+      9.0
+    ],
+    "drawn_text_outside": [],
+    "text_pairs_overlapping": [],
+    "ylabel_pairs_overlapping": [],
+    "scope": "Only in-view tick labels actually eligible for drawing; out-of-view log locator ticks excluded."
+  },
+  {
+    "dataset": "slow",
+    "figure_inches": [
+      13.0,
+      9.0
+    ],
+    "drawn_text_outside": [],
+    "text_pairs_overlapping": [],
+    "ylabel_pairs_overlapping": [],
+    "scope": "Only in-view tick labels actually eligible for drawing; out-of-view log locator ticks excluded."
+  },
+  {
+    "dataset": "moving",
+    "figure_inches": [
+      13.0,
+      9.0
+    ],
+    "drawn_text_outside": [],
+    "text_pairs_overlapping": [],
+    "ylabel_pairs_overlapping": [],
+    "scope": "Only in-view tick labels actually eligible for drawing; out-of-view log locator ticks excluded."
+  }
+]

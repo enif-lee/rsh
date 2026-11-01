@@ -1,0 +1,33 @@
+{
+ "accepted_host_phases": 24,
+ "completed_jobs": 96,
+ "accepted_guard_jobs": 96,
+ "expected_jobs": 96,
+ "status": "measurement_finished_analysis_pending",
+ "completed_blocks": [
+  "00-lan-compress-i0-legacy",
+  "01-lan-compress-i0-raw-only",
+  "02-lan-compress-i1-raw-only",
+  "03-lan-compress-i1-legacy",
+  "04-lan-bandwidth-i0-legacy",
+  "05-lan-bandwidth-i0-raw-only",
+  "06-lan-bandwidth-i1-raw-only",
+  "07-lan-bandwidth-i1-legacy",
+  "08-wan-compress-i0-legacy",
+  "09-wan-compress-i0-raw-only",
+  "10-wan-compress-i1-raw-only",
+  "11-wan-compress-i1-legacy",
+  "12-wan-bandwidth-i0-legacy",
+  "13-wan-bandwidth-i0-raw-only",
+  "14-wan-bandwidth-i1-raw-only",
+  "15-wan-bandwidth-i1-legacy",
+  "16-highlat-compress-i0-legacy",
+  "17-highlat-compress-i0-raw-only",
+  "18-highlat-compress-i1-raw-only",
+  "19-highlat-compress-i1-legacy",
+  "20-highlat-bandwidth-i0-legacy",
+  "21-highlat-bandwidth-i0-raw-only",
+  "22-highlat-bandwidth-i1-raw-only",
+  "23-highlat-bandwidth-i1-legacy"
+ ]
+}

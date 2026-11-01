@@ -1,0 +1,14 @@
+{
+  "functional_jobs": 16,
+  "trace_endpoints": 24,
+  "rsh_server_commits": 2137,
+  "same_ack_refloor": 28,
+  "same_ack_refloor_after23": 0,
+  "same_ack_probe_records": 0,
+  "performance_eligible": false,
+  "source_imports_exact": 16,
+  "raw_capture_or_source_replay": 0,
+  "new_benchmarks": 0,
+  "physical_queue_counterexample_only": true,
+  "verifier_scope": "Bundled hashes and stored sample/aggregate arithmetic; no independent raw-poll join reconstruction."
+}

@@ -1,0 +1,41 @@
+{
+  "status": "source_only_unbuilt_untested",
+  "variants": [
+    {
+      "label": "baseline",
+      "parent": "49-moving-cadence-trace/combined-source",
+      "parent_product": "295f81d54ea4",
+      "source_files": 26,
+      "planned_unsalted_build_id": "9621a9ce4e8a",
+      "source_manifest_sha256": "f11743719d2b410c6879c68475e3819068d94f2fce15d2f25ff12c78145b1dfa",
+      "reverse_to_parent26_exact": true,
+      "reverse_inherited_to_product25_exact": true,
+      "record_capacity": 131072,
+      "record_bytes": 80,
+      "policy_change": "none; common actual branch30 gap diagnostic",
+      "new_builds": 0,
+      "new_tests": 0
+    },
+    {
+      "label": "margin",
+      "parent": "49-moving-cadence-trace/combined-source",
+      "parent_product": "295f81d54ea4",
+      "source_files": 26,
+      "planned_unsalted_build_id": "e8a3f8def09b",
+      "source_manifest_sha256": "6c10914513bc4779df8f9c3c082bd45ab5b16c3b6046388c25de04b46ed1d3f3",
+      "reverse_to_parent26_exact": true,
+      "reverse_inherited_to_product25_exact": true,
+      "record_capacity": 131072,
+      "record_bytes": 80,
+      "policy_change": "only product48 branch30 rawgap0.9 clamp8..20 for TCP+animating",
+      "new_builds": 0,
+      "new_tests": 0
+    }
+  ],
+  "common_gap_diagnostic": "event36 f branch30 now actual applied gap for both sources, one existing getter call, no sentinel0",
+  "new_policy_fields": false,
+  "imports": 0,
+  "builds": 0,
+  "tests": 0,
+  "Docker": 0
+}

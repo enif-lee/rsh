@@ -1,0 +1,106 @@
+{
+  "status": "derived_observation",
+  "cache_sha256": "d18fee88feeec44bea1fde53739451c46c13d177e29d3ab8d1df1f04671a5dfa",
+  "rows": [
+    {
+      "batch": "00-lan-compress-i0",
+      "variant": "main-trace-A",
+      "counts": {},
+      "cases": []
+    },
+    {
+      "batch": "00-lan-compress-i0",
+      "variant": "main-trace-B",
+      "counts": {},
+      "cases": []
+    },
+    {
+      "batch": "00-lan-compress-i0",
+      "variant": "combined-trace",
+      "counts": {},
+      "cases": []
+    },
+    {
+      "batch": "01-lan-compress-i1",
+      "variant": "main-trace-B",
+      "counts": {},
+      "cases": []
+    },
+    {
+      "batch": "01-lan-compress-i1",
+      "variant": "combined-trace",
+      "counts": {},
+      "cases": []
+    },
+    {
+      "batch": "01-lan-compress-i1",
+      "variant": "main-trace-A",
+      "counts": {},
+      "cases": []
+    },
+    {
+      "batch": "02-lan-bandwidth-i0",
+      "variant": "main-trace-A",
+      "counts": {
+        "catch_only": 223,
+        "budget_10ms": 223
+      },
+      "cases": []
+    },
+    {
+      "batch": "02-lan-bandwidth-i0",
+      "variant": "main-trace-B",
+      "counts": {
+        "catch_only": 193,
+        "budget_10ms": 193
+      },
+      "cases": []
+    },
+    {
+      "batch": "02-lan-bandwidth-i0",
+      "variant": "combined-trace",
+      "counts": {
+        "catch_only": 258,
+        "budget_10ms": 258
+      },
+      "cases": []
+    },
+    {
+      "batch": "03-lan-bandwidth-i1",
+      "variant": "main-trace-B",
+      "counts": {
+        "catch_only": 304,
+        "budget_10ms": 304
+      },
+      "cases": []
+    },
+    {
+      "batch": "03-lan-bandwidth-i1",
+      "variant": "combined-trace",
+      "counts": {
+        "catch_only": 169,
+        "budget_10ms": 169
+      },
+      "cases": []
+    },
+    {
+      "batch": "03-lan-bandwidth-i1",
+      "variant": "main-trace-A",
+      "counts": {
+        "catch_only": 271,
+        "budget_10ms": 271
+      },
+      "cases": []
+    }
+  ],
+  "total_catch_only": 1418,
+  "row_time_crossings": 0,
+  "then_poll_crossings": 0,
+  "limits": [
+    "Row timestamp is after mark call begins; an upper-time counterfactual, not actual hypothetical flush call Instant.",
+    "Existing scalar cache only; no new raw reparse, capture, build, tests or Docker.",
+    "No strict poll timeout/sole limiter, unknown source-frame ownership or GPU claim.",
+    "Mask bit catch-only is a state observation; deadline crossing would be hypothetical immediate flush eligibility at row time, not causal FPS attribution."
+  ],
+  "script_sha256": "7f5c2cabedc385e3ebec0c59e98949e653e15584a01744d9dc3742570d771f73"
+}

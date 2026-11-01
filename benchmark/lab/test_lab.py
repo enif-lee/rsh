@@ -11,6 +11,7 @@ import sys
 import tempfile
 import time
 import unittest
+from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 import lab
@@ -27,18 +28,18 @@ class RunScheduleTests(unittest.TestCase):
             lab.main()
             return run.call_args.args[0]
 
-    def test_default_full_matrix_has_three_repeats_and_one_memory_sample(self):
+    def test_default_full_matrix_has_four_workers_and_two_repeats_per_case(self):
         opts = self.options(
             "--tests", "render,switch,echo,flood,outage,roam,reattach,udpblock,sessions",
             "--nets", "lan,wan,lowbw,verylow,slow64k,highlat,lossy,mobile,badmobile",
             "--switches", "lan:highlat,lan:lowbw,lowbw:highlat,highlat:lossy,wan:verylow")
-        self.assertEqual(opts.parallel, 12)
+        self.assertEqual(opts.parallel, 4)
         jobs = lab.jobs_of(opts)
-        self.assertEqual(len(jobs), 755)
-        self.assertEqual(sum(j["test"] == "render" for j in jobs), 270)
-        self.assertEqual(sum(j["test"] == "switch" for j in jobs), 150)
-        self.assertEqual([j["iteration"] for j in jobs if j["test"] == "sessions"], [0] * 5)
-        self.assertEqual({j["iteration"] for j in jobs if j["test"] != "sessions"}, {0, 1, 2})
+        self.assertEqual(len(jobs), 510)
+        self.assertEqual(sum(j["test"] == "render" for j in jobs), 180)
+        self.assertEqual(sum(j["test"] == "switch" for j in jobs), 100)
+        self.assertEqual([j["iteration"] for j in jobs if j["test"] == "sessions"], [0] * 5 + [1] * 5)
+        self.assertEqual({j["iteration"] for j in jobs}, {0, 1})
 
     def test_memory_repeats_can_exceed_the_other_repeats(self):
         opts = self.options("--tools", "ssh,rsh", "--tests", "echo,sessions", "--nets", "lan",
@@ -47,6 +48,37 @@ class RunScheduleTests(unittest.TestCase):
         self.assertEqual(opts.parallel, 4)
         self.assertEqual(sum(j["test"] == "echo" for j in jobs), 2)
         self.assertEqual(sum(j["test"] == "sessions" for j in jobs), 4)
+
+
+class SecondBuildTests(unittest.TestCase):
+    def test_run_forces_tcp_for_both_builds_only_when_requested(self):
+        for tool, dropped in (("rsh", False), ("rsh-b", False),
+                              ("rsh-tcp", True), ("rsh-b-tcp", True)):
+            with self.subTest(tool=tool), patch.object(lab, "prepare") as prepare, \
+                 patch.object(lab.subprocess, "Popen", side_effect=RuntimeError("stop before launching")):
+                with self.assertRaisesRegex(RuntimeError, "stop before launching"):
+                    lab.run_job(0, dict(tool=tool, net="wan", test="render"))
+                prepare.assert_called_once_with(0, "wan", dropped)
+
+    def test_demo_installs_both_builds_and_forces_second_tcp_before_launch(self):
+        opts = SimpleNamespace(tools="rsh-b-tcp", rsh="/baseline", rsh_b="/candidate")
+        commands = []
+        def tmux(*args, **kwargs):
+            if args[0] == "new-session":
+                commands.append(args[-1])
+                raise RuntimeError("stop before client starts")
+        with patch.object(lab, "slots", return_value=[0]), \
+             patch.object(lab, "install_rsh") as install, \
+             patch.object(lab, "install_rsh_b") as install_b, \
+             patch.object(lab, "sh"), patch.object(lab, "dexec") as dexec, \
+             patch.object(lab, "shape"), patch.object(lab, "tmux", side_effect=tmux):
+            with self.assertRaisesRegex(RuntimeError, "stop before client starts"):
+                lab.demo(opts)
+        install.assert_called_once_with("/baseline", range(1))
+        install_b.assert_called_once_with("/candidate", range(1))
+        self.assertIn(unittest.mock.call(lab.srv(0), "iptables", "-I", "INPUT", "-p", "udp", "-j", "DROP"), dexec.call_args_list)
+        self.assertIn("RSH_PEER=server:2223", commands[0])
+        self.assertIn("rsh-b server demo", commands[0])
 
 
 class Clock:

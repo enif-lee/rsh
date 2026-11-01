@@ -1,0 +1,29 @@
+[
+  {
+    "variant": "main-A",
+    "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-probe60-pair-main",
+    "sha256": "9ab79c22ebd289047ffa616a5e8aef3c7d9f2498756b5974ae5a74b2d0ecb463",
+    "source_build_id": "6729d398d4f1",
+    "paired_build_evidence": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/probe60-release-pair.json",
+    "source_build_verified": true,
+    "candidate_policy": "unchanged-main"
+  },
+  {
+    "variant": "main-B",
+    "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-probe60-pair-main",
+    "sha256": "9ab79c22ebd289047ffa616a5e8aef3c7d9f2498756b5974ae5a74b2d0ecb463",
+    "source_build_id": "6729d398d4f1",
+    "paired_build_evidence": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/probe60-release-pair.json",
+    "source_build_verified": true,
+    "candidate_policy": "unchanged-main"
+  },
+  {
+    "variant": "candidate",
+    "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-tcp-probe60",
+    "sha256": "40a052633245007fc65e9aa119b1ec613f375890ed5f35245c97becc8983166a",
+    "source_build_id": "7b3c0aa515be",
+    "paired_build_evidence": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/probe60-release-pair.json",
+    "source_build_verified": true,
+    "candidate_policy": "lossless-server-output-probe60"
+  }
+]

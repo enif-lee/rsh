@@ -1,0 +1,38 @@
+{
+  "reviewed_epoch": 1793453594.995256,
+  "read_only": true,
+  "blocking_findings": 0,
+  "nonblocking_findings": 2,
+  "core_rows_verified": 48,
+  "table_rows_verified": 12,
+  "roles_per_table_row": 4,
+  "fps_and_low_recalculation": true,
+  "compact_fields_exact_original": true,
+  "csv_fields_exact_original": true,
+  "plot_semantics_reviewed": true,
+  "plots_rendered": false,
+  "tests_run": false,
+  "docker_calls": 0,
+  "full_replays": 0,
+  "live_github_state_queried": false,
+  "sha256": {
+    "docs/bench/lowtail-20261031.md": "f4afba0072947d8a0446f2d426ac1e12cfc4d4d2fa806572886fb629e294be3f",
+    "docs/bench/data/lowtail-20261031/core-results.json": "500725c9103a3ce49a5c84e09e87e1e6d5b9ec0a591252df2070edf487bc7919",
+    "docs/bench/data/lowtail-20261031/core-metrics.csv": "dc857b701083448fef8f9bf453c071a4af76f291f3bae3b75c9ee19e351bc930",
+    "docs/bench/data/lowtail-20261031/plot.py": "f6a2cbf1abcc4d2f58834a9d7b096a01cd7057a752c71a354e2925c28ea7ee8e",
+    "docs/bench/data/lowtail-20261031/package-source.py": "3aed751a6930ac98535f64aec329e3cd17a0c09de3e4df66798afb66a4675ce1",
+    "BENCHMARK.md": "1d002bdf24e327fb4e1b06a85bdac0aec37d740ad6279bcd0d1680c273fd13da",
+    "benchmark/lab/report.py": "56a66670c46c027d977010a442eae5c80e459c2e0df65aa83d46d8e1ff70f0e1"
+  },
+  "followup_epoch": 1793454179.267413,
+  "original_findings_addressed": 2,
+  "remaining_blocking_findings": 0,
+  "portable_verifier_read_only_reviewed": true,
+  "portable_verifier_executed": false,
+  "followup_sha256": {
+    "docs/bench/lowtail-20261031.md": "5bbb9ffc6ae00539e0f188421bb978a606b4ab9f25c1b7a134e93ccc25898fb5",
+    "docs/bench/data/lowtail-20261031/package-source.py": "98eb65d118853c0d05deb9ccfca426a8a02373aaef9aa9c0bd3ebf46d4070950",
+    "docs/bench/data/lowtail-20261031/verify-metrics.py": "709dbfce4e6712d5d88f87dfacf1bfb4acf639459c4484926644359a333d1b3b",
+    "docs/bench/data/lowtail-20261031/README.md": "036e9744938e4ebdfa52bf9ee7b40529b1ad10841fbf7a94ea210091df68c404"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "imported_run_files_exact": 13,
+  "other_exact_imports": 8,
+  "source_artifact_count": 96,
+  "raw_hashes": 192,
+  "complete_body_frames": 42132,
+  "mode_pairs": 48,
+  "svg_point_counts": {
+    "fps": 288,
+    "resources": 288,
+    "deltas": 144
+  },
+  "python_ast_files": 8,
+  "trailing_whitespace_findings": 0,
+  "report_local_links_valid": true,
+  "benchmark_generator_section_identical": true,
+  "raw_csv_crlf_preserved": true,
+  "preview_pngs_removed": true,
+  "terminal_replay_performed": false,
+  "performance_accepted": false
+}

@@ -1,0 +1,9 @@
+{
+  "cohort": "slow",
+  "actual_audit_exact": true,
+  "resource_scope": "Saved-job/summary/CSV consistency; raw endpoint counters not independently reconstructed.",
+  "raw_capture_replays": 0,
+  "raw_payloads_reparsed": 0,
+  "per_evaluation_fps_table_values": 144,
+  "selection": null
+}

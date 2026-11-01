@@ -1,0 +1,1335 @@
+{
+  "mode": "benchmark-after-ticker-readiness",
+  "start": 1793483930.1779091,
+  "end": 1793483960.1779091,
+  "epoch_ns": 1793483930177909360,
+  "end_ns": 1793483960177909360,
+  "after_dispatch_vm_epoch_ns": 1793483927221419578,
+  "native_backend": "native42-spin12",
+  "native_worker_sha256": "c5e4c3d1ca5f8d347be6bb1edffedec1b3873e453508007ed538910b6ef61f87",
+  "native_plan_sha256": "924181378d1168bdecd3534aaabfdcf40b131b7b4270fc53d19727e3d8507216",
+  "readiness": {
+    "2": {
+      "warmup_scene": "ticker",
+      "warmup_started_epoch": 1793483925.0929828,
+      "first_frame_epoch": 1793483925.1853752,
+      "done_epoch": 1793483926.2031174,
+      "prompt_epoch": 1793483926.2042053,
+      "drained_epoch": 1793483926.2996683,
+      "drain_queue_empty": true
+    },
+    "0": {
+      "warmup_scene": "ticker",
+      "warmup_started_epoch": 1793483925.9042408,
+      "first_frame_epoch": 1793483925.99134,
+      "done_epoch": 1793483927.001095,
+      "prompt_epoch": 1793483927.0018823,
+      "drained_epoch": 1793483927.0906155,
+      "drain_queue_empty": true
+    },
+    "1": {
+      "warmup_scene": "ticker",
+      "warmup_started_epoch": 1793483925.9025452,
+      "first_frame_epoch": 1793483925.9913936,
+      "done_epoch": 1793483927.0046842,
+      "prompt_epoch": 1793483927.0054896,
+      "drained_epoch": 1793483927.095367,
+      "drain_queue_empty": true
+    },
+    "3": {
+      "warmup_scene": "ticker",
+      "warmup_started_epoch": 1793483925.8982763,
+      "first_frame_epoch": 1793483925.9916196,
+      "done_epoch": 1793483927.0091825,
+      "prompt_epoch": 1793483927.009981,
+      "drained_epoch": 1793483927.095339,
+      "drain_queue_empty": true
+    }
+  },
+  "workers": [
+    {
+      "name": "rl-0-srv",
+      "container": "rl-0-srv",
+      "direction": "down",
+      "device": "eth0",
+      "path": "/tmp/native45-d821324f40d04df796fbed63e44a8f61",
+      "owner": {
+        "pid": 446,
+        "uid": 0,
+        "starttime": 76158551
+      },
+      "ready_host_epoch_ns": 1793483923121763000,
+      "live_before": {
+        "identity": {
+          "pid": 446,
+          "uid": 0,
+          "starttime": 76158551
+        },
+        "exe": "/tmp/native45-d821324f40d04df796fbed63e44a8f61",
+        "sha256": "c5e4c3d1ca5f8d347be6bb1edffedec1b3873e453508007ed538910b6ef61f87",
+        "cmdline": [
+          "/tmp/native45-d821324f40d04df796fbed63e44a8f61",
+          "eth0",
+          "down"
+        ],
+        "signal_sent": false,
+        "observed_vm_epoch_ns": 1793483923169611992
+      }
+    },
+    {
+      "name": "rl-0-cli",
+      "container": "rl-0-cli",
+      "direction": "up",
+      "device": "eth0",
+      "path": "/tmp/native45-d821324f40d04df796fbed63e44a8f61",
+      "owner": {
+        "pid": 288,
+        "uid": 0,
+        "starttime": 76158552
+      },
+      "ready_host_epoch_ns": 1793483923120671000,
+      "live_before": {
+        "identity": {
+          "pid": 288,
+          "uid": 0,
+          "starttime": 76158552
+        },
+        "exe": "/tmp/native45-d821324f40d04df796fbed63e44a8f61",
+        "sha256": "c5e4c3d1ca5f8d347be6bb1edffedec1b3873e453508007ed538910b6ef61f87",
+        "cmdline": [
+          "/tmp/native45-d821324f40d04df796fbed63e44a8f61",
+          "eth0",
+          "up"
+        ],
+        "signal_sent": false,
+        "observed_vm_epoch_ns": 1793483923169608201
+      }
+    },
+    {
+      "name": "rl-1-srv",
+      "container": "rl-1-srv",
+      "direction": "down",
+      "device": "eth0",
+      "path": "/tmp/native45-d821324f40d04df796fbed63e44a8f61",
+      "owner": {
+        "pid": 426,
+        "uid": 0,
+        "starttime": 76158551
+      },
+      "ready_host_epoch_ns": 1793483923115683000,
+      "live_before": {
+        "identity": {
+          "pid": 426,
+          "uid": 0,
+          "starttime": 76158551
+        },
+        "exe": "/tmp/native45-d821324f40d04df796fbed63e44a8f61",
+        "sha256": "c5e4c3d1ca5f8d347be6bb1edffedec1b3873e453508007ed538910b6ef61f87",
+        "cmdline": [
+          "/tmp/native45-d821324f40d04df796fbed63e44a8f61",
+          "eth0",
+          "down"
+        ],
+        "signal_sent": false,
+        "observed_vm_epoch_ns": 1793483923162105163
+      }
+    },
+    {
+      "name": "rl-1-cli",
+      "container": "rl-1-cli",
+      "direction": "up",
+      "device": "eth0",
+      "path": "/tmp/native45-d821324f40d04df796fbed63e44a8f61",
+      "owner": {
+        "pid": 289,
+        "uid": 0,
+        "starttime": 76158551
+      },
+      "ready_host_epoch_ns": 1793483923121916000,
+      "live_before": {
+        "identity": {
+          "pid": 289,
+          "uid": 0,
+          "starttime": 76158551
+        },
+        "exe": "/tmp/native45-d821324f40d04df796fbed63e44a8f61",
+        "sha256": "c5e4c3d1ca5f8d347be6bb1edffedec1b3873e453508007ed538910b6ef61f87",
+        "cmdline": [
+          "/tmp/native45-d821324f40d04df796fbed63e44a8f61",
+          "eth0",
+          "up"
+        ],
+        "signal_sent": false,
+        "observed_vm_epoch_ns": 1793483923167250105
+      }
+    },
+    {
+      "name": "rl-2-srv",
+      "container": "rl-2-srv",
+      "direction": "down",
+      "device": "eth0",
+      "path": "/tmp/native45-d821324f40d04df796fbed63e44a8f61",
+      "owner": {
+        "pid": 417,
+        "uid": 0,
+        "starttime": 76158568
+      },
+      "ready_host_epoch_ns": 1793483923286153000,
+      "live_before": {
+        "identity": {
+          "pid": 417,
+          "uid": 0,
+          "starttime": 76158568
+        },
+        "exe": "/tmp/native45-d821324f40d04df796fbed63e44a8f61",
+        "sha256": "c5e4c3d1ca5f8d347be6bb1edffedec1b3873e453508007ed538910b6ef61f87",
+        "cmdline": [
+          "/tmp/native45-d821324f40d04df796fbed63e44a8f61",
+          "eth0",
+          "down"
+        ],
+        "signal_sent": false,
+        "observed_vm_epoch_ns": 1793483923324490726
+      }
+    },
+    {
+      "name": "rl-2-cli",
+      "container": "rl-2-cli",
+      "direction": "up",
+      "device": "eth0",
+      "path": "/tmp/native45-d821324f40d04df796fbed63e44a8f61",
+      "owner": {
+        "pid": 290,
+        "uid": 0,
+        "starttime": 76158568
+      },
+      "ready_host_epoch_ns": 1793483923272905000,
+      "live_before": {
+        "identity": {
+          "pid": 290,
+          "uid": 0,
+          "starttime": 76158568
+        },
+        "exe": "/tmp/native45-d821324f40d04df796fbed63e44a8f61",
+        "sha256": "c5e4c3d1ca5f8d347be6bb1edffedec1b3873e453508007ed538910b6ef61f87",
+        "cmdline": [
+          "/tmp/native45-d821324f40d04df796fbed63e44a8f61",
+          "eth0",
+          "up"
+        ],
+        "signal_sent": false,
+        "observed_vm_epoch_ns": 1793483923315482640
+      }
+    },
+    {
+      "name": "rl-3-srv",
+      "container": "rl-3-srv",
+      "direction": "down",
+      "device": "eth0",
+      "path": "/tmp/native45-d821324f40d04df796fbed63e44a8f61",
+      "owner": {
+        "pid": 427,
+        "uid": 0,
+        "starttime": 76158568
+      },
+      "ready_host_epoch_ns": 1793483923273915000,
+      "live_before": {
+        "identity": {
+          "pid": 427,
+          "uid": 0,
+          "starttime": 76158568
+        },
+        "exe": "/tmp/native45-d821324f40d04df796fbed63e44a8f61",
+        "sha256": "c5e4c3d1ca5f8d347be6bb1edffedec1b3873e453508007ed538910b6ef61f87",
+        "cmdline": [
+          "/tmp/native45-d821324f40d04df796fbed63e44a8f61",
+          "eth0",
+          "down"
+        ],
+        "signal_sent": false,
+        "observed_vm_epoch_ns": 1793483923312395832
+      }
+    },
+    {
+      "name": "rl-3-cli",
+      "container": "rl-3-cli",
+      "direction": "up",
+      "device": "eth0",
+      "path": "/tmp/native45-d821324f40d04df796fbed63e44a8f61",
+      "owner": {
+        "pid": 290,
+        "uid": 0,
+        "starttime": 76158567
+      },
+      "ready_host_epoch_ns": 1793483923270842000,
+      "live_before": {
+        "identity": {
+          "pid": 290,
+          "uid": 0,
+          "starttime": 76158567
+        },
+        "exe": "/tmp/native45-d821324f40d04df796fbed63e44a8f61",
+        "sha256": "c5e4c3d1ca5f8d347be6bb1edffedec1b3873e453508007ed538910b6ef61f87",
+        "cmdline": [
+          "/tmp/native45-d821324f40d04df796fbed63e44a8f61",
+          "eth0",
+          "up"
+        ],
+        "signal_sent": false,
+        "observed_vm_epoch_ns": 1793483923310870408
+      }
+    }
+  ],
+  "intended_trace": [
+    {
+      "offset_s": 0.0,
+      "phase": 0,
+      "delay_ms": 40,
+      "loss_pct": 0,
+      "down_kbit": 8000,
+      "up_kbit": 2000
+    },
+    {
+      "offset_s": 0.25,
+      "phase": 0,
+      "delay_ms": 29,
+      "loss_pct": 0,
+      "down_kbit": 8000,
+      "up_kbit": 2000
+    },
+    {
+      "offset_s": 0.5,
+      "phase": 0,
+      "delay_ms": 30,
+      "loss_pct": 0,
+      "down_kbit": 8000,
+      "up_kbit": 2000
+    },
+    {
+      "offset_s": 0.75,
+      "phase": 0,
+      "delay_ms": 36,
+      "loss_pct": 0,
+      "down_kbit": 8000,
+      "up_kbit": 2000
+    },
+    {
+      "offset_s": 1.0,
+      "phase": 0,
+      "delay_ms": 30,
+      "loss_pct": 0,
+      "down_kbit": 8000,
+      "up_kbit": 2000
+    },
+    {
+      "offset_s": 1.25,
+      "phase": 0,
+      "delay_ms": 33,
+      "loss_pct": 0,
+      "down_kbit": 8000,
+      "up_kbit": 2000
+    },
+    {
+      "offset_s": 1.5,
+      "phase": 0,
+      "delay_ms": 35,
+      "loss_pct": 0,
+      "down_kbit": 8000,
+      "up_kbit": 2000
+    },
+    {
+      "offset_s": 1.75,
+      "phase": 0,
+      "delay_ms": 31,
+      "loss_pct": 0,
+      "down_kbit": 8000,
+      "up_kbit": 2000
+    },
+    {
+      "offset_s": 2.0,
+      "phase": 0,
+      "delay_ms": 28,
+      "loss_pct": 0,
+      "down_kbit": 8000,
+      "up_kbit": 2000
+    },
+    {
+      "offset_s": 2.25,
+      "phase": 0,
+      "delay_ms": 34,
+      "loss_pct": 0,
+      "down_kbit": 8000,
+      "up_kbit": 2000
+    },
+    {
+      "offset_s": 2.5,
+      "phase": 0,
+      "delay_ms": 40,
+      "loss_pct": 0,
+      "down_kbit": 8000,
+      "up_kbit": 2000
+    },
+    {
+      "offset_s": 2.75,
+      "phase": 0,
+      "delay_ms": 33,
+      "loss_pct": 0,
+      "down_kbit": 8000,
+      "up_kbit": 2000
+    },
+    {
+      "offset_s": 3.0,
+      "phase": 0,
+      "delay_ms": 33,
+      "loss_pct": 0,
+      "down_kbit": 8000,
+      "up_kbit": 2000
+    },
+    {
+      "offset_s": 3.25,
+      "phase": 0,
+      "delay_ms": 42,
+      "loss_pct": 0,
+      "down_kbit": 8000,
+      "up_kbit": 2000
+    },
+    {
+      "offset_s": 3.5,
+      "phase": 0,
+      "delay_ms": 34,
+      "loss_pct": 0,
+      "down_kbit": 8000,
+      "up_kbit": 2000
+    },
+    {
+      "offset_s": 3.6,
+      "phase": 0,
+      "delay_ms": 34,
+      "loss_pct": 100,
+      "down_kbit": 8000,
+      "up_kbit": 2000
+    },
+    {
+      "offset_s": 3.606,
+      "phase": 0,
+      "delay_ms": 34,
+      "loss_pct": 0,
+      "down_kbit": 8000,
+      "up_kbit": 2000
+    },
+    {
+      "offset_s": 3.75,
+      "phase": 0,
+      "delay_ms": 32,
+      "loss_pct": 0,
+      "down_kbit": 8000,
+      "up_kbit": 2000
+    },
+    {
+      "offset_s": 4.0,
+      "phase": 0,
+      "delay_ms": 46,
+      "loss_pct": 0,
+      "down_kbit": 8000,
+      "up_kbit": 2000
+    },
+    {
+      "offset_s": 4.25,
+      "phase": 0,
+      "delay_ms": 30,
+      "loss_pct": 0,
+      "down_kbit": 8000,
+      "up_kbit": 2000
+    },
+    {
+      "offset_s": 4.5,
+      "phase": 0,
+      "delay_ms": 38,
+      "loss_pct": 0,
+      "down_kbit": 8000,
+      "up_kbit": 2000
+    },
+    {
+      "offset_s": 4.75,
+      "phase": 0,
+      "delay_ms": 26,
+      "loss_pct": 0,
+      "down_kbit": 8000,
+      "up_kbit": 2000
+    },
+    {
+      "offset_s": 5.0,
+      "phase": 0,
+      "delay_ms": 30,
+      "loss_pct": 0,
+      "down_kbit": 8000,
+      "up_kbit": 2000
+    },
+    {
+      "offset_s": 5.25,
+      "phase": 0,
+      "delay_ms": 41,
+      "loss_pct": 0,
+      "down_kbit": 8000,
+      "up_kbit": 2000
+    },
+    {
+      "offset_s": 5.5,
+      "phase": 0,
+      "delay_ms": 42,
+      "loss_pct": 0,
+      "down_kbit": 8000,
+      "up_kbit": 2000
+    },
+    {
+      "offset_s": 5.75,
+      "phase": 0,
+      "delay_ms": 32,
+      "loss_pct": 0,
+      "down_kbit": 8000,
+      "up_kbit": 2000
+    },
+    {
+      "offset_s": 6.0,
+      "phase": 1,
+      "delay_ms": 61,
+      "loss_pct": 0,
+      "down_kbit": 2000,
+      "up_kbit": 500
+    },
+    {
+      "offset_s": 6.25,
+      "phase": 1,
+      "delay_ms": 69,
+      "loss_pct": 0,
+      "down_kbit": 2000,
+      "up_kbit": 500
+    },
+    {
+      "offset_s": 6.5,
+      "phase": 1,
+      "delay_ms": 45,
+      "loss_pct": 0,
+      "down_kbit": 2000,
+      "up_kbit": 500
+    },
+    {
+      "offset_s": 6.75,
+      "phase": 1,
+      "delay_ms": 75,
+      "loss_pct": 0,
+      "down_kbit": 2000,
+      "up_kbit": 500
+    },
+    {
+      "offset_s": 7.0,
+      "phase": 1,
+      "delay_ms": 114,
+      "loss_pct": 0,
+      "down_kbit": 2000,
+      "up_kbit": 500
+    },
+    {
+      "offset_s": 7.25,
+      "phase": 1,
+      "delay_ms": 55,
+      "loss_pct": 0,
+      "down_kbit": 2000,
+      "up_kbit": 500
+    },
+    {
+      "offset_s": 7.5,
+      "phase": 1,
+      "delay_ms": 28,
+      "loss_pct": 0,
+      "down_kbit": 2000,
+      "up_kbit": 500
+    },
+    {
+      "offset_s": 7.75,
+      "phase": 1,
+      "delay_ms": 65,
+      "loss_pct": 0,
+      "down_kbit": 2000,
+      "up_kbit": 500
+    },
+    {
+      "offset_s": 8.0,
+      "phase": 1,
+      "delay_ms": 66,
+      "loss_pct": 0,
+      "down_kbit": 2000,
+      "up_kbit": 500
+    },
+    {
+      "offset_s": 8.25,
+      "phase": 1,
+      "delay_ms": 104,
+      "loss_pct": 0,
+      "down_kbit": 2000,
+      "up_kbit": 500
+    },
+    {
+      "offset_s": 8.4,
+      "phase": 1,
+      "delay_ms": 104,
+      "loss_pct": 100,
+      "down_kbit": 2000,
+      "up_kbit": 500
+    },
+    {
+      "offset_s": 8.432,
+      "phase": 1,
+      "delay_ms": 104,
+      "loss_pct": 0,
+      "down_kbit": 2000,
+      "up_kbit": 500
+    },
+    {
+      "offset_s": 8.5,
+      "phase": 1,
+      "delay_ms": 75,
+      "loss_pct": 0,
+      "down_kbit": 2000,
+      "up_kbit": 500
+    },
+    {
+      "offset_s": 8.75,
+      "phase": 1,
+      "delay_ms": 70,
+      "loss_pct": 0,
+      "down_kbit": 2000,
+      "up_kbit": 500
+    },
+    {
+      "offset_s": 9.0,
+      "phase": 1,
+      "delay_ms": 66,
+      "loss_pct": 0,
+      "down_kbit": 2000,
+      "up_kbit": 500
+    },
+    {
+      "offset_s": 9.25,
+      "phase": 1,
+      "delay_ms": 50,
+      "loss_pct": 0,
+      "down_kbit": 2000,
+      "up_kbit": 500
+    },
+    {
+      "offset_s": 9.5,
+      "phase": 1,
+      "delay_ms": 78,
+      "loss_pct": 0,
+      "down_kbit": 2000,
+      "up_kbit": 500
+    },
+    {
+      "offset_s": 9.75,
+      "phase": 1,
+      "delay_ms": 46,
+      "loss_pct": 0,
+      "down_kbit": 2000,
+      "up_kbit": 500
+    },
+    {
+      "offset_s": 10.0,
+      "phase": 2,
+      "delay_ms": 228,
+      "loss_pct": 0,
+      "down_kbit": 512,
+      "up_kbit": 128
+    },
+    {
+      "offset_s": 10.25,
+      "phase": 2,
+      "delay_ms": 177,
+      "loss_pct": 0,
+      "down_kbit": 512,
+      "up_kbit": 128
+    },
+    {
+      "offset_s": 10.5,
+      "phase": 2,
+      "delay_ms": 194,
+      "loss_pct": 0,
+      "down_kbit": 512,
+      "up_kbit": 128
+    },
+    {
+      "offset_s": 10.75,
+      "phase": 2,
+      "delay_ms": 136,
+      "loss_pct": 0,
+      "down_kbit": 512,
+      "up_kbit": 128
+    },
+    {
+      "offset_s": 11.0,
+      "phase": 2,
+      "delay_ms": 101,
+      "loss_pct": 0,
+      "down_kbit": 512,
+      "up_kbit": 128
+    },
+    {
+      "offset_s": 11.25,
+      "phase": 2,
+      "delay_ms": 250,
+      "loss_pct": 0,
+      "down_kbit": 512,
+      "up_kbit": 128
+    },
+    {
+      "offset_s": 11.5,
+      "phase": 2,
+      "delay_ms": 210,
+      "loss_pct": 0,
+      "down_kbit": 512,
+      "up_kbit": 128
+    },
+    {
+      "offset_s": 11.75,
+      "phase": 2,
+      "delay_ms": 243,
+      "loss_pct": 0,
+      "down_kbit": 512,
+      "up_kbit": 128
+    },
+    {
+      "offset_s": 12.0,
+      "phase": 2,
+      "delay_ms": 192,
+      "loss_pct": 0,
+      "down_kbit": 512,
+      "up_kbit": 128
+    },
+    {
+      "offset_s": 12.25,
+      "phase": 2,
+      "delay_ms": 320,
+      "loss_pct": 0,
+      "down_kbit": 512,
+      "up_kbit": 128
+    },
+    {
+      "offset_s": 12.4,
+      "phase": 2,
+      "delay_ms": 320,
+      "loss_pct": 100,
+      "down_kbit": 512,
+      "up_kbit": 128
+    },
+    {
+      "offset_s": 12.5,
+      "phase": 2,
+      "delay_ms": 221,
+      "loss_pct": 100,
+      "down_kbit": 512,
+      "up_kbit": 128
+    },
+    {
+      "offset_s": 12.52,
+      "phase": 2,
+      "delay_ms": 221,
+      "loss_pct": 0,
+      "down_kbit": 512,
+      "up_kbit": 128
+    },
+    {
+      "offset_s": 12.75,
+      "phase": 2,
+      "delay_ms": 115,
+      "loss_pct": 0,
+      "down_kbit": 512,
+      "up_kbit": 128
+    },
+    {
+      "offset_s": 13.0,
+      "phase": 2,
+      "delay_ms": 193,
+      "loss_pct": 0,
+      "down_kbit": 512,
+      "up_kbit": 128
+    },
+    {
+      "offset_s": 13.25,
+      "phase": 2,
+      "delay_ms": 193,
+      "loss_pct": 0,
+      "down_kbit": 512,
+      "up_kbit": 128
+    },
+    {
+      "offset_s": 13.5,
+      "phase": 2,
+      "delay_ms": 33,
+      "loss_pct": 0,
+      "down_kbit": 512,
+      "up_kbit": 128
+    },
+    {
+      "offset_s": 13.75,
+      "phase": 2,
+      "delay_ms": 122,
+      "loss_pct": 0,
+      "down_kbit": 512,
+      "up_kbit": 128
+    },
+    {
+      "offset_s": 14.0,
+      "phase": 3,
+      "delay_ms": 414,
+      "loss_pct": 0,
+      "down_kbit": 128,
+      "up_kbit": 32
+    },
+    {
+      "offset_s": 14.25,
+      "phase": 3,
+      "delay_ms": 422,
+      "loss_pct": 0,
+      "down_kbit": 128,
+      "up_kbit": 32
+    },
+    {
+      "offset_s": 14.5,
+      "phase": 3,
+      "delay_ms": 291,
+      "loss_pct": 0,
+      "down_kbit": 128,
+      "up_kbit": 32
+    },
+    {
+      "offset_s": 14.75,
+      "phase": 3,
+      "delay_ms": 157,
+      "loss_pct": 0,
+      "down_kbit": 128,
+      "up_kbit": 32
+    },
+    {
+      "offset_s": 15.0,
+      "phase": 3,
+      "delay_ms": 321,
+      "loss_pct": 0,
+      "down_kbit": 128,
+      "up_kbit": 32
+    },
+    {
+      "offset_s": 15.25,
+      "phase": 3,
+      "delay_ms": 172,
+      "loss_pct": 0,
+      "down_kbit": 128,
+      "up_kbit": 32
+    },
+    {
+      "offset_s": 15.5,
+      "phase": 3,
+      "delay_ms": 422,
+      "loss_pct": 0,
+      "down_kbit": 128,
+      "up_kbit": 32
+    },
+    {
+      "offset_s": 15.75,
+      "phase": 3,
+      "delay_ms": 295,
+      "loss_pct": 0,
+      "down_kbit": 128,
+      "up_kbit": 32
+    },
+    {
+      "offset_s": 15.8,
+      "phase": 3,
+      "delay_ms": 295,
+      "loss_pct": 100,
+      "down_kbit": 128,
+      "up_kbit": 32
+    },
+    {
+      "offset_s": 16.0,
+      "phase": 3,
+      "delay_ms": 191,
+      "loss_pct": 100,
+      "down_kbit": 128,
+      "up_kbit": 32
+    },
+    {
+      "offset_s": 16.04,
+      "phase": 3,
+      "delay_ms": 191,
+      "loss_pct": 0,
+      "down_kbit": 128,
+      "up_kbit": 32
+    },
+    {
+      "offset_s": 16.25,
+      "phase": 3,
+      "delay_ms": 207,
+      "loss_pct": 0,
+      "down_kbit": 128,
+      "up_kbit": 32
+    },
+    {
+      "offset_s": 16.5,
+      "phase": 3,
+      "delay_ms": 182,
+      "loss_pct": 0,
+      "down_kbit": 128,
+      "up_kbit": 32
+    },
+    {
+      "offset_s": 16.75,
+      "phase": 3,
+      "delay_ms": 205,
+      "loss_pct": 0,
+      "down_kbit": 128,
+      "up_kbit": 32
+    },
+    {
+      "offset_s": 17.0,
+      "phase": 4,
+      "delay_ms": 137,
+      "loss_pct": 100,
+      "down_kbit": 128,
+      "up_kbit": 32
+    },
+    {
+      "offset_s": 17.25,
+      "phase": 4,
+      "delay_ms": 147,
+      "loss_pct": 100,
+      "down_kbit": 128,
+      "up_kbit": 32
+    },
+    {
+      "offset_s": 17.5,
+      "phase": 4,
+      "delay_ms": 186,
+      "loss_pct": 100,
+      "down_kbit": 128,
+      "up_kbit": 32
+    },
+    {
+      "offset_s": 17.75,
+      "phase": 4,
+      "delay_ms": 216,
+      "loss_pct": 100,
+      "down_kbit": 128,
+      "up_kbit": 32
+    },
+    {
+      "offset_s": 18.0,
+      "phase": 5,
+      "delay_ms": 58,
+      "loss_pct": 0,
+      "down_kbit": 1000,
+      "up_kbit": 250
+    },
+    {
+      "offset_s": 18.25,
+      "phase": 5,
+      "delay_ms": 54,
+      "loss_pct": 0,
+      "down_kbit": 1000,
+      "up_kbit": 250
+    },
+    {
+      "offset_s": 18.5,
+      "phase": 5,
+      "delay_ms": 69,
+      "loss_pct": 0,
+      "down_kbit": 1000,
+      "up_kbit": 250
+    },
+    {
+      "offset_s": 18.75,
+      "phase": 5,
+      "delay_ms": 87,
+      "loss_pct": 0,
+      "down_kbit": 1000,
+      "up_kbit": 250
+    },
+    {
+      "offset_s": 19.0,
+      "phase": 5,
+      "delay_ms": 92,
+      "loss_pct": 0,
+      "down_kbit": 1000,
+      "up_kbit": 250
+    },
+    {
+      "offset_s": 19.25,
+      "phase": 5,
+      "delay_ms": 31,
+      "loss_pct": 0,
+      "down_kbit": 1000,
+      "up_kbit": 250
+    },
+    {
+      "offset_s": 19.5,
+      "phase": 5,
+      "delay_ms": 125,
+      "loss_pct": 0,
+      "down_kbit": 1000,
+      "up_kbit": 250
+    },
+    {
+      "offset_s": 19.75,
+      "phase": 5,
+      "delay_ms": 73,
+      "loss_pct": 0,
+      "down_kbit": 1000,
+      "up_kbit": 250
+    },
+    {
+      "offset_s": 20.0,
+      "phase": 5,
+      "delay_ms": 138,
+      "loss_pct": 0,
+      "down_kbit": 1000,
+      "up_kbit": 250
+    },
+    {
+      "offset_s": 20.25,
+      "phase": 5,
+      "delay_ms": 63,
+      "loss_pct": 0,
+      "down_kbit": 1000,
+      "up_kbit": 250
+    },
+    {
+      "offset_s": 20.5,
+      "phase": 5,
+      "delay_ms": 55,
+      "loss_pct": 0,
+      "down_kbit": 1000,
+      "up_kbit": 250
+    },
+    {
+      "offset_s": 20.75,
+      "phase": 5,
+      "delay_ms": 74,
+      "loss_pct": 0,
+      "down_kbit": 1000,
+      "up_kbit": 250
+    },
+    {
+      "offset_s": 21.0,
+      "phase": 5,
+      "delay_ms": 80,
+      "loss_pct": 100,
+      "down_kbit": 1000,
+      "up_kbit": 250
+    },
+    {
+      "offset_s": 21.05,
+      "phase": 5,
+      "delay_ms": 80,
+      "loss_pct": 0,
+      "down_kbit": 1000,
+      "up_kbit": 250
+    },
+    {
+      "offset_s": 21.25,
+      "phase": 5,
+      "delay_ms": 65,
+      "loss_pct": 0,
+      "down_kbit": 1000,
+      "up_kbit": 250
+    },
+    {
+      "offset_s": 21.5,
+      "phase": 5,
+      "delay_ms": 105,
+      "loss_pct": 0,
+      "down_kbit": 1000,
+      "up_kbit": 250
+    },
+    {
+      "offset_s": 21.75,
+      "phase": 5,
+      "delay_ms": 41,
+      "loss_pct": 0,
+      "down_kbit": 1000,
+      "up_kbit": 250
+    },
+    {
+      "offset_s": 22.0,
+      "phase": 5,
+      "delay_ms": 109,
+      "loss_pct": 0,
+      "down_kbit": 1000,
+      "up_kbit": 250
+    },
+    {
+      "offset_s": 22.25,
+      "phase": 5,
+      "delay_ms": 71,
+      "loss_pct": 0,
+      "down_kbit": 1000,
+      "up_kbit": 250
+    },
+    {
+      "offset_s": 22.5,
+      "phase": 5,
+      "delay_ms": 122,
+      "loss_pct": 0,
+      "down_kbit": 1000,
+      "up_kbit": 250
+    },
+    {
+      "offset_s": 22.75,
+      "phase": 5,
+      "delay_ms": 86,
+      "loss_pct": 0,
+      "down_kbit": 1000,
+      "up_kbit": 250
+    },
+    {
+      "offset_s": 23.0,
+      "phase": 6,
+      "delay_ms": 29,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 23.25,
+      "phase": 6,
+      "delay_ms": 41,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 23.5,
+      "phase": 6,
+      "delay_ms": 57,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 23.75,
+      "phase": 6,
+      "delay_ms": 44,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 24.0,
+      "phase": 6,
+      "delay_ms": 42,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 24.25,
+      "phase": 6,
+      "delay_ms": 37,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 24.5,
+      "phase": 6,
+      "delay_ms": 33,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 24.75,
+      "phase": 6,
+      "delay_ms": 32,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 25.0,
+      "phase": 6,
+      "delay_ms": 28,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 25.25,
+      "phase": 6,
+      "delay_ms": 26,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 25.5,
+      "phase": 6,
+      "delay_ms": 37,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 25.75,
+      "phase": 6,
+      "delay_ms": 52,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 26.0,
+      "phase": 6,
+      "delay_ms": 47,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 26.25,
+      "phase": 6,
+      "delay_ms": 45,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 26.5,
+      "phase": 6,
+      "delay_ms": 43,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 26.75,
+      "phase": 6,
+      "delay_ms": 34,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 27.0,
+      "phase": 6,
+      "delay_ms": 40,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 27.2,
+      "phase": 6,
+      "delay_ms": 40,
+      "loss_pct": 100,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 27.207,
+      "phase": 6,
+      "delay_ms": 40,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 27.25,
+      "phase": 6,
+      "delay_ms": 37,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 27.5,
+      "phase": 6,
+      "delay_ms": 46,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 27.75,
+      "phase": 6,
+      "delay_ms": 51,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 28.0,
+      "phase": 6,
+      "delay_ms": 52,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 28.25,
+      "phase": 6,
+      "delay_ms": 46,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 28.5,
+      "phase": 6,
+      "delay_ms": 50,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 28.75,
+      "phase": 6,
+      "delay_ms": 37,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 29.0,
+      "phase": 6,
+      "delay_ms": 39,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 29.25,
+      "phase": 6,
+      "delay_ms": 38,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 29.5,
+      "phase": 6,
+      "delay_ms": 33,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    },
+    {
+      "offset_s": 29.75,
+      "phase": 6,
+      "delay_ms": 30,
+      "loss_pct": 0,
+      "down_kbit": 5000,
+      "up_kbit": 1250
+    }
+  ],
+  "lead_seconds": 3,
+  "time_projection": "All agents use identical float(epoch_ns/1e9); native helpers retain integer ns. No exact packet timing claim."
+}

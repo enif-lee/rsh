@@ -1,0 +1,16 @@
+{
+  "base_commit": "24248bd60ec6998e1dc27d0baf84db4a4e5cb8ed",
+  "archived_from_commit": "189c99e9fb6e27e54d22461ad0ad6d389db5ecd3",
+  "included_paths": [
+    "src/server.rs",
+    "src/wire.rs",
+    "tests/session.rs"
+  ],
+  "patch_sha256": "86ea20a9f08a92f11fa94807886806bfdd15492f1dc275d0b30feebb40d7a758",
+  "candidate_file_sha256": {
+    "src/server.rs": "beb9f2e96576b7fee0d60f33a695ba0178c2f544a8cfaefac3497e97a936ecef",
+    "src/wire.rs": "b846fbb593aef1798e3132ce3f356a3006a0b6614cfb773b4b358e373f8e7bf8",
+    "tests/session.rs": "501eab050323ea071af50b4cc404bca56ef9203843cd9a902601e1345800f7cf"
+  },
+  "scope": "Unselected older TCP batching prototype preserved as an artifact; documentation PR no longer applies its product changes."
+}

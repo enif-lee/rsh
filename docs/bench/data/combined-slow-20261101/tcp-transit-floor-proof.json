@@ -1,0 +1,23 @@
+{
+  "status": "source_only_prepared_not_built_or_tested",
+  "parent_manifest_sha256": "b944a95f90abb3c57943b9bc4d74a36362cf5b0e86d3591cd3c61f8b03afa427",
+  "canonical_files": 25,
+  "full_files": 31,
+  "changed_files": [
+    "src/proto.rs",
+    "src/server.rs"
+  ],
+  "production_changes": "Only early returnNone in drain_bdp unless sampled floor>=20. No server production changes, newstate/API/options, trace or probe-threshold changes.",
+  "proto_production_reverse_exact_parent": true,
+  "server_production_exact_parent": true,
+  "probe_threshold_original08": true,
+  "new_fixtures": 4,
+  "adapted_far_server_fixtures": 2,
+  "tests_executed": 0,
+  "builds": 0,
+  "docker_calls": 0,
+  "performance_eligible": false,
+  "source_manifest_sha256": "4e2dc5fa4b906ef9bc1c32e514e3b72255957d9664636522b04f558b5f00d08c",
+  "full_manifest_sha256": "201f57f3e40e1aa46152e7ff070d22a26e64f8f558d749c932b5800cf8a6f3e5",
+  "patch_sha256": "a7ea87d823c3bb3946d3a5b1f33864dbf365ea2c7c783a8de1da2f86b3fe655d"
+}

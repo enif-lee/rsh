@@ -1,0 +1,17 @@
+batch,net,scene,iteration,variant,slot,frames,fps,low1_fps,low5_fps,kbit_s,rss_client_kb,rss_server_kb,cpu_client,cpu_server,age_ms,age_p95_ms,max_gap_ms,assessment
+00-wan-bandwidth-i0,wan,bandwidth,0,ssh,0,480,60.0,29.6,48.0,5796,7632,18808,0.2,0.21,53,57,57,control
+00-wan-bandwidth-i0,wan,bandwidth,0,main-A,1,464,58.0,29.1,45.2,2268,2728,6008,1.07,4.62,55,65,89,control
+00-wan-bandwidth-i0,wan,bandwidth,0,main-B,2,459,57.4,29.4,44.9,2238,2692,6040,1.07,4.62,58,64,96,control
+00-wan-bandwidth-i0,wan,bandwidth,0,candidate,3,469,58.6,43.4,48.6,2280,2704,5968,1.09,4.76,59,63,88,fps_tradeoff_review_required
+01-wan-bandwidth-i1,wan,bandwidth,1,ssh,3,480,60.0,36.3,46.6,5800,7396,18568,0.21,0.22,53,58,44,control
+01-wan-bandwidth-i1,wan,bandwidth,1,main-A,2,462,57.7,28.1,46.1,2277,2164,5068,1.12,4.71,55,64,87,control
+01-wan-bandwidth-i1,wan,bandwidth,1,main-B,1,464,58.0,30.9,46.4,2277,1624,5092,1.09,4.68,55,65,111,control
+01-wan-bandwidth-i1,wan,bandwidth,1,candidate,0,467,58.4,41.5,46.8,2285,2248,5396,1.11,4.83,58,63,115,fps_tradeoff_review_required
+02-highlat-bandwidth-i0,highlat,bandwidth,0,ssh,0,480,60.0,12.4,43.5,5799,8064,19016,0.21,0.23,154,497,128,control
+02-highlat-bandwidth-i0,highlat,bandwidth,0,main-A,1,417,52.1,24.3,45.2,2080,2828,6124,1.05,4.37,156,167,352,control
+02-highlat-bandwidth-i0,highlat,bandwidth,0,main-B,2,426,53.2,16.1,47.0,2124,2800,6092,1.04,4.48,156,167,329,control
+02-highlat-bandwidth-i0,highlat,bandwidth,0,candidate,3,426,53.2,37.5,47.4,2123,2780,6028,1.07,4.55,160,168,343,fps_tradeoff_review_required
+03-highlat-bandwidth-i1,highlat,bandwidth,1,ssh,3,480,60.0,13.6,42.8,5795,8012,19124,0.22,0.24,153,502,134,control
+03-highlat-bandwidth-i1,highlat,bandwidth,1,main-A,2,426,53.2,17.1,45.5,2126,2796,6128,1.1,4.55,159,171,291,control
+03-highlat-bandwidth-i1,highlat,bandwidth,1,main-B,1,425,53.1,30.0,47.0,2114,2784,6140,1.09,4.51,154,169,296,control
+03-highlat-bandwidth-i1,highlat,bandwidth,1,candidate,0,429,53.6,20.7,47.3,2124,2740,6040,1.13,4.63,159,163,293,fps_tradeoff_review_required

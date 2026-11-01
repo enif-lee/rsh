@@ -1,0 +1,241 @@
+{
+  "status": "EXISTING_VERIFIED_ARTIFACTS_DIRECT_MAIN_REFERENCE_NOT_RUN",
+  "artifacts": [
+    {
+      "variant": "baseline",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-pty-name-account",
+      "sha256": "c25f94dd9fb4b3b694fefa5f3b024bc600c38a7b382eeb3a2726399f8fb51a33",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/pty-name-account-source",
+      "source_build_id": "4f98af080434",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "snapshot_manifest_entries": 31,
+      "source_manifest_sha256": "63fc7bb537988d9517be0c9b3f1a001c94ccfb5aa7d7ea8776d43f18df506b1d",
+      "full_inventory_entries": 91,
+      "source_full_manifest_sha256": "90e464b42ec1ea612fc531ca6f1dcb3a25ab2fd467cbb1206465ab674dcc5005",
+      "guard_output": "verified build 4f98af080434: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-pty-name-account\nverified build 4f98af080434: /Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/pty-name-account-library-tests",
+      "functional_tests": {
+        "library": {
+          "passed": 99,
+          "ignored": 2,
+          "log_sha256": "ff52a724e2c47c5e604869bb82266fb89674cf37dc6c10be658a0069b548e347"
+        },
+        "binary_cli": {
+          "passed": 4,
+          "ignored": 0,
+          "log_sha256": "4a010cb91f02ae81019964bc8ea02c13fa665d0899f40f4bbc81f865753eeaae"
+        },
+        "session": {
+          "passed": 25,
+          "ignored": 0,
+          "log_sha256": "08a09cb9c92c503f8b5cffb53c3c14c6623844c2603406a5d030e2a12cec70a2"
+        },
+        "pty_concurrency": {
+          "passed": 1,
+          "ignored": 0,
+          "log_sha256": "5c4f37fb46e3c7d2990b5b4c82c727cb999546e0bb8288c7efda81c12815bfc1"
+        }
+      },
+      "functional_total_passed": 129,
+      "concurrency_child_spawns": 64,
+      "cargo_root_artifacts": {
+        "all-tests-build.jsonl": [
+          {
+            "name": "rsh",
+            "kind": [
+              "bin"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": true
+            },
+            "fresh": false,
+            "executable": "/target/debug/deps/rsh-ffba42ccfca42a15"
+          },
+          {
+            "name": "rsh",
+            "kind": [
+              "bin"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": false
+            },
+            "fresh": false,
+            "executable": "/target/debug/rsh"
+          },
+          {
+            "name": "binary_cli",
+            "kind": [
+              "test"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": true
+            },
+            "fresh": false,
+            "executable": "/target/debug/deps/binary_cli-499ca979f2f3fc6b"
+          },
+          {
+            "name": "session",
+            "kind": [
+              "test"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": true
+            },
+            "fresh": false,
+            "executable": "/target/debug/deps/session-7a5d2366fdc3fcc5"
+          },
+          {
+            "name": "pty_concurrency",
+            "kind": [
+              "test"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": true
+            },
+            "fresh": false,
+            "executable": "/target/debug/deps/pty_concurrency-72e082953d31c37e"
+          },
+          {
+            "name": "rsh",
+            "kind": [
+              "lib"
+            ],
+            "profile": {
+              "opt_level": "0",
+              "debuginfo": 2,
+              "debug_assertions": true,
+              "overflow_checks": true,
+              "test": true
+            },
+            "fresh": false,
+            "executable": "/target/debug/deps/rsh-a4e873949d566604"
+          }
+        ],
+        "release-build.jsonl": [
+          {
+            "name": "rsh",
+            "kind": [
+              "bin"
+            ],
+            "profile": {
+              "opt_level": "3",
+              "debuginfo": 0,
+              "debug_assertions": false,
+              "overflow_checks": false,
+              "test": false
+            },
+            "fresh": false,
+            "executable": "/target/release/rsh"
+          }
+        ]
+      },
+      "reference_scope": "Exact CAN+PTY-safe main4f98/c25 duplicate A/A+SSH versus quiet65 781b/3d4c, whole policy-stack effect; not incremental quiet versus60 or additive isolation"
+    },
+    {
+      "variant": "candidate",
+      "binary": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/rsh-cadence65",
+      "source": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/65-tcp-margin-quiet-source",
+      "sha256": "3d4c5bd15f7d4e2ebe0d71f53c3bdc1fc3e21b3fdde8d396c28a8519b3795827",
+      "source_build_id": "781bbe465298",
+      "source_build_verified": true,
+      "source_manifest_unchanged": true,
+      "source_manifest_sha256": "ff3159b5eef9733c6b53938b8071d14a299821d93e219cf6ef3ab4ba55a37cc5",
+      "source_full_manifest_sha256": "bbf62aa8fd33de8f87341cbb0eb0879303eb1d66dfe8dabc20f42ce3e0c049d5",
+      "snapshot_manifest_entries": 25,
+      "full_inventory_entries": 32,
+      "functional_tests": {
+        "library": {
+          "passed": 119,
+          "ignored": 2,
+          "log_sha256": "1aed7de265f00f11286b581709860330ad581a4a978efe9561feeb47181c1a2e"
+        },
+        "binary_cli": {
+          "passed": 4,
+          "ignored": 0,
+          "log_sha256": "674ef27f7b7f7416f0a982331e913d26fcc7684a79770825a93b3ae06724e2a0"
+        },
+        "session": {
+          "passed": 25,
+          "ignored": 0,
+          "log_sha256": "28291e707fb477081278b53d654b8a58ac1ce68da6a101548f4006492eb7ffc2"
+        },
+        "pty_concurrency": {
+          "passed": 1,
+          "ignored": 0,
+          "log_sha256": "5c4f37fb46e3c7d2990b5b4c82c727cb999546e0bb8288c7efda81c12815bfc1"
+        }
+      },
+      "functional_total_passed": 149,
+      "ignored": 2,
+      "cargo_root_artifacts": [
+        {
+          "log": "cadence65-all-tests-build.jsonl",
+          "sha256": "405f18523ebeebeb3129157de3461b8d30a122ca911009b2390a6bd1126d603e",
+          "root_fresh_false": true,
+          "root_executable_count": 6
+        },
+        {
+          "log": "cadence65-release-build.jsonl",
+          "sha256": "35338ab2a3f172234f5fcca7b09cc48177a162e6c3a11e486f15b34ed5441b10",
+          "root_fresh_false": true,
+          "root_executable_count": 1
+        }
+      ],
+      "reference_scope": "Exact CAN+PTY-safe main4f98/c25 duplicate A/A+SSH versus quiet65 781b/3d4c, whole policy-stack effect; not incremental quiet versus60 or additive isolation"
+    }
+  ],
+  "comparison_scope": "Exact CAN+PTY-safe main4f98/c25 duplicate A/A+SSH versus quiet65 781b/3d4c, whole policy-stack effect; not incremental quiet versus60 or additive isolation",
+  "same_container_sequential_build": false,
+  "new_builds": 0,
+  "baseline_original_pair": {
+    "path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/pty-account-release-pair.json",
+    "sha256": "5b3e84a1417e574635b59888b48cb185b4599c8328ae8c704d934df80ed9db19"
+  },
+  "candidate_original_pair": {
+    "path": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/cadence65-release-pair.json",
+    "sha256": "850f61d3bb491c0e4809d568c9a6ffbe79590ebb7680cd7c64926f38d2af853d"
+  },
+  "candidate_native_macos": {
+    "result": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/macos65-build-result.json",
+    "result_sha256": "c95413072a810ac65ffedb4a49de55a92a4ea9edb097c3963600ea71bf447ffd",
+    "guards": "/Users/ed/personal/rsh/benchmark/lab/out/lowtail-research-20261031/macos65-guards.log",
+    "guards_sha256": "6872e4491dc22dfce8a5539932130196ef1bdda665f898476defcf2b1c9f8631",
+    "scope": "Separate native148passed/2ignored; not the Linux benchmark binary"
+  },
+  "old_adverse_cases_retained": [
+    19,
+    51,
+    53,
+    57,
+    61,
+    62,
+    63,
+    64,
+    66,
+    67,
+    68,
+    69,
+    70
+  ],
+  "selection": "No auto-promotion/no per-field veto/no numeric weights; FPS1%/5%low+avg primary, CPU/RSS secondary; preserve allcosts/nulls, moving descriptive only"
+}

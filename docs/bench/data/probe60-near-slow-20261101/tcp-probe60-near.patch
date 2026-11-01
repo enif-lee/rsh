@@ -1,0 +1,59 @@
+diff --git a/tcp-probe60-source/src/proto.rs b/tcp-probe60-near-source/src/proto.rs
+index a482f8a..a4aa54d 100644
+--- a/tcp-probe60-source/src/proto.rs
++++ b/tcp-probe60-near-source/src/proto.rs
+@@ -1633,7 +1633,15 @@ impl Sender {
+                 None => Some((now, self.delivered_wire)),
+                 Some((from, count)) if now.duration_since(from).as_secs_f64() * 1000.0 >= floor => {
+                     let took = (self.delivered_wire - count) as f64 / now.duration_since(from).as_secs_f64();
+-                    if took >= (if self.lossless { 0.6 } else { 0.8 }) * rate {
++                    // Extra exploration only while every packet in this ACK
++                    // fits its least round trip plus estimated serialization.
++                    let near = self.lossless && self.floor_rtt.is_some_and(|floor| {
++                        popped.iter().all(|(at, wire, _)| {
++                            now.duration_since(*at).as_secs_f64() * 1000.0
++                                <= floor + *wire as f64 / rate * 1000.0
++                        })
++                    });
++                    if took >= (if near { 0.6 } else { 0.8 }) * rate {
+                         self.capacity = Some(rate * PROBE_GAIN);
+                         for (_, sample) in self.rates.iter_mut() {
+                             *sample *= PROBE_GAIN;
+@@ -2857,4 +2865,37 @@ mod tests {
+             assert_eq!(tcp_probe60_fixture(tcp, 8100, false, 100).capacity, Some(125_000.0));
+         }
+     }
++
++    fn tcp_probe60_near_fixture(delivered: u64, old_ms: u64, new_ms: u64) -> Sender {
++        let now = Instant::now();
++        let mut tx = Sender::new(1);
++        tx.set_lossless(true);
++        tx.floor_rtt = Some(100.0);
++        tx.capacity = Some(100_000.0);
++        tx.push(&vec![0u8; 2 * CHUNK]);
++        assert!(tx.next_chunk(now - Duration::from_millis(old_ms)).is_some());
++        assert!(tx.next_chunk(now - Duration::from_millis(new_ms)).is_some());
++        let wire: u64 = tx.flight.iter().map(|(_, _, wire, _)| wire).sum();
++        tx.delivered_wire = delivered - wire;
++        tx.probe_from = Some((now - Duration::from_millis(100), 0));
++        assert!(tx.on_ack(1, (2 * CHUNK) as u64, now, false));
++        tx
++    }
++
++    #[test]
++    fn tcp_probe60_near_accepts_cumulative_near_floor_ack() {
++        assert_eq!(tcp_probe60_near_fixture(7000, 108, 107).capacity, Some(125_000.0));
++    }
++
++    #[test]
++    fn tcp_probe60_near_rejects_extra_growth_with_one_later_packet() {
++        // Both are below the existing queue threshold, but the first is
++        // above floor+its own serialization. The other packet cannot hide it.
++        assert_eq!(tcp_probe60_near_fixture(7000, 119, 100).capacity, Some(100_000.0));
++    }
++
++    #[test]
++    fn tcp_probe60_near_preserves_old_eighty_percent_growth() {
++        assert_eq!(tcp_probe60_near_fixture(8100, 119, 100).capacity, Some(125_000.0));
++    }
+ }

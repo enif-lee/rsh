@@ -1,0 +1,18 @@
+[
+  {
+    "variant": "baseline",
+    "source_unchanged": true,
+    "source_build_verified": true,
+    "guard_output": "verified build 6729d398d4f1: /Users/ed/personal/rsh/benchmark/lab/out/parity-release-pair-20261030/rsh-baseline-linux-aarch64",
+    "binary": "/Users/ed/personal/rsh/benchmark/lab/out/parity-release-pair-20261030/rsh-baseline-linux-aarch64",
+    "sha256": "b2d2a572223c79f094a27d6476cd3e0dd0c2a163eb65913dac7b30e50b5bee23"
+  },
+  {
+    "variant": "candidate",
+    "source_unchanged": true,
+    "source_build_verified": true,
+    "guard_output": "verified build cdb1e168767c: /Users/ed/personal/rsh/benchmark/lab/out/parity-release-pair-20261030/rsh-candidate-linux-aarch64",
+    "binary": "/Users/ed/personal/rsh/benchmark/lab/out/parity-release-pair-20261030/rsh-candidate-linux-aarch64",
+    "sha256": "a7e669e1eb8632a70e46594cc55d73f7d76de3840abf0d1fc2d24ee989e73121"
+  }
+]

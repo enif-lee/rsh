@@ -1,0 +1,23 @@
+{
+  "README.md": "036e9744938e4ebdfa52bf9ee7b40529b1ad10841fbf7a94ea210091df68c404",
+  "artifact-identities.json": "b1a4e1a9dfd5963bb0d8e9d5182c3eb80064b202724bf6d8898357ac0f1f7458",
+  "build-fresh-quarter.log": "57b4c7514939e1d65aa58458f155b43cd0711315ec7fc4b815e0228892702352",
+  "core-metrics.csv": "dc857b701083448fef8f9bf453c071a4af76f291f3bae3b75c9ee19e351bc930",
+  "core-results.json": "500725c9103a3ce49a5c84e09e87e1e6d5b9ec0a591252df2070edf487bc7919",
+  "fresh-quarter-control-result.json": "3d4ee603eef30f89f5109c6a3602f0a11fbf6ec0fa62f96dd54753def0e94f35",
+  "fresh-quarter-release-pair.json": "d45bed27df62de4f5d4764078d78493c14aefe6e1a4a7f53f64366b87d31c094",
+  "fresh19-actual-review.json": "93de7f82186f389d2e120b0e4c0a9b90785019e7995c164f21bc300fd16cc369",
+  "lowtail-publication-review.json": "25e99d7b175e759e22d9035df3ef3b9de14656321ea6fa3e46ebfbd14473658c",
+  "lowtail-publication-review.md": "38541d9555fb7e83973938917b3956b8d556a84da6b994784b0cdb479824fae7",
+  "main-source-manifest.json": "691ce46870af026e614a960844f821580d0486ce4d7c551ee27041b3cd1d6c39",
+  "original-harness-manifest.json": "eee713b0ae5d0be77311ac40e1f271ecc5623d4bd2b0c2f0484d72ecea4d1841",
+  "package-source.py": "98eb65d118853c0d05deb9ccfca426a8a02373aaef9aa9c0bd3ebf46d4070950",
+  "plot-environment.json": "a1025af12e9c05d17302a6938af8963e07dc1bf1b042279a9f86cab62655f595",
+  "plot.py": "8a2eb2c9e8ce9e3946e5f9979c820e59fb5dd55110d93c15f25efb085c0893d5",
+  "prepared-inputs.json": "9b59971600e057c65f50ce46ee32342338e3954e11e3c15c8b99643edb5e85a2",
+  "run-status.json": "d375377d4b20d2c12a742e0951f08ce71993a7ff0ca323b2da44708292966b71",
+  "source-header-join-audit.json": "0bc7da3e6bd83ccbdd0505f7e7dcd8191c785a6219873f9a087706fcbee09891",
+  "tcp-fresh-quarter-source-manifest.json": "f17f426b7204d1959a8041d410f04449ef9ec9977e3b71a9c5eb1a77ceca6375",
+  "tcp-fresh-quarter.patch": "1edb5102313fd68b35c270ea91213806f75953b434bdcb4e6eba9ab642b9abfc",
+  "verify-metrics.py": "709dbfce4e6712d5d88f87dfacf1bfb4acf639459c4484926644359a333d1b3b"
+}
