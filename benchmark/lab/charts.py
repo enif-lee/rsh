@@ -19,7 +19,7 @@ ORDER = ["rsh", "rsh-tcp", "ssh", "et", "mosh"]
 NAME = {"rsh": "rsh (UDP)", "rsh-tcp": "rsh (TCP)", "ssh": "OpenSSH", "et": "ET", "mosh": "mosh"}
 LIGHT = {"rsh": "#2a78d6", "rsh-tcp": "#eb6834", "ssh": "#1baf7a", "et": "#eda100", "mosh": "#e87ba4"}
 DARK = {"rsh": "#3987e5", "rsh-tcp": "#d95926", "ssh": "#199e70", "et": "#c98500", "mosh": "#d55181"}
-NETS = [("lan", "LAN"), ("wan", "RTT 100 ms"), ("lowbw", "1 Mbit/s · RTT 100 ms"), ("verylow", "256 kbit/s · RTT 100 ms"),
+NETS = [("lan", "LAN"), ("wan", "RTT 100 ms"), ("mid5", "5 Mbit/s · RTT 100 ms"), ("lowbw", "1 Mbit/s · RTT 100 ms"), ("verylow", "256 kbit/s · RTT 100 ms"),
         ("slow64k", "64 kbit/s · RTT 100 ms"), ("mobile", "512 kbit/s · RTT 200 ms · 1% loss"),
         ("badmobile", "256 kbit/s · RTT 400 ms · 2% loss"), ("highlat", "RTT 300 ms"), ("lossy", "2% loss · RTT 100 ms")]
 
