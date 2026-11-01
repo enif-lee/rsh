@@ -460,6 +460,11 @@ controller holds, without proving physical idle or justifying sample discard.
 Median-stage ordering and a physical-queue counterexample remain explicit;
 these are not additional eligible performance observations.
 
+The separate [TCP quarter-freshness follow-up](docs/bench/fresh-quarter55-20261101.md)
+retains96 eligible static observations and16 descriptive moving observations,
+including1Mbit/s random FPS gains, dashboard/age costs and random moving1%low
+losses. The candidate remains unselected; earlier19 adverse evidence is retained.
+
 ## References
 
 The [README references](README.md#references) identify the papers and

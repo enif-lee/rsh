@@ -1,5 +1,5 @@
 {
-  "../../cadence-margin-slow-age.svg": "e954312385bc42d695a473846d61f820e14db7cacf8268dc7bf662d961291595",
+  "../../cadence-margin-slow-age.svg": "8eacd824b666e98e629b3c3a09ead04d67c15c6420f0fe7d85f2374405dc4d9d",
   "../../cadence-margin-slow-fps.svg": "ac56ab4bf83d42cea660b984e03f65856d9aa4c4e87f61abf738137a6f60bdc1",
   "../../cadence-margin-slow-resources.svg": "0204680bb966073ee4d331e8ee4d5dfea6f9b398555da1bb8420c879e254f129",
   "48-tcp-cadence-margin-control-proof.json": "b75d2b9078a224f2de8110ac937cd00188f8b62789463634079afdb4416c5b1c",
@@ -49,7 +49,7 @@
   "paired-build-provenance.json": "58555a80bdb8ef9cde6e17e73cdd62efdc336f15495eecec836f022561f55085",
   "plan.json": "1181a4006016cfeceae8e3d0fd23a879b1e8f19d06dd1312a404898e3dac8e88",
   "plot-environment.json": "a1025af12e9c05d17302a6938af8963e07dc1bf1b042279a9f86cab62655f595",
-  "plot.py": "da399424945747c45a297f7f845b69088a47ee00fc77acdcc9856d032278165c",
+  "plot.py": "1065436c22295201bf997426d45d1b4d76491cc505b54426e1dcd67b76dd8dbd",
   "prepared-inputs.json": "e298eb539ebc0ae739fe85614dea790066545bb928584837d826fc840904bcd4",
   "publication-checks.json": "c3ec27935596e6585c933a9cb39e02dc1c3ed586017b26c6896c3d1ab79380f6",
   "raw-build-log-sha256.json": "183b85c3f368191e3d1b855b00cdb976c2d9aec316e0e788e7d7c4db27f3660f",

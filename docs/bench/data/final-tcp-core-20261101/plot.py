@@ -61,7 +61,7 @@ def resources(preview):
     legend(fig);fig.tight_layout(rect=(0,.055,1,.93));export(fig,'resources',preview)
 
 def age(preview):
-    fig,axes=plt.subplots(2,len(CONFIG['nets']),figsize=(13 if len(CONFIG['nets'])==3 else 8,7),squeeze=False)
+    fig,axes=plt.subplots(2,len(CONFIG['nets']),figsize=(13,9),squeeze=False)
     for si,scene in enumerate(('compress','bandwidth')):
         for ni,net in enumerate(CONFIG['nets']):
             ax=axes[si,ni]

@@ -1,0 +1,77 @@
+{
+  "prior_commit": "82d0d251b8bd604e3a882d2b9863f610eb4e59ff",
+  "defect": "Two long ylabels intersected on 13x7-inch age figures.",
+  "correction": "Age-only figure size 13x9 inches; data, scale and metrics unchanged.",
+  "original_bbox_intersection_px": [
+    14.3366,
+    22.6158
+  ],
+  "corrected_ylabel_pair_clearance_px": 62.8842,
+  "runtime_claim": false,
+  "archives": {
+    "final-tcp-core-20261101": {
+      "before_manifest_sha256": "520c7940eb2bc6f9a77473b2344774623b64d4b84113cb9780d0427a2a226bfb",
+      "after_manifest_sha256": "5fb06a3115aeeafc6ac4c647dbe5e49885d272fd1ce4fbf4e5132b8d00a6a42e",
+      "changed": {
+        "../../final-tcp-core-age.svg": {
+          "before": "e74e9d526eb37a57766e47a76bb8d2c5e7de09d8fc464295cd6b044697b44dd5",
+          "after": "4c8f21bb8fe0842d1ef3da57a375d44125271d6fbe549a256fa9ca53501c5a5a"
+        },
+        "plot.py": {
+          "before": "e11d04cc4f562ecbb6fa705f169d0cc345d41663648e6432160a6bdda1fb3e3e",
+          "after": "461d33af66c4430b4d74bff0fa870a339cdba1a8444c015ed95ca551cdc97ab4"
+        }
+      },
+      "unchanged_manifest_entries": 54,
+      "all_other_entries_byte_identical": true
+    },
+    "final-tcp-slow-20261101": {
+      "before_manifest_sha256": "0fa6b78152947214ce92cfad23e5ac38434558afbbc9e6ff94cdb088a9176ce4",
+      "after_manifest_sha256": "3608b1b009ee99a97cd2a12b010de4430da2faa79109fc9cee3b5eed5e7aa852",
+      "changed": {
+        "../../final-tcp-slow-age.svg": {
+          "before": "0fc39689ecf843d2b81cdbd4b5920cc5755c11486f04995ba3a298952f0dfbad",
+          "after": "b5aac1ff0f1a34becebda1c01d16d639fa5c5ca8aed8d8186bb5acbc868db3a6"
+        },
+        "plot.py": {
+          "before": "eb2432daf5038151ac0345795358491cce885ce06903f0dd63e503d72b1f972f",
+          "after": "5f30e6d5078500830aa0f0b579d06b0407c5fb5ce0bbebb48b56e0a5cb30dc8f"
+        }
+      },
+      "unchanged_manifest_entries": 54,
+      "all_other_entries_byte_identical": true
+    },
+    "cadence-margin-core-20261101": {
+      "before_manifest_sha256": "6e8e5f37c4a4a110feed2c19a49b2128a32674e9019c111fed3155cfc4fb1f38",
+      "after_manifest_sha256": "bf953cab984072f225ce4a8e5d5f8714ac999bddc1c394ac62a51d17a20316ff",
+      "changed": {
+        "../../cadence-margin-core-age.svg": {
+          "before": "e2a0ecd0c461e105fbce9136c742cd5c1ad2c01c0ff25de4586792625c73a512",
+          "after": "231ecd29ad4871d65fc3494c184ea63c4258a3fbb15df26c959ac45eef4bcf77"
+        },
+        "plot.py": {
+          "before": "5c0e8186fd2fc6ff51340c2a1d031b12ed4d9d8eeb4189606e70a7297a0f58ad",
+          "after": "d9bdd199e1d58945b0e1aa528e95b1c70e862adb3b39352d1325127018bb070b"
+        }
+      },
+      "unchanged_manifest_entries": 59,
+      "all_other_entries_byte_identical": true
+    },
+    "cadence-margin-slow-20261101": {
+      "before_manifest_sha256": "5b9c47c38dfc9373a0e85cd3f8f840c9926dde363cf7efb64f993bd1736e6e48",
+      "after_manifest_sha256": "5e9829a9a0dd128e4e4c3bc4e759021231152ef80f18aa7d5a90783937058b9e",
+      "changed": {
+        "../../cadence-margin-slow-age.svg": {
+          "before": "e954312385bc42d695a473846d61f820e14db7cacf8268dc7bf662d961291595",
+          "after": "8eacd824b666e98e629b3c3a09ead04d67c15c6420f0fe7d85f2374405dc4d9d"
+        },
+        "plot.py": {
+          "before": "da399424945747c45a297f7f845b69088a47ee00fc77acdcc9856d032278165c",
+          "after": "1065436c22295201bf997426d45d1b4d76491cc505b54426e1dcd67b76dd8dbd"
+        }
+      },
+      "unchanged_manifest_entries": 59,
+      "all_other_entries_byte_identical": true
+    }
+  }
+}
