@@ -387,6 +387,10 @@ def glance_table():
     def average(tool):
         values=[r['fps'] for r in rs[tool] if r.get('fps') is not None]
         return statistics.mean(values) if values else None
+    def packets(tool):
+        values=[(r['pkts_in_s']+r['pkts_out_s'])/r['fps']
+                for r in rs[tool] if r.get('fps')]
+        return statistics.median(values) if values else None
     def memory(tool):
         values=[median(runs('sessions',tool),k) for k in ['client_kb','server_kb']]
         return sum(values)/1024 if all(v is not None for v in values) else None
@@ -395,6 +399,7 @@ def glance_table():
            ('1% / 5% low FPS',lambda t:(low(rs[t]),low(rs[t],quantile=.95)),True,1),
            ('Frame age, ms',lambda t:median(rs[t],'age_ms'),False,0),
            ('Received network, kbit/s',lambda t:median(rs[t],'kbit_s'),False,0),
+           ('Packets per frame (in + out)',packets,False,2),
            ('Key echo, ms',lambda t:median(runs('echo',t,'verylow'),'echo_ms'),False,0),
            ('Bulk output to prompt, s',lambda t:median(runs('flood',t,'verylow'),'flood_s'),False,2),
            ('Ten idle LAN sessions, client + server MiB',memory,False,1)]
@@ -421,10 +426,12 @@ uses ten simultaneous idle LAN sessions.
 
 '''+glance_table()+'''
 
-For FPS, **vs SSH** is rsh/SSH. For age, RX, echo, bulk time and RSS it is
+For FPS, **vs SSH** is rsh/SSH. For age, RX, packets, echo, bulk time and RSS it is
 SSH/rsh: a larger factor favors rsh, while a factor below 1 favors SSH.
 The 1%/5% factors are separate. Resource ratios describe usage, not speed;
-ratios use unrounded statistics. [Full results and methodology](BENCHMARK.md)
+ratios use unrounded statistics. Packets per frame is the median of each
+run's client inbound plus outbound packet rate divided by observed FPS.
+[Full results and methodology](BENCHMARK.md)
 include both rsh transports, every profile, CPU/RSS and collection failures.
 '''
     compact=lambda row:row[:2]+row[3:4]+row[5:]

@@ -34,14 +34,17 @@ uses ten simultaneous idle LAN sessions.
 | 1% / 5% low FPS | **39.4 / 44.2** | **9.52× / 8.63×** | 13.9 / 14.8 | 4.1 / 5.1 | 4.2 / 4.3 |
 | Frame age, ms | **72** | **52.17×** | 84 | 3782 | 3726 |
 | Received network, kbit/s | **211** | **1.18×** | 88 | 248 | 248 |
+| Packets per frame (in + out) | **2.01** | **2.34×** | 1.61 | 4.71 | 3.65 |
 | Key echo, ms | **7** | **17.42×** | 8 | 120 | 112 |
 | Bulk output to prompt, s | **0.16** | **143.94×** | 0.19 | 23.03 | 22.71 |
 | Ten idle LAN sessions, client + server MiB | **33.7** | **6.55×** | 243.1 | 220.6 | 201.4 |
 
-For FPS, **vs SSH** is rsh/SSH. For age, RX, echo, bulk time and RSS it is
+For FPS, **vs SSH** is rsh/SSH. For age, RX, packets, echo, bulk time and RSS it is
 SSH/rsh: a larger factor favors rsh, while a factor below 1 favors SSH.
 The 1%/5% factors are separate. Resource ratios describe usage, not speed;
-ratios use unrounded statistics. [Full results and methodology](BENCHMARK.md)
+ratios use unrounded statistics. Packets per frame is the median of each
+run's client inbound plus outbound packet rate divided by observed FPS.
+[Full results and methodology](BENCHMARK.md)
 include both rsh transports, every profile, CPU/RSS and collection failures.
 <!-- benchmark-summary:end -->
 
