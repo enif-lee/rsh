@@ -153,7 +153,7 @@ def svg(title, note, groups, fmt, higher, log=False, missing="n/a", pair=None, v
                 cls = t.replace("-", "_")
                 width = lambda x: max(2.0, plot * scale(x) / most if most else 0)
                 out.append('<rect class="s-%s" x="%d" y="%d" width="%.1f" height="%d" rx="2"/>' % (cls, LABEL_W + 16, y, width(v[0]), BAR))
-                for low, opacity in ((v[2], '0.88'), (v[1], '0.76')):
+                for low, opacity in ((v[2], '0.8'), (v[1], '0.6')):
                     if low is not None:
                         # Blend against the theme background, not the darker
                         # bar underneath, so each shade stays distinct.

@@ -18,23 +18,23 @@
 <text class="t2" x="102" y="107" font-size="11" text-anchor="end">rsh (UDP)</text>
 <rect class="s-rsh" x="108" y="98" width="32.1" height="11" rx="2"/>
 <rect class="bg" x="108" y="98" width="24.7" height="11" rx="2"/>
-<rect class="s-rsh" x="108" y="98" width="24.7" height="11" rx="2" opacity="0.88"/>
+<rect class="s-rsh" x="108" y="98" width="24.7" height="11" rx="2" opacity="0.8"/>
 <rect class="bg" x="108" y="98" width="6.5" height="11" rx="2"/>
-<rect class="s-rsh" x="108" y="98" width="6.5" height="11" rx="2" opacity="0.76"/>
+<rect class="s-rsh" x="108" y="98" width="6.5" height="11" rx="2" opacity="0.6"/>
 <text class="t1" x="146.1" y="107" font-size="11">3.9 / 0.8 / 3.0</text>
 <text class="t2" x="102" y="120" font-size="11" text-anchor="end">rsh (TCP)</text>
 <rect class="s-rsh_tcp" x="108" y="111" width="45.8" height="11" rx="2"/>
 <rect class="bg" x="108" y="111" width="46.5" height="11" rx="2"/>
-<rect class="s-rsh_tcp" x="108" y="111" width="46.5" height="11" rx="2" opacity="0.88"/>
+<rect class="s-rsh_tcp" x="108" y="111" width="46.5" height="11" rx="2" opacity="0.8"/>
 <rect class="bg" x="108" y="111" width="34.9" height="11" rx="2"/>
-<rect class="s-rsh_tcp" x="108" y="111" width="34.9" height="11" rx="2" opacity="0.76"/>
+<rect class="s-rsh_tcp" x="108" y="111" width="34.9" height="11" rx="2" opacity="0.6"/>
 <text class="t1" x="160.5" y="120" font-size="11" font-weight="600">5.5 / 4.2 / 5.6</text>
 <text class="t2" x="102" y="133" font-size="11" text-anchor="end">OpenSSH</text>
 <rect class="s-ssh" x="108" y="124" width="11.7" height="11" rx="2"/>
 <rect class="bg" x="108" y="124" width="20.9" height="11" rx="2"/>
-<rect class="s-ssh" x="108" y="124" width="20.9" height="11" rx="2" opacity="0.88"/>
+<rect class="s-ssh" x="108" y="124" width="20.9" height="11" rx="2" opacity="0.8"/>
 <rect class="bg" x="108" y="124" width="19.5" height="11" rx="2"/>
-<rect class="s-ssh" x="108" y="124" width="19.5" height="11" rx="2" opacity="0.76"/>
+<rect class="s-ssh" x="108" y="124" width="19.5" height="11" rx="2" opacity="0.6"/>
 <text class="t1" x="134.9" y="133" font-size="11">1.4 / 2.3 / 2.5</text>
 <text class="t2" x="102" y="146" font-size="11" text-anchor="end">ET</text>
 <rect class="s-et" x="108" y="137" width="2.0" height="11" rx="2"/>
@@ -42,156 +42,156 @@
 <text class="t2" x="102" y="159" font-size="11" text-anchor="end">mosh</text>
 <rect class="s-mosh" x="108" y="150" width="44.5" height="11" rx="2"/>
 <rect class="bg" x="108" y="150" width="33.2" height="11" rx="2"/>
-<rect class="s-mosh" x="108" y="150" width="33.2" height="11" rx="2" opacity="0.88"/>
+<rect class="s-mosh" x="108" y="150" width="33.2" height="11" rx="2" opacity="0.8"/>
 <rect class="bg" x="108" y="150" width="32.8" height="11" rx="2"/>
-<rect class="s-mosh" x="108" y="150" width="32.8" height="11" rx="2" opacity="0.76"/>
+<rect class="s-mosh" x="108" y="150" width="32.8" height="11" rx="2" opacity="0.6"/>
 <text class="t1" x="158.5" y="159" font-size="11">5.3 / 3.9 / 4.0</text>
 <text class="t1" x="16" y="191" font-size="12" font-weight="600">lan → highlat</text>
 <line class="axis" x1="108" y1="197" x2="108" y2="264" stroke-width="1"/>
 <text class="t2" x="102" y="208" font-size="11" text-anchor="end">rsh (UDP)</text>
 <rect class="s-rsh" x="108" y="199" width="468.3" height="11" rx="2"/>
 <rect class="bg" x="108" y="199" width="385.4" height="11" rx="2"/>
-<rect class="s-rsh" x="108" y="199" width="385.4" height="11" rx="2" opacity="0.88"/>
+<rect class="s-rsh" x="108" y="199" width="385.4" height="11" rx="2" opacity="0.8"/>
 <rect class="bg" x="108" y="199" width="280.3" height="11" rx="2"/>
-<rect class="s-rsh" x="108" y="199" width="280.3" height="11" rx="2" opacity="0.76"/>
+<rect class="s-rsh" x="108" y="199" width="280.3" height="11" rx="2" opacity="0.6"/>
 <text class="t1" x="582.3" y="208" font-size="11">56.2 / 33.7 / 46.3</text>
 <text class="t2" x="102" y="221" font-size="11" text-anchor="end">rsh (TCP)</text>
 <rect class="s-rsh_tcp" x="108" y="212" width="405.0" height="11" rx="2"/>
 <rect class="bg" x="108" y="212" width="380.1" height="11" rx="2"/>
-<rect class="s-rsh_tcp" x="108" y="212" width="380.1" height="11" rx="2" opacity="0.88"/>
+<rect class="s-rsh_tcp" x="108" y="212" width="380.1" height="11" rx="2" opacity="0.8"/>
 <rect class="bg" x="108" y="212" width="34.9" height="11" rx="2"/>
-<rect class="s-rsh_tcp" x="108" y="212" width="34.9" height="11" rx="2" opacity="0.76"/>
+<rect class="s-rsh_tcp" x="108" y="212" width="34.9" height="11" rx="2" opacity="0.6"/>
 <text class="t1" x="519.0" y="221" font-size="11">48.6 / 4.2 / 45.7</text>
 <text class="t2" x="102" y="234" font-size="11" text-anchor="end">OpenSSH</text>
 <rect class="s-ssh" x="108" y="225" width="491.6" height="11" rx="2"/>
 <rect class="bg" x="108" y="225" width="416.2" height="11" rx="2"/>
-<rect class="s-ssh" x="108" y="225" width="416.2" height="11" rx="2" opacity="0.88"/>
+<rect class="s-ssh" x="108" y="225" width="416.2" height="11" rx="2" opacity="0.8"/>
 <rect class="bg" x="108" y="225" width="44.6" height="11" rx="2"/>
-<rect class="s-ssh" x="108" y="225" width="44.6" height="11" rx="2" opacity="0.76"/>
+<rect class="s-ssh" x="108" y="225" width="44.6" height="11" rx="2" opacity="0.6"/>
 <text class="t1" x="605.6" y="234" font-size="11">59.0 / 5.4 / 50.0</text>
 <text class="t2" x="102" y="247" font-size="11" text-anchor="end">ET</text>
 <rect class="s-et" x="108" y="238" width="492.0" height="11" rx="2"/>
 <rect class="bg" x="108" y="238" width="412.1" height="11" rx="2"/>
-<rect class="s-et" x="108" y="238" width="412.1" height="11" rx="2" opacity="0.88"/>
+<rect class="s-et" x="108" y="238" width="412.1" height="11" rx="2" opacity="0.8"/>
 <rect class="bg" x="108" y="238" width="94.1" height="11" rx="2"/>
-<rect class="s-et" x="108" y="238" width="94.1" height="11" rx="2" opacity="0.76"/>
+<rect class="s-et" x="108" y="238" width="94.1" height="11" rx="2" opacity="0.6"/>
 <text class="t1" x="606.0" y="247" font-size="11" font-weight="600">59.1 / 11.3 / 49.5</text>
 <text class="t2" x="102" y="260" font-size="11" text-anchor="end">mosh</text>
 <rect class="s-mosh" x="108" y="251" width="82.0" height="11" rx="2"/>
 <rect class="bg" x="108" y="251" width="54.1" height="11" rx="2"/>
-<rect class="s-mosh" x="108" y="251" width="54.1" height="11" rx="2" opacity="0.88"/>
+<rect class="s-mosh" x="108" y="251" width="54.1" height="11" rx="2" opacity="0.8"/>
 <rect class="bg" x="108" y="251" width="53.2" height="11" rx="2"/>
-<rect class="s-mosh" x="108" y="251" width="53.2" height="11" rx="2" opacity="0.76"/>
+<rect class="s-mosh" x="108" y="251" width="53.2" height="11" rx="2" opacity="0.6"/>
 <text class="t1" x="196.0" y="260" font-size="11">9.9 / 6.4 / 6.5</text>
 <text class="t1" x="16" y="292" font-size="12" font-weight="600">lan → lowbw</text>
 <line class="axis" x1="108" y1="298" x2="108" y2="365" stroke-width="1"/>
 <text class="t2" x="102" y="309" font-size="11" text-anchor="end">rsh (UDP)</text>
 <rect class="s-rsh" x="108" y="300" width="191.5" height="11" rx="2"/>
 <rect class="bg" x="108" y="300" width="168.2" height="11" rx="2"/>
-<rect class="s-rsh" x="108" y="300" width="168.2" height="11" rx="2" opacity="0.88"/>
+<rect class="s-rsh" x="108" y="300" width="168.2" height="11" rx="2" opacity="0.8"/>
 <rect class="bg" x="108" y="300" width="54.9" height="11" rx="2"/>
-<rect class="s-rsh" x="108" y="300" width="54.9" height="11" rx="2" opacity="0.76"/>
+<rect class="s-rsh" x="108" y="300" width="54.9" height="11" rx="2" opacity="0.6"/>
 <text class="t1" x="305.5" y="309" font-size="11">23.0 / 6.6 / 20.2</text>
 <text class="t2" x="102" y="322" font-size="11" text-anchor="end">rsh (TCP)</text>
 <rect class="s-rsh_tcp" x="108" y="313" width="196.1" height="11" rx="2"/>
 <rect class="bg" x="108" y="313" width="156.2" height="11" rx="2"/>
-<rect class="s-rsh_tcp" x="108" y="313" width="156.2" height="11" rx="2" opacity="0.88"/>
+<rect class="s-rsh_tcp" x="108" y="313" width="156.2" height="11" rx="2" opacity="0.8"/>
 <rect class="bg" x="108" y="313" width="99.1" height="11" rx="2"/>
-<rect class="s-rsh_tcp" x="108" y="313" width="99.1" height="11" rx="2" opacity="0.76"/>
+<rect class="s-rsh_tcp" x="108" y="313" width="99.1" height="11" rx="2" opacity="0.6"/>
 <text class="t1" x="310.1" y="322" font-size="11" font-weight="600">23.6 / 11.9 / 18.8</text>
 <text class="t2" x="102" y="335" font-size="11" text-anchor="end">OpenSSH</text>
 <rect class="s-ssh" x="108" y="326" width="83.2" height="11" rx="2"/>
 <rect class="bg" x="108" y="326" width="28.4" height="11" rx="2"/>
-<rect class="s-ssh" x="108" y="326" width="28.4" height="11" rx="2" opacity="0.88"/>
+<rect class="s-ssh" x="108" y="326" width="28.4" height="11" rx="2" opacity="0.8"/>
 <rect class="bg" x="108" y="326" width="19.5" height="11" rx="2"/>
-<rect class="s-ssh" x="108" y="326" width="19.5" height="11" rx="2" opacity="0.76"/>
+<rect class="s-ssh" x="108" y="326" width="19.5" height="11" rx="2" opacity="0.6"/>
 <text class="t1" x="197.2" y="335" font-size="11">10.0 / 2.3 / 3.4</text>
 <text class="t2" x="102" y="348" font-size="11" text-anchor="end">ET</text>
 <rect class="s-et" x="108" y="339" width="82.8" height="11" rx="2"/>
 <rect class="bg" x="108" y="339" width="15.7" height="11" rx="2"/>
-<rect class="s-et" x="108" y="339" width="15.7" height="11" rx="2" opacity="0.88"/>
+<rect class="s-et" x="108" y="339" width="15.7" height="11" rx="2" opacity="0.8"/>
 <rect class="bg" x="108" y="339" width="15.5" height="11" rx="2"/>
-<rect class="s-et" x="108" y="339" width="15.5" height="11" rx="2" opacity="0.76"/>
+<rect class="s-et" x="108" y="339" width="15.5" height="11" rx="2" opacity="0.6"/>
 <text class="t1" x="196.8" y="348" font-size="11">9.9 / 1.9 / 1.9</text>
 <text class="t2" x="102" y="361" font-size="11" text-anchor="end">mosh</text>
 <rect class="s-mosh" x="108" y="352" width="114.5" height="11" rx="2"/>
 <rect class="bg" x="108" y="352" width="70.0" height="11" rx="2"/>
-<rect class="s-mosh" x="108" y="352" width="70.0" height="11" rx="2" opacity="0.88"/>
+<rect class="s-mosh" x="108" y="352" width="70.0" height="11" rx="2" opacity="0.8"/>
 <rect class="bg" x="108" y="352" width="58.4" height="11" rx="2"/>
-<rect class="s-mosh" x="108" y="352" width="58.4" height="11" rx="2" opacity="0.76"/>
+<rect class="s-mosh" x="108" y="352" width="58.4" height="11" rx="2" opacity="0.6"/>
 <text class="t1" x="228.5" y="361" font-size="11">13.8 / 7.0 / 8.4</text>
 <text class="t1" x="16" y="393" font-size="12" font-weight="600">lowbw → highlat</text>
 <line class="axis" x1="108" y1="399" x2="108" y2="466" stroke-width="1"/>
 <text class="t2" x="102" y="410" font-size="11" text-anchor="end">rsh (UDP)</text>
 <rect class="s-rsh" x="108" y="401" width="432.9" height="11" rx="2"/>
 <rect class="bg" x="108" y="401" width="385.4" height="11" rx="2"/>
-<rect class="s-rsh" x="108" y="401" width="385.4" height="11" rx="2" opacity="0.88"/>
+<rect class="s-rsh" x="108" y="401" width="385.4" height="11" rx="2" opacity="0.8"/>
 <rect class="bg" x="108" y="401" width="254.6" height="11" rx="2"/>
-<rect class="s-rsh" x="108" y="401" width="254.6" height="11" rx="2" opacity="0.76"/>
+<rect class="s-rsh" x="108" y="401" width="254.6" height="11" rx="2" opacity="0.6"/>
 <text class="t1" x="546.9" y="410" font-size="11" font-weight="600">52.0 / 30.6 / 46.3</text>
 <text class="t2" x="102" y="423" font-size="11" text-anchor="end">rsh (TCP)</text>
 <rect class="s-rsh_tcp" x="108" y="414" width="110.7" height="11" rx="2"/>
 <rect class="bg" x="108" y="414" width="37.8" height="11" rx="2"/>
-<rect class="s-rsh_tcp" x="108" y="414" width="37.8" height="11" rx="2" opacity="0.88"/>
+<rect class="s-rsh_tcp" x="108" y="414" width="37.8" height="11" rx="2" opacity="0.8"/>
 <rect class="bg" x="108" y="414" width="27.6" height="11" rx="2"/>
-<rect class="s-rsh_tcp" x="108" y="414" width="27.6" height="11" rx="2" opacity="0.76"/>
+<rect class="s-rsh_tcp" x="108" y="414" width="27.6" height="11" rx="2" opacity="0.6"/>
 <text class="t1" x="224.7" y="423" font-size="11">13.3 / 3.3 / 4.5</text>
 <text class="t2" x="102" y="436" font-size="11" text-anchor="end">OpenSSH</text>
 <rect class="s-ssh" x="108" y="427" width="154.8" height="11" rx="2"/>
 <rect class="bg" x="108" y="427" width="29.4" height="11" rx="2"/>
-<rect class="s-ssh" x="108" y="427" width="29.4" height="11" rx="2" opacity="0.88"/>
+<rect class="s-ssh" x="108" y="427" width="29.4" height="11" rx="2" opacity="0.8"/>
 <rect class="bg" x="108" y="427" width="27.6" height="11" rx="2"/>
-<rect class="s-ssh" x="108" y="427" width="27.6" height="11" rx="2" opacity="0.76"/>
+<rect class="s-ssh" x="108" y="427" width="27.6" height="11" rx="2" opacity="0.6"/>
 <text class="t1" x="268.8" y="436" font-size="11">18.6 / 3.3 / 3.5</text>
 <text class="t2" x="102" y="449" font-size="11" text-anchor="end">ET</text>
 <rect class="s-et" x="108" y="440" width="122.4" height="11" rx="2"/>
 <rect class="bg" x="108" y="440" width="29.6" height="11" rx="2"/>
-<rect class="s-et" x="108" y="440" width="29.6" height="11" rx="2" opacity="0.88"/>
+<rect class="s-et" x="108" y="440" width="29.6" height="11" rx="2" opacity="0.8"/>
 <rect class="bg" x="108" y="440" width="27.6" height="11" rx="2"/>
-<rect class="s-et" x="108" y="440" width="27.6" height="11" rx="2" opacity="0.76"/>
+<rect class="s-et" x="108" y="440" width="27.6" height="11" rx="2" opacity="0.6"/>
 <text class="t1" x="236.4" y="449" font-size="11">14.7 / 3.3 / 3.6</text>
 <text class="t2" x="102" y="462" font-size="11" text-anchor="end">mosh</text>
 <rect class="s-mosh" x="108" y="453" width="62.0" height="11" rx="2"/>
 <rect class="bg" x="108" y="453" width="53.9" height="11" rx="2"/>
-<rect class="s-mosh" x="108" y="453" width="53.9" height="11" rx="2" opacity="0.88"/>
+<rect class="s-mosh" x="108" y="453" width="53.9" height="11" rx="2" opacity="0.8"/>
 <rect class="bg" x="108" y="453" width="53.6" height="11" rx="2"/>
-<rect class="s-mosh" x="108" y="453" width="53.6" height="11" rx="2" opacity="0.76"/>
+<rect class="s-mosh" x="108" y="453" width="53.6" height="11" rx="2" opacity="0.6"/>
 <text class="t1" x="176.0" y="462" font-size="11">7.5 / 6.4 / 6.5</text>
 <text class="t1" x="16" y="494" font-size="12" font-weight="600">highlat → lossy</text>
 <line class="axis" x1="108" y1="500" x2="108" y2="567" stroke-width="1"/>
 <text class="t2" x="102" y="511" font-size="11" text-anchor="end">rsh (UDP)</text>
 <rect class="s-rsh" x="108" y="502" width="466.2" height="11" rx="2"/>
 <rect class="bg" x="108" y="502" width="378.4" height="11" rx="2"/>
-<rect class="s-rsh" x="108" y="502" width="378.4" height="11" rx="2" opacity="0.88"/>
+<rect class="s-rsh" x="108" y="502" width="378.4" height="11" rx="2" opacity="0.8"/>
 <rect class="bg" x="108" y="502" width="253.0" height="11" rx="2"/>
-<rect class="s-rsh" x="108" y="502" width="253.0" height="11" rx="2" opacity="0.76"/>
+<rect class="s-rsh" x="108" y="502" width="253.0" height="11" rx="2" opacity="0.6"/>
 <text class="t1" x="580.2" y="511" font-size="11" font-weight="600">56.0 / 30.4 / 45.5</text>
 <text class="t2" x="102" y="524" font-size="11" text-anchor="end">rsh (TCP)</text>
 <rect class="s-rsh_tcp" x="108" y="515" width="138.6" height="11" rx="2"/>
 <rect class="bg" x="108" y="515" width="42.1" height="11" rx="2"/>
-<rect class="s-rsh_tcp" x="108" y="515" width="42.1" height="11" rx="2" opacity="0.88"/>
+<rect class="s-rsh_tcp" x="108" y="515" width="42.1" height="11" rx="2" opacity="0.8"/>
 <rect class="bg" x="108" y="515" width="24.4" height="11" rx="2"/>
-<rect class="s-rsh_tcp" x="108" y="515" width="24.4" height="11" rx="2" opacity="0.76"/>
+<rect class="s-rsh_tcp" x="108" y="515" width="24.4" height="11" rx="2" opacity="0.6"/>
 <text class="t1" x="252.6" y="524" font-size="11">16.6 / 2.9 / 5.1</text>
 <text class="t2" x="102" y="537" font-size="11" text-anchor="end">OpenSSH</text>
 <rect class="s-ssh" x="108" y="528" width="269.3" height="11" rx="2"/>
 <rect class="bg" x="108" y="528" width="80.5" height="11" rx="2"/>
-<rect class="s-ssh" x="108" y="528" width="80.5" height="11" rx="2" opacity="0.88"/>
+<rect class="s-ssh" x="108" y="528" width="80.5" height="11" rx="2" opacity="0.8"/>
 <rect class="bg" x="108" y="528" width="53.5" height="11" rx="2"/>
-<rect class="s-ssh" x="108" y="528" width="53.5" height="11" rx="2" opacity="0.76"/>
+<rect class="s-ssh" x="108" y="528" width="53.5" height="11" rx="2" opacity="0.6"/>
 <text class="t1" x="383.3" y="537" font-size="11">32.4 / 6.4 / 9.7</text>
 <text class="t2" x="102" y="550" font-size="11" text-anchor="end">ET</text>
 <rect class="s-et" x="108" y="541" width="354.2" height="11" rx="2"/>
 <rect class="bg" x="108" y="541" width="82.3" height="11" rx="2"/>
-<rect class="s-et" x="108" y="541" width="82.3" height="11" rx="2" opacity="0.88"/>
+<rect class="s-et" x="108" y="541" width="82.3" height="11" rx="2" opacity="0.8"/>
 <rect class="bg" x="108" y="541" width="41.5" height="11" rx="2"/>
-<rect class="s-et" x="108" y="541" width="41.5" height="11" rx="2" opacity="0.76"/>
+<rect class="s-et" x="108" y="541" width="41.5" height="11" rx="2" opacity="0.6"/>
 <text class="t1" x="468.2" y="550" font-size="11">42.5 / 5.0 / 9.9</text>
 <text class="t2" x="102" y="563" font-size="11" text-anchor="end">mosh</text>
 <rect class="s-mosh" x="108" y="554" width="106.1" height="11" rx="2"/>
 <rect class="bg" x="108" y="554" width="56.6" height="11" rx="2"/>
-<rect class="s-mosh" x="108" y="554" width="56.6" height="11" rx="2" opacity="0.88"/>
+<rect class="s-mosh" x="108" y="554" width="56.6" height="11" rx="2" opacity="0.8"/>
 <rect class="bg" x="108" y="554" width="25.2" height="11" rx="2"/>
-<rect class="s-mosh" x="108" y="554" width="25.2" height="11" rx="2" opacity="0.76"/>
+<rect class="s-mosh" x="108" y="554" width="25.2" height="11" rx="2" opacity="0.6"/>
 <text class="t1" x="220.1" y="563" font-size="11">12.8 / 3.0 / 6.8</text>
 </svg>
