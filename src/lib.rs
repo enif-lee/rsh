@@ -4,6 +4,8 @@ pub mod client;
 pub mod config;
 pub mod crypto;
 pub mod forward;
+pub mod history;
+pub mod session_ui;
 pub mod net;
 pub mod path;
 pub mod predict;

@@ -534,6 +534,19 @@ pub fn kill_sessions(peer: SocketAddr, key: &Key, host: &str, target: &str) -> i
     }
 }
 
+/// Rename through the replay-protected control handshake without taking over
+/// the running attachment.
+pub fn rename_session(peer: SocketAddr, key: &Key, host: &str, target: &str, name: &str, tmux: bool) -> io::Result<String> {
+    let sock = bind_for(peer)?;
+    let action = proto::Action::Rename { target: target.into(), name: name.into(), tmux };
+    match hello(&sock, peer, key, &new_hello(host, action, (80, 24), &[]))? {
+        HelloReply::Ready(done) => Ok(done.attached.label),
+        HelloReply::Denied(reason) if reason == "bad hello" => Err(io::Error::new(ErrorKind::Unsupported,
+            "server does not support session rename; upgrade the server and try again")),
+        HelloReply::Denied(reason) => Err(io::Error::new(ErrorKind::PermissionDenied, reason)),
+    }
+}
+
 pub fn new_hello(host: &str, action: proto::Action, size: (u16, u16), command: &[String]) -> Hello {
     new_hello_forwarding(host, action, size, command, &[])
 }

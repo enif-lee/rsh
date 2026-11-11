@@ -312,7 +312,8 @@ pub fn client_name() -> String {
         .collect()
 }
 
-pub fn install_and_bootstrap(ssh: &Ssh, bin: &str, binary: Option<&Binary>) -> Result<(u16, String), String> {
+pub fn install_and_bootstrap(ssh: &Ssh, bin: &str, binary: Option<&Binary>, preserve_sessions: bool) -> Result<(u16, String), String> {
+    let preserving = if preserve_sessions { " --preserve-sessions" } else { "" };
     let client = shell_quote(&client_name());
     // The upload goes to a name of its own and replaces rsh only when it
     // arrived whole: an interrupted copy must never become the binary.
@@ -320,10 +321,10 @@ pub fn install_and_bootstrap(ssh: &Ssh, bin: &str, binary: Option<&Binary>) -> R
         Some(binary) => format!(
             "set -e; b={bin}; t=\"$b.new.$$\"; mkdir -p \"$(dirname \"$b\")\"; cat > \"$t\"; \
              if [ \"$(wc -c < \"$t\" | tr -d ' ')\" != {size} ]; then rm -f \"$t\"; echo 'rsh: upload incomplete' >&2; exit 1; fi; \
-             chmod 755 \"$t\"; mv -f \"$t\" \"$b\"; exec \"$b\" bootstrap --client {client}",
+             chmod 755 \"$t\"; mv -f \"$t\" \"$b\"; exec \"$b\" bootstrap --client {client}{preserving}",
             size = binary.bytes.len()
         ),
-        None => format!("exec {bin} bootstrap --client {client}"),
+        None => format!("exec {bin} bootstrap --client {client}{preserving}"),
     };
     let output = ssh
         .run(&script, binary.map(|b| b.bytes.as_slice()))

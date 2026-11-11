@@ -16,6 +16,42 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 
+fn terminal_colors(fd: i32) -> bool {
+    crate::pty::is_tty(fd) && env::var_os("NO_COLOR").is_none() && env::var("TERM").as_deref() != Ok("dumb")
+}
+
+fn output_colors() -> bool { terminal_colors(1) }
+
+fn paint(text: impl std::fmt::Display, style: console::Style, color: bool) -> String {
+    style.apply_to(text).force_styling(color).to_string()
+}
+
+fn help_styles() -> clap::builder::Styles {
+    use clap::builder::styling::AnsiColor;
+    clap::builder::Styles::styled()
+        .header(AnsiColor::Cyan.on_default().bold())
+        .usage(AnsiColor::Cyan.on_default().bold())
+        .literal(AnsiColor::Green.on_default().bold())
+        .placeholder(AnsiColor::Yellow.on_default())
+}
+
+fn help_text(error: &clap::Error, color: bool) -> String {
+    if !color { return error.render().to_string(); }
+    let rendered = error.render().ansi().to_string();
+    rendered.split_inclusive('\n').map(|line| {
+        match line.trim_end() {
+            "rsh <host>" | "keys in a session (typed at the start of a line, as in ssh)" | "menus" | "auth file" => {
+                format!("{}{}", paint(line.trim_end(), console::Style::new().cyan().bold(), true), if line.ends_with('\n') { "\n" } else { "" })
+            }
+            _ if line.starts_with("  ~") => {
+                let key = line.split_whitespace().next().unwrap_or("");
+                line.replacen(key, &paint(key, console::Style::new().yellow().bold(), true), 1)
+            }
+            _ => line.to_string(),
+        }
+    }).collect()
+}
+
 pub const DEFAULT_PORT: u16 = 2222;
 
 pub fn main() -> i32 {
@@ -25,7 +61,7 @@ pub fn main() -> i32 {
     match session(&args, &mut input, &mut io::stdout(), tty) {
         Ok(code) => code,
         Err(err) => {
-            let _ = writeln!(io::stderr(), "rsh: {err}");
+            let _ = writeln!(io::stderr(), "{} {err}", paint("rsh:", console::Style::new().red().bold(), terminal_colors(2)));
             2
         }
     }
@@ -92,6 +128,9 @@ keys in a session (typed at the start of a line, as in ssh)
                  leave tmux; the tmux session keeps running)
   ~l             sessions of every known host; Up/Down and Enter switch
                  to one, q closes
+  ~m             rename the current rsh or tmux session
+  ~,             settings; arrows move/change, Enter activates, Esc closes
+                 also ~ then Cmd+, when the terminal forwards CSI 44;9u
   ~r             repaint the screen from the server
   ~h             these keys
   ~~             send ~
@@ -100,7 +139,8 @@ keys in a session (typed at the start of a line, as in ssh)
   anywhere, not only at the start of a line.
 
 menus
-  Up/Down move, typing filters, Enter selects, Esc cancels.
+  Up/Down move, typing filters, Enter selects, m renames, Esc cancels.
+  Recent sessions and detached tmux sessions come first.
   rsh ls groups rows under each host, numbered from 1 per host; picking
   a host line goes on as rsh <host> does. Without a tty a line with the
   number selects (<host> <number> when several hosts answer, <host>
@@ -125,6 +165,8 @@ struct Options {
     authorized: PathBuf,
     /// Both files are at their defaults, so the old shared file may be split.
     default_files: bool,
+    /// Internal bootstrap mode used by rename: never replace a live server.
+    preserve_sessions: bool,
     client_name: Option<String>,
     peer: Option<String>,
     bind: Option<SocketAddr>,
@@ -174,7 +216,7 @@ enum Sub {
 
 /// UDP remote shell: sessions stay on the server across disconnects.
 #[derive(Parser)]
-#[command(name = "rsh", disable_version_flag = true, after_help = AFTER_HELP, override_usage = USAGE)]
+#[command(name = "rsh", disable_version_flag = true, after_help = AFTER_HELP, override_usage = USAGE, styles = help_styles())]
 struct Cli {
     #[command(subcommand)]
     command: Option<CliCommand>,
@@ -233,6 +275,9 @@ struct Cli {
     version: bool,
     #[arg(long, hide = true)]
     handoff_format: bool,
+    /// Internal bootstrap guard for session-preserving management actions
+    #[arg(long, hide = true, global = true)]
+    preserve_sessions: bool,
 }
 
 #[derive(Subcommand)]
@@ -374,6 +419,7 @@ impl Options {
             target,
             run: cli.run,
             default_files: auth.is_none() && cli.authorized.is_none(),
+            preserve_sessions: cli.preserve_sessions,
             auth: auth.unwrap_or_else(|| home().join(".rsh").join("known")),
             authorized: cli.authorized.unwrap_or_else(|| home().join(".rsh").join("authorized")),
             client_name: cli.client,
@@ -400,7 +446,7 @@ fn session(args: &[String], keys: &mut Keys, stdout: &mut dyn Write, tty: bool) 
     let opts = match Options::parse(args) {
         Ok(opts) => opts,
         Err(err) if matches!(err.kind(), clap::error::ErrorKind::DisplayHelp | clap::error::ErrorKind::DisplayHelpOnMissingArgumentOrSubcommand) => {
-            write!(stdout, "{}", err.render()).map_err(|err| err.to_string())?;
+            write!(stdout, "{}", help_text(&err, output_colors())).map_err(|err| err.to_string())?;
             return Ok(0);
         }
         Err(err) => return Err(err.render().to_string().trim_start_matches("error: ").trim_end().to_string()),
@@ -599,7 +645,7 @@ fn bootstrap(opts: &Options, stdout: &mut dyn Write) -> Result<(), String> {
             });
             let handoff = found.as_ref().and_then(|r| r.handoff);
             let mut upgraded = false;
-            if same_path && handoff.is_none_or(|h| h == crate::server::HANDOFF_FORMAT) {
+            if same_path && (handoff == Some(crate::server::HANDOFF_FORMAT) || !opts.preserve_sessions && handoff.is_none()) {
                 let mut quiet = Vec::new();
                 upgraded = upgrade_server(opts, &mut quiet).is_ok()
                     && net::list_with_server(local, &key, Duration::from_secs(2))
@@ -610,12 +656,18 @@ fn bootstrap(opts: &Options, stdout: &mut dyn Write) -> Result<(), String> {
             if upgraded {
                 let _ = writeln!(log, "rsh: server upgraded in place; sessions kept");
             } else {
+                if opts.preserve_sessions {
+                    return Err("cannot upgrade this server while preserving its sessions; existing sessions were left running".into());
+                }
                 let _ = writeln!(log, "rsh: replacing the rsh server on port {} (its sessions end)", bind.port());
                 stop_servers(opts, bind.port(), true)?;
                 start_server(opts, bind, &key)?;
             }
         }
         None => {
+            if opts.preserve_sessions {
+                return Err("cannot verify the running server for a session-preserving upgrade; server was left untouched".into());
+            }
             // Nothing answers with our token: an older rsh, or none, may hold
             // the port. A server of this protocol is left alone.
             stop_servers(opts, bind.port(), false)?;
@@ -865,7 +917,7 @@ fn onboard(host: &str, opts: &Options, store: &mut AuthStore, why: &str) -> Resu
         );
     }
     let (port, token) =
-        crate::remote::install_and_bootstrap(&ssh, &bin, binary.as_ref()).map_err(|e| format!("{host}: {e}"))?;
+        crate::remote::install_and_bootstrap(&ssh, &bin, binary.as_ref(), opts.preserve_sessions).map_err(|e| format!("{host}: {e}"))?;
     store.insert_with_port(host, token, (port != DEFAULT_PORT).then_some(port));
     store.save(&opts.auth).map_err(|err| err.to_string())
 }
@@ -966,7 +1018,7 @@ fn connect_host(host: &str, opts: &Options, keys: &mut Keys, stdout: &mut dyn Wr
             let mut rows: Vec<Row> = live.iter().map(|s| Row::Session(s.clone())).collect();
             rows.push(Row::New);
             write!(stdout, "{host}{}", eol(tty)).map_err(|err| err.to_string())?;
-            match choose_row(&rows, keys, stdout, tty)?.map(|index| &rows[index]) {
+            match choose_row(&mut rows, keys, stdout, tty, Some(&renamer(opts)))?.map(|index| &rows[index]) {
                 Some(Row::Session(s)) => Action::Attach(s.id),
                 Some(Row::New) => Action::Named(new_name(&live, tty)?),
                 Some(_) => return Err("cancelled".to_string()),
@@ -978,6 +1030,12 @@ fn connect_host(host: &str, opts: &Options, keys: &mut Keys, stdout: &mut dyn Wr
     };
     let raw = if tty { Some(RawTerm::enter(0).map_err(|err| err.to_string())?) } else { None };
     attach(host, peer, key, action, opts, &config, keys, stdout, raw)
+}
+
+fn current_session_label(peer: SocketAddr, key: &Key, id: u64, fallback: &str) -> String {
+    net::list(peer, key, Duration::from_millis(350), false).ok()
+        .and_then(|listing| listing.sessions.into_iter().find(|s| s.id == id))
+        .map_or_else(|| fallback.to_string(), |session| session.label)
 }
 
 /// The command that attaches this session again: the name as an argument,
@@ -1055,6 +1113,7 @@ fn attach(
         None => err,
     };
     loop {
+        let config = if first { config.clone() } else { crate::config::Config::load(&home().join(".rsh/config.yaml"))? };
         let size = if tty { crate::pty::window_size(1) } else { (80, 24) };
         let mut mux = HostMux::new();
         let sock = mux.socket_for(&host, peer).map_err(|err| err.to_string())?;
@@ -1088,6 +1147,34 @@ fn attach(
             Keys::Lines(_) => Input::Script(keys.rest()),
         };
         let frames = (first && opts.bench.count_frames).then(|| std::sync::Arc::new(std::sync::Mutex::new(crate::bench::FrameCount::default())));
+        let history_path = crate::history::History::path(&opts.auth);
+        let here = match &tmux { Some(name) => Target::Tmux(host.clone(), name.clone()), None => Target::Rsh(host.clone(), attached.session) };
+        if let Err(err) = crate::history::History::record(&history_path, &here) { let _ = write!(io::stderr(), "rsh: could not save recent session: {err}{nl}"); }
+        let current_label = std::sync::Arc::new(std::sync::Mutex::new(attached.label.clone()));
+        let rename = renamer(opts);
+        let rename_current = {
+            let (host, key, label, id, is_tmux, history) = (host.clone(), key.clone(), current_label.clone(), attached.session, tmux.is_some(), crate::history::History::path(&opts.auth));
+            std::sync::Arc::new(move |target: &Target, name: &str| {
+                // Another client may have renamed this session since attach.
+                // Its wrapper/session id stays stable across that rename.
+                let is_current = match target {
+                    Target::Rsh(h, session) => h == &host && *session == id,
+                    Target::Tmux(h, old) => is_tmux && h == &host && old == &*label.lock().unwrap(),
+                };
+                if !is_current { return rename(target, name); }
+                let listing = net::list(peer, &key, Duration::from_secs(1), false).map_err(|err| err.to_string())?;
+                let session = listing.sessions.iter().find(|s| s.id == id && s.alive).ok_or("current session no longer exists")?;
+                let arg = if is_tmux { session.label.clone() } else { id.to_string() };
+                let name = net::rename_session(peer, &key, &host, &arg, name, is_tmux).map_err(|err| err.to_string())?;
+                if is_tmux { let _ = crate::history::History::record(&history, &Target::Tmux(host.clone(), name.clone())); }
+                Ok(name)
+            })
+        };
+        let controls = crate::session_ui::Controls {
+            rename: rename_current,
+            config_path: home().join(".rsh/config.yaml"),
+            label: current_label,
+        };
         let lister: client::Lister = {
             let store = load_store(&opts.auth).unwrap_or_default();
             let here = match &tmux {
@@ -1095,7 +1182,11 @@ fn attach(
                 None => Target::Rsh(host.clone(), attached.session),
             };
             let (ssh, peer, host) = (opts.ssh.clone(), opts.peer.clone(), host.clone());
-            std::sync::Arc::new(move || session_overview(&store, &ssh, peer.as_deref(), &host, &here))
+            let label = controls.label.clone();
+            std::sync::Arc::new(move || {
+                let here = match &here { Target::Tmux(host, _) => Target::Tmux(host.clone(), label.lock().unwrap().clone()), other => other.clone() };
+                session_overview(&store, &ssh, peer.as_deref(), &host, &here, &history_path)
+            })
         };
         let outcome = client::run(
             &mut mux,
@@ -1112,11 +1203,17 @@ fn attach(
                 frames: frames.clone(),
                 tmux: tmux.clone(),
                 clipboard_read: config.clipboard_read,
+                controls: Some(controls.clone()),
             },
         )
         .map_err(|err| err.to_string())?;
         first = false;
-        let label = &printable(&attached.label);
+        let mut current_label = controls.label.lock().unwrap().clone();
+        if !matches!(outcome, Outcome::Exited(_) | Outcome::Kicked(_)) {
+            current_label = current_session_label(peer, &key, attached.session, &current_label);
+        }
+        if tmux.is_some() { tmux = Some(current_label.clone()); }
+        let label = &printable(&current_label);
         let resume = resume_command(&host, label, tmux.is_some());
         let (code, message) = match outcome {
             Outcome::Switch(target) => {
@@ -1182,10 +1279,70 @@ fn new_name(live: &[SessionInfo], tty: bool) -> Result<String, String> {
 #[derive(Clone)]
 enum Row {
     Session(SessionInfo),
-    Tmux { host: String, tmux: TmuxInfo },
+    Tmux { host: String, tmux: TmuxInfo, attached: bool },
     Open { host: String },
     Down { host: String, error: String },
     New,
+}
+
+fn row_target(row: &Row) -> Option<Target> {
+    match row {
+        Row::Session(s) => Some(Target::Rsh(s.host.clone(), s.id)),
+        Row::Tmux { host, tmux, .. } => Some(Target::Tmux(host.clone(), tmux.name.clone())),
+        _ => None,
+    }
+}
+
+fn row_name(row: &Row) -> Option<&str> {
+    match row { Row::Session(s) => Some(&s.label), Row::Tmux { tmux, .. } => Some(&tmux.name), _ => None }
+}
+
+fn rename_row(row: &mut Row, name: String) {
+    match row { Row::Session(s) => s.label = name, Row::Tmux { tmux, .. } => tmux.name = name, _ => {} }
+}
+
+fn renamer(opts: &Options) -> crate::session_ui::Renamer {
+    let opts = opts.clone();
+    std::sync::Arc::new(move |target, name| {
+        let mut store = load_store(&opts.auth)?;
+        let (host, arg, tmux) = match target {
+            Target::Rsh(host, id) => (host, id.to_string(), false),
+            Target::Tmux(host, name) => (host, name.clone(), true),
+        };
+        let explicit = if opts.host.as_ref().is_none_or(|current| current == host) { opts.peer.as_deref() } else { None };
+        let mut peer = peer_of(host, &store, &opts.ssh, explicit)?;
+        let token = store.token(host).ok_or_else(|| format!("{host}: no token"))?;
+        let renamed = net::rename_session(peer, &Key::from_token(token), host, &arg, name, tmux);
+        let name = match renamed {
+            Err(err) if err.kind() == ErrorKind::Unsupported && opts.peer.is_none() => {
+                // Listing alone never upgrades hosts. The first rename on an
+                // older server must do the same onboarding as connecting.
+                let mut preserving = opts.clone();
+                preserving.preserve_sessions = true;
+                onboard(host, &preserving, &mut store, "the server does not support session rename")?;
+                peer = peer_of(host, &store, &opts.ssh, None)?;
+                let token = store.token(host).ok_or_else(|| format!("{host}: no token after update"))?;
+                net::rename_session(peer, &Key::from_token(token), host, &arg, name, tmux).map_err(|err| format!("{host}: {err}"))?
+            }
+            result => result.map_err(|err| format!("{host}: {err}"))?,
+        };
+        if tmux {
+            let _ = crate::history::History::record(&crate::history::History::path(&opts.auth), &Target::Tmux(host.clone(), name.clone()));
+        }
+        Ok(name)
+    })
+}
+
+/// Relevant rows come first; local access time wins within that group.
+fn row_rank(row: &Row, history: &crate::history::History) -> (u8, std::cmp::Reverse<u64>, u64) {
+    let recent = row_target(row).map_or(0, |target| history.get(&target));
+    let (tier, idle) = match row {
+        Row::Tmux { tmux, attached, .. } => (if !attached || recent > 0 { 0 } else { 2 }, tmux.idle_secs),
+        Row::Session(s) => (if recent > 0 { 0 } else if !s.attached { 1 } else { 2 }, s.idle_secs),
+        Row::Open { .. } => (3, 0),
+        _ => (4, 0),
+    };
+    (tier, std::cmp::Reverse(recent), idle)
 }
 
 /// A row as menus show it. A host row heads the rows after it (`rsh ls`
@@ -1196,17 +1353,41 @@ fn row_text(number: usize, row: &Row, empty: bool) -> String {
         Row::Session(s) => {
             let state = if s.attached { "attached" } else { "detached" };
             let (label, title) = (printable(&s.label), printable(&s.title));
-            let mut text = format!("[{number}] {} {label}  {state} idle {}", s.id, short_age(s.idle_secs));
+            let mut text = format!("[{number}] rsh {label}  {state} idle {}", short_age(s.idle_secs));
             if !title.is_empty() {
                 text.push_str(&format!("  {title}"));
             }
             text
         }
-        Row::Tmux { tmux, .. } => format!("[{number}] tmux {}  {}", printable(&tmux.name), tmux_state(tmux, false)),
+        Row::Tmux { tmux, attached, .. } => format!("[{number}] tmux {}  {}", printable(&tmux.name), tmux_state(tmux, *attached, false)),
         Row::Open { host } if empty => format!("{}  no rsh sessions; open a new one", printable(host)),
         Row::Open { host } => printable(host),
         Row::Down { host, error } => format!("{}  unreachable: {}", printable(host), printable(error)),
         Row::New => format!("[{number}] new session"),
+    }
+}
+
+fn colored_row(number: usize, row: &Row, empty: bool, color: bool) -> String {
+    if !color { return row_text(number, row, empty); }
+    let dim = |text: &str| paint(text, console::Style::new().dim(), true);
+    let name = |text: &str| paint(printable(text), console::Style::new().cyan().bold(), true);
+    let number = paint(format!("[{number}]"), console::Style::new().dim(), true);
+    match row {
+        Row::Session(s) => {
+            let state = if s.attached { paint("attached", console::Style::new().green(), true) } else { paint("detached", console::Style::new().yellow(), true) };
+            let mut text = format!("{number} {} {}  {state} {}", paint("rsh", console::Style::new().magenta(), true), name(&s.label), dim(&format!("idle {}", short_age(s.idle_secs))));
+            let title = printable(&s.title);
+            if !title.is_empty() { text.push_str(&format!("  {}", dim(&title))); }
+            text
+        }
+        Row::Tmux { tmux, attached, .. } => {
+            let state = if !attached { console::Style::new().yellow() } else { console::Style::new().green() };
+            format!("{number} {} {}  {}", paint("tmux", console::Style::new().magenta(), true), name(&tmux.name), paint(tmux_state(tmux, *attached, false), state, true))
+        }
+        Row::Open { host } if empty => format!("{}  {}", name(host), dim("no rsh sessions; open a new one")),
+        Row::Open { host } => name(host),
+        Row::Down { host, error } => format!("{}  {}", name(host), paint(format!("unreachable: {}", printable(error)), console::Style::new().red(), true)),
+        Row::New => format!("{number} {}", paint("new session", console::Style::new().green(), true)),
     }
 }
 
@@ -1218,7 +1399,7 @@ fn numbered(rows: &[Row]) -> Vec<(usize, String)> {
         .map(|(index, row)| {
             if matches!(row, Row::Open { .. } | Row::Down { .. }) {
                 number = 0;
-                let empty = !matches!(rows.get(index + 1), Some(Row::Session(_)));
+                let empty = !matches!(rows.get(index + 1), Some(Row::Session(_) | Row::Tmux { .. }));
                 (0, row_text(0, row, empty))
             } else {
                 number += 1;
@@ -1228,20 +1409,18 @@ fn numbered(rows: &[Row]) -> Vec<(usize, String)> {
         .collect()
 }
 
-/// Clients, size (with `size`) and idle time of a tmux session, and the
-/// rsh session joined to it.
-fn tmux_state(tmux: &TmuxInfo, size: bool) -> String {
+/// Only the live rsh attachment matters, independently of native tmux
+/// clients. The session list supplies this even when the server predates
+/// the UI's attached/detached wording.
+fn tmux_rsh_attached(tmux: &TmuxInfo, sessions: &[SessionInfo], host: &str) -> bool {
+    tmux.session != 0 && sessions.iter().any(|s| s.id == tmux.session && s.host == host && s.alive && s.attached && crate::tmux::is_wrapper(&s.command))
+}
+
+/// rsh attachment state, optional size and idle time of a tmux session.
+fn tmux_state(tmux: &TmuxInfo, attached: bool, size: bool) -> String {
     let size = if size { format!(" {}x{}", tmux.cols, tmux.rows) } else { String::new() };
-    let mut text = format!(
-        "{} client{}{size} idle {}",
-        tmux.clients,
-        if tmux.clients == 1 { "" } else { "s" },
-        short_age(tmux.idle_secs)
-    );
-    if tmux.session != 0 {
-        text.push_str(&format!("  rsh {}", tmux.session));
-    }
-    text
+    let state = if attached { "attached" } else { "detached" };
+    format!("{state}{size} idle {}", short_age(tmux.idle_secs))
 }
 
 /// Text from the server with control characters removed, so a title a
@@ -1259,9 +1438,29 @@ fn short_age(secs: u64) -> String {
     }
 }
 
+fn rename_prompt(term: &console::Term, initial: &str) -> io::Result<Option<String>> {
+    let mut value = initial.to_string();
+    loop {
+        let width = usize::from(term.size().1).saturating_sub(1);
+        let prompt = format!("{} {}: {}_", paint("session name", console::Style::new().cyan().bold(), output_colors()),
+            paint("(Enter saves, Esc cancels)", console::Style::new().dim(), output_colors()), paint(printable(&value), console::Style::new().green(), output_colors()));
+        term.write_str(&console::truncate_str(&prompt, width, "…"))?;
+        let key = term.read_key()?;
+        term.clear_line()?;
+        match key {
+            console::Key::Escape | console::Key::CtrlC => return Ok(None),
+            console::Key::Enter => return Ok(Some(value)),
+            console::Key::Backspace => { value.pop(); }
+            console::Key::Char('\x15') => value.clear(),
+            console::Key::Char(ch) if !ch.is_control() && value.chars().count() < 64 => value.push(ch),
+            _ => {}
+        }
+    }
+}
+
 /// Inline menu: draws below the cursor and redraws in place, so the
 /// terminal's earlier contents stay. Returns None when there is no input.
-fn choose_row(rows: &[Row], keys: &mut Keys, stdout: &mut dyn Write, tty: bool) -> Result<Option<usize>, String> {
+fn choose_row(rows: &mut [Row], keys: &mut Keys, stdout: &mut dyn Write, tty: bool, rename: Option<&crate::session_ui::Renamer>) -> Result<Option<usize>, String> {
     // The first session, else the first host that answers.
     let selected = rows
         .iter()
@@ -1298,44 +1497,69 @@ fn choose_row(rows: &[Row], keys: &mut Keys, stdout: &mut dyn Write, tty: bool) 
         }
         return pick_typed(rows, &shown, text).map(Some).ok_or_else(|| format!("no row {text}"));
     }
-    // Unreachable hosts are shown above the menu but cannot be picked.
-    let mut choices = Vec::new();
-    for (index, row) in rows.iter().enumerate() {
-        if matches!(row, Row::Down { .. }) {
-            writeln!(stdout, "  {}", shown[index].1).map_err(io_err)?;
-        } else {
-            choices.push(index);
-        }
-    }
-    if choices.is_empty() {
-        return Err("no host answers".to_string());
-    }
-    // One screen line each: a row that wraps confuses the menu's redraw.
-    let width = usize::from(crate::pty::window_size(1).0).saturating_sub(6).max(20);
-    // Rows under a host are indented below it.
-    let labels: Vec<String> = choices
-        .iter()
-        .map(|&index| {
-            let (number, text) = &shown[index];
-            let text = if *number > 0 && rows.iter().any(|row| matches!(row, Row::Open { .. })) { format!("  {text}") } else { text.clone() };
-            console::truncate_str(&text, width, "…").into_owned()
-        })
-        .collect();
-    // Typing filters the rows; Esc or Ctrl-C cancels. Drawn on stdout,
-    // the terminal here: on a stderr that is not one, it would spin.
-    client::install_signal_handlers();
     let term = console::Term::stdout();
-    let picked = dialoguer::FuzzySelect::with_theme(&dialoguer::theme::ColorfulTheme::default())
-        .with_prompt("rsh")
-        .items(&labels)
-        .default(choices.iter().position(|&index| index == selected).unwrap_or(0))
-        .max_length(labels.len().clamp(3, 15))
-        .interact_on_opt(&term);
-    match picked {
-        Ok(Some(index)) => Ok(Some(choices[index])),
-        _ => {
-            let _ = term.show_cursor();
-            Err("cancelled".to_string())
+    let color = output_colors();
+    let down: Vec<_> = rows.iter().filter(|row| matches!(row, Row::Down { .. })).map(|row| colored_row(0, row, false, color)).collect();
+    if rows.iter().all(|row| matches!(row, Row::Down { .. })) {
+        for line in down { term.write_line(&line).map_err(io_err)?; }
+        return Err("no host answers".into());
+    }
+    let mut query = String::new();
+    let mut cursor = selected;
+    let mut status = String::new();
+    let mut status_error = false;
+    loop {
+        let shown = numbered(rows);
+        let choices: Vec<usize> = rows.iter().enumerate().filter(|(index, row)| {
+            !matches!(row, Row::Down { .. }) && (query.is_empty() || shown[*index].1.to_lowercase().contains(&query.to_lowercase()))
+        }).map(|(index, _)| index).collect();
+        if !choices.contains(&cursor) { cursor = choices.first().copied().unwrap_or(0); }
+        let position = choices.iter().position(|index| *index == cursor).unwrap_or(0);
+        let (height, width) = term.size();
+        let count = usize::from(height.saturating_sub(4)).clamp(1, 15);
+        let first = position.saturating_sub(count - 1);
+        let visible: Vec<_> = choices.iter().skip(first).take(count).collect();
+        let down_lines = down.len().min(usize::from(height.saturating_sub(visible.len() as u16 + 3)));
+        let shortcut = |key: &str| paint(key, console::Style::new().yellow().bold(), color);
+        let hint = format!("{}  {} select  {} attach  {} rename  {} cancel  filter: {query}",
+            paint("rsh", console::Style::new().cyan().bold(), color), shortcut("↑/↓"), shortcut("Enter"), shortcut("m"), shortcut("Esc"));
+        term.write_line(&console::truncate_str(&hint, usize::from(width).saturating_sub(1), "…")).map_err(io_err)?;
+        for &&index in &visible {
+            let empty = !matches!(rows.get(index + 1), Some(Row::Session(_) | Row::Tmux { .. }));
+            let text = colored_row(shown[index].0, &rows[index], empty, color);
+            let line = console::truncate_str(&text, usize::from(width).saturating_sub(4), "…");
+            let marker = if index == cursor { paint(">", console::Style::new().cyan().bold(), color) } else { " ".into() };
+            term.write_line(&format!("{marker} {line}")).map_err(io_err)?;
+        }
+        for line in down.iter().take(down_lines) {
+            term.write_line(&console::truncate_str(line, usize::from(width).saturating_sub(1), "…")).map_err(io_err)?;
+        }
+        let displayed_status = if down_lines < down.len() { format!("{status}  ({} more unreachable hosts)", down.len() - down_lines) } else { status.clone() };
+        let status_style = if status_error { console::Style::new().red().bold() } else { console::Style::new().green() };
+        term.write_line(&console::truncate_str(&paint(&displayed_status, status_style, color), usize::from(width).saturating_sub(1), "…")).map_err(io_err)?;
+        let key = term.read_key().map_err(io_err)?;
+        term.clear_last_lines(visible.len() + down_lines + 2).map_err(io_err)?;
+        match key {
+            console::Key::ArrowUp if !choices.is_empty() => cursor = choices[position.saturating_sub(1)].to_owned(),
+            console::Key::ArrowDown if !choices.is_empty() => cursor = choices[(position + 1).min(choices.len() - 1)],
+            console::Key::Enter if !choices.is_empty() => return Ok(Some(cursor)),
+            console::Key::Escape | console::Key::CtrlC => return Err("cancelled".into()),
+            console::Key::Backspace => { query.pop(); }
+            console::Key::Char('m') if rename.is_some() && !choices.is_empty() && row_target(&rows[cursor]).is_some() => {
+                let old = row_name(&rows[cursor]).unwrap_or("").to_string();
+                let name = rename_prompt(&term, &old);
+                match name {
+                    Ok(Some(name)) if name != old => match rename.unwrap()(&row_target(&rows[cursor]).unwrap(), &name) {
+                        Ok(name) => { status = format!("Renamed: {} → {}", printable(&old), printable(&name)); rename_row(&mut rows[cursor], name); query.clear(); status_error = false; }
+                        Err(err) => { status = format!("Rename failed: {}", printable(&err)); status_error = true; }
+                    },
+                    Ok(Some(_)) => {},
+                    Ok(None) => { status = "Rename cancelled".into(); status_error = false; }
+                    Err(err) => return Err(err.to_string()),
+                }
+            }
+            console::Key::Char(ch) if !ch.is_control() => query.push(ch),
+            _ => {}
         }
     }
 }
@@ -1367,10 +1591,10 @@ fn reachable_rows(store: &AuthStore, opts: &Options) -> Vec<(Row, SocketAddr, Op
         Some(host) => vec![host.clone()],
         None => store.hosts(),
     };
-    host_rows(store, hosts, &opts.ssh, opts.peer.as_deref())
+    host_rows(store, hosts, &opts.ssh, opts.peer.as_deref(), &crate::history::History::path(&opts.auth))
 }
 
-fn host_rows(store: &AuthStore, hosts: Vec<String>, ssh: &str, peer: Option<&str>) -> Vec<(Row, SocketAddr, Option<Key>)> {
+fn host_rows(store: &AuthStore, hosts: Vec<String>, ssh: &str, peer: Option<&str>, history_path: &Path) -> Vec<(Row, SocketAddr, Option<Key>)> {
     let unknown = SocketAddr::from(([0, 0, 0, 0], 0));
     // Hosts are asked at once, so unreachable ones cost one timeout in total.
     let answers: Vec<_> = std::thread::scope(|scope| {
@@ -1392,33 +1616,39 @@ fn host_rows(store: &AuthStore, hosts: Vec<String>, ssh: &str, peer: Option<&str
             .collect();
         jobs.into_iter().filter_map(|job| job.join().ok()).collect()
     });
-    let mut rows = Vec::new();
+    let history = crate::history::History::load(history_path);
+    let mut groups = Vec::new();
     for (host, peer, key, listed) in answers {
+        let mut rows = Vec::new();
         let peer = peer.unwrap_or(unknown);
         match listed {
             Ok(listing) => {
                 // An rsh session joined to a tmux session shows on its tmux row.
                 let live: Vec<SessionInfo> =
-                    listing.sessions.into_iter().filter(|s| s.alive && s.host == host && !crate::tmux::is_wrapper(&s.command)).collect();
+                    listing.sessions.iter().filter(|s| s.alive && s.host == host && !crate::tmux::is_wrapper(&s.command)).cloned().collect();
                 // The host row heads them and opens a session there.
                 rows.push((Row::Open { host: host.clone() }, peer, Some(key.clone())));
                 for session in live {
                     rows.push((Row::Session(session), peer, Some(key.clone())));
                 }
                 for tmux in listing.tmux {
-                    rows.push((Row::Tmux { host: host.clone(), tmux }, peer, Some(key.clone())));
+                    let attached = tmux_rsh_attached(&tmux, &listing.sessions, &host);
+                    rows.push((Row::Tmux { host: host.clone(), tmux, attached }, peer, Some(key.clone())));
                 }
             }
             Err(error) => rows.push((Row::Down { host, error }, peer, None)),
         }
+        if rows.len() > 1 { rows[1..].sort_by_key(|(row, _, _)| row_rank(row, &history)); }
+        groups.push(rows);
     }
-    rows
+    groups.sort_by_key(|rows| rows.iter().map(|(row, _, _)| row_rank(row, &history)).min());
+    groups.into_iter().flatten().collect()
 }
 
 /// What `~l` in a session shows: the sessions of every known host, by
 /// host, with the current one marked. With --peer only that host is asked,
 /// since the address says nothing about the others.
-fn session_overview(store: &AuthStore, ssh: &str, peer: Option<&str>, host: &str, here: &Target) -> Vec<client::ListRow> {
+fn session_overview(store: &AuthStore, ssh: &str, peer: Option<&str>, host: &str, here: &Target, history: &Path) -> Vec<client::ListRow> {
     let hosts = match peer {
         Some(_) => vec![host.to_string()],
         None => store.hosts(),
@@ -1426,7 +1656,7 @@ fn session_overview(store: &AuthStore, ssh: &str, peer: Option<&str>, host: &str
     let mut lines = Vec::new();
     let mut last = None;
     let text = |text: String| client::ListRow { text, target: None };
-    let rows: Vec<Row> = host_rows(store, hosts, ssh, peer).into_iter().map(|(row, _, _)| row).collect();
+    let rows: Vec<Row> = host_rows(store, hosts, ssh, peer, history).into_iter().map(|(row, _, _)| row).collect();
     for (index, row) in rows.iter().cloned().enumerate() {
         let (name, line) = match row {
             Row::Session(s) => {
@@ -1434,8 +1664,8 @@ fn session_overview(store: &AuthStore, ssh: &str, peer: Option<&str>, host: &str
                 let mark = if target == *here { "*" } else { " " };
                 let state = if s.attached { "attached" } else { "detached" };
                 let mut line = format!(
-                    " {mark} {} {:<12} {state} {}x{} idle {}",
-                    s.id,
+                    " {mark} {:<6} {:<12} {state} {}x{} idle {}",
+                    "rsh",
                     printable(&s.label),
                     s.cols,
                     s.rows,
@@ -1447,15 +1677,15 @@ fn session_overview(store: &AuthStore, ssh: &str, peer: Option<&str>, host: &str
                 }
                 (s.host, client::ListRow { text: line, target: Some(target) })
             }
-            Row::Tmux { host: name, tmux } => {
+            Row::Tmux { host: name, tmux, attached } => {
                 let target = Target::Tmux(name.clone(), tmux.name.clone());
                 let joined = Target::Rsh(name.clone(), tmux.session);
                 let mark = if target == *here || joined == *here { "*" } else { " " };
-                let line = format!(" {mark} {:<6} {:<12} {}", "tmux", printable(&tmux.name), tmux_state(&tmux, true));
+                let line = format!(" {mark} {:<6} {:<12} {}", "tmux", printable(&tmux.name), tmux_state(&tmux, attached, true));
                 (name, client::ListRow { text: line, target: Some(target) })
             }
             // The host line comes from the rows under it.
-            Row::Open { host } if matches!(rows.get(index + 1), Some(Row::Session(_))) => {
+            Row::Open { host } if matches!(rows.get(index + 1), Some(Row::Session(_) | Row::Tmux { .. })) => {
                 if last.as_ref() != Some(&host) {
                     lines.push(text(printable(&host)));
                     last = Some(host);
@@ -1484,19 +1714,20 @@ fn list_and_attach(opts: &Options, keys: &mut Keys, stdout: &mut dyn Write, tty:
     if found.is_empty() {
         return Err("no known hosts; connect once with rsh <host>".to_string());
     }
-    let rows: Vec<Row> = found.iter().map(|(row, _, _)| row.clone()).collect();
-    let Some(index) = choose_row(&rows, keys, stdout, tty)? else {
+    let mut rows: Vec<Row> = found.iter().map(|(row, _, _)| row.clone()).collect();
+    let rename = renamer(opts);
+    let Some(index) = choose_row(&mut rows, keys, stdout, tty, Some(&rename))? else {
         return Ok(0);
     };
     // Through the same way as `rsh <host>`, so the host is brought to
     // this build first when it runs another.
-    match found[index].0.clone() {
+    match rows[index].clone() {
         Row::Session(s) => {
             let mut picked = opts.clone();
             picked.attach_id = Some(s.id);
             connect_host(&s.host, &picked, keys, stdout, tty)
         }
-        Row::Tmux { host, tmux } => {
+        Row::Tmux { host, tmux, .. } => {
             let mut picked = opts.clone();
             picked.tmux = true;
             picked.name = Some(tmux.name);
@@ -1741,6 +1972,161 @@ mod tests {
     }
 
     #[test]
+    fn preserving_bootstrap_refuses_replacement_and_keeps_the_server_reachable() {
+        let dir = std::env::temp_dir().join(format!("rsh-preserving-bootstrap-{}", std::process::id()));
+        fs::create_dir_all(&dir).unwrap();
+        let authorized = dir.join("authorized");
+        let mut store = AuthStore::new(); store.insert("client:manual", "token"); store.save(&authorized).unwrap();
+        let socket = std::net::UdpSocket::bind("127.0.0.1:0").unwrap();
+        socket.set_read_timeout(Some(Duration::from_secs(3))).unwrap();
+        let address = socket.local_addr().unwrap();
+        let key = Key::from_token("token");
+        let reply_key = key.clone();
+        let worker = std::thread::spawn(move || {
+            for _ in 0..2 {
+                let mut bytes = [0; 4096];
+                let (n, from) = socket.recv_from(&mut bytes).unwrap();
+                let packet = crate::proto::open(&reply_key, crate::crypto::Dir::ToServer, &bytes[..n]).unwrap();
+                assert_eq!(packet.kind, crate::proto::KIND_LIST);
+                let payload = crate::proto::encode_list(&packet.nonce, &[], "rsh 0.2.0 build old protocol 3 handoff 999", &[]);
+                let reply = crate::proto::seal(&reply_key, crate::crypto::Dir::ToClient, crate::proto::KIND_LIST_REPLY, reply_key.id(), &payload);
+                socket.send_to(&reply, from).unwrap();
+            }
+        });
+        let arguments = args(&["bootstrap", "--authorized", authorized.to_str().unwrap(), "--bind", &address.to_string(), "--preserve-sessions"]);
+        let error = run(&arguments, &mut Cursor::new(Vec::<u8>::new()), &mut Vec::new()).unwrap_err();
+        assert!(error.contains("preserving its sessions"), "{error}");
+        assert!(error.contains("left running"), "{error}");
+        assert!(net::list_with_server(address, &key, Duration::from_secs(1)).unwrap().1.contains("handoff 999"));
+        worker.join().unwrap();
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn rename_updates_an_unsupported_managed_server_and_uses_its_saved_peer() {
+        use crate::proto::{self, KIND_DENIED};
+        use std::os::unix::fs::PermissionsExt;
+        let (server, dir, auth) = setup("rename-update");
+        let key = Key::from_token("secret-token");
+        let socket = net::bind_for(server.addr()).unwrap();
+        let hello = net::new_hello("fixture.example", Action::Named("before".into()), (80, 24), &[]);
+        let HelloReply::Ready(done) = net::hello(&socket, server.addr(), &key, &hello).unwrap() else { panic!("denied") };
+        let id = done.attached.session;
+        let legacy = std::net::UdpSocket::bind("127.0.0.1:0").unwrap();
+        legacy.set_read_timeout(Some(Duration::from_secs(3))).unwrap();
+        let address = legacy.local_addr().unwrap();
+        let denied_key = key.clone();
+        let denial = std::thread::spawn(move || {
+            for _ in 0..2 {
+                let mut bytes = [0; 4096];
+                let (n, from) = legacy.recv_from(&mut bytes).unwrap();
+                let packet = proto::open(&denied_key, crate::crypto::Dir::ToServer, &bytes[..n]).unwrap();
+                let reply = proto::seal(&denied_key, crate::crypto::Dir::ToClient, KIND_DENIED, denied_key.id(), &proto::encode_denied(&packet.nonce, "bad hello"));
+                legacy.send_to(&reply, from).unwrap();
+            }
+        });
+        let mut store = load_store(&auth).unwrap();
+        store.insert_with_port("fixture.example", "secret-token", Some(address.port()));
+        store.save(&auth).unwrap();
+        let script = dir.join("ssh");
+        let marker = dir.join("bootstrapped");
+        fs::write(&script, format!("#!/bin/sh\ncase \"$1\" in\n-G) echo 'hostname 127.0.0.1';;\n*) case \"$*\" in\n*RSH-PROBE*) printf '%s\\n' RSH-PROBE {} {};;\n*) echo updated > {}; echo 'RSH CONNECT {} secret-token';;\nesac;;\nesac\n",
+            crate::remote::shell_quote(&format!("{} {}", std::env::consts::OS, std::env::consts::ARCH)), crate::remote::shell_quote(&crate::version::describe()),
+            crate::remote::shell_quote(&marker.display().to_string()), server.addr().port())).unwrap();
+        fs::set_permissions(&script, fs::Permissions::from_mode(0o755)).unwrap();
+        let mut opts = Options::parse(&args(&["ls", "--auth", auth.to_str().unwrap(), "--ssh", script.to_str().unwrap()])).unwrap();
+        let target = Target::Rsh("fixture.example".into(), id);
+        // Explicit peers are user-managed and must never invoke SSH.
+        opts.peer = Some(address.to_string());
+        let error = renamer(&opts)(&target, "after").unwrap_err();
+        assert!(error.contains("does not support session rename"), "{error}");
+        assert!(!marker.exists());
+        opts.peer = None;
+        assert_eq!(renamer(&opts)(&target, "after").unwrap(), "after");
+        denial.join().unwrap();
+        assert!(marker.exists(), "managed rename ran onboarding");
+        assert_eq!(load_store(&auth).unwrap().port("fixture.example"), Some(server.addr().port()));
+        let listed = net::list_sessions_wait(server.addr(), &key, Duration::from_secs(1)).unwrap();
+        assert!(listed.iter().any(|s| s.id == id && s.label == "after"));
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn help_and_row_colors_preserve_plain_text() {
+        let error = Cli::try_parse_from(["rsh", "--help"]).err().unwrap();
+        let plain = help_text(&error, false);
+        let colored = help_text(&error, true);
+        assert!(colored.contains("\x1b["));
+        assert_eq!(console::strip_ansi_codes(&colored), plain);
+        let rows = [Row::Open { host: "host".into() }, Row::Tmux { host: "host".into(), attached: false, tmux: TmuxInfo { name: "work".into(), clients: 0, cols: 80, rows: 24, idle_secs: 1, session: 0 } }, Row::Down { host: "down".into(), error: "no reply".into() }, Row::New];
+        for row in rows {
+            let plain = colored_row(1, &row, false, false);
+            let colored = colored_row(1, &row, false, true);
+            assert!(!plain.contains('\x1b'));
+            assert!(colored.contains('\x1b'));
+            assert_eq!(console::strip_ansi_codes(&colored), plain);
+        }
+    }
+
+    #[test]
+    fn detach_advice_uses_the_name_changed_by_another_client() {
+        let server = Server::spawn();
+        server.allow("h", "token");
+        let key = Key::from_token("token");
+        let sock = net::bind_for(server.addr()).unwrap();
+        let hello = net::new_hello("h", Action::Named("before".into()), (80, 24), &[]);
+        let HelloReply::Ready(done) = net::hello(&sock, server.addr(), &key, &hello).unwrap() else { panic!("denied") };
+        let id = done.attached.session;
+        net::rename_session(server.addr(), &key, "h", &id.to_string(), "after", false).unwrap();
+        let label = current_session_label(server.addr(), &key, id, "before");
+        assert_eq!(resume_command("h", &label, false), "rsh h after");
+    }
+
+    #[test]
+    fn ls_prefers_detached_tmux_and_recent_targets() {
+        let path = std::env::temp_dir().join(format!("rsh-sort-{}.recent", std::process::id()));
+        let target = Target::Tmux("visited".into(), "active".into());
+        crate::history::History::record(&path, &target).unwrap();
+        let history = crate::history::History::load(&path);
+        let tmux = |host: &str, name: &str, attached| Row::Tmux { host: host.into(), attached, tmux: TmuxInfo { name: name.into(), clients: 3, cols: 80, rows: 24, idle_secs: 1, session: 0 } };
+        let mut rows = [tmux("unrelated", "active", true), tmux("detached", "idle", false), tmux("visited", "active", true)];
+        rows.sort_by_key(|row| row_rank(row, &history));
+        assert_eq!(row_target(&rows[0]), Some(target));
+        assert_eq!(row_target(&rows[1]), Some(Target::Tmux("detached".into(), "idle".into())));
+        assert_eq!(row_target(&rows[2]), Some(Target::Tmux("unrelated".into(), "active".into())));
+        let _ = fs::remove_file(&path);
+        let _ = fs::remove_file(path.with_extension("recent.lock"));
+    }
+
+    #[test]
+    fn tmux_state_uses_only_the_matching_live_rsh_connection() {
+        let mut tmux = TmuxInfo { name: "work".into(), clients: 4, cols: 80, rows: 24, idle_secs: 2, session: 123456 };
+        let mut session = SessionInfo {
+            id: 123456, host: "host".into(), label: "work".into(), alive: true, attached: false,
+            cols: 80, rows: 24, created_unix: 0, idle_secs: 2, command: crate::tmux::command("work"), title: String::new(),
+        };
+        let state = |tmux: &TmuxInfo, session: &SessionInfo| tmux_rsh_attached(tmux, std::slice::from_ref(session), "host");
+        assert!(!tmux_rsh_attached(&tmux, &[], "host"), "native clients alone do not count");
+        assert!(!state(&tmux, &session), "a detached rsh wrapper does not count");
+        session.attached = true;
+        tmux.clients = 0;
+        assert!(state(&tmux, &session), "cached native counts cannot hide a live rsh connection");
+        assert_eq!(tmux_state(&tmux, true, false), "attached idle 2s");
+        assert_eq!(tmux_state(&tmux, false, true), "detached 80x24 idle 2s");
+        session.alive = false;
+        assert!(!state(&tmux, &session));
+        session.alive = true;
+        session.command.clear();
+        assert!(!state(&tmux, &session), "plain sessions cannot masquerade as tmux wrappers");
+        session.command = crate::tmux::command("work");
+        session.host = "other".into();
+        assert!(!state(&tmux, &session));
+        session.host = "host".into();
+        tmux.session = 0;
+        assert!(!state(&tmux, &session));
+    }
+
+    #[test]
     fn ls_rows_are_grouped_and_numbered_by_host() {
         let session = |id: u64, host: &str| {
             Row::Session(SessionInfo {
@@ -1763,7 +2149,7 @@ mod tests {
             session(222222, "a"),
             Row::Open { host: "b".into() },
             Row::Open { host: "t".into() },
-            Row::Tmux { host: "t".into(), tmux: TmuxInfo { name: "main".into(), clients: 1, cols: 80, rows: 24, idle_secs: 2, session: 0 } },
+            Row::Tmux { host: "t".into(), attached: true, tmux: TmuxInfo { name: "main".into(), clients: 1, cols: 80, rows: 24, idle_secs: 2, session: 0 } },
             Row::Down { host: "c".into(), error: "no reply".into() },
         ];
         let shown: Vec<String> = numbered(&rows).into_iter().map(|(_, text)| text).collect();
@@ -1771,11 +2157,11 @@ mod tests {
             shown,
             [
                 "a",
-                "[1] 111111 s111111  detached idle 5s",
-                "[2] 222222 s222222  detached idle 5s",
+                "[1] rsh s111111  detached idle 5s",
+                "[2] rsh s222222  detached idle 5s",
                 "b  no rsh sessions; open a new one",
-                "t  no rsh sessions; open a new one",
-                "[1] tmux main  1 client idle 2s",
+                "t",
+                "[1] tmux main  attached idle 2s",
                 "c  unreachable: no reply",
             ]
         );
@@ -1804,14 +2190,21 @@ mod tests {
         let rows: Vec<&str> = listing.lines().filter(|line| line.starts_with('[') && !line.contains("] tmux ")).collect();
         assert_eq!(rows.len(), 2, "{listing}");
         assert!(rows[0].starts_with("[1] ") && rows[1].starts_with("[2] "), "{listing}");
-        let second: u64 = rows[1].split_whitespace().nth(1).unwrap().parse().unwrap();
+        let live = net::list_sessions_wait(server.addr(), &Key::from_token("secret-token"), Duration::from_secs(1)).unwrap();
+        let second_name = rows[1].split_whitespace().nth(2).unwrap();
+        let second = live.iter().find(|s| s.label == second_name).unwrap().id;
+        assert!(rows.iter().all(|row| row.split_whitespace().nth(1) == Some("rsh")));
         let (_, picked) = run_text(&ls, "2\necho MARK:$RSH_SESSION\n");
         assert_eq!(marker(&picked), second, "{picked}");
-        let (_, again) = run_text(&ls, "2\necho MARK:$RSH_SESSION\n");
+        let (_, reordered) = run_text(&ls, "");
+        let first_now = reordered.lines().find(|line| line.starts_with("[1] ")).unwrap();
+        assert_eq!(first_now.split_whitespace().nth(2).unwrap(), second_name);
+        let (_, again) = run_text(&ls, "1\necho MARK:$RSH_SESSION\n");
         assert_eq!(marker(&again), second);
         let (code, killed) = run_text(&["kill", "fixture.example", "two", "--auth", &auth, "--peer", &addr], "");
         assert_eq!(code, 0);
-        assert!(killed.contains(&format!("killed fixture.example session {second}")), "{killed}");
+        let two = live.iter().find(|s| s.label == "two").unwrap().id;
+        assert!(killed.contains(&format!("killed fixture.example session {two}")), "{killed}");
         let _ = fs::remove_dir_all(&dir);
     }
 

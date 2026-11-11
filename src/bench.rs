@@ -395,7 +395,7 @@ pub fn session(host: &str, peer: SocketAddr, key: &Key, mebibytes: usize, out: &
             sessions: None,
             frames: None,
             tmux: None,
-            clipboard_read: false,
+            clipboard_read: false, controls: None,
         },
     )
     .map_err(|err| err.to_string())?;

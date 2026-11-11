@@ -52,7 +52,7 @@ fn run_script(peer: SocketAddr, action: Action, script: &str) -> (Attached, Outc
             sessions: None,
             frames: None,
             tmux: None,
-            clipboard_read: false,
+            clipboard_read: false, controls: None,
         },
     )
     .unwrap();
@@ -293,7 +293,7 @@ fn input_past_the_pty_backlog_arrives_whole_over_tcp() {
         &attached,
         Input::Script("x\n".repeat(300_000).into_bytes()),
         &mut out,
-        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false },
+        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, controls: None },
     )
     .unwrap();
     assert_eq!(outcome, Outcome::Exited(0));
@@ -380,7 +380,7 @@ fn compression_asked_for_works_on_a_fast_link_too() {
     };
     let mut out = Vec::new();
     let script = b"sleep 1; yes abcdefgh | head -n 20000; echo DONE-$((6*7))\n".to_vec();
-    let options = client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false };
+    let options = client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, controls: None };
     let outcome = client::run(&mut mux, &attached, Input::Script(script), &mut out, options).unwrap();
     assert_eq!(outcome, Outcome::Detached);
     let text = String::from_utf8_lossy(&out);
@@ -426,7 +426,7 @@ fn command_session_reports_exit_code_and_is_removed() {
         &attached,
         Input::Script(Vec::new()),
         &mut out,
-        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false },
+        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, controls: None },
     )
     .unwrap();
     assert_eq!(outcome, Outcome::Exited(7));
@@ -452,7 +452,7 @@ fn second_client_takes_over_and_first_is_kicked() {
         &a,
         Input::Script(b"echo hi\n".to_vec()),
         &mut out,
-        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false },
+        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, controls: None },
     )
     .unwrap();
     assert!(matches!(outcome, Outcome::Kicked(ref reason) if reason.contains("another client")), "{outcome:?}");
@@ -590,7 +590,7 @@ fn stale_attachment_is_told_after_server_restart() {
         &attached,
         Input::Script(b"x".to_vec()),
         &mut out,
-        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false },
+        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, controls: None },
     )
     .unwrap();
     assert!(matches!(outcome, Outcome::Kicked(ref reason) if reason.contains("no longer has")), "{outcome:?}");
@@ -694,7 +694,7 @@ fn local_and_remote_port_forwarding() {
             &attached,
             Input::Script(b"for i in 1 2 3 4 5 6 7 8; do echo tick; sleep 0.5; done\n".to_vec()),
             &mut out,
-            client::Options { size: (80, 24), escape: None, raw: None, forwarder: Some(forwarder), allowed_targets: vec![echo.to_string()], sessions: None, frames: None, tmux: None, clipboard_read: false },
+            client::Options { size: (80, 24), escape: None, raw: None, forwarder: Some(forwarder), allowed_targets: vec![echo.to_string()], sessions: None, frames: None, tmux: None, clipboard_read: false, controls: None },
         )
         .unwrap()
     });
@@ -822,7 +822,7 @@ fn attach_in_the_middle_of_an_escape_sequence() {
         &second,
         Input::Script(Vec::new()),
         &mut out,
-        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false },
+        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, controls: None },
     )
     .unwrap();
     assert_eq!(outcome, Outcome::Exited(0));
@@ -853,7 +853,7 @@ fn revoked_token_ends_its_attachment_and_bad_permissions_fail_closed() {
         &attached,
         Input::Script(b"while :; do echo tick; sleep 0.2; done\n".to_vec()),
         &mut out,
-        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false },
+        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, controls: None },
     )
     .unwrap();
     assert!(matches!(outcome, Outcome::Kicked(ref reason) if reason.contains("revoked")), "{outcome:?}");
@@ -868,4 +868,189 @@ fn revoked_token_ends_its_attachment_and_bad_permissions_fail_closed() {
     thread::sleep(Duration::from_millis(2600));
     assert!(net::list_sessions_wait(server.addr(), &key(), Duration::from_millis(1500)).is_ok());
     let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn rename_preserves_attachment_and_refuses_collisions() {
+    let server = server();
+    let mut mux = HostMux::new();
+    let attached = attach(server.addr(), &mut mux, Action::Named("before".into()), &[]);
+    let other = attach(server.addr(), &mut mux, Action::Named("occupied".into()), &[]);
+    let rename = |name| net::rename_session(server.addr(), &key(), HOST, &attached.session.to_string(), name, false);
+    assert!(rename("occupied").is_err());
+    assert!(rename("").is_err());
+    assert!(rename("bad\nname").is_err());
+    assert_eq!(rename("이름 qjk ' $()").unwrap(), "이름 qjk ' $()");
+    let listed = net::list_sessions_wait(server.addr(), &key(), Duration::from_secs(1)).unwrap();
+    let session = listed.iter().find(|s| s.id == attached.session).unwrap();
+    assert_eq!(session.label, "이름 qjk ' $()");
+    assert!(session.attached);
+    assert!(listed.iter().any(|s| s.id == other.session && s.label == "occupied"));
+    // The original attachment can still type and receive its output.
+    let mut out = Vec::new();
+    let outcome = client::run(&mut mux, &attached, Input::Script(b"echo RENAME_ALIVE; exit\n".to_vec()), &mut out,
+        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, controls: None }).unwrap();
+    assert_eq!(outcome, Outcome::Exited(0));
+    assert!(String::from_utf8_lossy(&out).contains("RENAME_ALIVE"));
+}
+
+#[test]
+fn tty_rename_and_settings_keep_coalesced_keys_off_the_remote_shell() {
+    use std::io::{self, Write};
+    use std::os::fd::{FromRawFd, OwnedFd};
+    use std::sync::Mutex;
+    struct Capture(Arc<Mutex<Vec<u8>>>);
+    impl Write for Capture {
+        fn write(&mut self, bytes: &[u8]) -> io::Result<usize> { self.0.lock().unwrap().extend_from_slice(bytes); Ok(bytes.len()) }
+        fn flush(&mut self) -> io::Result<()> { Ok(()) }
+    }
+    let server = server();
+    let peer = server.addr();
+    let mut mux = HostMux::new();
+    let attached = attach(peer, &mut mux, Action::Named("before".into()), &[]);
+    let id = attached.session;
+    let dir = std::env::temp_dir().join(format!("rsh-tty-settings-{}", std::process::id()));
+    let calls = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let called = calls.clone();
+    let controls = rsh::session_ui::Controls {
+        rename: Arc::new(move |target, name| {
+            called.fetch_add(1, Ordering::SeqCst);
+            thread::sleep(Duration::from_millis(400));
+            match target {
+                client::Target::Rsh(host, id) => net::rename_session(peer, &key(), host, &id.to_string(), name, false).map_err(|e| e.to_string()),
+                _ => unreachable!(),
+            }
+        }),
+        config_path: dir.join("config.yaml"), label: Arc::new(Mutex::new("before".into())),
+    };
+    let state = controls.clone();
+    let mut fds = [0; 2];
+    assert_eq!(unsafe { libc::pipe(fds.as_mut_ptr()) }, 0);
+    let read = unsafe { OwnedFd::from_raw_fd(fds[0]) };
+    let mut write = unsafe { std::fs::File::from_raw_fd(fds[1]) };
+    let output = Arc::new(Mutex::new(Vec::new()));
+    let mut capture = Capture(output.clone());
+    let worker = thread::spawn(move || {
+        client::run(&mut mux, &attached, Input::Tty(read.as_raw_fd()), &mut capture,
+            client::Options { size: (100, 30), escape: Some(b'~'), raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: true, controls: Some(controls) }).unwrap()
+    });
+    // One read contains the open command, the whole edited name and Enter.
+    write.write_all("~m\x7f\x7f\x7f\x7f\x7f\x7f새 이름 qjk\r".as_bytes()).unwrap();
+    let deadline = Instant::now() + Duration::from_secs(4);
+    while calls.load(Ordering::SeqCst) == 0 {
+        assert!(Instant::now() < deadline);
+        thread::sleep(Duration::from_millis(5));
+    }
+    // Closing a busy editor and submitting another must preserve the first
+    // receiver; otherwise local and remote names can diverge.
+    write.write_all(b"\x1b").unwrap();
+    thread::sleep(Duration::from_millis(80));
+    write.write_all(b"~m\x7f\x7f\x7f\x7f\x7f\x7fsecond\r").unwrap();
+    while *state.label.lock().unwrap() != "새 이름 qjk" {
+        assert!(Instant::now() < deadline, "rename did not finish");
+        thread::sleep(Duration::from_millis(10));
+    }
+    assert_eq!(calls.load(Ordering::SeqCst), 1);
+    assert!(net::list_sessions_wait(peer, &key(), Duration::from_secs(1)).unwrap().iter().any(|s| s.id == id && s.label == "새 이름 qjk" && s.attached));
+    let mut local = Terminal::with_size(100, 30);
+    local.feed(&output.lock().unwrap());
+    assert!((0..30).any(|row| local.screen_line(row).contains("Rename session")), "an older result does not close a newly opened editor");
+    write.write_all(b"\x1b").unwrap();
+    thread::sleep(Duration::from_millis(80));
+    // Global scope -> clipboard row -> toggle. Encoded arrows can share a read.
+    write.write_all(b"~,\x1b[C\x1b[B\x1b[C").unwrap();
+    while !state.config_path.exists() {
+        assert!(Instant::now() < deadline, "global settings were not saved");
+        thread::sleep(Duration::from_millis(10));
+    }
+    assert!(!rsh::config::Config::load(&state.config_path).unwrap().clipboard_read);
+    // An arrow fragmented at its first ESC stays a navigation key.
+    write.write_all(b"\x1b").unwrap();
+    thread::sleep(Duration::from_millis(5));
+    write.write_all(b"[A\x1b[D").unwrap();
+    thread::sleep(Duration::from_millis(30));
+    write.write_all(b"\x1b").unwrap();
+    thread::sleep(Duration::from_millis(100));
+    write.write_all(b"~.").unwrap();
+    drop(write);
+    assert_eq!(worker.join().unwrap(), Outcome::Detached);
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn a_tmux_rename_refreshes_the_list_behind_a_new_editor() {
+    use client::{ListRow, Target};
+    use std::io::{self, Write};
+    use std::os::fd::{FromRawFd, OwnedFd};
+    use std::sync::atomic::AtomicUsize;
+    use std::sync::{mpsc, Mutex};
+    struct Screen(Arc<Mutex<Terminal>>);
+    impl Write for Screen {
+        fn write(&mut self, bytes: &[u8]) -> io::Result<usize> { self.0.lock().unwrap().feed(bytes); Ok(bytes.len()) }
+        fn flush(&mut self) -> io::Result<()> { Ok(()) }
+    }
+    for (submit_second, empty_refresh) in [(false, false), (true, false), (false, true)] {
+        let server = server();
+        let mut mux = HostMux::new();
+        let attached = attach(server.addr(), &mut mux, Action::Named("before".into()), &[]);
+        let label = Arc::new(Mutex::new("before".to_string()));
+        let listed = Arc::new(AtomicUsize::new(0));
+        let lister: client::Lister = {
+            let (label, listed) = (label.clone(), listed.clone());
+            Arc::new(move || {
+                let call = listed.fetch_add(1, Ordering::SeqCst);
+                if empty_refresh && call > 0 {
+                    return vec![ListRow { text: "could not refresh sessions".into(), target: None }];
+                }
+                let name = label.lock().unwrap().clone();
+                vec![ListRow { text: format!("tmux {name}"), target: Some(Target::Tmux(HOST.into(), name)) }]
+            })
+        };
+        let (started_send, started_receive) = mpsc::channel();
+        let (release_send, release_receive) = mpsc::channel();
+        let release_receive = Mutex::new(release_receive);
+        let targets = Arc::new(Mutex::new(Vec::new()));
+        let rename_targets = targets.clone();
+        let controls = rsh::session_ui::Controls {
+            rename: Arc::new(move |target, name| {
+                let first = { let mut targets = rename_targets.lock().unwrap(); targets.push(target.clone()); targets.len() == 1 };
+                if first { started_send.send(()).unwrap(); release_receive.lock().unwrap().recv().unwrap(); }
+                Ok(name.to_string())
+            }),
+            config_path: std::env::temp_dir().join("rsh-list-race-unused/config.yaml"), label: label.clone(),
+        };
+        let mut fds = [0; 2];
+        assert_eq!(unsafe { libc::pipe(fds.as_mut_ptr()) }, 0);
+        let read = unsafe { OwnedFd::from_raw_fd(fds[0]) };
+        let mut write = unsafe { std::fs::File::from_raw_fd(fds[1]) };
+        let screen = Arc::new(Mutex::new(Terminal::with_size(100, 30)));
+        let mut output = Screen(screen.clone());
+        let worker = thread::spawn(move || client::run(&mut mux, &attached, Input::Tty(read.as_raw_fd()), &mut output,
+            client::Options { size: (100, 30), escape: Some(b'~'), raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: Some(lister), frames: None, tmux: Some("before".into()), clipboard_read: false, controls: Some(controls) }).unwrap());
+        let text = || { let screen = screen.lock().unwrap(); (0..30).map(|row| screen.screen_line(row)).collect::<Vec<_>>().join("\n") };
+        let until = |ready: &dyn Fn() -> bool| {
+            let deadline = Instant::now() + Duration::from_secs(4);
+            while !ready() { assert!(Instant::now() < deadline, "{}", text()); thread::sleep(Duration::from_millis(5)); }
+        };
+        write.write_all(b"~l").unwrap(); until(&|| text().contains("tmux before"));
+        write.write_all(b"m\x7f\x7f\x7f\x7f\x7f\x7fafter\r").unwrap();
+        started_receive.recv_timeout(Duration::from_secs(4)).unwrap();
+        write.write_all(b"\x1b").unwrap(); until(&|| !text().contains("Rename session"));
+        write.write_all(b"m").unwrap(); until(&|| text().contains("Name: before_"));
+        release_send.send(()).unwrap();
+        until(&|| *label.lock().unwrap() == "after" && listed.load(Ordering::SeqCst) >= 2);
+        assert!(text().contains("Rename session"), "the older result keeps the newer editor open");
+        if submit_second {
+            write.write_all(b"\x7f\x7f\x7f\x7f\x7f\x7ffinal\r").unwrap();
+            until(&|| text().contains("tmux final"));
+            assert_eq!(targets.lock().unwrap()[1], Target::Tmux(HOST.into(), "after".into()), "new editor follows the renamed target");
+        } else {
+            write.write_all(b"\x1b").unwrap(); until(&|| !text().contains("Rename session"));
+            until(&|| text().contains(if empty_refresh { "could not refresh sessions" } else { "tmux after" }));
+        }
+        assert!(text().contains("rsh sessions"));
+        write.write_all(b"\r").unwrap(); until(&|| !text().contains("rsh sessions"));
+        write.write_all(b"~.").unwrap(); drop(write);
+        assert_eq!(worker.join().unwrap(), Outcome::Left, "Enter on the current row cannot switch to the old tmux name");
+    }
 }

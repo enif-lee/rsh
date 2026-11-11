@@ -28,16 +28,6 @@ fn marker(text: &str) -> u64 {
     panic!("no marker in {text}");
 }
 
-fn listed_id(text: &str, index: usize) -> u64 {
-    text.lines()
-        .find(|line| line.starts_with(&format!("[{index}] ")))
-        .unwrap()
-        .split_whitespace()
-        .nth(1)
-        .unwrap()
-        .parse()
-        .unwrap()
-}
 
 fn spawn_with(args: &[&str], auth: &std::path::Path, peer: &str, script: &[u8]) -> String {
     let mut child = bin()
@@ -80,7 +70,8 @@ fn binary_host_and_ls_repeat_same_session() {
 
     let pick = b"1\necho MARK:$RSH_SESSION\n";
     let listed = spawn_with(&["ls"], &auth, &peer_addr, pick);
-    let only = listed_id(&listed, 1);
+    let only = marker(&first);
+    assert!(listed.lines().any(|line| line.starts_with("[1] rsh ")), "{listed}");
     assert_eq!(listed.lines().filter(|line| line.starts_with('[') && !line.contains("] tmux ")).count(), 1, "{listed}");
     assert_eq!(marker(&listed), only, "{listed}");
     let again = spawn_with(&["ls"], &auth, &peer_addr, pick);
@@ -171,7 +162,7 @@ fn live_upgrade_keeps_sessions_and_attached_clients() {
             &attached,
             Input::Script(script),
             &mut out,
-            client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false },
+            client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, controls: None },
         )
         .unwrap();
         (outcome, String::from_utf8_lossy(&out).into_owned())
@@ -231,7 +222,7 @@ fn live_upgrade_keeps_sessions_and_attached_clients() {
         &again,
         Input::Script(b"echo GOT:$KEEP\n".to_vec()),
         &mut out,
-        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false },
+        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, controls: None },
     )
     .unwrap();
     let text = String::from_utf8_lossy(&out);
@@ -243,7 +234,7 @@ fn live_upgrade_keeps_sessions_and_attached_clients() {
         &ended,
         Input::Script(Vec::new()),
         &mut out,
-        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false },
+        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, controls: None },
     )
     .unwrap();
     assert_eq!(outcome, Outcome::Exited(5), "{}", String::from_utf8_lossy(&out));
@@ -339,7 +330,7 @@ fn tmux_sessions_are_joined_listed_and_left() {
             attached,
             Input::Script(script.to_vec()),
             &mut out,
-            client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: Some("work".into()), clipboard_read: false },
+            client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: Some("work".into()), clipboard_read: false, controls: None },
         )
         .unwrap();
         (outcome, String::from_utf8_lossy(&out).into_owned())
@@ -358,6 +349,21 @@ fn tmux_sessions_are_joined_listed_and_left() {
     let listed = net::list(peer, &key, Duration::from_secs(5), true).unwrap();
     let work = listed.tmux.iter().find(|t| t.name == "work").expect("work listed");
     assert_eq!((work.session, work.clients), (first.session, 1));
+
+    // Rename both an outside session and the live wrapper, then join under
+    // its new name without creating another PTY or losing the tmux shell.
+    assert!(net::rename_session(peer, &key, "t.example", "outside", "name;", true).is_err(), "tmux treats a trailing semicolon as a command separator");
+    net::rename_session(peer, &key, "t.example", "outside", "outside renamed", true).unwrap();
+    assert!(net::rename_session(peer, &key, "t.example", "work", "outside renamed", true).is_err());
+    net::rename_session(peer, &key, "t.example", "work", "renamed", true).unwrap();
+    let (_, renamed, created) = attach(Action::Named("renamed".into()), vec![rsh::tmux::command("renamed")]);
+    assert_eq!(renamed.session, first.session);
+    assert_eq!(renamed.label, "renamed");
+    assert!(!created);
+    let listed = net::list(peer, &key, Duration::from_secs(5), true).unwrap();
+    assert!(listed.tmux.iter().any(|s| s.name == "renamed" && s.session == first.session));
+    assert!(!listed.tmux.iter().any(|s| s.name == "work"));
+    net::rename_session(peer, &key, "t.example", "renamed", "work", true).unwrap();
 
     // Joining again reaches the same rsh session; a plain session never does.
     let (_, again, created) = join();

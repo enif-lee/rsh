@@ -26,13 +26,13 @@ pub fn is_wrapper(command: &str) -> bool {
 
 /// A session name tmux can be joined by again and the server keeps as it
 /// is: `:` and `.` (target separators, which `new-session -A` parses) and
-/// `#` (format expansion) become `_`; no control characters, at most 64
+/// `#` (format expansion) and `;` (tmux command separator) become `_`; no control characters, at most 64
 /// characters, trimmed (as `server::sanitize_name`).
 pub fn clean_name(name: &str) -> String {
     name.trim()
         .chars()
         .filter(|ch| !ch.is_control())
-        .map(|ch| if matches!(ch, ':' | '.' | '#') { '_' } else { ch })
+        .map(|ch| if matches!(ch, ':' | '.' | '#' | ';') { '_' } else { ch })
         .take(64)
         .collect::<String>()
         .trim()
@@ -66,6 +66,15 @@ pub fn list() -> Vec<Found> {
     // server; sessions use the default one (`pty::child_env` drops it too).
     command.args(["list-sessions", "-F", FORMAT]).env_remove("TMUX").env_remove("TMUX_PANE");
     parse(&run(command, Duration::from_secs(1), |_| false))
+}
+
+/// Rename an exact session target; no shell or tmux target globbing.
+pub fn rename(old: &str, name: &str) -> Result<(), String> {
+    let path = locate().ok_or("tmux not found")?;
+    let mut command = Command::new(path);
+    command.args(["rename-session", "-t", &format!("={old}"), name]).env_remove("TMUX").env_remove("TMUX_PANE");
+    let (_, success) = run_checked(command, Duration::from_secs(1), |_| false);
+    if success { Ok(()) } else { Err("tmux rename failed (missing session, duplicate name or timeout)".into()) }
 }
 
 fn parse(lines: &[String]) -> Vec<Found> {
@@ -111,7 +120,11 @@ fn locate() -> Option<PathBuf> {
 /// The lines a command prints until it closes its output, `done` accepts a
 /// line, or `limit` passes. It runs in a session of its own and is killed
 /// with all it started, so rc files cannot take a terminal or linger.
-fn run(mut command: Command, limit: Duration, done: impl Fn(&str) -> bool) -> Vec<String> {
+fn run(command: Command, limit: Duration, done: impl Fn(&str) -> bool) -> Vec<String> {
+    run_checked(command, limit, done).0
+}
+
+fn run_checked(mut command: Command, limit: Duration, done: impl Fn(&str) -> bool) -> (Vec<String>, bool) {
     command.stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::null());
     unsafe {
         use std::os::unix::process::CommandExt;
@@ -121,9 +134,11 @@ fn run(mut command: Command, limit: Duration, done: impl Fn(&str) -> bool) -> Ve
         });
     }
     let Ok(mut child) = command.spawn() else {
-        return Vec::new();
+        return (Vec::new(), false);
     };
     let mut lines = Vec::new();
+    let deadline = Instant::now() + limit;
+    let mut stopped = false;
     if let Some(stdout) = child.stdout.take() {
         let (send, receive) = mpsc::channel();
         std::thread::spawn(move || {
@@ -133,20 +148,25 @@ fn run(mut command: Command, limit: Duration, done: impl Fn(&str) -> bool) -> Ve
                 }
             }
         });
-        let deadline = Instant::now() + limit;
         while let Ok(line) = receive.recv_timeout(deadline.saturating_duration_since(Instant::now())) {
             let stop = done(&line);
             lines.push(line);
             if stop {
+                stopped = true;
                 break;
             }
         }
     }
-    unsafe {
-        libc::kill(-(child.id() as i32), libc::SIGKILL);
-    }
+    let success = loop {
+        match child.try_wait() {
+            Ok(Some(status)) => break status.success(),
+            _ if stopped || Instant::now() >= deadline => break false,
+            _ => std::thread::sleep(Duration::from_millis(1)),
+        }
+    };
+    unsafe { libc::kill(-(child.id() as i32), libc::SIGKILL); }
     let _ = child.wait();
-    lines
+    (lines, success)
 }
 
 #[cfg(test)]

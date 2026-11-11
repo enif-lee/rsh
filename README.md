@@ -106,10 +106,52 @@ Type these keys at the start of a line:
 | Key | Action |
 | --- | --- |
 | `~.` | Detach and leave the session running |
-| `~l` | Open the session list |
+| `~l` | Open the session list; `m` renames the selected session |
+| `~m` | Rename the current rsh or tmux session |
+| `~,` | Open settings; arrows navigate and change values, Enter activates |
 | `~r` | Request a repaint |
 | `~h` | Show escape-key help |
 | `~~` | Send a literal tilde |
+
+Session rows show their type (`rsh` or `tmux`) followed by the session name.
+Both types use `attached`/`detached` for the active **rsh connection**.
+For tmux, native tmux clients are excluded: a session attached only through
+native tmux still shows `detached` here. The state also determines detached
+session priority in sorting. It does not change tmux's own attachment count.
+Both kinds of session can keep running while detached. On older servers,
+the 60-session response limit may omit the rsh connection metadata for a
+tmux row; such a row appears detached until the server is updated.
+In `rsh ls`, use Up/Down and Enter to select, type to filter, and press
+`m` to rename the selected rsh or tmux session. Esc cancels the menu or
+name editor; Ctrl+U clears the name field. Names are limited to 64 characters; tmux names also exclude
+`.`, `:`, `#` and `;`. Renaming preserves the running session.
+
+If a managed host runs a server that predates rename, the first rename
+attempts an in-place update over SSH, then retries. If the server cannot
+preserve its sessions, rename reports an error and leaves it running.
+With `--peer` / `RSH_PEER`, update the user-managed server separately; the
+menu displays a clear error instead of the old `bad hello` response.
+After renaming, the list clears its text filter so the renamed row stays visible.
+In `~l`, completing or cancelling rename returns to the session list; a
+successful rename refreshes it and keeps the renamed row selected. `~m`
+returns directly to the session after renaming.
+
+Terminal output uses cyan for hosts/session names, magenta for session types,
+green/yellow for attachment state, and red for failures. `rsh --help`
+colors headings, options and escape shortcuts. Set `NO_COLOR=1` to disable
+colors; piped output and `TERM=dumb` also stay plain.
+
+Lists keep host groups together and put recently accessed sessions and
+detached tmux sessions first, then other detached rsh sessions, then
+unrelated attached sessions, empty hosts and unreachable hosts. Within the
+first group, the most recent local access wins. Successful connections are
+remembered alongside the auth file (`~/.rsh/known.recent` by default).
+
+`~` followed by Cmd+, also opens settings when the terminal forwards the
+Kitty Super-comma sequence (`CSI 44;9u`). A terminal app that reserves Cmd+,
+for its own preferences needs a key mapping to send that sequence; `~,`
+works with ordinary terminal input. Escape commands use `RSH_ESCAPE_KEY`
+when overridden and are disabled when it is empty.
 
 Use `rsh --help` for connection, server and forwarding options.
 
@@ -125,6 +167,15 @@ clipboard_read: false
 `compress` accepts `always` (the default), `adaptive`, or `none`.
 `--compress` overrides the file setting. `clipboard_read: false` blocks
 remote OSC 52 clipboard reads; the default is `true`.
+
+The `~,` settings window shows the version, host, session, peer and config
+path. Its **Session** scope changes clipboard reads and local echo
+prediction immediately for the current connection. Its **Global** scope
+saves clipboard and compression defaults for new attachments, preserving
+other settings and comments; `--compress` still takes precedence. Switch
+scope with Left/Right or Enter, move with Up/Down, and use Left/Right or
+Enter to change a value. Select “Rename current session” and press Enter
+to edit its name. Esc closes or cancels.
 
 | Environment variable | Purpose |
 | --- | --- |

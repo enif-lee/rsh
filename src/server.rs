@@ -168,6 +168,22 @@ struct TmuxList {
     waiting: Vec<(Key, [u8; 24], SocketAddr)>,
 }
 
+impl TmuxList {
+    fn ask(&mut self, now: Instant) {
+        let (send, receive) = std::sync::mpsc::channel();
+        thread::spawn(move || { let _ = send.send(crate::tmux::list()); });
+        self.asking = Some((now, receive));
+    }
+
+    fn invalidate(&mut self, now: Instant) {
+        self.known = None;
+        // A lookup started before rename can still carry the old name.
+        // Keep its waiting requests, but replace that lookup as well.
+        self.asking = None;
+        if !self.waiting.is_empty() { self.ask(now); }
+    }
+}
+
 const TMUX_FRESH: Duration = Duration::from_secs(2);
 const TMUX_WAIT: Duration = Duration::from_secs(1);
 
@@ -1177,6 +1193,31 @@ impl State {
             done.killed = killed;
             return done;
         }
+        if let Action::Rename { target, name, tmux } = &hello.action {
+            let cleaned = if *tmux { Some(crate::tmux::clean_name(name)).filter(|s| !s.is_empty()) } else { sanitize_name(name) };
+            if cleaned.as_deref() != Some(name.as_str()) {
+                return refuse("use a nonempty name of at most 64 characters without controls or tmux separators".into());
+            }
+            if *tmux {
+                if let Err(err) = crate::tmux::rename(target, name) { return refuse(err); }
+                for session in self.sessions.values_mut().filter(|s| s.ended_at.is_none() && s.command == crate::tmux::command(target)) {
+                    session.label = name.clone();
+                    session.command = crate::tmux::command(name);
+                }
+                self.tmux.invalidate(now);
+            } else {
+                let Some(id) = target.parse::<u64>().ok().filter(|id| self.sessions.get(id).is_some_and(|s| live(s) && !crate::tmux::is_wrapper(&s.command))) else {
+                    return refuse("unknown rsh session".into());
+                };
+                if self.sessions.values().any(|s| live(s) && s.id != id && s.label == *name && !crate::tmux::is_wrapper(&s.command)) {
+                    return refuse("session name already exists".into());
+                }
+                self.sessions.get_mut(&id).expect("session").label = name.clone();
+            }
+            let mut done = refuse(String::new());
+            done.label = name.clone();
+            return done;
+        }
         let cols = hello.cols.clamp(1, MAX_COLS);
         let rows = hello.rows.clamp(1, MAX_ROWS);
         let command = hello.command.join(" ");
@@ -1196,7 +1237,7 @@ impl State {
                     Some(s) if live(s) => Some(*id),
                     _ => return refuse("unknown session".into()),
                 },
-                Action::Kill(_) => None,
+                Action::Kill(_) | Action::Rename { .. } => None,
             }
         };
         let (id, created) = match existing {
@@ -1330,11 +1371,7 @@ impl State {
                 self.tmux.waiting.push((key.clone(), packet.nonce, addr));
             }
             if self.tmux.asking.is_none() {
-                let (send, receive) = std::sync::mpsc::channel();
-                thread::spawn(move || {
-                    let _ = send.send(crate::tmux::list());
-                });
-                self.tmux.asking = Some((now, receive));
+                self.tmux.ask(now);
             }
             return None;
         }
@@ -1362,8 +1399,16 @@ impl State {
 
     fn list_reply(&self, key: &Key, nonce: &[u8; 24], addr: SocketAddr, tmux: bool) -> Vec<u8> {
         let now = Instant::now();
+        let found = self.tmux.known.as_ref().filter(|_| tmux).map(|(_, found)| found.as_slice()).unwrap_or_default();
+        let joined: Vec<u64> = found.iter().take(60).map(|t| {
+            self.sessions.values()
+                .find(|s| s.ended_at.is_none() && s.pty.is_some() && crate::tmux::is_wrapper(&s.command) && s.label == t.name)
+                .map_or(0, |s| s.id)
+        }).collect();
         let mut sessions: Vec<&Session> = self.sessions.values().collect();
-        sessions.sort_by_key(|s| (s.created, s.id));
+        // Each displayed tmux row needs its wrapper's live rsh state, even
+        // when older plain sessions fill the response's 60-session limit.
+        sessions.sort_by_key(|s| (!joined.contains(&s.id), s.created, s.id));
         let infos: Vec<SessionInfo> = sessions
             .into_iter()
             .take(60)
@@ -1387,22 +1432,17 @@ impl State {
             })
             .collect();
         let unix = SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0);
-        let found = self.tmux.known.as_ref().filter(|_| tmux).map(|(_, found)| found.as_slice()).unwrap_or_default();
         let tmux: Vec<TmuxInfo> = found
             .iter()
             .take(60)
-            .map(|t| TmuxInfo {
+            .zip(joined)
+            .map(|(t, session)| TmuxInfo {
                 name: t.name.chars().take(64).collect(),
                 clients: t.clients,
                 cols: t.cols,
                 rows: t.rows,
                 idle_secs: unix.saturating_sub(t.activity),
-                // The rsh session joined to it: its label is the tmux name.
-                session: self
-                    .sessions
-                    .values()
-                    .find(|s| s.ended_at.is_none() && s.pty.is_some() && crate::tmux::is_wrapper(&s.command) && s.label == t.name)
-                    .map_or(0, |s| s.id),
+                session,
             })
             .collect();
         self.send(key, KIND_LIST_REPLY, key.id(), &encode_list(nonce, &infos, &crate::version::describe(), &tmux), addr)
@@ -2513,6 +2553,60 @@ fn sanitize_name(name: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn tmux_listing_keeps_live_wrapper_state_past_the_plain_session_limit() {
+        let server = Server::spawn();
+        let mut state = server.state();
+        let now = Instant::now();
+        let key = Key::from_token("test");
+        let command = vec!["sleep".into(), "30".into()];
+        let hello = crate::net::new_hello("test", Action::Default, (80, 24), &command);
+        let packet = Packet { kind: KIND_CONFIRM, session: 1, counter: 0, nonce: [0; 24], payload: Vec::new() };
+        let addr = "127.0.0.1:12345".parse().unwrap();
+        let attached = state.carry_out(1, &key, 0, &hello, &packet, addr, now);
+        let wrapper = state.sessions.get_mut(&attached.session).unwrap();
+        wrapper.label = "late".into();
+        wrapper.command = crate::tmux::command("late");
+        let pid = wrapper.pid;
+        for id in 1..=60 {
+            state.sessions.insert(id, Session {
+                id, host: "test".into(), label: format!("older-{id}"), command: String::new(),
+                created: UNIX_EPOCH + Duration::from_secs(id), pty: None, pid,
+                closed_at: None, exit_code: None, ended_at: None, term: Terminal::with_size(2, 2),
+                tail: Vec::new(), pty_in: VecDeque::new(), attach: None, last_active: now,
+                last_client: now, output_seen: now, trimmed: false,
+            });
+        }
+        state.tmux.known = Some((now, vec![crate::tmux::Found { name: "late".into(), clients: 1, activity: 0, cols: 80, rows: 24 }]));
+        let with_tmux = state.list_reply(&key, &[0; 24], addr, true);
+        let plain = state.list_reply(&key, &[0; 24], addr, false);
+        state.sessions.retain(|id, _| *id == attached.session);
+        drop(state);
+        let decode = |bytes: &[u8]| proto::decode_list(&proto::open(&key, Dir::ToClient, bytes).unwrap().payload).unwrap().1;
+        let listed = decode(&with_tmux);
+        assert_eq!(listed.sessions.len(), 60);
+        assert_eq!(listed.tmux[0].session, attached.session);
+        assert!(listed.sessions.iter().any(|s| s.id == attached.session && s.attached));
+        let plain = decode(&plain);
+        assert!(plain.tmux.is_empty());
+        assert_eq!(plain.sessions.len(), 60);
+        assert!(!plain.sessions.iter().any(|s| s.id == attached.session), "plain LIST keeps its existing creation order");
+    }
+
+    #[test]
+    fn rename_invalidates_inflight_tmux_lookup_without_losing_waiters() {
+        let key = Key::from_token("test");
+        let mut tmux = TmuxList::default();
+        let (send, receive) = std::sync::mpsc::channel();
+        tmux.asking = Some((Instant::now(), receive));
+        tmux.waiting.push((key, [0; 24], "127.0.0.1:1".parse().unwrap()));
+        tmux.invalidate(Instant::now());
+        assert!(send.send(Vec::new()).is_err(), "the pre-rename result cannot enter the cache");
+        assert_eq!(tmux.waiting.len(), 1);
+        assert!(tmux.asking.is_some(), "pending requests get a fresh lookup");
+        assert!(tmux.known.is_none());
+    }
 
     #[test]
     fn stepped_output_gathers_briefly_without_skipping_generation_waits() {

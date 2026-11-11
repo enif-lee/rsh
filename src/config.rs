@@ -31,6 +31,10 @@ pub enum Compress {
 }
 
 impl Compress {
+    pub fn name(self) -> &'static str {
+        match self { Self::Adaptive => "adaptive", Self::Always => "always", Self::Off => "none" }
+    }
+
     /// From the setting's (and `--compress`'s) name.
     pub fn from_name(name: &str) -> Option<Self> {
         match name {
@@ -55,6 +59,41 @@ impl Config {
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => Ok(Self::default()),
             Err(err) => Err(format!("{}: {err}", path.display())),
         }
+    }
+
+    /// Change one known setting, keeping comments and unrelated values.
+    pub fn save_setting(path: &Path, key: &str, value: &str) -> Result<(), String> {
+        use std::io::Write;
+        use std::os::unix::fs::OpenOptionsExt;
+        use std::os::fd::AsRawFd;
+        if let Some(parent) = path.parent() { crate::net::private_dir(parent).map_err(|err| err.to_string())?; }
+        let lock = std::fs::OpenOptions::new().write(true).create(true).truncate(false).mode(0o600).open(path.with_extension("lock")).map_err(|err| err.to_string())?;
+        if unsafe { libc::flock(lock.as_raw_fd(), libc::LOCK_EX) } != 0 { return Err(std::io::Error::last_os_error().to_string()); }
+        let text = match std::fs::read_to_string(path) {
+            Ok(text) => text,
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => String::new(),
+            Err(err) => return Err(err.to_string()),
+        };
+        Self::parse(&text)?;
+        let mut found = false;
+        let mut lines: Vec<String> = text.lines().map(|line| {
+            if line.split_once(':').is_some_and(|(name, _)| name.trim().trim_start_matches('\u{feff}') == key) {
+                found = true;
+                let comment = line.find(" #").map(|at| &line[at..]).unwrap_or("");
+                format!("{key}: {value}{comment}")
+            } else { line.to_string() }
+        }).collect();
+        if !found { lines.push(format!("{key}: {value}")); }
+        let text = lines.join("\n") + "\n";
+        Self::parse(&text)?;
+        let save = || -> std::io::Result<()> {
+            if let Some(parent) = path.parent() { crate::net::private_dir(parent)?; }
+            let tmp = path.with_extension(format!("yaml.{}-{}.tmp", std::process::id(), crate::server::now_ms()));
+            let mut file = std::fs::OpenOptions::new().write(true).create_new(true).mode(0o600).open(&tmp)?;
+            file.write_all(text.as_bytes())?;
+            std::fs::rename(tmp, path)
+        };
+        save().map_err(|err| format!("{}: {err}", path.display()))
     }
 
     pub fn parse(text: &str) -> Result<Self, String> {
@@ -96,6 +135,20 @@ impl Config {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn saving_preserves_comments_and_other_settings() {
+        let dir = std::env::temp_dir().join(format!("rsh-config-save-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("config.yaml");
+        std::fs::write(&path, "\u{feff}compress: none # keep\n# clipboard policy\nclipboard_read: false\n").unwrap();
+        Config::save_setting(&path, "compress", "adaptive").unwrap();
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), "compress: adaptive # keep\n# clipboard policy\nclipboard_read: false\n");
+        let before = std::fs::read(&path).unwrap();
+        assert!(Config::save_setting(&path, "compress", "bad").is_err());
+        assert_eq!(std::fs::read(&path).unwrap(), before);
+        let _ = std::fs::remove_dir_all(dir);
+    }
 
     #[test]
     fn settings_parse_and_mistakes_are_errors() {

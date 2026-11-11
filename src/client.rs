@@ -11,7 +11,7 @@ use crate::terminal::Terminal;
 use crate::wire::Wire;
 use std::io::{self, Write};
 use std::net::SocketAddr;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
@@ -56,6 +56,18 @@ pub const DEFAULT_ESCAPE: u8 = b'~';
 
 /// Lines for the `~l` window; it runs on its own thread.
 pub type Lister = Arc<dyn Fn() -> Vec<ListRow> + Send + Sync>;
+
+fn request_listing(lister: Lister) -> std::sync::mpsc::Receiver<Vec<ListRow>> {
+    let (send, receive) = std::sync::mpsc::channel();
+    std::thread::spawn(move || { let _ = send.send(lister()); });
+    receive
+}
+
+fn session_list_lines(rows: &[ListRow]) -> Vec<String> {
+    let mut lines = vec!["rsh sessions (m rename)".to_string(), String::new()];
+    lines.extend(rows.iter().map(|row| row.text.clone()));
+    lines
+}
 
 /// A row of the `~l` window; a row with a target can be picked to switch
 /// to it.
@@ -144,11 +156,39 @@ pub struct Options<'a> {
     /// OSC 52 clipboard reads reach the terminal (`clipboard_read` in
     /// `~/.rsh/config.yaml`).
     pub clipboard_read: bool,
+    pub controls: Option<crate::session_ui::Controls>,
 }
 
 static WINCH: AtomicBool = AtomicBool::new(false);
 static CONT: AtomicBool = AtomicBool::new(false);
 static QUIT: AtomicBool = AtomicBool::new(false);
+
+// A signal can arrive while rendering, before poll starts. The byte remains
+// readable then, unlike EINTR, so an idle heartbeat cannot delay a resize.
+static SIGNAL_WRITE: AtomicI32 = AtomicI32::new(-1);
+static SIGNAL_READ: AtomicI32 = AtomicI32::new(-1);
+
+struct SignalPipe { read: std::os::fd::OwnedFd, write: std::os::fd::OwnedFd }
+
+impl SignalPipe {
+    fn new() -> io::Result<Self> {
+        use std::os::fd::FromRawFd;
+        let mut fds = [-1; 2];
+        if unsafe { libc::pipe(fds.as_mut_ptr()) } != 0 { return Err(io::Error::last_os_error()); }
+        let pipe = Self { read: unsafe { std::os::fd::OwnedFd::from_raw_fd(fds[0]) }, write: unsafe { std::os::fd::OwnedFd::from_raw_fd(fds[1]) } };
+        for fd in fds {
+            if unsafe { libc::fcntl(fd, libc::F_SETFL, libc::O_NONBLOCK) } < 0 || unsafe { libc::fcntl(fd, libc::F_SETFD, libc::FD_CLOEXEC) } < 0 {
+                return Err(io::Error::last_os_error());
+            }
+        }
+        Ok(pipe)
+    }
+}
+
+fn drain_signal_pipe(fd: i32) {
+    let mut bytes = [0u8; 256];
+    while fd >= 0 && unsafe { libc::read(fd, bytes.as_mut_ptr().cast(), bytes.len()) } > 0 {}
+}
 
 extern "C" fn on_signal(signal: libc::c_int) {
     match signal {
@@ -156,10 +196,30 @@ extern "C" fn on_signal(signal: libc::c_int) {
         libc::SIGCONT => CONT.store(true, Ordering::Relaxed),
         _ => QUIT.store(true, Ordering::Relaxed),
     }
+    let fd = SIGNAL_WRITE.load(Ordering::Relaxed);
+    if fd >= 0 {
+        unsafe {
+            // write is async-signal-safe; preserve the interrupted syscall's
+            // errno even when a full nonblocking pipe returns EAGAIN.
+            #[cfg(target_os = "macos")]
+            let errno = libc::__error();
+            #[cfg(not(target_os = "macos"))]
+            let errno = libc::__errno_location();
+            let saved = *errno;
+            libc::write(fd, [1u8].as_ptr().cast(), 1);
+            *errno = saved;
+        }
+    }
 }
 
 /// Signal handlers without SA_RESTART, so poll() wakes on them.
 pub fn install_signal_handlers() {
+    use std::os::fd::AsRawFd;
+    static PIPE: std::sync::OnceLock<Option<SignalPipe>> = std::sync::OnceLock::new();
+    if let Some(pipe) = PIPE.get_or_init(|| SignalPipe::new().ok()) {
+        SIGNAL_READ.store(pipe.read.as_raw_fd(), Ordering::Relaxed);
+        SIGNAL_WRITE.store(pipe.write.as_raw_fd(), Ordering::Relaxed);
+    }
     unsafe {
         let mut action: libc::sigaction = std::mem::zeroed();
         action.sa_sigaction = on_signal as *const () as usize;
@@ -187,6 +247,7 @@ struct Escape {
     /// next one; sent as it is if nothing follows soon (`expire`).
     partial: Vec<u8>,
     partial_since: Option<Instant>,
+    deferred: Vec<u8>,
 }
 
 /// How long a cut-off sequence waits for the rest.
@@ -197,6 +258,8 @@ enum Command {
     Help,
     Redraw,
     List,
+    Rename,
+    Settings,
 }
 
 /// One piece of input, as far as the escape key cares.
@@ -222,6 +285,7 @@ impl Escape {
             pasting: false,
             partial: Vec::new(),
             partial_since: None,
+            deferred: Vec::new(),
         }
     }
 
@@ -231,7 +295,12 @@ impl Escape {
     /// come encoded (kitty keyboard protocol, modifyOtherKeys) when the
     /// program asked the terminal for that, and reports from the terminal
     /// (focus, mouse) may come between them.
+    #[cfg(test)]
     fn filter(&mut self, bytes: &[u8], out: &mut Vec<u8>) -> Vec<Command> {
+        self.filter_input(bytes, out, false)
+    }
+
+    fn filter_input(&mut self, bytes: &[u8], out: &mut Vec<u8>, stop_at_window: bool) -> Vec<Command> {
         let mut commands = Vec::new();
         let Some(key) = self.key else {
             out.extend_from_slice(bytes);
@@ -285,10 +354,15 @@ impl Escape {
                     Some('h' | '?') => Some(Command::Help),
                     Some('r') => Some(Command::Redraw),
                     Some('l') => Some(Command::List),
+                    Some('m') => Some(Command::Rename),
+                    Some(',') => Some(Command::Settings),
+                    _ if command_comma(raw) => Some(Command::Settings),
                     _ => None,
                 };
                 if let Some(command) = command {
+                    let opens_window = matches!(command, Command::Help | Command::List | Command::Rename | Command::Settings);
                     commands.push(command);
+                    if stop_at_window && opens_window { self.deferred.extend_from_slice(rest); break; }
                     continue;
                 }
                 // Not a command: the escape key itself was typed, and then
@@ -371,9 +445,13 @@ impl Escape {
 
 /// The first unit of `bytes` and its length.
 fn next_unit(bytes: &[u8]) -> (usize, Unit) {
-    if bytes[0] != 0x1b || bytes.len() < 2 {
-        return (1, Unit::Key(Some(char::from(bytes[0]))));
+    if bytes[0] >= 0xc2 {
+        let len = match bytes[0] { 0xc2..=0xdf => 2, 0xe0..=0xef => 3, 0xf0..=0xf4 => 4, _ => 1 };
+        if bytes.len() < len { return (bytes.len(), Unit::Partial); }
+        if let Ok(text) = std::str::from_utf8(&bytes[..len]) { return (len, Unit::Key(text.chars().next())); }
     }
+    if bytes[0] == 0x1b && bytes.len() == 1 { return (1, Unit::Partial); }
+    if bytes[0] != 0x1b { return (1, Unit::Key(Some(char::from(bytes[0])))); }
     match bytes[1] {
         // X10 mouse: CSI M and three raw bytes.
         b'[' if bytes.get(2) == Some(&b'M') => {
@@ -410,6 +488,15 @@ fn next_unit(bytes: &[u8]) -> (usize, Unit) {
             .map_or((bytes.len(), Unit::Partial), |end| (end, Unit::Report)),
         _ => (1, Unit::Key(Some('\x1b'))),
     }
+}
+
+fn command_comma(raw: &[u8]) -> bool {
+    // Kitty keyboard protocol: Super/Command is modifier bit 8 (+1).
+    let Some(params) = raw.strip_prefix(b"\x1b[").and_then(|v| v.strip_suffix(b"u")) else { return false };
+    let Ok(text) = std::str::from_utf8(params) else { return false };
+    let mut fields = text.split(';');
+    fields.next().is_some_and(|key| key.split(':').next() == Some("44"))
+        && fields.next().is_some_and(|mods| matches!(mods, "9" | "9:1" | "9:2"))
 }
 
 fn csi_unit(params: &[u8], last: u8) -> Unit {
@@ -585,11 +672,19 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
     };
     let mut listing: Option<std::sync::mpsc::Receiver<Vec<ListRow>>> = None;
     // What this client is on, as `~l` rows name it.
-    let here = match &opts.tmux {
+    let mut here = match &opts.tmux {
         Some(name) => Target::Tmux(attached.host.clone(), name.clone()),
         None => Target::Rsh(attached.host.clone(), attached.session),
     };
     let mut list_rows: Vec<ListRow> = Vec::new();
+    let mut label = attached.label.clone();
+    let mut modal: Option<crate::session_ui::Modal> = None;
+    let mut list_return: Option<usize> = None;
+    let mut list_focus: Option<Target> = None;
+    let mut modal_serial = 0u64;
+    let mut rename_serial = 0u64;
+    let mut renaming: Option<std::sync::mpsc::Receiver<(Target, Result<String, String>)>> = None;
+    let mut prediction_mode = if tty { Mode::from_env() } else { Mode::Never };
     let mut last_heard = start;
     let mut last_hop = start;
     let mut stale_acked = start - STALE_ACK_GAP;
@@ -607,7 +702,7 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
     let mut stdin_eof: Option<Instant> = None;
     let mut behind = true;
     let mut updates = false;
-    let mut predictor = Predictor::new(if tty { Mode::from_env() } else { Mode::Never });
+    let mut predictor = Predictor::new(prediction_mode);
     let mut repaint = false;
     let mut held: Vec<u8> = Vec::new();
     // The generation under way when it is one deflate stream, and its inflater.
@@ -640,7 +735,7 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
         if stdin_eof.is_some() {
             wait = wait.min(Duration::from_millis(50));
         }
-        if listing.is_some() {
+        if listing.is_some() || renaming.is_some() {
             wait = wait.min(Duration::from_millis(100));
         }
         if escape.partial_since.is_some() {
@@ -665,10 +760,13 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                 revents: 0,
             },
         ];
+        let signal_fd = SIGNAL_READ.load(Ordering::Relaxed);
+        fds.push(libc::pollfd { fd: signal_fd, events: libc::POLLIN, revents: 0 });
         forwarder.pollfds(&mut fds);
         unsafe {
             libc::poll(fds.as_mut_ptr(), fds.len() as libc::nfds_t, wait.as_millis().max(1) as i32);
         }
+        if fds[2].revents != 0 { drain_signal_pipe(signal_fd); }
         let now = Instant::now();
         if QUIT.swap(false, Ordering::Relaxed) {
             detach(&mut link, &rx, size, now);
@@ -876,14 +974,16 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                     finish(&mut out, &mirror, &mut predictor, &mut decor)?;
                     return Ok(Outcome::Detached);
                 }
-                if n > 0 && decor.window.is_some() {
+                let mut incoming = if n > 0 { buf[..n as usize].to_vec() } else { Vec::new() };
+                while !incoming.is_empty() {
+                if decor.window.is_some() {
                     // Keys go to the window, not the session; reports the
                     // terminal sends (mouse, focus, answers) still go on.
-                    let (mut keys, reports) = escape.window_keys(&buf[..n as usize]);
+                    let (mut keys, reports) = escape.window_keys(&incoming);
                     if !reports.is_empty() && tx.pending() + reports.len() <= INPUT_BACKLOG {
                         tx.push(&reports);
                     }
-                    if decor.selected.is_none() && !keys.is_empty() {
+                    if modal.is_none() && decor.selected.is_none() && !keys.is_empty() {
                         // A window one only reads: any key closes it.
                         keys = vec![WindowKey::Close];
                     }
@@ -891,8 +991,63 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                     if decor.window.is_none() {
                         break;
                     }
+                    if let (Some(window), Some(controls)) = (modal.as_mut(), opts.controls.as_ref()) {
+                        use crate::session_ui::Effect;
+                        out.write_all(&decor.undo(&mirror))?;
+                        match window.handle(key, controls, &here, &label) {
+                            Effect::Close => {
+                                modal = None;
+                                if let Some(line) = list_return.take() {
+                                    decor.window = Some(session_list_lines(&list_rows));
+                                    decor.selected = Some(line);
+                                } else { decor.window = None; decor.selected = None; }
+                            }
+                            Effect::Clipboard(value) => opts.clipboard_read = value,
+                            Effect::Prediction(mode) => {
+                                out.write_all(&predictor.undo(&mirror))?;
+                                prediction_mode = mode;
+                                predictor = Predictor::new(mode);
+                            }
+                            Effect::Rename(_, _) if renaming.is_some() => {
+                                window.busy = false;
+                                window.status = "Another rename is still in progress".into();
+                            }
+                            Effect::Rename(target, name) => {
+                                let rename = controls.rename.clone();
+                                let (send, receive) = std::sync::mpsc::channel();
+                                std::thread::spawn(move || { let result = rename(&target, &name); let _ = send.send((target, result)); });
+                                renaming = Some(receive);
+                                rename_serial = modal_serial;
+                            }
+                            Effect::None => {}
+                        }
+                        if let Some(window) = &modal {
+                            decor.window = Some(window.lines(controls, &attached.host, &attached.peer.to_string(), &label, opts.tmux.is_some()));
+                            decor.selected = Some(window.selected);
+                        }
+                        wrote = true;
+                        continue;
+                    }
                     let picked = decor.selected.and_then(|line| list_rows.get(line.wrapping_sub(2))).and_then(|row| row.target.clone());
+                    let key = match key { WindowKey::Char('k') => WindowKey::Up, WindowKey::Char('j') => WindowKey::Down, WindowKey::Char('q') => WindowKey::Close, other => other };
                     match key {
+                        WindowKey::Char('m') if picked.is_some() && opts.controls.is_some() => {
+                            let target = picked.expect("picked");
+                            let name = match &target {
+                                Target::Tmux(_, name) => name.clone(),
+                                Target::Rsh(_, id) if *id == attached.session => label.clone(),
+                                Target::Rsh(_, _) => String::new(),
+                            };
+                            let window = crate::session_ui::Modal::rename(target, name);
+                            list_return = decor.selected;
+                            modal_serial += 1;
+                            out.write_all(&decor.undo(&mirror))?;
+                            decor.window = Some(window.lines(opts.controls.as_ref().unwrap(), &attached.host, &attached.peer.to_string(), &label, opts.tmux.is_some()));
+                            decor.selected = Some(window.selected);
+                            modal = Some(window);
+                            listing = None;
+                            wrote = true;
+                        }
                         WindowKey::Up | WindowKey::Down => {
                             let step = |line: usize| if key == WindowKey::Up { line.checked_sub(1) } else { Some(line + 1) };
                             let mut line = decor.selected.unwrap_or(2);
@@ -901,6 +1056,7 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                                 if list_rows[line - 2].target.is_some() {
                                     out.write_all(&decor.undo(&mirror))?;
                                     decor.selected = Some(line);
+                                    if listing.is_some() { list_focus = list_rows[line - 2].target.clone(); }
                                     wrote = true;
                                     break;
                                 }
@@ -917,14 +1073,15 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                             decor.selected = None;
                             list_rows.clear();
                             listing = None;
+                            list_focus = None;
                             wrote = true;
                         }
-                        WindowKey::Other => {}
+                        _ => {}
                     }
                     }
-                } else if n > 0 {
-                    let mut keys = Vec::with_capacity(n as usize);
-                    let commands = escape.filter(&buf[..n as usize], &mut keys);
+                } else {
+                    let mut keys = Vec::with_capacity(incoming.len());
+                    let commands = escape.filter_input(&incoming, &mut keys, true);
                     if decor.armed != escape.held.is_some() {
                         out.write_all(&decor.undo(&mirror))?;
                         decor.armed = escape.held.is_some();
@@ -941,6 +1098,22 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                     }
                     for command in commands {
                     match command {
+                        Command::Rename | Command::Settings => {
+                            if let Some(controls) = &opts.controls {
+                                list_return = None;
+                                modal_serial += 1;
+                                let window = if matches!(command, Command::Rename) {
+                                    crate::session_ui::Modal::rename(here.clone(), label.clone())
+                                } else { crate::session_ui::Modal::settings(controls, opts.clipboard_read, prediction_mode) };
+                                out.write_all(&decor.undo(&mirror))?;
+                                decor.window = Some(window.lines(controls, &attached.host, &attached.peer.to_string(), &label, opts.tmux.is_some()));
+                                decor.selected = Some(window.selected);
+                                modal = Some(window);
+                                listing = None;
+                                list_rows.clear();
+                                wrote = true;
+                            }
+                        }
                         Command::Detach => {
                             detach(&mut link, &rx, size, now);
                             finish(&mut out, &mirror, &mut predictor, &mut decor)?;
@@ -948,21 +1121,19 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                         }
                         Command::Redraw => redraw_wanted = Some(rx.gen),
                         Command::Help => {
+                            list_return = None;
                             out.write_all(&decor.undo(&mirror))?;
-                            decor.window = Some(help_lines(escape.key.unwrap_or(DEFAULT_ESCAPE), &attached.host, &attached.label, opts.tmux.is_some()));
+                            decor.window = Some(help_lines(escape.key.unwrap_or(DEFAULT_ESCAPE), &attached.host, &label, opts.tmux.is_some()));
                             decor.selected = None;
                             list_rows.clear();
                             wrote = true;
                         }
                         Command::List => {
+                            modal = None; list_return = None; list_focus = None; list_rows.clear();
                             out.write_all(&decor.undo(&mirror))?;
-                            let mut lines = vec!["rsh sessions".to_string(), String::new()];
+                            let mut lines = vec!["rsh sessions (m rename)".to_string(), String::new()];
                             if let Some(lister) = opts.sessions.clone() {
-                                let (send, receive) = std::sync::mpsc::channel();
-                                std::thread::spawn(move || {
-                                    let _ = send.send(lister());
-                                });
-                                listing = Some(receive);
+                                listing = Some(request_listing(lister));
                                 lines.push("asking every host...".to_string());
                             } else {
                                 lines.push("not available here".to_string());
@@ -973,7 +1144,56 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                     }
                     }
                 }
+                incoming = std::mem::take(&mut escape.deferred);
+                }
             }
+        }
+        if let Some(answer) = renaming.as_ref().and_then(|receive| receive.try_recv().ok()) {
+            renaming = None;
+            let (target, result) = answer;
+            out.write_all(&decor.undo(&mirror))?;
+            match result {
+                Ok(name) => {
+                    let updated_target = match &target {
+                        Target::Tmux(host, _) => Target::Tmux(host.clone(), name.clone()),
+                        other => other.clone(),
+                    };
+                    if target == here {
+                        label = name.clone();
+                        if let Target::Tmux(host, _) = &here { here = Target::Tmux(host.clone(), name.clone()); opts.tmux = Some(name.clone()); }
+                        decor.badge = tty.then(|| format!(" {}:{host} ", crate::cli::printable(&label)));
+                        if let Some(controls) = &opts.controls { *controls.label.lock().unwrap() = name; }
+                    }
+                    for row in &mut list_rows {
+                        if row.target.as_ref() == Some(&target) { row.target = Some(updated_target.clone()); }
+                    }
+                    if let Some(window) = &mut modal { window.retarget(&target, &updated_target); }
+                    let origin_open = modal.is_some() && modal_serial == rename_serial;
+                    if origin_open && list_return.is_some() {
+                        decor.selected = list_return.take();
+                        modal = None;
+                        decor.window = Some(session_list_lines(&list_rows));
+                    } else if origin_open {
+                        modal = None; decor.window = None; decor.selected = None; list_rows.clear();
+                    }
+                    // Refresh the backing list even behind a newer editor.
+                    // Serial checks control the visible dialog, not its data.
+                    if !list_rows.is_empty() || listing.is_some() || list_return.is_some() {
+                        let focus = list_return.or(decor.selected)
+                            .and_then(|line| list_rows.get(line.wrapping_sub(2)))
+                            .and_then(|row| row.target.clone()).unwrap_or(updated_target);
+                        if let Some(lister) = opts.sessions.clone() {
+                            listing = Some(request_listing(lister));
+                            list_focus = Some(focus);
+                        }
+                    }
+                }
+                Err(err) => if let Some(window) = modal.as_mut().filter(|_| modal_serial == rename_serial) {
+                    window.busy = false; window.status = err;
+                    if let Some(controls) = &opts.controls { decor.window = Some(window.lines(controls, &attached.host, &attached.peer.to_string(), &label, opts.tmux.is_some())); }
+                }
+            }
+            wrote = true;
         }
         if let Some(receive) = &listing {
             let answer = match receive.try_recv() {
@@ -987,22 +1207,40 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
             if let Some(found) = answer {
                 listing = None;
                 out.write_all(&decor.undo(&mirror))?;
-                let mut lines = vec!["rsh sessions".to_string(), String::new()];
-                lines.extend(found.iter().map(|row| row.text.clone()));
-                // The highlight starts on this session, else the first one.
+                let lines = session_list_lines(&found);
+                // A rename keeps focus on that row, even when sorting moved it.
+                let focus = list_focus.take().unwrap_or_else(|| here.clone());
                 let start = found
                     .iter()
-                    .position(|row| row.target.as_ref() == Some(&here))
+                    .position(|row| row.target.as_ref() == Some(&focus))
                     .or_else(|| found.iter().position(|row| row.target.is_some()));
-                decor.selected = start.map(|index| index + 2);
+                let selected = start.map(|index| index + 2);
                 list_rows = found;
-                decor.window = Some(lines);
+                if modal.is_none() {
+                    decor.selected = selected;
+                    decor.window = Some(lines);
+                } else if list_return.is_some() {
+                    list_return = Some(selected.unwrap_or(2));
+                }
                 wrote = true;
             }
         }
         // The start of a sequence nothing completed is typed text after all.
         let mut late = Vec::new();
         escape.expire(Instant::now(), &mut late);
+        if decor.window.is_some() && late == b"\x1b" {
+            out.write_all(&decor.undo(&mirror))?;
+            modal = None;
+            if let Some(line) = list_return.take() {
+                decor.window = Some(session_list_lines(&list_rows));
+                decor.selected = Some(line);
+            } else {
+                decor.window = None; decor.selected = None; listing = None; list_rows.clear(); list_focus = None;
+            }
+            wrote = true;
+            late.clear();
+        }
+        if decor.window.is_some() { late.clear(); }
         if !late.is_empty() && tx.pending() + late.len() <= INPUT_BACKLOG {
             let start = tx.end();
             tx.push(&late);
@@ -1610,7 +1848,7 @@ impl Decor {
                 shown.pop();
                 shown.push(Line::from(format!("... {} more", text.len() - room + 1)));
             }
-            let hint = if self.selected.is_some() { "  Up/Down move, Enter switch, q close" } else { "  any key closes" };
+            let hint = if self.selected.is_some() { "  arrows / Enter; Esc closes" } else { "  any key closes" };
             let height = shown.len() as u16 + 2;
             if width >= 12 && height <= rows && !shown.is_empty() {
                 let area = Rect::new((cols - width) / 2, (rows - height) / 2, width, height);
@@ -1729,6 +1967,8 @@ fn help_lines(key: u8, host: &str, label: &str, tmux: bool) -> Vec<String> {
         String::new(),
         if tmux { format!("{k}.  leave tmux; its session keeps running") } else { format!("{k}.  detach; the session keeps running") },
         format!("{k}l  sessions of every known host; Enter switches"),
+        format!("{k}m  rename the current session"),
+        format!("{k},  settings (or {k} then Cmd+, if forwarded)"),
         format!("{k}r  repaint the screen from the server"),
         format!("{k}h  this help"),
         format!("{k}{k}  send {k}"),
@@ -1738,11 +1978,15 @@ fn help_lines(key: u8, host: &str, label: &str, tmux: bool) -> Vec<String> {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum WindowKey {
+pub(crate) enum WindowKey {
     Up,
     Down,
+    Left,
+    Right,
     Enter,
     Close,
+    Backspace,
+    Char(char),
     Other,
 }
 
@@ -1752,10 +1996,12 @@ fn window_key(raw: &[u8], unit: &Unit) -> WindowKey {
     match unit {
         _ if raw.len() > 2 && raw[0] == 0x1b && raw.ends_with(b"A") => WindowKey::Up,
         _ if raw.len() > 2 && raw[0] == 0x1b && raw.ends_with(b"B") => WindowKey::Down,
-        Unit::Key(Some('k')) => WindowKey::Up,
-        Unit::Key(Some('j')) => WindowKey::Down,
+        _ if raw.len() > 2 && raw[0] == 0x1b && raw.ends_with(b"C") => WindowKey::Right,
+        _ if raw.len() > 2 && raw[0] == 0x1b && raw.ends_with(b"D") => WindowKey::Left,
         Unit::Key(Some('\r' | '\n')) => WindowKey::Enter,
-        Unit::Key(Some('q' | '\x1b')) => WindowKey::Close,
+        Unit::Key(Some('\x1b' | '\x03')) => WindowKey::Close,
+        Unit::Key(Some('\x7f' | '\x08')) => WindowKey::Backspace,
+        Unit::Key(Some(ch)) => WindowKey::Char(*ch),
         _ => WindowKey::Other,
     }
 }
@@ -1778,6 +2024,42 @@ mod tests {
     use super::*;
 
     #[test]
+    fn a_signal_queued_before_poll_wakes_it_and_can_be_drained() {
+        use std::os::fd::AsRawFd;
+        let pipe = SignalPipe::new().unwrap();
+        let mut fd = libc::pollfd { fd: pipe.read.as_raw_fd(), events: libc::POLLIN, revents: 0 };
+        assert_eq!(unsafe { libc::write(pipe.write.as_raw_fd(), [1u8].as_ptr().cast(), 1) }, 1);
+        let start = Instant::now();
+        assert_eq!(unsafe { libc::poll(&mut fd, 1, 500) }, 1);
+        assert!(start.elapsed() < Duration::from_millis(100), "a pre-poll resize cannot wait for a heartbeat");
+        drain_signal_pipe(fd.fd);
+        assert_eq!(unsafe { libc::poll(&mut fd, 1, 0) }, 0);
+        for raw in [pipe.read.as_raw_fd(), pipe.write.as_raw_fd()] {
+            assert_ne!(unsafe { libc::fcntl(raw, libc::F_GETFL) } & libc::O_NONBLOCK, 0);
+            assert_ne!(unsafe { libc::fcntl(raw, libc::F_GETFD) } & libc::FD_CLOEXEC, 0);
+        }
+    }
+
+    #[test]
+    fn modal_commands_keep_coalesced_input_local_and_decode_command_comma() {
+        for command in [b"~m".as_slice(), b"~,", b"~\x1b[44;9u"] {
+            let mut escape = Escape::new(Some(b'~'));
+            let mut out = Vec::new();
+            let mut bytes = command.to_vec();
+            bytes.extend_from_slice("한글 qjk\r".as_bytes());
+            assert_eq!(escape.filter_input(&bytes, &mut out, true).len(), 1);
+            assert!(out.is_empty());
+            let deferred = std::mem::take(&mut escape.deferred);
+            assert_eq!(escape.window_keys(&deferred).0, vec![WindowKey::Char('한'), WindowKey::Char('글'), WindowKey::Char(' '), WindowKey::Char('q'), WindowKey::Char('j'), WindowKey::Char('k'), WindowKey::Enter]);
+        }
+        let mut escape = Escape::new(Some(b'~'));
+        assert!(escape.window_keys(&[0xed, 0x95]).0.is_empty());
+        assert_eq!(escape.window_keys(&[0x9c]).0, vec![WindowKey::Char('한')]);
+        let mut out = Vec::new();
+        assert!(escape.filter_input(b"\x1b[200~~m~,\x1b[201~", &mut out, true).is_empty(), "pastes do not open windows");
+    }
+
+    #[test]
     fn queries_are_stripped() {
         let text = b"a\x1b]52;c;?\x07b\x1b]52;c;aGk=\x07c\x1b[21td\x1b[8;1;1te\x1b]52;p;?\x1b\\f";
         assert_eq!(&*strip_queries(text, false), b"ab\x1b]52;c;aGk=\x07cd\x1b[8;1;1tef");
@@ -1793,6 +2075,8 @@ mod tests {
                 Command::Help => 'h',
                 Command::Redraw => 'r',
                 Command::List => 'l',
+                Command::Rename => 'm',
+                Command::Settings => ',',
             })
             .collect()
     }
@@ -1931,16 +2215,16 @@ mod tests {
         assert_eq!(names(shift.filter(b"\x1b[57453;1u\x1b[96;2u\x1b[46u", &mut out)), ".");
         // Window keys: several in one read, and one cut between reads.
         let mut keys = Escape::new(Some(DEFAULT_ESCAPE));
-        assert_eq!(keys.window_keys(b"\x1b[B\x1b[Bjk").0, [WindowKey::Down, WindowKey::Down, WindowKey::Down, WindowKey::Up]);
+        assert_eq!(keys.window_keys(b"\x1b[B\x1b[Bjk").0, [WindowKey::Down, WindowKey::Down, WindowKey::Char('j'), WindowKey::Char('k')]);
         assert!(keys.window_keys(b"\x1b").0.is_empty() || keys.window_keys(b"").0.is_empty());
         let mut cut = Escape::new(Some(DEFAULT_ESCAPE));
         assert!(cut.window_keys(b"\x1b[").0.is_empty());
         assert_eq!(cut.window_keys(b"B").0, [WindowKey::Down]);
-        assert_eq!(cut.window_keys(b"q\x1b[113;1:3u"), (vec![WindowKey::Close], b"\x1b[113;1:3u".to_vec()), "the release is a report");
+        assert_eq!(cut.window_keys(b"q\x1b[113;1:3u"), (vec![WindowKey::Char('q')], b"\x1b[113;1:3u".to_vec()), "the release is a report");
         // A clipboard answer cut between reads goes on whole, keys or not.
         let mut answer = Escape::new(Some(DEFAULT_ESCAPE));
         assert_eq!(answer.window_keys(b"\x1b]52;c;aGVs"), (vec![], vec![]));
-        assert_eq!(answer.window_keys(b"bG8=\x1b\\j"), (vec![WindowKey::Down], b"\x1b]52;c;aGVsbG8=\x1b\\".to_vec()));
+        assert_eq!(answer.window_keys(b"bG8=\x1b\\j"), (vec![WindowKey::Char('j')], b"\x1b]52;c;aGVsbG8=\x1b\\".to_vec()));
     }
 
     #[test]

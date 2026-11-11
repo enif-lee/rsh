@@ -539,6 +539,8 @@ pub enum Action {
     Attach(u64),
     /// End the sessions whose id or name is this; no attachment follows.
     Kill(String),
+    /// Rename a plain rsh session (id) or a tmux session (exact name).
+    Rename { target: String, name: String, tmux: bool },
 }
 
 /// First packet of a handshake, sealed with the token key. Nothing happens
@@ -569,6 +571,7 @@ impl Hello {
             Action::Named(name) => w.u8(1).str(name),
             Action::Attach(id) => w.u8(2).str(&id.to_string()),
             Action::Kill(target) => w.u8(3).str(target),
+            Action::Rename { target, name, tmux } => w.u8(4).str(target).str(name).u8(u8::from(*tmux)),
         };
         w.u16(self.cols)
             .u16(self.rows)
@@ -591,6 +594,7 @@ impl Hello {
             1 => Action::Named(arg),
             2 => Action::Attach(arg.parse().ok()?),
             3 => Action::Kill(arg),
+            4 => Action::Rename { target: arg, name: r.str()?, tmux: r.u8()? != 0 },
             _ => return None,
         };
         Some(Self {
