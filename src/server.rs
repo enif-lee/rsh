@@ -8,7 +8,8 @@ use crate::proto::{
 };
 use crate::path::PathModel;
 use crate::pty::{kill_group, try_wait, Pty, SpawnOptions};
-use crate::terminal::Terminal;
+use crate::terminal::{Effects, Terminal};
+use alacritty_terminal::{vte::Parser, event::Event};
 use crate::wire::{is_tcp_addr, TcpSide};
 use std::collections::{BTreeMap, VecDeque};
 use std::io::{self, ErrorKind};
@@ -112,6 +113,9 @@ const DOUBLE_OFF: f64 = 0.001;
 const DEFLATE_RTT: Duration = Duration::from_millis(20);
 /// Client input is acked by the echo that usually follows it within this
 /// time, or by an empty packet when none does.
+const SCROLL_FRAME_GAP: Duration = Duration::from_millis(8);
+const VIEW_SYNC_HOLD: Duration = Duration::from_millis(150);
+
 const INPUT_ACK_DELAY: Duration = Duration::from_millis(5);
 /// Largest terminal a client may ask for; bounds the emulator's memory.
 const MAX_COLS: u16 = 512;
@@ -224,7 +228,44 @@ struct Session {
     trimmed: bool,
 }
 
+struct ServerScroll {
+    request: proto::ScrollRequest,
+    status: proto::ScrollStatus,
+    next_status: Option<proto::ScrollStatus>,
+    dirty: bool,
+    active: bool,
+    skipped: bool,
+    mode_reset: Vec<u8>,
+    at: Instant,
+    parser: Parser,
+    effects: Effects,
+    sync_since: Option<Instant>,
+}
+
+impl ServerScroll {
+    fn new(now: Instant) -> Self {
+        Self { request: Default::default(), status: Default::default(), next_status: None, dirty: false,
+            active: false, skipped: false, mode_reset: Vec::new(), at: now - SCROLL_FRAME_GAP,
+            parser: Parser::new(), effects: Effects { suppress_titles: true, relay_size_queries: true, ..Effects::default() }, sync_since: None }
+    }
+
+    fn apply(&mut self, term: &mut Terminal, request: proto::ScrollRequest) {
+        if request.serial <= self.request.serial || request.reset > request.serial { return; }
+        let was_scrolled = term.display_offset() > 0;
+        if !was_scrolled && !self.skipped && !self.active { self.mode_reset = term.reset_sequence(); }
+        let previous = if request.reset != self.request.reset {
+            term.scroll_display(i32::MIN);
+            0
+        } else { self.request.position };
+        let delta = request.position.saturating_sub(previous).clamp(i64::from(i32::MIN), i64::from(i32::MAX)) as i32;
+        term.scroll_display(delta);
+        self.request = request;
+        self.dirty = true;
+    }
+}
+
 struct Attachment {
+    scroll: Option<ServerScroll>,
     id: u64,
     /// This attachment's own keys, from the X25519 handshake.
     key: Key,
@@ -255,8 +296,8 @@ struct Attachment {
     /// Since when the program's output stops in the middle of an escape
     /// sequence (see `TAIL_WAIT`).
     mid_sequence: Option<Instant>,
-    /// In that mode, the screen the client will have once it has all that
-    /// was sent: what the next update is the difference from.
+    /// The screen the client will have once it has all that was sent:
+    /// managed live/history rows and slow-link updates are diffed from it.
     shadow: Option<Terminal>,
     /// The client inflates `FLAG_DEFLATE` datagrams (HELLO features).
     deflate: bool,
@@ -806,6 +847,7 @@ fn import(bytes: &[u8]) -> Option<Handoff> {
                 eprintln!("rsh: after upgrade: {note}");
             }
             session.attach = Some(Attachment {
+                scroll: None,
                 id: attach_id,
                 key: Key::from_parts(c2s, s2c),
                 token,
@@ -859,6 +901,37 @@ fn import(bytes: &[u8]) -> Option<Handoff> {
         let at = since(now, r.u64()?);
         replies.push_back((nonce, addr, at, r.bytes()?.to_vec()));
     }
+    if let Some(tag) = r.bytes_fixed(4) {
+        if tag != b"SCRL" { return None; }
+        for _ in 0..r.u16()? {
+            let session = sessions.get_mut(&r.u64()?)?;
+            let request = proto::ScrollRequest { serial: r.u64()?, reset: r.u64()?, position: r.u64()? as i64 };
+            let offset = r.u32()?;
+            let was_active = r.u8()? != 0;
+            let _skipped = r.u8()? != 0;
+            let reset = r.bytes()?.to_vec();
+            let effects = r.bytes()?.to_vec();
+            let previous = r.bytes()?;
+            if !previous.is_empty() {
+                let (cols, rows) = session.term.size();
+                let mut shadow = Terminal::with_history(cols, rows, 0);
+                shadow.feed(previous);
+                session.attach.as_mut()?.shadow = Some(shadow);
+            }
+            session.term.scroll_display(offset.min(i32::MAX as u32) as i32);
+            let mut scroll = ServerScroll::new(now);
+            scroll.request = request;
+            scroll.active = offset == 0 && was_active;
+            scroll.skipped = true; // A new generation restores the last complete view.
+            scroll.mode_reset = reset;
+            scroll.effects.bytes = effects;
+            scroll.parser.advance(&mut scroll.effects, &session.tail);
+            scroll.dirty = true;
+            session.term.capture_events();
+            session.attach.as_mut()?.scroll = Some(scroll);
+            session.refresh_scroll(now);
+        }
+    }
     Some(Handoff {
         socket,
         sessions,
@@ -879,6 +952,9 @@ impl State {
                 wait = wait.min(deadline.saturating_duration_since(now));
             }
             if let Some(at) = session.attach.as_ref().and_then(|a| a.ack_at).filter(|_| reachable) {
+                wait = wait.min(at.saturating_duration_since(now));
+            }
+            if let Some(at) = session.attach.as_ref().and_then(Attachment::scroll_at).filter(|_| reachable) {
                 wait = wait.min(at.saturating_duration_since(now));
             }
             if let Some(at) = session.attach.as_ref().and_then(Attachment::next_screen_at).filter(|_| reachable) {
@@ -964,6 +1040,17 @@ impl State {
         w.u16(self.replies.len() as u16);
         for (nonce, addr, at, reply) in &self.replies {
             w.rest(nonce).str(&addr.to_string()).u64(age_ms(*at, now)).bytes(reply);
+        }
+        // Optional trailing extension: old handoff-3 readers ignore it;
+        // a new reader still accepts exports without this extension.
+        let views: Vec<_> = self.sessions.values().filter_map(|s| s.attach.as_ref()?.scroll.as_ref().map(|view| (s, view))).collect();
+        w.rest(b"SCRL").u16(views.len() as u16);
+        for (session, view) in views {
+            w.u64(session.id).u64(view.request.serial).u64(view.request.reset)
+                .u64(view.request.position as u64).u32(session.term.display_offset() as u32)
+                .u8(u8::from(view.active)).u8(u8::from(view.skipped)).bytes(&view.mode_reset).bytes(&view.effects.bytes);
+            let previous = session.attach.as_ref().and_then(|a| a.shadow.as_ref()).map(|shadow| shadow.render(0)).unwrap_or_default();
+            w.bytes(&previous);
         }
         (w.finish(), fds)
     }
@@ -1169,6 +1256,7 @@ impl State {
     #[allow(clippy::too_many_arguments)]
     fn carry_out(&mut self, attach_id: u64, key: &Key, token: u64, hello: &Hello, packet: &Packet, addr: SocketAddr, now: Instant) -> Attached {
         let refuse = |reason: String| Attached {
+            features: hello.features & proto::FEATURE_SCROLL,
             session: 0,
             label: String::new(),
             created: false,
@@ -1264,9 +1352,24 @@ impl State {
         session.resize(cols, rows);
         let mut output = Sender::new(0);
         output.set_lossless(is_tcp_addr(addr));
-        let first = session.screen(ATTACH_HISTORY);
+        session.term.scroll_display(i32::MIN);
+        session.term.stop_capture();
+        let scroll = hello.features & proto::FEATURE_SCROLL != 0;
+        let first = if scroll { session.term.render(0) } else { session.screen(ATTACH_HISTORY) };
+        let view = scroll.then(|| {
+            let mut view = ServerScroll::new(now);
+            view.parser.advance(&mut view.effects, &session.tail);
+            session.term.capture_events();
+            view
+        });
+        let shadow = scroll.then(|| {
+            let mut shadow = Terminal::with_history(cols, rows, 0);
+            shadow.feed(&first);
+            shadow
+        });
         let (forward, notes) = listen_remote(&hello.forwards);
         session.attach = Some(Attachment {
+                scroll: view,
             id: attach_id,
             key: key.clone(),
             token,
@@ -1283,7 +1386,7 @@ impl State {
             syncing_until: None,
             screen_at: None,
             mid_sequence: None,
-            shadow: None,
+            shadow,
             deflate: hello.features & proto::FEATURE_DEFLATE != 0,
             screens: hello.features & proto::FEATURE_SCREENS != 0,
             path: (hello.features & proto::FEATURE_PATH != 0).then(|| PathModel::new(now)),
@@ -1313,6 +1416,7 @@ impl State {
         session.last_client = now;
         self.attach_index.insert(attach_id, id);
         Attached {
+            features: hello.features & proto::FEATURE_SCROLL,
             session: id,
             label: session.label.clone(),
             created,
@@ -1521,6 +1625,7 @@ impl State {
         };
         session.last_client = now;
         if stream.flags & FLAG_DETACH != 0 {
+            session.term.stop_capture();
             if let Some(old) = session.attach.take() {
                 self.attach_index.remove(&old.id);
             }
@@ -1531,7 +1636,11 @@ impl State {
         }
         // A reordered packet carries an older window size; only the newest counts.
         if newest && stream.cols > 0 && stream.rows > 0 {
+            let size = session.term.size();
             session.resize(stream.cols.min(MAX_COLS), stream.rows.min(MAX_ROWS));
+            if size != session.term.size() {
+                if let Some(scroll) = session.attach.as_mut().and_then(|a| a.scroll.as_mut()) { scroll.dirty = true; }
+            }
         }
         let attach = session.attach.as_mut().expect("attachment");
         if let (Some(path), Some(report)) = (attach.path.as_mut(), proto::Feedback::decode(stream.feedback).filter(|_| !stream.feedback.is_empty())) {
@@ -1545,6 +1654,9 @@ impl State {
                 attach.output.set_path(path.rate(now).filter(|rate| *rate < proto::SLOW_RATE), path.window_rtt(now));
             }
         }
+        if let (Some(scroll), Some(request)) = (attach.scroll.as_mut(), stream.scroll) {
+            scroll.apply(&mut session.term, request);
+        }
         attach.open_window(now);
         let advanced = attach.output.on_ack(stream.out_gen, stream.out_ack, now, !stream.data.is_empty() || stream.flags & proto::FLAG_REPEAT != 0);
         if !stream.data.is_empty() && stream.in_offset > attach.input.next {
@@ -1552,7 +1664,7 @@ impl State {
             attach.reply_due = true;
         } else if !stream.data.is_empty() {
             attach.ack_at.get_or_insert(now + INPUT_ACK_DELAY);
-        } else if stream.flags & !(proto::FLAG_REPEAT | proto::FLAG_FEEDBACK) != 0 || (!advanced && attach.output.deadline().is_none()) {
+        } else if stream.flags & !(proto::FLAG_REPEAT | proto::FLAG_FEEDBACK | proto::FLAG_SCROLL) != 0 || (!advanced && attach.output.deadline().is_none()) {
             // A heartbeat with nothing in flight: the answer is how the
             // client knows the server is there. Acks need no answer.
             attach.reply_due = true;
@@ -1568,13 +1680,18 @@ impl State {
             session.last_active = now;
         }
         if interrupt || redraw {
-            let screen = session.screen(0);
-            let attach = session.attach.as_mut().expect("attachment");
-            attach.reset_output(&screen);
-            attach.repaint_due = false;
-            // The client now has this repaint, not the shadow's screen.
-            attach.shadow = None;
-            attach.syncing_until = None;
+            if session.attach.as_ref().is_some_and(|a| a.scroll.is_some()) {
+                session.term.scroll_display(i32::MIN);
+                if let Some(scroll) = session.attach.as_mut().and_then(|a| a.scroll.as_mut()) { scroll.dirty = true; scroll.skipped = true; }
+            } else {
+                let screen = session.screen(0);
+                let attach = session.attach.as_mut().expect("attachment");
+                attach.reset_output(&screen);
+                attach.repaint_due = false;
+                // The client now has this repaint, not the shadow's screen.
+                attach.shadow = None;
+                attach.syncing_until = None;
+            }
         }
         self.flush_input(id);
         self.pump(id, now);
@@ -1683,7 +1800,7 @@ impl State {
         // from the start: none of it has been sent yet, so no queue of it
         // forms ahead of the screen that ends it.
         if total >= BURST && session.attach.as_ref().is_some_and(|a| {
-            a.screens && a.syncing_until.is_none() && a.output.first_acked() && a.output.srtt().is_some_and(|srtt| srtt >= DEFLATE_RTT)
+            a.scroll.is_none() && a.screens && a.syncing_until.is_none() && a.output.first_acked() && a.output.srtt().is_some_and(|srtt| srtt >= DEFLATE_RTT)
         }) {
             let attach = session.attach.as_mut().expect("attachment");
             attach.syncing_until = Some(now + SYNC_SPAN);
@@ -1706,6 +1823,10 @@ impl State {
         // At the end the last update goes at once: the client stops at the
         // stream's end and would miss one still waiting for its turn.
         let ending = session.exit_code.is_some();
+        if session.attach.as_ref().is_some_and(|a| a.scroll_due(now)
+            || ending && a.scroll.as_ref().is_some_and(|s| s.dirty)) {
+            session.refresh_scroll(now);
+        }
         let due = |a: &Attachment| a.repaint_due && if a.shadow.is_some() { ending || a.next_screen_due(now) } else { a.output.first_acked() };
         if session.attach.as_ref().is_some_and(due) {
             session.refresh(now);
@@ -1748,7 +1869,7 @@ impl State {
             if attach.z.is_some() {
                 flags |= proto::FLAG_ZSTREAM;
             }
-            if attach.syncing_until.is_some() {
+            if attach.syncing_until.is_some() || attach.scroll.is_some() {
                 flags |= proto::FLAG_UPDATES;
             }
             if squeeze && data.len() > 64 {
@@ -1782,7 +1903,7 @@ impl State {
             let number = |path: &mut Option<PathModel>, len: usize, copy: bool| {
                 path.as_mut().filter(|_| udp).map(|path| path.number(Instant::now(), len + 4 + proto::SEAL_OVERHEAD + 28, copy))
             };
-            let mut stream = ServerStream {
+            let mut stream = ServerStream { scroll: attach.scroll.as_ref().map(|s| s.status),
                 flags,
                 in_ack: attach.input.next,
                 out_gen: attach.output.gen,
@@ -1937,7 +2058,7 @@ impl State {
             if let Some(attach) = self.sessions.get(&id).and_then(|s| s.attach.as_ref()) {
                 let ack_due = attach.ack_at.is_some_and(|at| now >= at);
                 let gathered = attach.output.all_sent() && attach.gathered_at().is_some_and(|at| now >= at);
-                if attach.output.deadline().is_some_and(|deadline| now >= deadline) || attach.reply_due || ack_due || attach.next_screen_due(now) || gathered {
+                if attach.output.deadline().is_some_and(|deadline| now >= deadline) || attach.reply_due || ack_due || attach.next_screen_due(now) || attach.scroll_due(now) || gathered {
                     self.pump(id, now);
                 }
             }
@@ -1981,6 +2102,7 @@ impl State {
         self.pending.retain(|_, p| self.keys.contains_key(&p.token));
         for session in self.sessions.values_mut() {
             if session.attach.as_ref().is_some_and(|a| !self.keys.contains_key(&a.token)) {
+                session.term.stop_capture();
                 let old = session.attach.take().expect("attachment");
                 self.attach_index.remove(&old.id);
                 let bytes = proto::seal(&old.key, Dir::ToClient, KIND_KICKED, old.id, &proto::Writer::new().str("this client's token was revoked").finish());
@@ -1991,6 +2113,29 @@ impl State {
 }
 
 impl Attachment {
+    fn publish_view_status(&mut self) {
+        if let Some(scroll) = &mut self.scroll {
+            if let Some(status) = scroll.next_status.take() {
+                self.reply_due |= status != scroll.status;
+                scroll.status = status;
+            }
+        }
+    }
+
+    fn scroll_at(&self) -> Option<Instant> {
+        let scroll = self.scroll.as_ref()?;
+        (scroll.dirty && (self.output.all_sent() && self.output.pending() <= 2 * self.update_len.max(proto::CHUNK)
+            || scroll.skipped || scroll.request.reset > scroll.status.serial && scroll.request.position == 0))
+            .then(|| {
+                let at = scroll.at + SCROLL_FRAME_GAP;
+                scroll.sync_since.filter(|_| !scroll.active).map_or(at, |since| at.max(since + VIEW_SYNC_HOLD))
+            })
+    }
+
+    fn scroll_due(&self, now: Instant) -> bool {
+        self.scroll_at().is_some_and(|at| now >= at)
+    }
+
     /// In the screens-only mode, when the next update may go: once the last
     /// one is out (though not yet acked); at once while the path shows no
     /// queue, else half a round trip after the last (as mosh paces every
@@ -2272,6 +2417,7 @@ impl Attachment {
     /// bytes it added.
     fn stage(&mut self, ending: bool) -> usize {
         if self.zraw.is_empty() {
+            self.publish_view_status();
             return 0;
         }
         if self.z.is_none() {
@@ -2280,6 +2426,7 @@ impl Attachment {
                 // At the end no switch is waited for: the client stops at it.
                 let raw = std::mem::take(&mut self.zraw);
                 self.output.push(&raw);
+                self.publish_view_status();
                 return raw.len();
             }
             if !drained {
@@ -2309,6 +2456,7 @@ impl Attachment {
             self.ratio = (raw.len() as f64 / packed.len().max(1) as f64).clamp(1.0, 64.0);
         }
         self.output.push(&packed);
+        self.publish_view_status();
         packed.len()
     }
 
@@ -2333,6 +2481,65 @@ impl Attachment {
 }
 
 impl Session {
+    fn refresh_scroll(&mut self, now: Instant) {
+        let offset = self.term.display_offset();
+        let (cols, rows) = self.term.size();
+        // Live rows can be compared directly, without rendering and parsing
+        // an entire screen just to find that nothing changed. Only a history
+        // view needs a separate projection of the authoritative grid.
+        let history = (offset > 0).then(|| {
+            let mut current = Terminal::with_history(cols, rows, 0);
+            current.feed(&self.term.render_view());
+            current
+        });
+        let current = history.as_ref().unwrap_or(&self.term);
+        let attach = self.attach.as_mut().expect("attachment");
+        let force = attach.scroll.as_ref().expect("scroll").skipped;
+        let same = !force && attach.shadow.as_ref().is_some_and(|previous| current.same_view(previous));
+        let reset = if same { Vec::new() } else {
+            attach.shadow.as_ref().map(Terminal::reset_sequence)
+                .unwrap_or_else(|| attach.scroll.as_ref().unwrap().mode_reset.clone())
+        };
+        let mut delta = if same { Some(Vec::new()) } else if force { None } else { attach.shadow.as_mut().and_then(|previous| {
+            let bytes = current.diff_from(previous)?;
+            previous.feed(&bytes);
+            current.same_screen(previous).then_some(bytes)
+        }) };
+        let effects = std::mem::take(&mut attach.scroll.as_mut().unwrap().effects.bytes);
+        if let Some(bytes) = &mut delta {
+            bytes.extend_from_slice(&effects);
+            if !bytes.is_empty() {
+                attach.push_output(bytes);
+                attach.update_len = bytes.len();
+            }
+        } else {
+            let screen = current.render(0);
+            let mut fresh = vec![0x18];
+            fresh.extend_from_slice(&reset);
+            fresh.extend_from_slice(&screen);
+            // A full repaint must clear a former title too.
+            fresh.extend_from_slice(format!("\x1b]2;{}\x07", current.title().chars().take(1024).collect::<String>()).as_bytes());
+            fresh.extend_from_slice(&effects);
+            attach.reset_output(&fresh);
+            attach.update_len = fresh.len();
+            let mut previous = Terminal::with_history(cols, rows, 0);
+            previous.feed(&screen);
+            attach.shadow = Some(previous);
+        }
+        attach.syncing_until = None;
+        attach.repaint_due = false;
+        attach.screen_at = Some(now);
+        let scroll = attach.scroll.as_mut().unwrap();
+        scroll.active = offset > 0;
+        scroll.dirty = false;
+        scroll.skipped = false;
+        scroll.at = now;
+        // Publish the position with its screen bytes, not an empty reply
+        // while those bytes still wait in the compressor's staging buffer.
+        scroll.next_status = Some(proto::ScrollStatus { serial: scroll.request.serial, offset: offset as u32 });
+        attach.stage(false);
+    }
+
     fn resize(&mut self, cols: u16, rows: u16) {
         if self.term.size() == (cols, rows) {
             return;
@@ -2355,6 +2562,10 @@ impl Session {
     /// difference from what it has, or a repaint when that will not do
     /// (or the difference does not reproduce the screen).
     fn refresh(&mut self, now: Instant) {
+        if self.attach.as_ref().is_some_and(|a| a.scroll.is_some()) {
+            self.refresh_scroll(now);
+            return;
+        }
         let at_ground = self.tail.is_empty();
         let Some(attach) = self.attach.as_mut() else {
             return;
@@ -2399,7 +2610,7 @@ impl Session {
         self.output_seen = Instant::now();
         self.trimmed = false;
         let was_ground = self.tail.is_empty();
-        if let Some(attach) = self.attach.as_mut().filter(|a| a.screens && was_ground) {
+        if let Some(attach) = self.attach.as_mut().filter(|a| a.screens && was_ground && a.scroll.is_none()) {
             // On a slow link, output that would take long to drain starts
             // the screens-only mode at once, from the screen the client
             // will have: all before was sent, so no repaint is needed. Before
@@ -2426,7 +2637,11 @@ impl Session {
                 }
             }
         }
-        let cut = self.term.feed_to_ground(bytes);
+        let cut = if let Some(scroll) = self.attach.as_mut().and_then(|a| a.scroll.as_mut()) {
+            self.term.feed_with_effects(bytes, &mut scroll.parser, &mut scroll.effects)
+        } else {
+            self.term.feed_to_ground(bytes)
+        };
         if cut > 0 {
             self.tail.clear();
         }
@@ -2434,9 +2649,27 @@ impl Session {
         if self.tail.len() > 64 * 1024 {
             self.tail.clear();
         }
+        let events = self.term.take_events();
         let Some(attach) = self.attach.as_mut() else {
+            self.term.stop_capture();
             return;
         };
+        if let Some(scroll) = attach.scroll.as_mut() {
+            // A disconnected or slow viewer has the same memory bound as
+            // the normal output stream. These are complete side effects;
+            // dropping them cannot split a sequence in the next frame.
+            if scroll.effects.bytes.len() > OUTPUT_BACKLOG { scroll.effects.bytes.clear(); }
+            for event in events {
+                let reply = match event {
+                    Event::PtyWrite(reply) => Some(reply.into_bytes()),
+                    _ => None,
+                };
+                if let Some(reply) = reply.filter(|reply| self.pty_in.len() + reply.len() <= INPUT_BACKLOG) { self.pty_in.extend(reply); }
+            }
+            scroll.sync_since = if self.term.synchronized() { Some(scroll.sync_since.unwrap_or_else(Instant::now)) } else { None };
+            scroll.dirty = true;
+            return;
+        }
         let now = Instant::now();
         attach.mid_sequence = if self.tail.is_empty() { None } else { attach.mid_sequence.or(Some(now)) };
         if now.duration_since(attach.made.0) >= 2 * SYNC_SPAN {
@@ -3168,5 +3401,360 @@ mod tcp_margin_quiet65_tests {
             attach.output.push(b"not sent");
             assert_eq!(attach.screen_due_at(), None);
         });
+    }
+}
+
+#[cfg(test)]
+mod server_scroll_tests {
+    use super::*;
+
+    fn history(rows: u16) -> Terminal {
+        let mut term = Terminal::with_size(80, rows);
+        for n in 0..1300 { term.feed(format!("line {n:04} 한글\r\n").as_bytes()); }
+        term
+    }
+
+    fn request(serial: u64, reset: u64, position: i64) -> proto::ScrollRequest {
+        proto::ScrollRequest { serial, reset, position }
+    }
+
+    fn fixture() -> (Server, u64) {
+        let server = Server::spawn();
+        let id = {
+            let mut state = server.state();
+            let now = Instant::now();
+            let mut hello = crate::net::new_hello("test", Action::Default, (80, 12), &["sleep 30".into()]);
+            hello.features = proto::FEATURE_SCROLL | proto::FEATURE_SCREENS;
+            let packet = Packet { kind: KIND_CONFIRM, session: 1, counter: 0, nonce: [0; 24], payload: vec![] };
+            let attached = state.carry_out(1, &Key::from_token("test"), 0, &hello, &packet, "127.0.0.1:12345".parse().unwrap(), now);
+            assert_eq!(attached.features, proto::FEATURE_SCROLL);
+            let session = state.sessions.get_mut(&attached.session).unwrap();
+            session.term = history(12);
+            session.term.capture_events();
+            let screen = session.screen(0);
+            let attach = session.attach.as_mut().unwrap();
+            attach.output = Sender::new(0);
+            attach.output.push(&screen);
+            let mut shadow = Terminal::with_history(80, 12, 0);
+            shadow.feed(&screen);
+            attach.shadow = Some(shadow);
+            attached.session
+        };
+        (server, id)
+    }
+
+    fn drain(session: &mut Session, now: Instant) -> Vec<u8> {
+        if session.attach.as_ref().and_then(|a| a.scroll.as_ref()).is_some_and(|s| s.dirty) {
+            session.refresh_scroll(now);
+        }
+        let attach = session.attach.as_mut().unwrap();
+        attach.stage(true);
+        let mut bytes = Vec::new();
+        while let Some((_, chunk)) = attach.output.next_chunk(now) { bytes.extend(chunk); }
+        attach.output.on_ack(attach.output.gen, attach.output.end(), now + Duration::from_millis(1), false);
+        bytes
+    }
+
+    #[test]
+    fn cumulative_scroll_is_idempotent_reversible_at_bounds_and_survives_compaction() {
+        let mut term = history(12);
+        assert!(term.trim());
+        assert_eq!(term.scrollback_len(), 1000);
+        let mut view = ServerScroll::new(Instant::now());
+        view.apply(&mut term, request(1, 0, 300));
+        assert_eq!(term.display_offset(), 300, "compacted rows remain scrollable");
+        let first = term.display_rows();
+        view.apply(&mut term, request(1, 0, 300));
+        view.apply(&mut term, request(0, 0, 30));
+        assert_eq!(first, term.display_rows());
+        view.apply(&mut term, request(3, 0, 9000));
+        assert_eq!(term.display_offset(), 1000);
+        view.apply(&mut term, request(4, 0, 8997));
+        assert_eq!(term.display_offset(), 997, "reversing at the top acts immediately");
+        view.apply(&mut term, request(6, 6, 3));
+        assert_eq!(term.display_offset(), 3, "a lost reset is included in the next cumulative request");
+        term.feed(b"new output\r\n");
+        assert_eq!(term.display_offset(), 4);
+        assert!(!term.trim(), "an anchored server view must not be trimmed away");
+    }
+
+    #[test]
+    fn server_history_frames_are_diffs_and_live_queries_keep_live_coordinates() {
+        let (server, id) = fixture();
+        let mut state = server.state();
+        let session = state.sessions.get_mut(&id).unwrap();
+        let now = Instant::now();
+        let mut client = Terminal::with_history(80, 12, 0);
+        client.feed(&drain(session, now));
+        for (serial, pos, expected) in [(1, 30, None), (2, 31, Some("\x1b[1T")), (3, 30, Some("\x1b[1S"))] {
+            session.attach.as_mut().unwrap().scroll.as_mut().unwrap().apply(&mut session.term, request(serial, 0, pos));
+            session.refresh_scroll(now + Duration::from_millis(serial * 8));
+            let bytes = drain(session, now + Duration::from_millis(serial * 8));
+            if let Some(control) = expected {
+                assert!(String::from_utf8_lossy(&bytes).contains(control));
+                assert!(!String::from_utf8_lossy(&bytes).contains("\x1b[2J"));
+            }
+            client.feed(&bytes);
+            let mut full = Terminal::with_history(80, 12, 0);
+            full.feed(&session.term.render_view());
+            assert!(client.same_screen(&full));
+            assert_eq!(client.scrollback_len(), 0);
+        }
+        let (row, col) = session.term.cursor();
+        session.output(b"\x1b[6n\x1b]52;c;aGVsbG8=\x07\x07");
+        assert_eq!(session.pty_in.iter().copied().collect::<Vec<_>>(), format!("\x1b[{};{}R", row + 1, col + 1).as_bytes());
+        session.refresh_scroll(now + Duration::from_millis(32));
+        let bytes = drain(session, now + Duration::from_millis(32));
+        assert!(String::from_utf8_lossy(&bytes).contains("\x1b]52;c;aGVsbG8=\x07\x07"));
+        session.attach.as_mut().unwrap().scroll.as_mut().unwrap().apply(&mut session.term, request(4, 4, 0));
+        session.refresh_scroll(now + Duration::from_millis(40));
+        client.feed(&drain(session, now + Duration::from_millis(40)));
+        let mut full = Terminal::with_history(80, 12, 0); full.feed(&session.screen(0));
+        assert!(client.same_screen(&full), "live modes and cursor must be restored");
+        assert!(!session.attach.as_ref().unwrap().scroll.as_ref().unwrap().active);
+    }
+
+    #[test]
+    fn cancelling_the_first_history_frame_keeps_intervening_output_and_modes() {
+        let (server, id) = fixture();
+        let mut state = server.state();
+        let session = state.sessions.get_mut(&id).unwrap();
+        let now = Instant::now();
+        session.term.feed(b"\x1b[?1000h");
+        let initial = session.screen(0);
+        session.attach.as_mut().unwrap().reset_output(&initial);
+        let mut shadow = Terminal::with_history(80, 12, 0);
+        shadow.feed(&initial);
+        session.attach.as_mut().unwrap().shadow = Some(shadow);
+        let mut client = Terminal::with_history(80, 12, 0);
+        client.feed(&drain(session, now));
+        session.attach.as_mut().unwrap().scroll.as_mut().unwrap().apply(&mut session.term, request(1, 0, 3));
+        session.output(b"NEW\x1b[?1000l\x1b]52;c;");
+        session.attach.as_mut().unwrap().scroll.as_mut().unwrap().apply(&mut session.term, request(2, 2, 0));
+        session.output(b"aGVsbG8=\x07");
+        assert!(!session.attach.as_ref().unwrap().scroll.as_ref().unwrap().active);
+        session.refresh_scroll(now + Duration::from_millis(8));
+        let bytes = drain(session, now + Duration::from_millis(8));
+        assert!(String::from_utf8_lossy(&bytes).contains("\x1b]52;c;aGVsbG8=\x07"));
+        client.feed(&bytes);
+        let mut full = Terminal::with_history(80, 12, 0); full.feed(&session.screen(0));
+        assert!(client.same_screen(&full));
+        assert!(client.screen_line(11).contains("NEW"));
+        assert!(!client.mouse_mode());
+    }
+
+    #[test]
+    fn live_transition_emits_completed_effects_before_an_unfinished_tail() {
+        let (server, id) = fixture();
+        let mut state = server.state();
+        let session = state.sessions.get_mut(&id).unwrap();
+        let now = Instant::now();
+        drain(session, now);
+        session.attach.as_mut().unwrap().scroll.as_mut().unwrap().apply(&mut session.term, request(1, 0, 3));
+        session.refresh_scroll(now);
+        drain(session, now);
+        session.output(b"\x1b]52;c;aGk=\x07\x1b]52;c;");
+        session.attach.as_mut().unwrap().scroll.as_mut().unwrap().apply(&mut session.term, request(2, 2, 0));
+        session.refresh_scroll(now + Duration::from_millis(8));
+        let mut parser = Parser::new();
+        let mut effects = Effects::default();
+        parser.advance(&mut effects, &drain(session, now + Duration::from_millis(8)));
+        session.output(b"cGVuZGluZw==\x07");
+        parser.advance(&mut effects, &drain(session, now + Duration::from_millis(16)));
+        let effects = String::from_utf8_lossy(&effects.bytes);
+        assert!(effects.contains("\x1b]52;c;aGk=\x07"));
+        assert!(effects.contains("\x1b]52;c;cGVuZGluZw==\x07"), "{effects:?}");
+    }
+
+    #[test]
+    fn identical_live_rows_hidden_cursor_moves_and_titles_send_no_output() {
+        let (server, id) = fixture();
+        let mut state = server.state();
+        let session = state.sessions.get_mut(&id).unwrap();
+        let now = Instant::now();
+        drain(session, now);
+        let frame = b"\x1b[?2026h\x1b[?25l\x1b[0m\x1b[2;1Hsteady body\x1b[K\x1b]2;steady title\x07\x1b[?2026l";
+        session.output(frame);
+        let first = drain(session, now);
+        assert!(!first.is_empty());
+        for i in 0..120 {
+            session.output(frame);
+            session.output(format!("\x1b[{};{}H\x1b[31m", i % 12 + 1, i % 50 + 1).as_bytes());
+            let attach = session.attach.as_ref().unwrap();
+            let generation = attach.output.gen;
+            let end = attach.output.end();
+            let bytes = drain(session, now + Duration::from_millis(i * 8));
+            assert!(bytes.is_empty(), "unchanged rows must not generate screen bytes");
+            let attach = session.attach.as_ref().unwrap();
+            assert_eq!((attach.output.gen, attach.output.end()), (generation, end));
+            assert!(!attach.reply_due, "no-op output must not generate empty frame replies");
+        }
+        session.output(b"\x1b[?25h");
+        assert!(!drain(session, now).is_empty(), "showing the latest cursor still reaches the client");
+    }
+
+    #[test]
+    fn live_diffs_preserve_deferred_pen_saved_cursor_tabs_and_partial_effects() {
+        let (server, id) = fixture();
+        let mut state = server.state();
+        let session = state.sessions.get_mut(&id).unwrap();
+        let now = Instant::now();
+        let mut client = Terminal::with_history(80, 12, 0);
+        client.feed(&drain(session, now));
+        session.output(b"\x1b[?25l\x1b[4;9H\x1b7\x1b[31m\x1b[3g\x1bH");
+        client.feed(&drain(session, now));
+        session.output(b"\x1b[4;1H\tRED\x1b8SAVED\x1b[?25h\x1b]52;c;");
+        let first = drain(session, now);
+        client.feed(&first);
+        assert!(client.at_ground(), "partial strings stay in the server parser");
+        assert!(client.same_screen(&session.term));
+        session.output(b"aGk=\x07\x07\x1b[?1006h");
+        let second = drain(session, now);
+        assert!(String::from_utf8_lossy(&second).contains("\x1b]52;c;aGk=\x07\x07"));
+        client.feed(&second);
+        assert!(client.same_screen(&session.term));
+    }
+
+    #[test]
+    fn live_changes_send_only_the_edited_span_and_queries_keep_their_coordinates() {
+        let (server, id) = fixture();
+        let mut state = server.state();
+        let session = state.sessions.get_mut(&id).unwrap();
+        let now = Instant::now();
+        drain(session, now);
+        session.output(b"\x1b[4;7H\x1b[6n\x1b[5;9H\x1b[14t");
+        let bytes = drain(session, now);
+        assert_eq!(session.pty_in.iter().copied().collect::<Vec<_>>(), b"\x1b[4;7R");
+        assert!(String::from_utf8_lossy(&bytes).contains("\x1b[14t"), "pixel-size queries need real client cell dimensions");
+        session.output(b"\x1b[5;9HX");
+        let bytes = drain(session, now);
+        assert!(bytes.len() < 250, "one edited span must not resend a screen: {} bytes", bytes.len());
+        assert!(!String::from_utf8_lossy(&bytes).contains("line 129"));
+    }
+
+    #[test]
+    fn live_window_and_icon_titles_are_preserved_but_not_repeated() {
+        let (server, id) = fixture();
+        let mut state = server.state();
+        let session = state.sessions.get_mut(&id).unwrap();
+        let now = Instant::now();
+        drain(session, now);
+        session.output(b"\x1b]0;window;icon\x07");
+        let bytes = drain(session, now);
+        let text = String::from_utf8_lossy(&bytes);
+        assert!(text.contains("\x1b]2;window;icon\x07"));
+        assert!(text.contains("\x1b]1;window;icon\x07"));
+        session.output(b"\x1b]0;window;icon\x07\x1b]1;window;icon\x07\x1b]2;window;icon\x07");
+        assert!(drain(session, now).is_empty());
+        session.output(b"\x1b]1;another icon\x07");
+        assert_eq!(drain(session, now), b"\x1b]1;another icon\x07");
+        session.output(b"\x1b]0;window;icon\x07");
+        assert_eq!(drain(session, now), b"\x1b]1;window;icon\x07");
+    }
+
+    #[test]
+    fn oversized_unfinished_effects_are_cancelled_with_the_grid_parser() {
+        let (server, id) = fixture();
+        let mut state = server.state();
+        let session = state.sessions.get_mut(&id).unwrap();
+        let now = Instant::now();
+        drain(session, now);
+        session.output(b"\x1b]52;c;");
+        let block = vec![b'x'; 64 * 1024];
+        for _ in 0..64 { session.output(&block); }
+        session.output(b"\x07\x1b[2;1HRECOVERED\x1b]52;c;b2s=\x07");
+        let bytes = drain(session, now);
+        assert!(bytes.len() < 1000, "cancelled strings must never reach the client: {} bytes, {:?}", bytes.len(), &bytes[..bytes.len().min(100)]);
+        assert!(String::from_utf8_lossy(&bytes).contains("\x1b]52;c;b2s=\x07"));
+        assert!(session.term.screen_line(1).starts_with("RECOVERED"));
+    }
+
+    #[test]
+    fn scroll_status_waits_until_its_screen_leaves_compression_staging() {
+        let (server, id) = fixture();
+        let mut state = server.state();
+        let session = state.sessions.get_mut(&id).unwrap();
+        let now = Instant::now();
+        let attach = session.attach.as_mut().unwrap();
+        attach.zstream = true;
+        attach.compress = true;
+        attach.scroll.as_mut().unwrap().apply(&mut session.term, request(1, 0, 3));
+        session.refresh_scroll(now);
+        let attach = session.attach.as_mut().unwrap();
+        assert!(!attach.zraw.is_empty(), "the initial generation is not acked yet");
+        assert_eq!(attach.scroll.as_ref().unwrap().status.serial, 0);
+        assert_eq!(attach.scroll.as_ref().unwrap().next_status.unwrap().serial, 1);
+        while attach.output.next_chunk(now).is_some() {}
+        attach.output.on_ack(attach.output.gen, attach.output.end(), now + Duration::from_millis(1), false);
+        attach.stage(false);
+        assert!(attach.zraw.is_empty());
+        assert_eq!(attach.scroll.as_ref().unwrap().status.serial, 1);
+        assert!(attach.reply_due);
+    }
+
+    #[test]
+    fn live_frames_obey_sync_hold_backpressure_and_flush_before_exit() {
+        let (server, id) = fixture();
+        let mut state = server.state();
+        let now = Instant::now();
+        let session = state.sessions.get_mut(&id).unwrap();
+        drain(session, now);
+        session.output(b"\x1b[?2026h\x1b[2Jpartial");
+        assert!(!session.attach.as_ref().unwrap().scroll_due(now + Duration::from_millis(8)));
+        session.output(b"\x1b[?2026l");
+        let bytes = drain(session, now);
+        assert!(!bytes.is_empty());
+        let attach = session.attach.as_mut().unwrap();
+        attach.output.push(&vec![b'x'; 64 * 1024]);
+        attach.scroll.as_mut().unwrap().dirty = true;
+        assert!(attach.scroll_at().is_none(), "live frames must wait behind queued output too");
+        attach.scroll.as_mut().unwrap().skipped = true;
+        assert!(attach.scroll_at().is_some(), "an explicit redraw can replace a backlog");
+        session.output(b"\x1b[?2026h\x1b[1;1HFINAL");
+        session.exit_code = Some(0);
+        state.pump(id, now);
+        let session = state.sessions.get(&id).unwrap();
+        let attach = session.attach.as_ref().unwrap();
+        assert!(!attach.scroll.as_ref().unwrap().dirty);
+        assert_eq!(attach.end_offset, Some(attach.output.end()));
+        assert!(attach.shadow.as_ref().unwrap().screen_line(0).starts_with("FINAL"));
+    }
+
+    #[test]
+    fn detaching_a_history_view_does_not_accumulate_query_events() {
+        let (server, id) = fixture();
+        let mut state = server.state();
+        let session = state.sessions.get_mut(&id).unwrap();
+        session.attach.as_mut().unwrap().scroll.as_mut().unwrap().apply(&mut session.term, request(1, 0, 30));
+        session.attach = None;
+        for _ in 0..1000 { session.output(b"\x1b]2;background\x07\x1b[6n"); }
+        assert!(session.term.take_events().is_empty());
+        session.term.feed(b"\x1b[6n");
+        assert!(session.term.take_events().is_empty(), "capture must have been disabled after detach");
+    }
+
+    #[test]
+    fn a_thousand_scroll_requests_coalesce_to_latest_frames() {
+        let (server, id) = fixture();
+        let mut state = server.state();
+        let session = state.sessions.get_mut(&id).unwrap();
+        let start = Instant::now();
+        drain(session, start);
+        let mut frames = 0;
+        let mut bytes = 0;
+        for serial in 1..=1000 {
+            let now = start + Duration::from_millis(serial);
+            session.attach.as_mut().unwrap().scroll.as_mut().unwrap().apply(&mut session.term, request(serial, 0, serial as i64));
+            if session.attach.as_ref().unwrap().scroll_due(now) {
+                session.refresh_scroll(now);
+                bytes += drain(session, now).len(); frames += 1;
+            }
+        }
+        session.refresh_scroll(start + Duration::from_millis(1008));
+        let scroll = session.attach.as_ref().unwrap().scroll.as_ref().unwrap();
+        assert_eq!(scroll.status.serial, 1000);
+        assert_eq!(scroll.status.offset, 1000);
+        assert!((120..=126).contains(&frames), "{frames} frames for 1000 requests");
+        eprintln!("1000 requests / second -> {frames} server frames, {bytes} output bytes, latest request selected within 8ms");
     }
 }

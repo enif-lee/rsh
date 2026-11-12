@@ -125,6 +125,25 @@ pub const FLAG_UPDATES: u8 = 8;
 /// HELLO features: the client reports when each numbered datagram arrived
 /// (`FLAG_NUMBERED`, `FLAG_FEEDBACK`), for the server's path model.
 pub const FEATURE_PATH: u8 = 16;
+/// Ordinary clients keep no history; scroll requests select the server's view.
+pub const FEATURE_SCROLL: u8 = 32;
+/// Optional scroll request/status in client/server stream headers.
+pub const FLAG_SCROLL: u8 = 32;
+
+/// Latest cumulative movement since `reset`. Repeating or reordering packets
+/// cannot repeat a wheel step; a new reset returns to the live screen.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct ScrollRequest {
+    pub serial: u64,
+    pub reset: u64,
+    pub position: i64,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct ScrollStatus {
+    pub serial: u64,
+    pub offset: u32,
+}
 /// Server stream flag: the datagram carries its number (`pn`).
 pub const FLAG_NUMBERED: u8 = 16;
 /// Client stream flag: the packet carries arrival times of numbered
@@ -659,6 +678,7 @@ pub fn decode_denied(buf: &[u8]) -> Option<([u8; 24], String)> {
 /// What CONFIRM did, sealed with the attachment's key.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Attached {
+    pub features: u8,
     pub session: u64,
     pub label: String,
     pub created: bool,
@@ -682,7 +702,7 @@ impl Attached {
         for id in &self.killed {
             w.u64(*id);
         }
-        w.str(&self.denied);
+        w.str(&self.denied).u8(self.features);
         w.finish()
     }
 
@@ -700,6 +720,7 @@ impl Attached {
             notes,
             killed,
             denied: r.str()?,
+            features: r.u8().unwrap_or(0),
         })
     }
 }
@@ -817,6 +838,7 @@ pub fn decode_list(buf: &[u8]) -> Option<([u8; 24], Listing)> {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ClientStream<'a> {
+    pub scroll: Option<ScrollRequest>,
     pub flags: u8,
     pub cols: u16,
     pub rows: u16,
@@ -831,11 +853,21 @@ pub struct ClientStream<'a> {
 impl<'a> ClientStream<'a> {
     pub fn encode(&self) -> Vec<u8> {
         let mut w = Writer::new();
-        let flags = if self.feedback.is_empty() { self.flags & !FLAG_FEEDBACK } else { self.flags | FLAG_FEEDBACK };
-        w.u8(flags).u16(self.cols).u16(self.rows).u32(self.out_gen).u64(self.out_ack).u64(self.in_offset);
-        if !self.feedback.is_empty() {
-            w.bytes(self.feedback);
+        let mut extension = Writer::new();
+        if let Some(scroll) = self.scroll {
+            // Keep new control fields inside the already length-delimited
+            // feedback block. A legacy server never mistakes them for keys,
+            // including after a live downgrade. Padding to a multiple of 8
+            // makes its old Feedback decoder reject this control envelope.
+            extension.u64(scroll.serial).u64(scroll.reset).u64(scroll.position as u64).bytes(self.feedback);
         }
+        let mut extension = extension.finish();
+        if self.scroll.is_some() { extension.resize(extension.len().div_ceil(8) * 8, 0); }
+        let feedback = if self.scroll.is_some() { extension.as_slice() } else { self.feedback };
+        let flags = if self.scroll.is_some() { self.flags | FLAG_SCROLL } else { self.flags & !FLAG_SCROLL };
+        let flags = if feedback.is_empty() { flags & !FLAG_FEEDBACK } else { flags | FLAG_FEEDBACK };
+        w.u8(flags).u16(self.cols).u16(self.rows).u32(self.out_gen).u64(self.out_ack).u64(self.in_offset);
+        if !feedback.is_empty() { w.bytes(feedback); }
         w.rest(self.data).finish()
     }
 
@@ -843,8 +875,14 @@ impl<'a> ClientStream<'a> {
         let mut r = Reader::new(buf);
         let flags = r.u8()?;
         let (cols, rows, out_gen, out_ack, in_offset) = (r.u16()?, r.u16()?, r.u32()?, r.u64()?, r.u64()?);
-        let feedback = if flags & FLAG_FEEDBACK != 0 { r.bytes()? } else { &[] };
-        Some(Self { flags, cols, rows, out_gen, out_ack, in_offset, feedback, data: r.rest() })
+        let mut feedback = if flags & FLAG_FEEDBACK != 0 { r.bytes()? } else { &[] };
+        let scroll = if flags & FLAG_SCROLL != 0 {
+            let mut extension = Reader::new(feedback);
+            let scroll = ScrollRequest { serial: extension.u64()?, reset: extension.u64()?, position: extension.u64()? as i64 };
+            feedback = extension.bytes()?;
+            Some(scroll)
+        } else { None };
+        Some(Self { scroll, flags, cols, rows, out_gen, out_ack, in_offset, feedback, data: r.rest() })
     }
 }
 
@@ -882,6 +920,7 @@ impl Feedback {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ServerStream<'a> {
+    pub scroll: Option<ScrollStatus>,
     pub flags: u8,
     pub in_ack: u64,
     pub out_gen: u32,
@@ -897,10 +936,14 @@ pub struct ServerStream<'a> {
 impl<'a> ServerStream<'a> {
     pub fn encode(&self) -> Vec<u8> {
         let mut w = Writer::new();
-        let flags = if self.pn.is_some() { self.flags | FLAG_NUMBERED } else { self.flags & !FLAG_NUMBERED };
+        let flags = if self.scroll.is_some() { self.flags | FLAG_SCROLL } else { self.flags & !FLAG_SCROLL };
+        let flags = if self.pn.is_some() { flags | FLAG_NUMBERED } else { flags & !FLAG_NUMBERED };
         w.u8(flags).u64(self.in_ack).u32(self.out_gen).u64(self.out_offset).i32(self.exit_code).u64(self.end_offset);
         if let Some(pn) = self.pn {
             w.u32(pn);
+        }
+        if let Some(scroll) = self.scroll {
+            w.u64(scroll.serial).u32(scroll.offset);
         }
         w.rest(self.data).finish()
     }
@@ -910,7 +953,10 @@ impl<'a> ServerStream<'a> {
         let flags = r.u8()?;
         let (in_ack, out_gen, out_offset, exit_code, end_offset) = (r.u64()?, r.u32()?, r.u64()?, r.i32()?, r.u64()?);
         let pn = if flags & FLAG_NUMBERED != 0 { Some(r.u32()?) } else { None };
-        Some(Self { flags, in_ack, out_gen, out_offset, exit_code, end_offset, pn, data: r.rest() })
+        let scroll = if flags & FLAG_SCROLL != 0 {
+            Some(ScrollStatus { serial: r.u64()?, offset: r.u32()? })
+        } else { None };
+        Some(Self { scroll, flags, in_ack, out_gen, out_offset, exit_code, end_offset, pn, data: r.rest() })
     }
 }
 
@@ -2081,6 +2127,31 @@ impl Receiver {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn scroll_headers_round_trip_without_reinterpreting_input_or_legacy_packets() {
+        let request = ScrollRequest { serial: 90, reset: 80, position: -123 };
+        let input = ClientStream { scroll: Some(request), flags: FLAG_SCROLL | FLAG_FEEDBACK, cols: 80, rows: 24,
+            out_gen: 2, out_ack: 50, in_offset: 10, feedback: &[], data: b"echo intact\r" };
+        assert_eq!(ClientStream::decode(&input.encode()), Some(input.clone()));
+        let mut old = input.clone(); old.scroll = None; old.flags = 0;
+        assert_eq!(ClientStream::decode(&old.encode()), Some(old));
+        let status = ServerStream { scroll: Some(ScrollStatus { serial: 90, offset: 17 }),
+            flags: FLAG_SCROLL, in_ack: 10, out_gen: 2, out_offset: 50, exit_code: 0,
+            end_offset: 60, pn: None, data: b"frame" };
+        assert_eq!(ServerStream::decode(&status.encode()), Some(status.clone()));
+        let encoded = input.encode();
+        let mut legacy_reader = Reader::new(&encoded);
+        legacy_reader.take(25).unwrap();
+        let old_feedback = legacy_reader.bytes().unwrap();
+        assert!(Feedback::decode(old_feedback).is_none());
+        assert_eq!(legacy_reader.rest(), input.data);
+        for end in 25..61 { assert!(ClientStream::decode(&encoded[..end]).is_none()); }
+        let attached = Attached { features: FEATURE_SCROLL, session: 1, label: "test".into(),
+            created: false, notes: vec![], killed: vec![], denied: String::new() };
+        let mut legacy = attached.encode(); legacy.pop();
+        assert_eq!(Attached::decode(&legacy).unwrap().features, 0);
+    }
+
     use super::*;
 
     #[test]
@@ -2132,7 +2203,7 @@ mod tests {
         };
         assert_eq!(Ready::decode(&ready.encode()), Some(ready));
         assert_eq!(decode_denied(&encode_denied(&[3; 24], "no")), Some(([3; 24], "no".to_string())));
-        let attached = Attached {
+        let attached = Attached { features: FEATURE_SCROLL,
             session: 4,
             label: "l".into(),
             created: true,
@@ -2161,7 +2232,7 @@ mod tests {
         let mut old = encode_list(&[5; 24], &listing.sessions, "rsh 1", &[]);
         old.truncate(old.len() - 2);
         assert_eq!(decode_list(&old), Some(([5; 24], Listing { tmux: Vec::new(), ..listing })));
-        let stream = ServerStream {
+        let stream = ServerStream { scroll: None,
             flags: FLAG_EXITED,
             in_ack: 2,
             out_gen: 3,
@@ -2176,7 +2247,7 @@ mod tests {
         assert_eq!(ServerStream::decode(&numbered.encode()).map(|s| s.flags & FLAG_NUMBERED != 0), Some(true));
         assert_eq!(ServerStream::decode(&numbered.encode()).and_then(|s| s.pn), Some(7));
         let feedback = Feedback { sent_us: 9, arrivals: vec![(1, 100), (2, 140)] }.encode();
-        let client = ClientStream { flags: 0, cols: 80, rows: 24, out_gen: 1, out_ack: 2, in_offset: 3, feedback: &feedback, data: b"ab" };
+        let client = ClientStream { scroll: None, flags: 0, cols: 80, rows: 24, out_gen: 1, out_ack: 2, in_offset: 3, feedback: &feedback, data: b"ab" };
         let encoded = client.encode();
         let back = ClientStream::decode(&encoded).unwrap();
         assert_eq!((back.feedback, back.data), (&feedback[..], &b"ab"[..]));

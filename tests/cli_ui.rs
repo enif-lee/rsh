@@ -354,6 +354,10 @@ fn tmux_menu_rename_is_visible_in_an_immediate_and_reopened_list() {
         "xterm-256color",
     );
     active.wait("after:fixture.example");
+    active.send(b"~p");
+    active.wait("Render profiling is available in ordinary rsh sessions.");
+    active.send(b"q");
+    active.wait_gone("Render profiling is available in ordinary rsh sessions.");
     active.send(b"~l");
     active.wait("attached 130x");
     assert_eq!(active.attr("tmux   after", "tmux").fg, rsh::terminal::Color::Indexed(5));
@@ -406,7 +410,7 @@ fn in_session_rename_returns_to_list_and_can_switch_afterwards() {
         };
         if name == "other" {
             other = done.attached.session;
-            let detach = rsh::proto::ClientStream {
+            let detach = rsh::proto::ClientStream { scroll: None,
                 flags: rsh::proto::FLAG_DETACH, cols: 80, rows: 24,
                 out_gen: 0, out_ack: 0, in_offset: 0, feedback: &[], data: &[],
             };
@@ -527,33 +531,47 @@ fn list_arrows_wrap_with_filtered_single_and_empty_results() {
 }
 
 #[test]
-fn ordinary_session_scrolls_its_body_with_a_fixed_header() {
+fn ordinary_session_scrolls_with_a_header_overlay_and_full_terminal_size() {
     let server = Server::spawn();
     server.allow("fixture.example", "token");
-    let dir = Temp::new("local-scrollback");
+    let dir = Temp::new("server-scrollback");
     let auth = dir.0.join("known");
     let mut store = AuthStore::new();
     store.insert("fixture.example", "token");
     store.save(&auth).unwrap();
     let address = server.addr().to_string();
-    let command = "n=0; while [ $n -lt 100 ]; do printf 'tree-node-%03d\\n' $n; n=$((n+1)); done; printf 'TREE_DONE\\nTERM:%s:%s\\n' \"$TERM\" \"$TERM_PROGRAM\"; read reply; printf 'INPUT:%s\\nSIZE:' \"$reply\"; stty size; read finish";
+    let command = "n=0; while [ $n -lt 400 ]; do printf 'tree-node-%03d\\n' $n; n=$((n+1)); done; printf 'TREE_DONE\\nTERM:%s:%s\\n' \"$TERM\" \"$TERM_PROGRAM\"; printf 'INITIAL_SIZE:'; stty size; read reply; printf 'INPUT:%s\\nSIZE:' \"$reply\"; stty size; read finish";
     let mut menu = Menu::start(
         &["--auth", auth.to_str().unwrap(), "--peer", &address, "fixture.example", "scroll-header", "--", command],
         &dir.0, false, "xterm-256color",
     );
     menu.wait("TREE_DONE");
     menu.wait("TERM:xterm-256color:rsh");
+    menu.wait_for("initial full terminal size", |text| text.lines().any(|line| line.strip_prefix("INITIAL_SIZE:").is_some_and(|size| size.split_whitespace().collect::<Vec<_>>() == ["30", "130"])));
     assert!(menu.screen.alt_screen());
     assert!(menu.screen.screen_line(0).contains("scroll-header:fixture.example"));
     let latest = menu.screen.screen_line(1);
     let history = menu.screen.scrollback_len();
+    std::thread::sleep(Duration::from_millis(2100)); // Exercise the server's idle history compaction.
     menu.send(b"\x1b[<64;10;");
     menu.send(b"5M");
     menu.wait("[scroll +3]");
     assert_ne!(menu.screen.screen_line(1), latest);
     assert!(menu.screen.screen_line(0).contains("scroll-header:fixture.example"));
+    menu.send(&[0x1b, b'[', b'M', 96, 42, 37]); // X10 wheel up.
+    menu.wait("[scroll +6]");
+    menu.send(b"\x1b[97;10;5M"); // urxvt wheel down.
+    menu.wait("[scroll +3]");
+    menu.send(b"\x1b[<64;");
+    std::thread::sleep(Duration::from_millis(100));
+    menu.send(b"10;5M");
+    menu.wait("[scroll +6]");
+    menu.send(b"\x1b[<65;10;5M");
+    menu.wait("[scroll +3]");
     menu.send(b"\x1b[5;2~");
-    menu.wait("[scroll +31]");
+    menu.wait("[scroll +32]");
+    menu.send(&b"\x1b[5;2~".repeat(7));
+    menu.wait("[scroll +235]");
     assert!(menu.screen.screen_line(0).contains("scroll-header:fixture.example"));
     // Resizing while viewing history must neither scroll the header away
     // nor transfer it into the outer terminal's scrollback.
@@ -561,7 +579,7 @@ fn ordinary_session_scrolls_its_body_with_a_fixed_header() {
     menu.pty.resize(100, 20);
     menu.send(b"back\r");
     menu.wait("INPUT:back");
-    menu.wait_for("resized body", |text| text.lines().any(|line| line.strip_prefix("SIZE:").is_some_and(|size| size.split_whitespace().collect::<Vec<_>>() == ["19", "100"])));
+    menu.wait_for("resized body", |text| text.lines().any(|line| line.strip_prefix("SIZE:").is_some_and(|size| size.split_whitespace().collect::<Vec<_>>() == ["20", "100"])));
     assert!(menu.screen.screen_line(0).contains("scroll-header:fixture.example"));
     menu.wait_gone("[scroll +");
     assert_eq!(menu.screen.scrollback_len(), history);
@@ -569,6 +587,15 @@ fn ordinary_session_scrolls_its_body_with_a_fixed_header() {
     menu.wait("detached");
     assert!(!menu.screen.alt_screen());
     assert!((0..menu.screen.scrollback_len()).all(|n| !menu.screen.scrollback_line(n).contains("scroll-header:fixture.example")));
+
+    let mut reattached = Menu::start(
+        &["--auth", auth.to_str().unwrap(), "--peer", &address, "fixture.example", "scroll-header"],
+        &dir.0, false, "xterm-256color",
+    );
+    reattached.wait("INPUT:back");
+    reattached.send(b"\x1b[5;2~");
+    reattached.wait("[scroll +29]");
+    assert!(reattached.text().contains("tree-node-"), "a new client can read history retained by the server");
 }
 
 #[test]
@@ -685,4 +712,29 @@ fn unfinished_synchronized_frame_is_released_before_the_heartbeat() {
     }
     menu.send(b"~.");
     menu.wait("detached");
+}
+
+#[test]
+fn render_profiling_flag_and_escape_restore_application_colors_without_typing_keys() {
+    use rsh::terminal::Color;
+    let server = Server::spawn();
+    server.allow("fixture.example", "token");
+    let dir = Temp::new("render-profile");
+    let auth = dir.0.join("known");
+    let mut store = AuthStore::new(); store.insert("fixture.example", "token"); store.save(&auth).unwrap();
+    let address = server.addr().to_string();
+    let command = "printf '\\033[1;1H\\033[44mORIGINAL\\033[0m\\033[8;1H'; read reply; printf 'KEY:%s\\n' \"$reply\"; read finish";
+    let mut menu = Menu::start(
+        &["--profile-render", "--auth", auth.to_str().unwrap(), "--peer", &address,
+          "fixture.example", "profile", "--", command], &dir.0, false, "xterm-256color",
+    );
+    menu.wait("ORIGINAL"); menu.wait("[profile]");
+    assert!(matches!(menu.attr("ORIGINAL", "ORIGINAL").bg, Color::Indexed(22 | 52 | 236)));
+    menu.send(b"~p"); menu.wait_gone("[profile]");
+    assert_eq!(menu.attr("ORIGINAL", "ORIGINAL").bg, Color::Named(4));
+    menu.send(b"~p"); menu.wait("[profile]");
+    assert_eq!(menu.attr("ORIGINAL", "ORIGINAL").bg, Color::Indexed(236));
+    menu.send(b"~p"); menu.wait_gone("[profile]");
+    assert_eq!(menu.attr("ORIGINAL", "ORIGINAL").bg, Color::Named(4));
+    menu.send(b"hello\r"); menu.wait("KEY:hello");
 }

@@ -162,7 +162,7 @@ fn live_upgrade_keeps_sessions_and_attached_clients() {
             &attached,
             Input::Script(script),
             &mut out,
-            client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, show_stats: false, controls: None },
+            client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, profile_render: false, show_stats: false, controls: None },
         )
         .unwrap();
         (outcome, String::from_utf8_lossy(&out).into_owned())
@@ -222,7 +222,7 @@ fn live_upgrade_keeps_sessions_and_attached_clients() {
         &again,
         Input::Script(b"echo GOT:$KEEP\n".to_vec()),
         &mut out,
-        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, show_stats: false, controls: None },
+        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, profile_render: false, show_stats: false, controls: None },
     )
     .unwrap();
     let text = String::from_utf8_lossy(&out);
@@ -234,7 +234,7 @@ fn live_upgrade_keeps_sessions_and_attached_clients() {
         &ended,
         Input::Script(Vec::new()),
         &mut out,
-        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, show_stats: false, controls: None },
+        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, profile_render: false, show_stats: false, controls: None },
     )
     .unwrap();
     assert_eq!(outcome, Outcome::Exited(5), "{}", String::from_utf8_lossy(&out));
@@ -330,7 +330,7 @@ fn tmux_sessions_are_joined_listed_and_left() {
             attached,
             Input::Script(script.to_vec()),
             &mut out,
-            client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: Some("work".into()), clipboard_read: false, show_stats: false, controls: None },
+            client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: Some("work".into()), clipboard_read: false, profile_render: false, show_stats: false, controls: None },
         )
         .unwrap();
         (outcome, String::from_utf8_lossy(&out).into_owned())
@@ -399,4 +399,100 @@ fn tmux_sessions_are_joined_listed_and_left() {
     drop(tmux_server);
     let _ = server.wait();
     let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn server_history_and_partial_clipboard_effect_survive_live_upgrade() {
+    use rsh::{crypto::{Dir, Key}, net::{self, HelloReply}, proto::{self, Action, Receiver, ScrollRequest, ScrollStatus}};
+    use std::net::UdpSocket;
+    use std::time::{Duration, Instant};
+
+    struct ChildGuard(std::process::Child);
+    impl Drop for ChildGuard { fn drop(&mut self) { let _ = self.0.kill(); let _ = self.0.wait(); } }
+    struct Client {
+        socket: UdpSocket, peer: std::net::SocketAddr, key: Key, attach: u64,
+        rx: Receiver, request: ScrollRequest, status: ScrollStatus, offset: u64, seen: Vec<u8>,
+    }
+    impl Client {
+        fn send(&mut self, data: &[u8]) {
+            let stream = proto::ClientStream { scroll: Some(self.request), flags: proto::FLAG_REPEAT,
+                cols: 80, rows: 12, out_gen: self.rx.gen, out_ack: self.rx.next,
+                in_offset: self.offset, feedback: &[], data };
+            let bytes = proto::seal(&self.key, Dir::ToServer, proto::KIND_STREAM, self.attach, &stream.encode());
+            self.socket.send_to(&bytes, self.peer).unwrap();
+            self.offset += data.len() as u64;
+        }
+        fn wait(&mut self, label: &str, predicate: impl Fn(&Self) -> bool) {
+            let deadline = Instant::now() + Duration::from_secs(5);
+            let mut buf = [0; 4096];
+            while !predicate(self) {
+                assert!(Instant::now() < deadline, "{label}: {:?}, {}", self.status, String::from_utf8_lossy(&self.seen));
+                self.send(&[]);
+                let Ok((n, _)) = self.socket.recv_from(&mut buf) else { continue };
+                let Some(packet) = proto::open(&self.key, Dir::ToClient, &buf[..n]) else { continue };
+                if packet.kind != proto::KIND_STREAM { continue; }
+                let stream = proto::ServerStream::decode(&packet.payload).unwrap();
+                assert_eq!(stream.flags & (proto::FLAG_ZSTREAM | proto::FLAG_DEFLATE), 0);
+                if let Some(status) = stream.scroll { self.status = status; }
+                self.seen.extend(self.rx.accept(stream.out_gen, stream.out_offset, stream.data, usize::MAX));
+            }
+        }
+    }
+    let dir = std::env::temp_dir().join(format!("rsh-native-upgrade-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let exe = dir.join("rsh");
+    std::fs::copy(env!("CARGO_BIN_EXE_rsh"), &exe).unwrap();
+    let auth = dir.join("auth");
+    let mut store = AuthStore::new(); store.insert("up.example", "tok"); store.save(&auth).unwrap();
+    let port = UdpSocket::bind("127.0.0.1:0").unwrap().local_addr().unwrap().port();
+    let peer: std::net::SocketAddr = format!("127.0.0.1:{port}").parse().unwrap();
+    let log = std::fs::File::create(dir.join("serve.log")).unwrap();
+    let server = ChildGuard(Command::new(&exe).args(["serve", "--bind", &peer.to_string(), "--authorized"])
+        .arg(&auth).stdout(log.try_clone().unwrap()).stderr(log).spawn().unwrap());
+    let key = Key::from_token("tok");
+    let deadline = Instant::now() + Duration::from_secs(5);
+    while net::list_sessions_wait(peer, &key, Duration::from_millis(100)).is_err() {
+        assert!(Instant::now() < deadline, "server startup");
+    }
+    let socket = net::bind_for(peer).unwrap();
+    let marker = dir.join("partial-ready");
+    let command = format!("stty -echo; n=0; while [ $n -lt 100 ]; do printf 'line-%03d\\n' $n; n=$((n+1)); done; printf 'READY\\n'; read a; printf '\\033]52;c;'; : > {}; read b; printf 'aGVsbG8=\\007'; read c",
+        rsh::remote::shell_quote(&marker.to_string_lossy()));
+    let mut hello = net::new_hello("up.example", Action::Default, (80, 12), &[command]);
+    hello.features = proto::FEATURE_SCROLL | proto::FEATURE_SCREENS;
+    let HelloReply::Ready(done) = net::hello(&socket, peer, &key, &hello).unwrap() else { panic!("denied") };
+    socket.set_read_timeout(Some(Duration::from_millis(20))).unwrap();
+    let mut client = Client { socket, peer, key: done.key, attach: done.attach, rx: Receiver::new(0),
+        request: Default::default(), status: Default::default(), offset: 0, seen: vec![] };
+    client.wait("ready", |c| String::from_utf8_lossy(&c.seen).contains("READY"));
+    client.send(b"one\n");
+    // An unfinished OSC stays in the server parser, never on the wire.
+    let deadline = Instant::now() + Duration::from_secs(5);
+    while !marker.exists() {
+        client.send(&[]);
+        assert!(Instant::now() < deadline, "program did not write its partial OSC");
+        std::thread::sleep(Duration::from_millis(10));
+    }
+    assert!(!client.seen.ends_with(b"\x1b]52;c;"));
+    client.request = ScrollRequest { serial: 1, reset: 0, position: 3 };
+    client.wait("history selected", |c| c.status.serial == 1 && c.status.offset == 3);
+    let pidfile = dir.join(format!("serve-{port}.pid"));
+    let before = std::fs::read_to_string(&pidfile).unwrap();
+    let generation = client.rx.gen;
+    std::fs::copy(env!("CARGO_BIN_EXE_rsh"), dir.join("next")).unwrap();
+    std::fs::rename(dir.join("next"), &exe).unwrap();
+    unsafe { libc::kill(server.0.id() as i32, libc::SIGUSR2); }
+    let deadline = Instant::now() + Duration::from_secs(5);
+    while std::fs::read_to_string(&pidfile).unwrap_or_default() == before {
+        assert!(Instant::now() < deadline, "server upgrade: {}", std::fs::read_to_string(dir.join("serve.log")).unwrap());
+        std::thread::sleep(Duration::from_millis(20));
+    }
+    client.wait("restored history", |c| c.rx.gen != generation && c.status.offset == 3);
+    client.seen.clear();
+    client.send(b"two\n");
+    client.wait("completed clipboard effect", |c| String::from_utf8_lossy(&c.seen).contains("\x1b]52;c;aGVsbG8=\x07"));
+    client.request = ScrollRequest { serial: 2, reset: 0, position: 6 };
+    client.wait("scroll after upgrade", |c| c.status.serial == 2 && c.status.offset == 6);
+    drop(server);
+    std::fs::remove_dir_all(dir).unwrap();
 }

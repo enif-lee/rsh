@@ -19,11 +19,6 @@ use std::time::{Duration, Instant};
 mod viewport;
 use viewport::Viewport;
 
-/// Interactive ordinary sessions reserve the first physical row for rsh.
-pub(crate) fn body_size(size: (u16, u16)) -> (u16, u16) {
-    (size.0, size.1.saturating_sub(1).max(1))
-}
-
 /// Keepalive interval while nothing else is sent.
 pub const HEARTBEAT: Duration = Duration::from_secs(1);
 /// With no key typed and no output for `IDLE_AFTER`, the keepalive goes
@@ -98,6 +93,7 @@ pub enum Target {
 }
 
 pub struct Attached {
+    pub features: u8,
     pub host: String,
     pub peer: SocketAddr,
     /// The attachment's own keys, from the handshake.
@@ -115,6 +111,7 @@ pub struct Attached {
 impl Attached {
     pub fn new(host: &str, peer: SocketAddr, token_key: &Key, done: crate::net::Handshake) -> Self {
         Self {
+            features: done.attached.features,
             host: host.to_string(),
             peer,
             key: done.key,
@@ -167,6 +164,7 @@ pub struct Options<'a> {
     /// `~/.rsh/config.yaml`).
     pub clipboard_read: bool,
     pub show_stats: bool,
+    pub profile_render: bool,
     pub controls: Option<crate::session_ui::Controls>,
 }
 
@@ -271,6 +269,7 @@ enum Command {
     List,
     Rename,
     Settings,
+    Profile,
 }
 
 /// One piece of input, as far as the escape key cares.
@@ -364,6 +363,7 @@ impl Escape {
                     Some('.') => Some(Command::Detach),
                     Some('h' | '?') => Some(Command::Help),
                     Some('r') => Some(Command::Redraw),
+                    Some('p') => Some(Command::Profile),
                     Some('l') => Some(Command::List),
                     Some('m') => Some(Command::Rename),
                     Some(',') => Some(Command::Settings),
@@ -597,6 +597,11 @@ pub fn escape_name(key: u8) -> String {
 }
 
 struct Link {
+    scroll: Option<proto::ScrollRequest>,
+    scroll_ack: u64,
+    scroll_status_counter: Option<u64>,
+    scroll_sent: u64,
+    scroll_sent_at: Instant,
     window: ReplayWindow,
     wire: Wire,
     key: Key,
@@ -614,18 +619,39 @@ struct Link {
 }
 
 impl Link {
+    fn scroll_status(&mut self, counter: u64, status: proto::ScrollStatus) -> Option<proto::ScrollStatus> {
+        if self.scroll_status_counter.is_some_and(|previous| counter <= previous) { return None; }
+        self.scroll_status_counter = Some(counter);
+        self.scroll_ack = self.scroll_ack.max(status.serial);
+        Some(status)
+    }
+
+    fn scroll_at(&self) -> Option<Instant> {
+        let request = self.scroll?;
+        (request.serial > self.scroll_ack).then(|| self.scroll_sent_at +
+            if request.serial != self.scroll_sent { Duration::from_millis(8) } else { proto::MIN_RTO })
+    }
+
     fn send(&mut self, stream: &ClientStream, now: Instant) {
         // A datagram's worth at most: few beside a chunk of input, the rest
         // with the next packet.
-        let most = if stream.data.len() > 600 { 8 } else { ARRIVALS_MAX };
-        let report = if self.arrivals.is_empty() {
+        let base = ClientStream { feedback: &[], scroll: self.scroll, ..stream.clone() }.encode().len();
+        let budget = 1280usize - 48 - proto::SEAL_OVERHEAD; // IPv6 + UDP.
+        let fixed = if self.scroll.is_some() { 0 } else { 8 }; // feedback length + clock.
+        let most = budget.saturating_sub(base + fixed) / 8;
+        let most = most.min(ARRIVALS_MAX);
+        let report = if self.arrivals.is_empty() || most == 0 {
             Vec::new()
         } else {
             let sent_us = self.micros(Instant::now());
             let arrivals = self.arrivals.drain(..self.arrivals.len().min(most)).collect();
             proto::Feedback { sent_us, arrivals }.encode()
         };
-        let stream = ClientStream { feedback: &report, ..stream.clone() };
+        let stream = ClientStream { feedback: &report, scroll: self.scroll, ..stream.clone() };
+        if let Some(scroll) = self.scroll {
+            self.scroll_sent = scroll.serial;
+            self.scroll_sent_at = now;
+        }
         let bytes = proto::seal(&self.key, Dir::ToServer, KIND_STREAM, self.attach, &stream.encode());
         self.send_packet(&bytes);
         self.last_sent = now;
@@ -661,6 +687,7 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
     };
     let start = Instant::now();
     let mut link = Link {
+        scroll: None, scroll_ack: 0, scroll_status_counter: None, scroll_sent: 0, scroll_sent_at: Instant::now() - proto::MIN_RTO,
         window: ReplayWindow::new(),
         wire,
         key: attached.key.clone(),
@@ -677,11 +704,14 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
     let mut stats = HeaderStats::new(start, 0, 0);
     let tty = matches!(input, Input::Tty(_));
     let managed = tty && opts.tmux.is_none();
-    let mut physical_size = opts.size;
-    let mut size = if managed { body_size(opts.size) } else { opts.size };
+    let mut size = opts.size;
     if managed {
+        if attached.features & proto::FEATURE_SCROLL == 0 {
+            return Err(io::Error::other("server does not support server-managed scrolling; update the rsh server"));
+        }
+        link.scroll = Some(proto::ScrollRequest::default());
         let mut viewport = Viewport::new(size);
-        viewport.header_rows = physical_size.1.saturating_sub(size.1);
+        viewport.set_profiling(opts.profile_render);
         out.viewport = Some(viewport);
     }
     let mut mirror = Terminal::with_history(size.0, size.1, 0);
@@ -750,6 +780,7 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
         let now = Instant::now();
         let mut wait = wake.heartbeat(now).saturating_sub(now.duration_since(link.last_sent));
         if let Some(viewport) = &mut out.viewport {
+            link.scroll = Some(viewport.request);
             if !viewport.replies.is_empty() {
                 let replies = std::mem::take(&mut viewport.replies);
                 if tx.pending() + replies.len() <= INPUT_BACKLOG { tx.push(&replies); }
@@ -767,6 +798,9 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
         }
         if let Some(due) = out.due() {
             wait = wait.min(due.saturating_duration_since(now));
+        }
+        if let Some(at) = link.scroll_at() {
+            wait = wait.min(at.saturating_duration_since(now));
         }
         if let Some(deadline) = tx.deadline() {
             wait = wait.min(deadline.saturating_duration_since(now));
@@ -819,11 +853,9 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
             return Ok(Outcome::Detached);
         }
         if tty && WINCH.swap(false, Ordering::Relaxed) {
-            let physical = crate::pty::window_size(stdin_fd.unwrap_or(0));
-            let next = if managed { body_size(physical) } else { physical };
-            if next != size || managed && physical != physical_size {
+            let next = crate::pty::window_size(stdin_fd.unwrap_or(0));
+            if next != size {
                 if managed { out.prepare_viewport(); }
-                physical_size = physical;
                 size = next;
                 // The terminal moved what rsh drew; a repaint clears it.
                 if !decor.drawn.is_empty() {
@@ -832,14 +864,13 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                 }
                 mirror.resize(size.0, size.1);
                 if let Some(viewport) = &mut out.viewport {
-                    viewport.header_rows = physical_size.1.saturating_sub(size.1);
                     viewport.resize(size);
                     redraw_wanted = Some(rx.gen);
                 }
                 force_send = true;
             } else if let Some(viewport) = &mut out.viewport {
                 // A font/pixel-size change can leave the row/column count
-                // unchanged while changing the pixel height of the header.
+                // unchanged while changing the pixel dimensions.
                 viewport.refresh_cell_size();
             }
         }
@@ -848,6 +879,7 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                 let _ = raw.reenter();
             }
             redraw_wanted = Some(rx.gen);
+            if let Some(viewport) = &mut out.viewport { viewport.invalidate(); }
         }
 
         let mut wrote = false;
@@ -931,6 +963,12 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
             } else {
                 stream.data
             };
+            if link.scroll.is_some() && stream.scroll.is_none() {
+                return Err(io::Error::other("server lost scrolling support during replacement; update the server and reattach"));
+            }
+            if let Some(status) = stream.scroll.and_then(|status| link.scroll_status(packet.counter, status)) {
+                out.queue_view_status(stream.out_gen, stream.end_offset, status);
+            }
             tx.on_ack(0, stream.in_ack, now, !data.is_empty());
             let gen = rx.gen;
             if !data.is_empty() {
@@ -1028,7 +1066,12 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
             if stream.flags & FLAG_EXITED != 0 {
                 exit = Some((stream.exit_code, stream.out_gen, stream.end_offset));
             }
+            out.view_received = (rx.gen, rx.next);
         }
+
+        // An ACK or a reordered packet can announce a view before its
+        // screen arrives. Apply its visual position only with those bytes.
+        out.prepare_viewport();
 
         let local_input_due = out.viewport.as_ref().and_then(Viewport::input_deadline).is_some_and(|at| now >= at);
         if fds[1].revents != 0 || local_input_due {
@@ -1203,6 +1246,16 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                             return Ok(if opts.tmux.is_some() { Outcome::Left } else { Outcome::Detached });
                         }
                         Command::Redraw => redraw_wanted = Some(rx.gen),
+                        Command::Profile => {
+                            if let Some(viewport) = &mut out.viewport {
+                                viewport.set_profiling(!viewport.profiling());
+                            } else {
+                                out.write_all(&decor.undo(&mirror))?;
+                                decor.window = Some(vec![Line::from("Row render profiling"), Line::from("Render profiling is available in ordinary rsh sessions.")]);
+                                decor.selected = None;
+                            }
+                            wrote = true;
+                        }
                         Command::Help => {
                             list_return = None;
                             out.write_all(&decor.undo(&mirror))?;
@@ -1349,6 +1402,10 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
         if redraw_wanted.is_some() {
             flags |= FLAG_REDRAW;
         }
+        if let Some(viewport) = &out.viewport {
+            link.scroll = Some(viewport.request);
+            if link.scroll_at().is_some_and(|at| now >= at) { force_send = true; }
+        }
         let mut sent = false;
         while let Some((offset, data)) = tx.next_chunk(now) {
             let stream = client_stream(&rx, size, flags, offset, &data);
@@ -1494,7 +1551,7 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
 }
 
 fn client_stream<'a>(rx: &Receiver, size: (u16, u16), flags: u8, offset: u64, data: &'a [u8]) -> ClientStream<'a> {
-    ClientStream {
+    ClientStream { scroll: None,
         flags,
         cols: size.0,
         rows: size.1,
@@ -1572,6 +1629,9 @@ struct Paced<'a> {
     /// Pending bytes already parsed for a local input event, without an
     /// intermediate physical repaint of the live screen before scrolling.
     viewport_fed: usize,
+    view_status: Option<(u32, u64, proto::ScrollStatus)>,
+    view_received: (u32, u64),
+    painted: Instant,
     pending: Vec<u8>,
     tokens: f64,
     filled: Instant,
@@ -1627,13 +1687,31 @@ const SYNC_HOLD: Duration = Duration::from_millis(150);
 
 impl<'a> Paced<'a> {
     fn new(inner: &'a mut dyn Write, terminal: bool) -> Self {
-        Paced { inner, viewport: None, viewport_fed: 0, pending: Vec::new(), tokens: BURST, filled: Instant::now(), hold: false, sync_open: None, written_ground: true, ground: true, terminal, update: Vec::new(), behind: false, since: None, every: REFILL, arrived: None, clears: false, updates: false, remote_pending: false, frames: 0 }
+        Paced { inner, viewport: None, viewport_fed: 0, view_status: None, view_received: (0, 0), painted: Instant::now() - MIN_REFILL, pending: Vec::new(), tokens: BURST, filled: Instant::now(), hold: false, sync_open: None, written_ground: true, ground: true, terminal, update: Vec::new(), behind: false, since: None, every: REFILL, arrived: None, clears: false, updates: false, remote_pending: false, frames: 0 }
+    }
+
+    fn queue_view_status(&mut self, generation: u32, end: u64, status: proto::ScrollStatus) {
+        if let Some((gen, first, previous)) = &mut self.view_status {
+            if *gen == generation && *previous == status {
+                *first = (*first).min(end);
+                return;
+            }
+        }
+        self.view_status = Some((generation, end, status));
     }
 
     fn prepare_viewport(&mut self) {
         if let Some(viewport) = &mut self.viewport {
-            viewport.feed(&self.pending[self.viewport_fed..]);
+            if self.viewport_fed < self.pending.len() {
+                viewport.feed(&self.pending[self.viewport_fed..]);
+            }
             self.viewport_fed = self.pending.len();
+            if let Some((generation, end, status)) = self.view_status {
+                if self.view_received.0 == generation && self.view_received.1 >= end {
+                    viewport.status(status);
+                    self.view_status = None;
+                }
+            }
         }
     }
 
@@ -1659,13 +1737,21 @@ impl<'a> Paced<'a> {
         }
     }
 
+    fn scrolling(&self, now: Instant) -> bool {
+        self.viewport.as_ref().is_some_and(|v| v.interactive || v.scroll_until.is_some_and(|until| now < until))
+    }
+
     /// Writes what is gathered when a write is allowed.
     fn flush_paced(&mut self, now: Instant) -> io::Result<()> {
         self.refill(now);
-        // Local scrolling is independent of the network and the program's
-        // frame boundaries, in both directions, including returning live.
-        if self.viewport.as_ref().is_some_and(|viewport| viewport.interactive) {
-            return self.write_out(now);
+        // Scroll responses use the fast frame cadence in either direction.
+        // Bound physical writes even under a continuous wheel flood, and
+        // wait for the whole server frame before showing its difference.
+        if self.scrolling(now) {
+            if now >= self.painted + MIN_REFILL && !self.catching_up(now) {
+                return self.write_out(now);
+            }
+            return Ok(());
         }
         if self.sync_open.is_some_and(|at| now.duration_since(at) >= SYNC_HOLD) {
             self.end_sync()?;
@@ -1691,6 +1777,11 @@ impl<'a> Paced<'a> {
 
     /// When gathered output may go.
     fn due(&self) -> Option<Instant> {
+        if self.scrolling(self.filled) && (!self.pending.is_empty() || self.viewport.as_ref().is_some_and(|v| v.dirty)) {
+            let whole = self.since.filter(|_| self.behind).map(|at| at + self.catch_up());
+            let frame = self.painted + MIN_REFILL;
+            return Some(whole.map_or(frame, |at| frame.max(at)));
+        }
         let token = self.filled + self.every.mul_f64((1.0 - self.tokens).max(0.0));
         let rest = self.since.filter(|_| self.behind).map(|since| since + self.catch_up());
         let output = (!self.pending.is_empty()).then(|| rest.map_or(token, |rest| rest.max(token)));
@@ -1724,12 +1815,12 @@ impl<'a> Paced<'a> {
     }
 
     fn write_out(&mut self, now: Instant) -> io::Result<()> {
+        self.prepare_viewport();
         if self.pending.is_empty() && !self.viewport.as_ref().is_some_and(|viewport| viewport.dirty) {
             if !self.hold { self.end_sync()?; }
             return Ok(());
         }
         if let Some(viewport) = &mut self.viewport {
-            viewport.feed(&self.pending[self.viewport_fed..]);
             let hold = self.hold && !viewport.interactive;
             let mut update = std::mem::take(&mut self.update);
             update.clear();
@@ -1754,6 +1845,7 @@ impl<'a> Paced<'a> {
         } else {
             self.inner.write_all(&self.pending)?;
         }
+        self.painted = now;
         self.written_ground = self.viewport.is_some() || self.ground;
         if !self.hold || self.sync_open.is_some_and(|at| now.duration_since(at) >= SYNC_HOLD) {
             self.end_sync()?;
@@ -2179,6 +2271,7 @@ fn help_lines(key: u8, host: &str, label: &str, tmux: bool) -> Vec<Line<'static>
         format!("{k}m  rename the current session"),
         format!("{k},  settings (or {k} then Cmd+, if forwarded)"),
         format!("{k}r  repaint the screen from the server"),
+        format!("{k}p  toggle row profiling (green: moved; red: redrawn; gray: unchanged)"),
         format!("{k}h  this help"),
         format!("{k}{k}  send {k}"),
         String::new(),
@@ -2286,6 +2379,7 @@ mod tests {
                 Command::List => 'l',
                 Command::Rename => 'm',
                 Command::Settings => ',',
+                Command::Profile => 'p',
             })
             .collect()
     }
@@ -2443,15 +2537,29 @@ mod tests {
         let (_server, _) = listener.accept().unwrap();
         let now = Instant::now();
         let mut link = Link {
+        scroll: None, scroll_ack: 0, scroll_status_counter: None, scroll_sent: 0, scroll_sent_at: Instant::now() - proto::MIN_RTO,
             window: ReplayWindow::new(), wire, key: Key::from_token("test"), attach: 1,
             last_sent: now, owed: None, acked: (0, 0), arrivals: Vec::new(), clock: now, traffic: 0,
         };
+        let current = proto::ScrollStatus { serial: 7, offset: 0 };
+        assert_eq!(link.scroll_status(100, current), Some(current));
+        assert_eq!(link.scroll_status(99, proto::ScrollStatus { serial: 7, offset: 30 }), None,
+            "reordered history status must not resurrect a view cleared by newer output");
+        assert_eq!(link.scroll_ack, 7);
         link.send_packet(b"sent");
         assert_eq!(link.traffic, 4);
+        link.scroll = Some(proto::ScrollRequest { serial: 1, reset: 0, position: 3 });
+        link.arrivals = (0..ARRIVALS_MAX as u32).map(|n| (n, n * 100)).collect();
+        let data = vec![b'x'; proto::CHUNK];
+        let stream = client_stream(&Receiver::new(0), (80, 24), 0, 0, &data);
+        let before = link.traffic;
+        link.send(&stream, now);
+        assert!(link.traffic - before + 48 <= 1280, "scroll + input + feedback must fit the IPv6 minimum MTU");
+        let sent = link.traffic;
         link.wire.reset(now);
         assert!(link.wire.down());
         link.send_packet(b"dropped while disconnected");
-        assert_eq!(link.traffic, 4);
+        assert_eq!(link.traffic, sent);
     }
 
     #[test]
@@ -2482,6 +2590,45 @@ mod tests {
         paced.write_all(b"another header").unwrap();
         paced.flush().unwrap();
         assert_eq!(paced.frames, 1);
+    }
+
+    #[test]
+    fn scroll_status_waits_for_matching_generation_and_complete_screen_bytes() {
+        use std::{cell::RefCell, rc::Rc};
+        struct Sink(Rc<RefCell<Vec<u8>>>);
+        impl Write for Sink {
+            fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+                self.0.borrow_mut().extend_from_slice(bytes);
+                Ok(bytes.len())
+            }
+            fn flush(&mut self) -> io::Result<()> { Ok(()) }
+        }
+        let bytes = Rc::new(RefCell::new(Vec::new()));
+        let mut sink = Sink(Rc::clone(&bytes));
+        let mut out = Paced::new(&mut sink, true);
+        let mut view = Viewport::new((100, 12));
+        view.badge = " work:host ".into();
+        out.viewport = Some(view);
+        out.write_all(b"\x1b[2;1HOLD").unwrap();
+        out.flush().unwrap();
+        let mut screen = Terminal::with_size(100, 12);
+        screen.feed(&bytes.borrow());
+        bytes.borrow_mut().clear();
+        out.viewport.as_mut().unwrap().request = proto::ScrollRequest { serial: 1, reset: 0, position: 3 };
+        out.queue_view_status(7, 100, proto::ScrollStatus { serial: 1, offset: 3 });
+        out.view_received = (6, u64::MAX);
+        out.behind = true;
+        out.flush().unwrap();
+        assert!(bytes.borrow().is_empty(), "a new generation's empty ACK must not paint a new position over old rows");
+        out.view_received = (7, 99);
+        out.flush().unwrap();
+        assert!(bytes.borrow().is_empty(), "a frame with a missing final byte is not the announced view");
+        out.write_all(b"\x1b[2;1HNEW").unwrap();
+        out.view_received = (7, 100);
+        out.flush().unwrap();
+        screen.feed(&bytes.borrow());
+        assert!(screen.screen_line(0).contains("[scroll +3]"));
+        assert_eq!(screen.screen_line(1).trim_end(), "NEW");
     }
 
     #[test]
@@ -2670,6 +2817,16 @@ mod tests {
     }
 
     #[test]
+    fn render_profile_escape_is_consumed_locally_including_encoded_keys() {
+        let mut escape = Escape::new(Some(b'~'));
+        let mut remote = Vec::new();
+        assert!(matches!(escape.filter(b"~p", &mut remote).as_slice(), [Command::Profile]));
+        assert!(remote.is_empty());
+        assert!(matches!(escape.filter(b"~\x1b[112u", &mut remote).as_slice(), [Command::Profile]));
+        assert!(remote.is_empty());
+    }
+
+    #[test]
     fn completed_local_wheel_does_not_expire_an_armed_escape() {
         let mut view = Viewport::new((80, 5));
         let mut escape = Escape::new(Some(b'~'));
@@ -2687,40 +2844,33 @@ mod tests {
     }
 
     #[test]
-    fn local_scroll_in_both_directions_bypasses_remote_frame_waits() {
-        struct Capture(Arc<std::sync::Mutex<Vec<u8>>>);
-        impl Write for Capture {
-            fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
-                self.0.lock().unwrap().extend_from_slice(bytes);
-                Ok(bytes.len())
-            }
-            fn flush(&mut self) -> io::Result<()> { Ok(()) }
-        }
-        let bytes = Arc::new(std::sync::Mutex::new(Vec::new()));
-        let mut capture = Capture(bytes.clone());
-        let mut out = Paced::new(&mut capture, true);
+    fn server_scroll_frames_are_whole_and_fast_but_bounded() {
+        let mut screen = Vec::new();
+        let mut out = Paced::new(&mut screen, true);
         out.viewport = Some(Viewport::new((80, 5)));
-        out.hold = true;
-        for n in 0..30 { out.write_all(format!("line {n:02}\r\n").as_bytes()).unwrap(); }
-        out.flush().unwrap();
         let start = Instant::now();
-        // Neither direction may wait for a token, missing remote packets,
-        // or an application that has left synchronized output open.
-        for (wheel, expected) in [(b"\x1b[<64;3;4M".as_slice(), "line 23"), (b"\x1b[<65;3;4M".as_slice(), "line 26")] {
-            out.write_all(b"remote frame still arriving").unwrap();
-            out.prepare_viewport();
-            out.prepare_viewport();
-            assert!(out.viewport.as_mut().unwrap().input(wheel, false, start).is_empty());
-            out.behind = true;
+        out.painted = start - MIN_REFILL;
+        out.filled = start;
+        out.tokens = 0.0;
+        out.viewport.as_mut().unwrap().scroll_until = Some(start + Duration::from_secs(2));
+        let mut frames = 0;
+        for ms in 0..1000 {
+            out.write_all(format!("\x1b[1;1Hframe {ms:04}").as_bytes()).unwrap();
             out.updates = true;
-            out.tokens = 0.0;
-            out.filled = start;
-            out.flush_paced(start + Duration::from_millis(1)).unwrap();
-            let mut tty = Terminal::with_size(80, 6);
-            tty.feed(&bytes.lock().unwrap());
-            assert!(!tty.synchronized(), "scrolling must be visible in the same flush");
-            assert_eq!(tty.screen_line(1), expected);
+            out.behind = ms % 8 == 0;
+            out.flush_paced(start + Duration::from_millis(ms)).unwrap();
+            if out.pending.is_empty() { frames += 1; }
         }
+        assert!((120..=125).contains(&frames), "{frames} writes for 1000 wheel-rate updates");
+        eprintln!("1000 updates / second -> {frames} physical writes, latest frame visible after final 8ms interval");
+        out.behind = false;
+        out.flush_paced(start + Duration::from_millis(1008)).unwrap();
+        out.viewport = None; // Inspect before the normal detach restores the main screen.
+        drop(out);
+        let mut tty = Terminal::with_size(80, 5);
+        tty.feed(&screen);
+        assert_eq!(tty.screen_line(0), "frame 0999");
+        assert!(!tty.synchronized());
     }
 
     #[test]

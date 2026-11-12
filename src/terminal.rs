@@ -167,6 +167,37 @@ const MAX_SIMPLE_CSI: usize = 64;
 /// resistant, for comparing rows that are checked afterwards.
 struct RowHasher(u64);
 
+/// Contiguous rows that moved together, including identical blank/repeated
+/// rows between changed rows. Rank candidates by changed rows saved so a
+/// stationary blank area cannot displace a real scrolling block.
+/// Rows `a..b` take previous rows `a+k..b+k` (positive k moves up).
+/// Hashes only select a candidate; callers still compare/repaint its cells.
+pub(crate) fn scroll_change(current: &[u64], previous: &[u64]) -> Option<(isize, usize, usize)> {
+    if current.len() != previous.len() { return None; }
+    let rows = current.len();
+    let mut best = None;
+    let mut best_changed = 0;
+    for k in (1..rows as isize).flat_map(|k| [k, -k]) {
+        let mut start = None;
+        let mut changed = 0;
+        for i in 0..=rows {
+            let j = i as isize + k;
+            let same = i < rows && j >= 0 && (j as usize) < rows && current[i] == previous[j as usize];
+            if same {
+                start.get_or_insert(i);
+                changed += usize::from(current[i] != previous[i]);
+            } else if let Some(a) = start.take() {
+                if changed >= 2 && changed > best_changed {
+                    best = Some((k, a, i));
+                    best_changed = changed;
+                }
+                changed = 0;
+            }
+        }
+    }
+    best
+}
+
 impl std::hash::Hasher for RowHasher {
     fn finish(&self) -> u64 {
         self.0
@@ -231,8 +262,8 @@ impl Cell {
     }
 }
 
-/// Server and prediction mirrors only retain the title. The local viewport
-/// also captures query replies, since it is the terminal host for its body.
+/// Mirrors retain the title. A terminal host also captures query replies;
+/// the server answers them while a history view replaces the live screen.
 #[derive(Clone, Default)]
 struct Events {
     title: Arc<Mutex<String>>,
@@ -459,6 +490,18 @@ impl Terminal {
     /// Feeds `bytes` and returns how many of them end at a point where no
     /// escape sequence or UTF-8 character is half done.
     pub fn feed_to_ground(&mut self, bytes: &[u8]) -> usize {
+        self.feed_observed(bytes, |_, _| {})
+    }
+
+    /// Side effects see the same bounded, cancelled sequences as the grid
+    /// parser, so an unfinished OSC cannot grow a separate parser forever.
+    pub(crate) fn feed_with_effects(&mut self, bytes: &[u8], parser: &mut Parser, effects: &mut Effects) -> usize {
+        self.feed_observed(bytes, |chunk, cancel| {
+            if cancel { *parser = Parser::new(); } else { parser.advance(effects, chunk); }
+        })
+    }
+
+    fn feed_observed(&mut self, bytes: &[u8], mut observe: impl FnMut(&[u8], bool)) -> usize {
         let mut pass = std::mem::take(&mut self.pass);
         pass.reserve(bytes.len());
         let mut cut = 0;
@@ -534,7 +577,12 @@ impl Terminal {
             } else {
                 self.run += 1;
                 if self.run > MAX_SEQUENCE {
-                    // Too long: cancel it in both parsers and skip the rest.
+                    // VTE dispatches an OSC even on CAN. Drop the unfinished
+                    // parser state first, so truncation cannot execute it.
+                    observe(&pass, false);
+                    self.flush(&mut pass);
+                    observe(&[], true);
+                    self.parser = Processor::new();
                     self.step(0x18, &mut pass);
                     self.skip = Skip::In;
                     self.ground = false;
@@ -543,6 +591,7 @@ impl Terminal {
             }
             if self.probe_soft_reset {
                 self.probe_soft_reset = false;
+                observe(&pass, false);
                 self.flush(&mut pass);
                 let mut handler = Tracked {
                     term: self.term.get_mut(),
@@ -551,6 +600,7 @@ impl Terminal {
                 handler.soft_reset();
             }
         }
+        observe(&pass, false);
         self.flush(&mut pass);
         self.pass = pass;
         if std::mem::take(&mut self.extra.history_cleared) {
@@ -608,16 +658,43 @@ impl Terminal {
     }
 
     /// A local terminal host answers queries itself instead of asking the
-    /// physical terminal, whose cursor includes rsh's reserved header row.
+    /// physical terminal, whose cursor can temporarily point at an overlay.
     pub(crate) fn capture_events(&mut self) {
         *self.events.captured.lock().unwrap() = Some(Vec::new());
+    }
+
+    pub(crate) fn stop_capture(&mut self) {
+        *self.events.captured.lock().unwrap() = None;
     }
 
     pub(crate) fn take_events(&self) -> Vec<Event> {
         self.events.captured.lock().unwrap().as_mut().map(std::mem::take).unwrap_or_default()
     }
 
+    /// Restore only compacted history rows into the existing grid. The live
+    /// parser, saved cursor, tab stops and mode stacks must stay untouched.
+    pub(crate) fn restore_history(&mut self) {
+        if self.kept.is_empty() || self.alt_screen() { return; }
+        let over = self.kept_over();
+        let count = self.kept.len() - over;
+        let mut row = Self::with_history(self.size.0, 1, 0);
+        row.feed(b"\x1b[?7l");
+        let term = self.term.get_mut();
+        let grid = term.grid_mut();
+        let total = grid.history_size() + count;
+        grid.update_history(total);
+        grid.initialize_all();
+        grid.update_history(self.history);
+        for (index, line) in self.kept.iter().skip(over).enumerate() {
+            row.feed(b"\x1b[H\x1b[0m\x1b[2K");
+            row.feed(line.as_bytes());
+            grid[Line(index as i32 - total as i32)] = row.term.borrow().grid()[Line(0)].clone();
+        }
+        self.kept.clear();
+    }
+
     pub(crate) fn scroll_display(&mut self, lines: i32) {
+        if lines > 0 { self.restore_history(); }
         self.term.get_mut().scroll_display(alacritty_terminal::grid::Scroll::Delta(lines));
     }
 
@@ -675,6 +752,32 @@ impl Terminal {
         }).collect()
     }
 
+    /// Diagnostic background only: leave the application grid unchanged.
+    pub(crate) fn render_profiled_row(&self, row: usize, background: u8) -> Vec<u8> {
+        let term = self.term.borrow();
+        let grid = term.grid();
+        let mut line = grid[Line(row as i32 - grid.display_offset() as i32)].clone();
+        for col in 0..term.columns() {
+            line[Column(col)].bg = AnsiColor::Indexed(background);
+            line[Column(col)].flags.remove(Flags::INVERSE);
+        }
+        let mut out = String::new();
+        render_row(&mut out, &line, term.columns());
+        out.into_bytes()
+    }
+
+    /// Copy-mode screen without transferring any history to the client.
+    pub(crate) fn render_view(&self) -> Vec<u8> {
+        let mut out = String::from("\x18\x1b[?2026h\x1b[0m\x1b(B\x0f\x1b[r\x1b[?6l\x1b[?7l\x1b[4l\x1b[?1049l\x1b[H\x1b[2J");
+        for (row, bytes) in self.display_rows().iter().enumerate() {
+            let _ = write!(out, "\x1b[{};1H", row + 1);
+            out.push_str(&String::from_utf8_lossy(bytes));
+        }
+        self.render_modes(&mut out);
+        out.push_str("\x1b[r\x1b[?6l\x1b[?25l\x1b[?2026l");
+        out.into_bytes()
+    }
+
     /// Input modes for a physical terminal owned by the client. Drawing is
     /// absolute and never inherits the program's origin/insert/wrap modes.
     pub(crate) fn display_modes(&self, pixel_mouse: bool) -> Vec<u8> {
@@ -689,13 +792,15 @@ impl Terminal {
         }
         out.push_str(if mode.contains(TermMode::APP_KEYPAD) { "\x1b=" } else { "\x1b>" });
         let _ = write!(out, "\x1b[={}u\x1b[>4;{}m\x1b[{} q", self.kitty_flags(), self.extra.modify_other_keys.unwrap_or(0), self.extra.cursor_style);
-        // SGR cell coordinates let the client subtract its header row and
-        // catch wheel events even when the remote shell does not use a mouse.
+        // SGR coordinates match the full application screen. Tracking lets
+        // the client catch wheel events even when the shell uses no mouse.
         out.push_str("\x1b[?1000l\x1b[?1002l\x1b[?1003l");
         let tracking = if mode.contains(TermMode::MOUSE_MOTION) { 1003 } else if mode.contains(TermMode::MOUSE_DRAG) { 1002 } else { 1000 };
         let _ = write!(out, "\x1b[?{tracking}h");
-        out.push_str("\x1b[?1006h\x1b[?1005l\x1b[?1015l\x1b[?1007l");
-        let _ = write!(out, "\x1b[?1016{}", if pixel_mouse { 'h' } else { 'l' });
+        // Ghostty resets to X10 when ANY encoding is disabled. Reset the
+        // alternatives first, then enable the chosen encoding last.
+        out.push_str("\x1b[?1005l\x1b[?1006l\x1b[?1015l\x1b[?1016l\x1b[?1007l");
+        let _ = write!(out, "\x1b[?{}h", if pixel_mouse { 1016 } else { 1006 });
         out.into_bytes()
     }
 
@@ -758,7 +863,7 @@ impl Terminal {
     pub fn trim(&mut self) -> bool {
         self.pass = Vec::new();
         let term = self.term.get_mut();
-        if term.mode().contains(TermMode::ALT_SCREEN) {
+        if term.mode().contains(TermMode::ALT_SCREEN) || term.grid().display_offset() > 0 {
             return false;
         }
         let history = term.grid().history_size();
@@ -1009,7 +1114,27 @@ impl Terminal {
             && self.scroll_region() == other.scroll_region()
             && self.modes_text() == other.modes_text()
             && self.title().chars().take(1024).eq(other.title().chars().take(1024))
-            && self.rows() == other.rows()
+            && self.same_rows(other)
+    }
+
+    /// The state a managed viewer needs. Hidden cursor/pen/region changes
+    /// stay on the server; the next visible update restores their latest
+    /// values before any later text is drawn.
+    pub(crate) fn same_view(&self, other: &Terminal) -> bool {
+        self.size() == other.size()
+            && self.alt_screen() == other.alt_screen()
+            && (!self.cursor_visible() || self.cursor() == other.cursor())
+            && self.modes_text() == other.modes_text()
+            && self.title().chars().take(1024).eq(other.title().chars().take(1024))
+            && self.same_rows(other)
+    }
+
+    fn same_rows(&self, other: &Terminal) -> bool {
+        let (now, was) = (self.term.borrow(), other.term.borrow());
+        (0..now.screen_lines()).all(|row| {
+            let (now, was) = (&now.grid()[Line(row as i32)], &was.grid()[Line(row as i32)]);
+            (0..usize::from(self.size.0.max(2))).all(|col| Cell::of(&now[Column(col)]) == Cell::of(&was[Column(col)]))
+        })
     }
 
     /// Bytes that turn `prev` (the screen a terminal shows) into this one:
@@ -1046,26 +1171,7 @@ impl Terminal {
         // non-ASCII cells wider than here (`WIDE_RUN`) must not wrap or
         // scroll with it at the right edge.
         let mut out = String::from("\x18\x1b[?2026h\x1b[0m\x1b(B\x0f\x1b[?6l\x1b[4l\x1b[?7l");
-        // The longest run of rows that moved together by k (up when k > 0).
-        let mut best: Option<(isize, usize, usize)> = None;
-        for k in (1..rows as isize).flat_map(|k| [k, -k]) {
-            let mut start = None;
-            for i in 0..=rows {
-                let j = i as isize + k;
-                let same = i < rows && j >= 0 && (j as usize) < rows && hc[i] == ho[j as usize] && hc[i] != ho[i];
-                match (same, start) {
-                    (true, None) => start = Some(i),
-                    (false, Some(a)) => {
-                        if i - a >= 2 && best.is_none_or(|(_, ba, bb)| i - a > bb - ba) {
-                            best = Some((k, a, i));
-                        }
-                        start = None;
-                    }
-                    _ => {}
-                }
-            }
-        }
-        if let Some((k, a, b)) = best {
+        if let Some((k, a, b)) = scroll_change(&hc, &ho) {
             // Rows a..b take old rows a+k..b+k: scroll the region they span.
             let (top, bottom) = if k > 0 { (a, b - 1 + k as usize) } else { ((a as isize + k) as usize, b - 1) };
             let n = k.unsigned_abs();
@@ -1742,6 +1848,38 @@ fn printable_char(bytes: &[u8]) -> Option<usize> {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn scrolling_spans_identical_rows_but_does_not_move_static_blank_areas() {
+        assert_eq!(scroll_change(&[0, 3, 0, 4, 0, 5], &[0, 2, 0, 3, 0, 4]), Some((2, 0, 4)));
+        assert_eq!(scroll_change(&[0; 20], &[0; 20]), None);
+        let mut old = vec![0; 30]; let mut next = old.clone();
+        old[22..26].copy_from_slice(&[1, 2, 3, 4]);
+        next[21..25].copy_from_slice(&[1, 2, 3, 4]);
+        let (offset, start, end) = scroll_change(&next, &old).unwrap();
+        assert_eq!(offset, 1);
+        assert!(start <= 21 && end >= 25, "a large stationary blank region must not win over real movement");
+    }
+
+    #[test]
+    fn restoring_compacted_rows_preserves_saved_cursor_tabs_and_partial_sequences() {
+        let mut compacted = Terminal::with_size(80, 12);
+        let mut untouched = Terminal::with_size(80, 12);
+        for term in [&mut compacted, &mut untouched] {
+            for n in 0..400 { term.feed(format!("line {n}\r\n").as_bytes()); }
+            term.feed(b"\x1b[3g\x1b[2;20H\x1bH\x1b7\x1b[7;2H\x1b]2;partial");
+        }
+        compacted.trim();
+        compacted.scroll_display(300);
+        compacted.scroll_display(i32::MIN);
+        for term in [&mut compacted, &mut untouched] {
+            term.feed(b"-title\x07\x1b8X\r\tY");
+        }
+        assert!(compacted.same_screen(&untouched));
+        assert_eq!(compacted.title(), "partial-title");
+        assert_eq!(compacted.cursor(), untouched.cursor());
+        assert_eq!(compacted.scrollback_len(), untouched.scrollback_len());
+    }
+
     /// A CSI of digits and separators skips the probe (`simple_csi`) only
     /// when it is all there: fed at once and a byte at a time (where it
     /// never is), output leaves the same screen, ground, synchronized
@@ -2309,5 +2447,75 @@ mod tests {
         // A switch to the alternate screen is not bridged.
         b.feed(b"\x1b[?1049h");
         assert!(b.diff_from(&a).is_none());
+    }
+}
+
+#[derive(Default)]
+pub(crate) struct Effects {
+    pub bytes: Vec<u8>,
+    /// Managed server views carry titles in their screen diff and forward
+    /// physical size queries for the client to answer with real cell sizes.
+    pub suppress_titles: bool,
+    pub relay_size_queries: bool,
+    pub icon_title: Option<Vec<u8>>,
+}
+
+impl Perform for Effects {
+    fn execute(&mut self, byte: u8) {
+        if byte == 7 {
+            self.bytes.push(byte);
+        }
+    }
+
+    fn osc_dispatch(&mut self, params: &[&[u8]], bell: bool) {
+        if params.first() == Some(&b"8".as_slice())
+            || self.suppress_titles && params.first() == Some(&b"2".as_slice())
+        {
+            return;
+        }
+        let icon = self.suppress_titles && matches!(params.first().copied(), Some(b"0" | b"1"));
+        if icon {
+            let title = params[1..].join(&b';');
+            if self.icon_title.as_ref() == Some(&title) { return; }
+            self.icon_title = Some(title);
+        }
+        self.bytes.extend_from_slice(b"\x1b]");
+        for (index, param) in params.iter().enumerate() {
+            if index > 0 {
+                self.bytes.push(b';');
+            }
+            // OSC 0 updates both titles. The screen diff carries the window
+            // title; preserve its separate icon effect as OSC 1 only on change.
+            self.bytes.extend_from_slice(if icon && index == 0 { b"1" } else { param });
+        }
+        self.bytes
+            .extend_from_slice(if bell { b"\x07" } else { b"\x1b\\" });
+    }
+
+    fn csi_dispatch(&mut self, params: &Params, intermediates: &[u8], _: bool, action: char) {
+        // Preserve window operations other than size queries, answered above.
+        if action != 't'
+            || !intermediates.is_empty()
+            || !self.relay_size_queries && params
+                .iter()
+                .next()
+                .is_some_and(|p| matches!(p, [14] | [18]))
+        {
+            return;
+        }
+        let mut sequence = String::from("\x1b[");
+        for (index, param) in params.iter().enumerate() {
+            if index > 0 {
+                sequence.push(';');
+            }
+            for (sub, value) in param.iter().enumerate() {
+                if sub > 0 {
+                    sequence.push(':');
+                }
+                let _ = write!(sequence, "{value}");
+            }
+        }
+        sequence.push(action);
+        self.bytes.extend_from_slice(sequence.as_bytes());
     }
 }

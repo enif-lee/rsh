@@ -109,6 +109,7 @@ Type these keys at the start of a line:
 | `~l` | Open the session list; `m` renames the selected session |
 | `~m` | Rename the current rsh or tmux session |
 | `~,` | Open settings; arrows navigate and change values, Enter activates |
+| `~p` | Toggle row render profiling (ordinary sessions) |
 | `~r` | Request a repaint |
 | `~h` | Show escape-key help |
 | `~~` | Send a literal tilde |
@@ -138,17 +139,49 @@ In `~l`, completing or cancelling rename returns to the session list; a
 successful rename refreshes it and keeps the renamed row selected. `~m`
 returns directly to the session after renaming.
 
-Ordinary interactive sessions reserve the first row for a fixed header.
-rsh keeps the last 1000 body lines locally and handles mouse-wheel scrolling
-and Shift+PageUp / Shift+PageDown. While viewing history, PageUp / PageDown
-also work; Esc or typing returns to the live screen. New output keeps the
+Ordinary interactive sessions use the full terminal size. The header overlays
+only the upper-right portion of the first row and hides when the cursor
+reaches it. Its underlying text is restored before scrolling or repainting,
+so the header never becomes part of the body or server history.
+The server keeps the last 1000 body lines. Mouse-wheel scrolling and
+Shift+PageUp / Shift+PageDown select a view of that server history; the
+client retains only the visible screen and previous frame for rendering.
+While viewing history, PageUp / PageDown also work; Esc or typing returns to the live screen. New output keeps the
 history view anchored. Hold Shift while dragging to use the terminal app's
 text selection. The client uses the alternate screen and restores the local
 screen on detach or exit. tmux attachments keep their existing rendering and
 tmux copy-mode scrolling.
 
-Local scrolling in either direction redraws immediately, independently of
-network catch-up, output pacing and a remote program's synchronized frame.
+Consecutive scroll requests are combined at an 8 ms frame interval; only
+the latest requested position is rendered, with bounded output in flight.
+Ordinary interactive sessions use the same server-side row comparison for
+live output: only changed spans and reusable row movements are sent. Repeated
+draws of identical rows do not send screen data, including hidden cursor
+movement and repeated window titles. Input modes, visible cursor changes,
+bell, clipboard and terminal queries still work. Pipes retain the original
+output bytes. The server keeps unfinished sequences and hidden drawing state
+until they affect a later frame; synchronized frames have a bounded hold.
+Scroll responses and TUI wheel output use the same fast cadence in either
+direction and wait for whole frames. History scrolling requires a network
+round trip and a server with scrolling support; update older servers before
+attaching an ordinary interactive client.
+The client compares consecutive visible frames to detect row movement in
+either direction, including a TUI transcript between a fixed title and input
+area. When it reduces output bytes, it scrolls only that body region and
+repaints the remaining changed rows. Detection uses frame contents rather
+than wheel events or history offsets; resizing forces a fresh render.
+
+Use `rsh --profile-render <host> [name]`, or type `~p` at the start of a
+line during an ordinary session, to visualize the client's body row diff
+(excluding header restoration and the diagnostic overlay's own writes):
+**green** rows moved and were reused, **red** rows were reprinted, and
+**gray** rows stayed unchanged. A partially edited row is also red because
+the renderer reprints that row. `[profile]` marks the mode in the header.
+The diagnostic backgrounds leave the application and server history intact;
+toggling off restores original colors. Diagnostic colors follow reused rows
+and repaint only when needed. They still add drawing work, so disable
+profiling when measuring render time or throughput.
+It is unavailable for tmux attachments and noninteractive output.
 
 The local viewport renders text cells, colors and hyperlinks. Inline bitmap
 graphics protocols such as Kitty graphics and sixel are not supported by
@@ -203,8 +236,8 @@ flushes containing remote output (an idle screen shows 0), latency is a
 ping round trip (`--ms` until the first reply), and KB/s is combined RX + TX
 encrypted packet bytes using decimal KB, excluding transport headers. While
 enabled, one ping per second measures latency even without typing. The
-header is hidden when the terminal is too narrow. For tmux attachments,
-the overlaid header also hides when it would cover the top-row cursor.
+overlaid header hides when the terminal is too narrow or when it would
+cover the top-row cursor.
 
 The `~,` settings window shows the version, host, session, peer and config
 path. Its **Session** scope changes clipboard reads, local echo prediction
@@ -254,8 +287,8 @@ flowchart LR
   when recent packet-pair measurements are unavailable.
 - **Rendering:** the client combines output into synchronized terminal
   updates and provides adaptive local echo prediction. Ordinary interactive
-  sessions render through a local terminal model with a separate header and
-  scrollable body; tmux attachments and noninteractive output retain the
+  sessions render through a local terminal model with a header overlay and
+  a body filling the terminal; tmux attachments and noninteractive output retain the
   byte-stream rendering path.
 - **Resources:** UDP sessions share a server process and socket. Quiet
   terminal history and buffers are compacted, and idle keepalives slow

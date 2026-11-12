@@ -124,6 +124,7 @@ keys in a session (typed at the start of a line, as in ssh)
   ~m             rename the current rsh or tmux session
   ~,             settings; arrows move/change, Enter activates, Esc closes
                  also ~ then Cmd+, when the terminal forwards CSI 44;9u
+  ~p             toggle row profiling (green moved, red redrawn, gray unchanged)
   ~r             repaint the screen from the server
   ~h             these keys
   ~~             send ~
@@ -177,6 +178,7 @@ struct Options {
     tmux: bool,
     /// `--compress`, over `compress` in the config.
     compress: Option<crate::config::Compress>,
+    profile_render: bool,
 }
 
 /// `rsh test` settings.
@@ -233,6 +235,9 @@ struct Cli {
     /// far links), none; over `compress` in ~/.rsh/config.yaml (always)
     #[arg(long, value_name = "MODE", value_parser = parse_compress)]
     compress: Option<crate::config::Compress>,
+    /// Color row reuse/repaints in ordinary interactive sessions (~p toggles)
+    #[arg(long, conflicts_with = "tmux")]
+    profile_render: bool,
     /// Forward a local port to host:port as seen from the server
     #[arg(short = 'L', value_name = "[bind:]port:host:port", value_parser = Spec::parse)]
     local: Vec<Spec>,
@@ -428,6 +433,7 @@ impl Options {
             attach_id: None,
             tmux: cli.tmux,
             compress: cli.compress,
+            profile_render: cli.profile_render,
         })
     }
 }
@@ -930,6 +936,7 @@ fn can_update(server: &crate::version::Remote) -> bool {
 fn connect_host(host: &str, opts: &Options, keys: &mut Keys, stdout: &mut dyn Write, tty: bool) -> Result<i32, String> {
     // Before anything is done on the host: a setting meant to be off is not
     // found wrong only after onboarding.
+    if opts.profile_render && !tty { return Err("--profile-render requires an interactive terminal".into()); }
     let config = crate::config::Config::load(&home().join(".rsh").join("config.yaml"))?;
     let mut store = load_store(&opts.auth)?;
     // With an explicit --peer the user manages the server; without one the
@@ -1117,9 +1124,9 @@ fn attach(
             None if first => opts.run.clone(),
             None => Vec::new(),
         };
-        let remote_size = if tty && tmux.is_none() { client::body_size(size) } else { size };
-        let mut hello = net::new_hello_forwarding(&host, action.clone(), remote_size, &run, &remote);
+        let mut hello = net::new_hello_forwarding(&host, action.clone(), size, &run, &remote);
         if tty && tmux.is_none() {
+            hello.features |= crate::proto::FEATURE_SCROLL;
             // Programs talk to rsh's cell-based terminal, not directly to
             // the outer emulator and its graphics-specific capabilities.
             hello.env.retain(|value| !value.starts_with("TERM=") && !value.starts_with("TERM_PROGRAM="));
@@ -1205,6 +1212,7 @@ fn attach(
                 tmux: tmux.clone(),
                 clipboard_read: config.clipboard_read,
                 show_stats: config.show_stats,
+                profile_render: opts.profile_render,
                 controls: Some(controls.clone()),
             },
         )
@@ -2295,6 +2303,8 @@ mod tests {
         for command in ["<HOST>", "ls", "kill", "serve", "bootstrap", "--name", "--auth", "--peer", "--bind", "~.", "kept until they exit"] {
             assert!(text.contains(command), "{command} in {text}");
         }
+        assert!(Options::parse(&args(&["--profile-render", "host"])).unwrap().profile_render);
+        assert!(Options::parse(&args(&["--profile-render", "--tmux", "host"])).is_err());
         let opts = Options::parse(&args(&["host", "--name", "x", "--", "ls", "-l"])).unwrap();
         assert_eq!(opts.host.as_deref(), Some("host"));
         assert_eq!(opts.run, args(&["ls", "-l"]));
