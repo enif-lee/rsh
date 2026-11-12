@@ -231,15 +231,19 @@ impl Cell {
     }
 }
 
-/// What alacritty reports through events: only the title matters here;
-/// replies to queries are the user's terminal's to send.
+/// Server and prediction mirrors only retain the title. The local viewport
+/// also captures query replies, since it is the terminal host for its body.
 #[derive(Clone, Default)]
 struct Events {
     title: Arc<Mutex<String>>,
+    captured: Arc<Mutex<Option<Vec<Event>>>>,
 }
 
 impl EventListener for Events {
     fn send_event(&self, event: Event) {
+        if let Some(events) = &mut *self.captured.lock().unwrap() {
+            events.push(event.clone());
+        }
         let title = match event {
             Event::Title(title) => title,
             Event::ResetTitle => String::new(),
@@ -601,6 +605,98 @@ impl Terminal {
 
     pub fn title(&self) -> String {
         self.events.title.lock().map(|title| title.clone()).unwrap_or_default()
+    }
+
+    /// A local terminal host answers queries itself instead of asking the
+    /// physical terminal, whose cursor includes rsh's reserved header row.
+    pub(crate) fn capture_events(&mut self) {
+        *self.events.captured.lock().unwrap() = Some(Vec::new());
+    }
+
+    pub(crate) fn take_events(&self) -> Vec<Event> {
+        self.events.captured.lock().unwrap().as_mut().map(std::mem::take).unwrap_or_default()
+    }
+
+    pub(crate) fn scroll_display(&mut self, lines: i32) {
+        self.term.get_mut().scroll_display(alacritty_terminal::grid::Scroll::Delta(lines));
+    }
+
+    pub(crate) fn display_offset(&self) -> usize {
+        self.term.borrow().grid().display_offset()
+    }
+
+    pub(crate) fn mouse_mode(&self) -> bool {
+        self.mode().intersects(TermMode::MOUSE_MODE)
+    }
+
+    pub(crate) fn sgr_mouse(&self) -> bool {
+        self.mode().contains(TermMode::SGR_MOUSE)
+    }
+
+    pub(crate) fn pixel_mouse(&self) -> bool {
+        self.extra.modes.contains(&1016)
+    }
+
+    pub(crate) fn application_cursor(&self) -> bool {
+        self.mode().contains(TermMode::APP_CURSOR)
+    }
+
+    pub(crate) fn mouse_report(&self, button: u16, x: u16, y: u16, released: bool) -> Vec<u8> {
+        if self.sgr_mouse() || self.pixel_mouse() {
+            return format!("\x1b[<{button};{x};{y}{}", if released { 'm' } else { 'M' }).into_bytes();
+        }
+        let button = if released { 3 | button & 28 } else { button };
+        if self.extra.modes.contains(&1015) {
+            return format!("\x1b[{};{x};{y}M", button + 32).into_bytes();
+        }
+        if self.mode().contains(TermMode::UTF8_MOUSE) {
+            let mut out = String::from("\x1b[M");
+            for value in [button, x, y] {
+                let Some(c) = char::from_u32(u32::from(value) + 32) else { return Vec::new(); };
+                out.push(c);
+            }
+            return out.into_bytes();
+        }
+        if x < 224 && y < 224 && button < 224 {
+            vec![0x1b, b'[', b'M', button as u8 + 32, x as u8 + 32, y as u8 + 32]
+        } else { Vec::new() }
+    }
+
+    /// Visible rows of the local viewport, with their colors and links.
+    /// Grid display_offset anchors a scrolled view as new output arrives.
+    pub(crate) fn display_rows(&self) -> Vec<Vec<u8>> {
+        let term = self.term.borrow();
+        let grid = term.grid();
+        let offset = grid.display_offset() as i32;
+        (0..grid.screen_lines()).map(|row| {
+            let mut bytes = String::new();
+            render_row(&mut bytes, &grid[Line(row as i32 - offset)], term.columns());
+            bytes.into_bytes()
+        }).collect()
+    }
+
+    /// Input modes for a physical terminal owned by the client. Drawing is
+    /// absolute and never inherits the program's origin/insert/wrap modes.
+    pub(crate) fn display_modes(&self, pixel_mouse: bool) -> Vec<u8> {
+        let mut out = String::new();
+        let mode = self.mode();
+        for (flag, number) in [
+            (TermMode::APP_CURSOR, 1),
+            (TermMode::FOCUS_IN_OUT, 1004),
+            (TermMode::BRACKETED_PASTE, 2004),
+        ] {
+            let _ = write!(out, "\x1b[?{number}{}", if mode.contains(flag) { 'h' } else { 'l' });
+        }
+        out.push_str(if mode.contains(TermMode::APP_KEYPAD) { "\x1b=" } else { "\x1b>" });
+        let _ = write!(out, "\x1b[={}u\x1b[>4;{}m\x1b[{} q", self.kitty_flags(), self.extra.modify_other_keys.unwrap_or(0), self.extra.cursor_style);
+        // SGR cell coordinates let the client subtract its header row and
+        // catch wheel events even when the remote shell does not use a mouse.
+        out.push_str("\x1b[?1000l\x1b[?1002l\x1b[?1003l");
+        let tracking = if mode.contains(TermMode::MOUSE_MOTION) { 1003 } else if mode.contains(TermMode::MOUSE_DRAG) { 1002 } else { 1000 };
+        let _ = write!(out, "\x1b[?{tracking}h");
+        out.push_str("\x1b[?1006h\x1b[?1005l\x1b[?1015l\x1b[?1007l");
+        let _ = write!(out, "\x1b[?1016{}", if pixel_mouse { 'h' } else { 'l' });
+        out.into_bytes()
     }
 
     fn mode(&self) -> TermMode {

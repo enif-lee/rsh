@@ -9,11 +9,20 @@ use crate::predict::{Mode, Predictor};
 use crate::pty::RawTerm;
 use crate::terminal::Terminal;
 use crate::wire::Wire;
+use ratatui::text::{Line, Span};
 use std::io::{self, Write};
 use std::net::SocketAddr;
 use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
+
+mod viewport;
+use viewport::Viewport;
+
+/// Interactive ordinary sessions reserve the first physical row for rsh.
+pub(crate) fn body_size(size: (u16, u16)) -> (u16, u16) {
+    (size.0, size.1.saturating_sub(1).max(1))
+}
 
 /// Keepalive interval while nothing else is sent.
 pub const HEARTBEAT: Duration = Duration::from_secs(1);
@@ -63,8 +72,9 @@ fn request_listing(lister: Lister) -> std::sync::mpsc::Receiver<Vec<ListRow>> {
     receive
 }
 
-fn session_list_lines(rows: &[ListRow]) -> Vec<String> {
-    let mut lines = vec!["rsh sessions (m rename)".to_string(), String::new()];
+fn session_list_lines(rows: &[ListRow]) -> Vec<Line<'static>> {
+    use ratatui::style::Stylize;
+    let mut lines = vec![Line::from("rsh sessions (m rename)").cyan().bold(), Line::default()];
     lines.extend(rows.iter().map(|row| row.text.clone()));
     lines
 }
@@ -73,7 +83,7 @@ fn session_list_lines(rows: &[ListRow]) -> Vec<String> {
 /// to it.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ListRow {
-    pub text: String,
+    pub text: Line<'static>,
     pub target: Option<Target>,
 }
 
@@ -156,6 +166,7 @@ pub struct Options<'a> {
     /// OSC 52 clipboard reads reach the terminal (`clipboard_read` in
     /// `~/.rsh/config.yaml`).
     pub clipboard_read: bool,
+    pub show_stats: bool,
     pub controls: Option<crate::session_ui::Controls>,
 }
 
@@ -599,6 +610,7 @@ struct Link {
     /// (microseconds since `clock`), for the server's path model.
     arrivals: Vec<(u32, u32)>,
     clock: Instant,
+    traffic: u64,
 }
 
 impl Link {
@@ -615,10 +627,18 @@ impl Link {
         };
         let stream = ClientStream { feedback: &report, ..stream.clone() };
         let bytes = proto::seal(&self.key, Dir::ToServer, KIND_STREAM, self.attach, &stream.encode());
-        let _ = self.wire.send(&bytes);
+        self.send_packet(&bytes);
         self.last_sent = now;
         self.owed = None;
         self.acked = (stream.out_gen, stream.out_ack);
+    }
+
+    fn send_packet(&mut self, bytes: &[u8]) {
+        // TCP deliberately drops packets while reconnecting and still returns
+        // Ok; do not report those (or a queue rejected by a broken connection).
+        if !self.wire.down() && self.wire.send(bytes).is_ok() && !self.wire.down() {
+            self.traffic += bytes.len() as u64;
+        }
     }
 
     fn micros(&self, at: Instant) -> u32 {
@@ -650,11 +670,20 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
         acked: (0, 0),
         arrivals: Vec::new(),
         clock: start,
+        traffic: 0,
     };
-    let mut ping: Option<[u8; 24]> = None;
-    let mut last_ping = start;
+    let mut ping: Option<([u8; 24], Instant)> = None;
+    let mut last_ping = start - HEARTBEAT;
+    let mut stats = HeaderStats::new(start, 0, 0);
     let tty = matches!(input, Input::Tty(_));
-    let mut size = opts.size;
+    let managed = tty && opts.tmux.is_none();
+    let mut physical_size = opts.size;
+    let mut size = if managed { body_size(opts.size) } else { opts.size };
+    if managed {
+        let mut viewport = Viewport::new(size);
+        viewport.header_rows = physical_size.1.saturating_sub(size.1);
+        out.viewport = Some(viewport);
+    }
     let mut mirror = Terminal::with_history(size.0, size.1, 0);
     // Input stays resent on its timeout over TCP too: the server takes only
     // what the pty has room for and drops the rest of a datagram.
@@ -663,7 +692,7 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
     let mut escape = Escape::new(if tty { opts.escape } else { None });
     let host = attached.host.rsplit('@').next().unwrap_or(&attached.host);
     let mut decor = Decor {
-        badge: tty.then(|| format!(" {}:{host} ", crate::cli::printable(&attached.label))),
+        badge: (tty && !managed).then(|| format!(" {}:{host} ", crate::cli::printable(&attached.label))),
         armed: false,
         selected: None,
         window: None,
@@ -720,6 +749,22 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
     loop {
         let now = Instant::now();
         let mut wait = wake.heartbeat(now).saturating_sub(now.duration_since(link.last_sent));
+        if let Some(viewport) = &mut out.viewport {
+            if !viewport.replies.is_empty() {
+                let replies = std::mem::take(&mut viewport.replies);
+                if tx.pending() + replies.len() <= INPUT_BACKLOG { tx.push(&replies); }
+                wait = Duration::ZERO;
+            }
+            if let Some(deadline) = viewport.input_deadline() {
+                wait = wait.min(deadline.saturating_duration_since(now));
+            }
+        }
+        if tty && opts.show_stats {
+            wait = wait.min((stats.since + HEARTBEAT).saturating_duration_since(now));
+        }
+        if let Some(since) = sync_since.filter(|_| out.hold) {
+            wait = wait.min((since + SYNC_HOLD).saturating_duration_since(now));
+        }
         if let Some(due) = out.due() {
             wait = wait.min(due.saturating_duration_since(now));
         }
@@ -774,8 +819,11 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
             return Ok(Outcome::Detached);
         }
         if tty && WINCH.swap(false, Ordering::Relaxed) {
-            let next = crate::pty::window_size(stdin_fd.unwrap_or(0));
-            if next != size {
+            let physical = crate::pty::window_size(stdin_fd.unwrap_or(0));
+            let next = if managed { body_size(physical) } else { physical };
+            if next != size || managed && physical != physical_size {
+                if managed { out.prepare_viewport(); }
+                physical_size = physical;
                 size = next;
                 // The terminal moved what rsh drew; a repaint clears it.
                 if !decor.drawn.is_empty() {
@@ -783,7 +831,16 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                     redraw_wanted = Some(rx.gen);
                 }
                 mirror.resize(size.0, size.1);
+                if let Some(viewport) = &mut out.viewport {
+                    viewport.header_rows = physical_size.1.saturating_sub(size.1);
+                    viewport.resize(size);
+                    redraw_wanted = Some(rx.gen);
+                }
                 force_send = true;
+            } else if let Some(viewport) = &mut out.viewport {
+                // A font/pixel-size change can leave the row/column count
+                // unchanged while changing the pixel height of the header.
+                viewport.refresh_cell_size();
             }
         }
         if CONT.swap(false, Ordering::Relaxed) {
@@ -801,6 +858,7 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
             tx.rewind();
         }
         while let Some((n, arrived)) = link.wire.recv(&mut buf) {
+            link.traffic += n as u64;
             if proto::peek(&buf[..n]).is_some_and(|(kind, _)| kind == KIND_PONG) {
                 // The server's answer to a PING, sealed with the token key.
                 let Some(packet) = proto::open(&attached.token_key, Dir::ToClient, &buf[..n]) else {
@@ -808,12 +866,20 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                 };
                 let mut reader = proto::Reader::new(&packet.payload);
                 let echo = reader.bytes_fixed(24);
-                if ping.is_some_and(|nonce| echo == Some(&nonce[..])) && reader.u8() == Some(0) {
-                    finish(&mut out, &mirror, &mut predictor, &mut decor)?;
-                    return Ok(Outcome::Kicked(
-                        "the server no longer has this session (it ended, another client took it, or the server restarted)"
-                            .to_string(),
-                    ));
+                if let Some((_, at)) = ping.filter(|(nonce, _)| echo == Some(&nonce[..])) {
+                    match reader.u8() {
+                        Some(0) => {
+                            finish(&mut out, &mirror, &mut predictor, &mut decor)?;
+                            return Ok(Outcome::Kicked(
+                                "the server no longer has this session (it ended, another client took it, or the server restarted)".to_string(),
+                            ));
+                        }
+                        Some(1) => {
+                            stats.latency = Some(now.saturating_duration_since(at));
+                            ping = None;
+                        }
+                        _ => {}
+                    }
                 }
                 continue;
             }
@@ -933,6 +999,7 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                             chunk = count.lock().map(|mut count| count.take(&chunk, now)).unwrap_or(chunk);
                         }
                         out.write_all(&strip_queries(&chunk, opts.clipboard_read))?;
+                        out.remote_pending = true;
                         held.clear();
                         held.extend_from_slice(&new[cut..]);
                         local_ground = true;
@@ -941,6 +1008,7 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                     }
                     if held.len() > HOLD_LIMIT {
                         out.write_all(&strip_queries(&held, opts.clipboard_read))?;
+                        out.remote_pending = true;
                         held.clear();
                         local_ground = mirror.at_ground();
                     }
@@ -962,10 +1030,11 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
             }
         }
 
-        if fds[1].revents != 0 {
+        let local_input_due = out.viewport.as_ref().and_then(Viewport::input_deadline).is_some_and(|at| now >= at);
+        if fds[1].revents != 0 || local_input_due {
             if let Some(fd) = stdin_fd {
                 let room = INPUT_BACKLOG.saturating_sub(tx.pending()).min(16384);
-                let n = if room == 0 { -2 } else { unsafe { libc::read(fd, buf.as_mut_ptr().cast(), room) } };
+                let n = if room == 0 || fds[1].revents == 0 { -2 } else { unsafe { libc::read(fd, buf.as_mut_ptr().cast(), room) } };
                 let gone = n == 0 || (n == -1 && fds[1].revents & (libc::POLLHUP | libc::POLLERR | libc::POLLNVAL) != 0);
                 if gone && !tty {
                     stdin_eof = Some(now);
@@ -975,6 +1044,15 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                     return Ok(Outcome::Detached);
                 }
                 let mut incoming = if n > 0 { buf[..n as usize].to_vec() } else { Vec::new() };
+                if managed {
+                    out.prepare_viewport();
+                    incoming = out.viewport.as_mut().unwrap().input(&incoming, decor.window.is_some(), now);
+                    if out.viewport.as_ref().unwrap().partial_expired {
+                        // The viewport already waited for this incomplete
+                        // unit. Escape must not start a second 50 ms wait.
+                        escape.partial_since = Some(now - PARTIAL_WAIT);
+                    }
+                }
                 while !incoming.is_empty() {
                 if decor.window.is_some() {
                     // Keys go to the window, not the session; reports the
@@ -1002,6 +1080,10 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                                     decor.selected = Some(line);
                                 } else { decor.window = None; decor.selected = None; }
                             }
+                            Effect::ShowStats(value) => {
+                                opts.show_stats = value;
+                                stats = HeaderStats::new(now, out.frames, link.traffic);
+                            }
                             Effect::Clipboard(value) => opts.clipboard_read = value,
                             Effect::Prediction(mode) => {
                                 out.write_all(&predictor.undo(&mirror))?;
@@ -1022,7 +1104,7 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                             Effect::None => {}
                         }
                         if let Some(window) = &modal {
-                            decor.window = Some(window.lines(controls, &attached.host, &attached.peer.to_string(), &label, opts.tmux.is_some()));
+                            decor.window = Some(window.lines(controls, &attached.host, &attached.peer.to_string(), &label, opts.tmux.is_some()).into_iter().map(Line::from).collect());
                             decor.selected = Some(window.selected);
                         }
                         wrote = true;
@@ -1042,21 +1124,22 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                             list_return = decor.selected;
                             modal_serial += 1;
                             out.write_all(&decor.undo(&mirror))?;
-                            decor.window = Some(window.lines(opts.controls.as_ref().unwrap(), &attached.host, &attached.peer.to_string(), &label, opts.tmux.is_some()));
+                            decor.window = Some(window.lines(opts.controls.as_ref().unwrap(), &attached.host, &attached.peer.to_string(), &label, opts.tmux.is_some()).into_iter().map(Line::from).collect());
                             decor.selected = Some(window.selected);
                             modal = Some(window);
                             listing = None;
                             wrote = true;
                         }
                         WindowKey::Up | WindowKey::Down => {
-                            let step = |line: usize| if key == WindowKey::Up { line.checked_sub(1) } else { Some(line + 1) };
-                            let mut line = decor.selected.unwrap_or(2);
-                            while let Some(next) = step(line).filter(|next| *next >= 2 && *next < list_rows.len() + 2) {
-                                line = next;
-                                if list_rows[line - 2].target.is_some() {
+                            let count = list_rows.len();
+                            let mut index = decor.selected.unwrap_or(2).saturating_sub(2);
+                            // At most one circuit, skipping host/error headings.
+                            for _ in 0..count {
+                                index = if key == WindowKey::Up { (index + count - 1) % count } else { (index + 1) % count };
+                                if list_rows[index].target.is_some() {
                                     out.write_all(&decor.undo(&mirror))?;
-                                    decor.selected = Some(line);
-                                    if listing.is_some() { list_focus = list_rows[line - 2].target.clone(); }
+                                    decor.selected = Some(index + 2);
+                                    if listing.is_some() { list_focus = list_rows[index].target.clone(); }
                                     wrote = true;
                                     break;
                                 }
@@ -1104,9 +1187,9 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                                 modal_serial += 1;
                                 let window = if matches!(command, Command::Rename) {
                                     crate::session_ui::Modal::rename(here.clone(), label.clone())
-                                } else { crate::session_ui::Modal::settings(controls, opts.clipboard_read, prediction_mode) };
+                                } else { crate::session_ui::Modal::settings(controls, opts.clipboard_read, prediction_mode, opts.show_stats) };
                                 out.write_all(&decor.undo(&mirror))?;
-                                decor.window = Some(window.lines(controls, &attached.host, &attached.peer.to_string(), &label, opts.tmux.is_some()));
+                                decor.window = Some(window.lines(controls, &attached.host, &attached.peer.to_string(), &label, opts.tmux.is_some()).into_iter().map(Line::from).collect());
                                 decor.selected = Some(window.selected);
                                 modal = Some(window);
                                 listing = None;
@@ -1131,12 +1214,12 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                         Command::List => {
                             modal = None; list_return = None; list_focus = None; list_rows.clear();
                             out.write_all(&decor.undo(&mirror))?;
-                            let mut lines = vec!["rsh sessions (m rename)".to_string(), String::new()];
+                            let mut lines = session_list_lines(&[]);
                             if let Some(lister) = opts.sessions.clone() {
                                 listing = Some(request_listing(lister));
-                                lines.push("asking every host...".to_string());
+                                lines.push("asking every host...".into());
                             } else {
-                                lines.push("not available here".to_string());
+                                lines.push("not available here".into());
                             }
                             decor.window = Some(lines);
                             wrote = true;
@@ -1161,7 +1244,6 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                     if target == here {
                         label = name.clone();
                         if let Target::Tmux(host, _) = &here { here = Target::Tmux(host.clone(), name.clone()); opts.tmux = Some(name.clone()); }
-                        decor.badge = tty.then(|| format!(" {}:{host} ", crate::cli::printable(&label)));
                         if let Some(controls) = &opts.controls { *controls.label.lock().unwrap() = name; }
                     }
                     for row in &mut list_rows {
@@ -1190,7 +1272,7 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                 }
                 Err(err) => if let Some(window) = modal.as_mut().filter(|_| modal_serial == rename_serial) {
                     window.busy = false; window.status = err;
-                    if let Some(controls) = &opts.controls { decor.window = Some(window.lines(controls, &attached.host, &attached.peer.to_string(), &label, opts.tmux.is_some())); }
+                    if let Some(controls) = &opts.controls { decor.window = Some(window.lines(controls, &attached.host, &attached.peer.to_string(), &label, opts.tmux.is_some()).into_iter().map(Line::from).collect()); }
                 }
             }
             wrote = true;
@@ -1200,7 +1282,7 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                 Ok(found) => Some(found),
                 Err(std::sync::mpsc::TryRecvError::Empty) => None,
                 Err(std::sync::mpsc::TryRecvError::Disconnected) => Some(vec![ListRow {
-                    text: "could not list sessions".to_string(),
+                    text: Line::styled("could not list sessions", ratatui::style::Style::new().fg(ratatui::style::Color::Red)),
                     target: None,
                 }]),
             };
@@ -1287,7 +1369,7 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
             forwarder.service(now);
             for payload in forwarder.outgoing(now) {
                 let bytes = proto::seal(&link.key, Dir::ToServer, KIND_CHANNEL, link.attach, &payload);
-                let _ = link.wire.send(&bytes);
+                link.send_packet(&bytes);
             }
         }
 
@@ -1331,12 +1413,14 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                 alert_drawn = now;
                 wrote = true;
             }
-        if silence >= wake.scaled(PING_SILENCE, now) && now.duration_since(last_ping) >= PING_SILENCE {
+        let stats_ping = tty && opts.show_stats && now.duration_since(last_ping) >= HEARTBEAT;
+        let stale_ping = silence >= wake.scaled(PING_SILENCE, now) && now.duration_since(last_ping) >= PING_SILENCE;
+        if (stats_ping || stale_ping) && ping.is_none_or(|(_, at)| now.duration_since(at) >= PING_SILENCE) {
             // Only the token key is sure to work with a restarted server.
             let payload = proto::Writer::new().u64(crate::server::now_ms()).u64(link.attach).finish();
             let bytes = proto::seal(&attached.token_key, Dir::ToServer, KIND_PING, attached.token_key.id(), &payload);
-            ping = bytes[13..proto::HEADER_LEN].try_into().ok();
-            let _ = link.wire.send(&bytes);
+            ping = bytes[13..proto::HEADER_LEN].try_into().ok().map(|nonce| (nonce, now));
+            link.send_packet(&bytes);
             last_ping = now;
         }
         if silence >= wake.scaled(PORT_HOP, now) && now.duration_since(last_hop) >= PORT_HOP {
@@ -1347,6 +1431,22 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
             }
             last_hop = now;
             tx.rewind();
+        }
+        if tty {
+            if opts.show_stats { stats.sample(now, out.frames, link.traffic); }
+            let badge = Some(stats.badge(&label, host, opts.show_stats));
+            if let Some(viewport) = &mut out.viewport {
+                if decor.alert.is_some() { viewport.live(); }
+                let badge = badge.unwrap();
+                if viewport.badge != badge || viewport.armed != decor.armed {
+                    viewport.badge = badge;
+                    viewport.armed = decor.armed;
+                    viewport.dirty = true;
+                }
+            } else if decor.badge != badge && local_ground {
+                out.write_all(&decor.undo(&mirror))?;
+                decor.badge = badge;
+            }
         }
         predictor.reconcile(&mirror, tx.acked(), tx.srtt(), now);
         // What rsh draws over the screen is put back only when a token is
@@ -1468,11 +1568,19 @@ const PACED_MAX: usize = 64 * 1024;
 /// one it has not ended yet stays open past the write.
 struct Paced<'a> {
     inner: &'a mut dyn Write,
+    viewport: Option<Viewport>,
+    /// Pending bytes already parsed for a local input event, without an
+    /// intermediate physical repaint of the live screen before scrolling.
+    viewport_fed: usize,
     pending: Vec<u8>,
     tokens: f64,
     filled: Instant,
     /// The program is inside a synchronized update of its own.
     pub hold: bool,
+    /// A synchronized update has reached the tty without its closing mark.
+    sync_open: Option<Instant>,
+    /// Ground state of bytes actually written, which may trail `pending`.
+    written_ground: bool,
     /// The bytes end where no sequence is half done; a write that does not
     /// (a long image or clipboard string cut by `HOLD_LIMIT`) goes out as
     /// it is, for marks inside it would end the string.
@@ -1494,6 +1602,9 @@ struct Paced<'a> {
     clears: bool,
     /// The server sends screen updates (`FLAG_UPDATES`): each goes out whole.
     pub updates: bool,
+    /// Only flushes carrying remote program output count toward header FPS.
+    remote_pending: bool,
+    frames: u64,
 }
 
 const BURST: f64 = 2.0;
@@ -1516,7 +1627,14 @@ const SYNC_HOLD: Duration = Duration::from_millis(150);
 
 impl<'a> Paced<'a> {
     fn new(inner: &'a mut dyn Write, terminal: bool) -> Self {
-        Paced { inner, pending: Vec::new(), tokens: BURST, filled: Instant::now(), hold: false, ground: true, terminal, update: Vec::new(), behind: false, since: None, every: REFILL, arrived: None, clears: false, updates: false }
+        Paced { inner, viewport: None, viewport_fed: 0, pending: Vec::new(), tokens: BURST, filled: Instant::now(), hold: false, sync_open: None, written_ground: true, ground: true, terminal, update: Vec::new(), behind: false, since: None, every: REFILL, arrived: None, clears: false, updates: false, remote_pending: false, frames: 0 }
+    }
+
+    fn prepare_viewport(&mut self) {
+        if let Some(viewport) = &mut self.viewport {
+            viewport.feed(&self.pending[self.viewport_fed..]);
+            self.viewport_fed = self.pending.len();
+        }
     }
 
     fn refill(&mut self, now: Instant) {
@@ -1544,11 +1662,23 @@ impl<'a> Paced<'a> {
     /// Writes what is gathered when a write is allowed.
     fn flush_paced(&mut self, now: Instant) -> io::Result<()> {
         self.refill(now);
+        // Local scrolling is independent of the network and the program's
+        // frame boundaries, in both directions, including returning live.
+        if self.viewport.as_ref().is_some_and(|viewport| viewport.interactive) {
+            return self.write_out(now);
+        }
+        if self.sync_open.is_some_and(|at| now.duration_since(at) >= SYNC_HOLD) {
+            self.end_sync()?;
+        }
+        // A timeout must release a held frame even if no more bytes arrived.
+        if self.pending.is_empty() {
+            return self.write_out(now);
+        }
         // A large heap goes out anyway: one big write would keep the loop
         // from reading datagrams while the terminal takes it.
         if !self.pending.is_empty() && !self.catching_up(now) && (self.tokens >= 1.0 || self.pending.len() >= PACED_MAX) {
             self.tokens = (self.tokens - 1.0).max(0.0);
-            self.write_out()?;
+            self.write_out(now)?;
         }
         Ok(())
     }
@@ -1563,7 +1693,9 @@ impl<'a> Paced<'a> {
     fn due(&self) -> Option<Instant> {
         let token = self.filled + self.every.mul_f64((1.0 - self.tokens).max(0.0));
         let rest = self.since.filter(|_| self.behind).map(|since| since + self.catch_up());
-        (!self.pending.is_empty()).then(|| rest.map_or(token, |rest| rest.max(token)))
+        let output = (!self.pending.is_empty()).then(|| rest.map_or(token, |rest| rest.max(token)));
+        let release = self.sync_open.filter(|_| self.written_ground).map(|at| at + SYNC_HOLD);
+        output.into_iter().chain(release).min()
     }
 
     /// The output's steps set how often a write may go; a frame split over
@@ -1582,24 +1714,56 @@ impl<'a> Paced<'a> {
         self.arrived = Some(now);
     }
 
-    fn write_out(&mut self) -> io::Result<()> {
-        if self.pending.is_empty() {
+    fn end_sync(&mut self) -> io::Result<()> {
+        if self.sync_open.is_some() && self.written_ground {
+            self.inner.write_all(SYNC_END)?;
+            self.sync_open = None;
+            self.inner.flush()?;
+        }
+        Ok(())
+    }
+
+    fn write_out(&mut self, now: Instant) -> io::Result<()> {
+        if self.pending.is_empty() && !self.viewport.as_ref().is_some_and(|viewport| viewport.dirty) {
+            if !self.hold { self.end_sync()?; }
             return Ok(());
         }
-        if self.terminal && self.ground {
+        if let Some(viewport) = &mut self.viewport {
+            viewport.feed(&self.pending[self.viewport_fed..]);
+            let hold = self.hold && !viewport.interactive;
             let mut update = std::mem::take(&mut self.update);
             update.clear();
+            update.extend_from_slice(SYNC_BEGIN);
+            update.extend(viewport.draw());
+            if !hold { update.extend_from_slice(SYNC_END); }
+            self.inner.write_all(&update)?;
+            self.sync_open = if hold { Some(self.sync_open.unwrap_or(now)) } else { None };
+            self.update = update;
+        } else if self.terminal && self.ground && self.written_ground {
+            let mut update = std::mem::take(&mut self.update);
+            update.clear();
+            // A resize can end the terminal's hold without notifying rsh.
             update.extend_from_slice(SYNC_BEGIN);
             without_sync(&self.pending, &mut update);
             if !self.hold {
                 update.extend_from_slice(SYNC_END);
             }
             self.inner.write_all(&update)?;
+            self.sync_open = if self.hold { Some(self.sync_open.unwrap_or(now)) } else { None };
             self.update = update;
         } else {
             self.inner.write_all(&self.pending)?;
         }
+        self.written_ground = self.viewport.is_some() || self.ground;
+        if !self.hold || self.sync_open.is_some_and(|at| now.duration_since(at) >= SYNC_HOLD) {
+            self.end_sync()?;
+        }
+        if self.remote_pending {
+            self.frames += 1;
+            self.remote_pending = false;
+        }
         self.pending.clear();
+        self.viewport_fed = 0;
         self.since = None;
         self.clears = false;
         self.inner.flush()
@@ -1643,7 +1807,7 @@ impl Write for Paced<'_> {
 
     /// Writes everything now.
     fn flush(&mut self) -> io::Result<()> {
-        self.write_out()?;
+        self.write_out(Instant::now())?;
         self.inner.flush()
     }
 }
@@ -1652,6 +1816,10 @@ impl Drop for Paced<'_> {
     fn drop(&mut self) {
         self.hold = false;
         let _ = self.flush();
+        if let Some(viewport) = &mut self.viewport {
+            let _ = self.inner.write_all(&viewport.finish());
+            let _ = self.inner.flush();
+        }
     }
 }
 
@@ -1733,6 +1901,41 @@ pub fn strip_queries(bytes: &[u8], clipboard_read: bool) -> std::borrow::Cow<'_,
     }
 }
 
+/// One-second samples of actual terminal output and encrypted packet bytes
+/// (RX + TX, excluding transport headers). Header-only draws do not count.
+struct HeaderStats {
+    since: Instant,
+    frames: u64,
+    traffic: u64,
+    fps: u64,
+    kbps: f64,
+    latency: Option<Duration>,
+}
+
+impl HeaderStats {
+    fn new(now: Instant, frames: u64, traffic: u64) -> Self {
+        Self { since: now, frames, traffic, fps: 0, kbps: 0.0, latency: None }
+    }
+
+    fn sample(&mut self, now: Instant, frames: u64, traffic: u64) {
+        let elapsed = now.duration_since(self.since).as_secs_f64();
+        if elapsed < 1.0 { return; }
+        self.fps = ((frames - self.frames) as f64 / elapsed).round() as u64;
+        self.kbps = (traffic - self.traffic) as f64 / elapsed / 1000.0;
+        self.frames = frames;
+        self.traffic = traffic;
+        self.since = now;
+    }
+
+    fn badge(&self, label: &str, host: &str, enabled: bool) -> String {
+        let prefix = if enabled {
+            let latency = self.latency.map_or_else(|| "--".into(), |rtt| rtt.as_millis().to_string());
+            format!("[{}fps, {latency}ms, {:.0}KB/s] ", self.fps, self.kbps)
+        } else { String::new() };
+        format!(" {prefix}{}:{} ", crate::cli::printable(label), crate::cli::printable(host))
+    }
+}
+
 /// What rsh draws over the program's screen: the host badge at the top
 /// right and the `~h`/`~l` window. Like the predictor's guesses it is taken
 /// off before output is written and put back after, so the screen under it
@@ -1745,7 +1948,7 @@ struct Decor {
     /// `window`, whose line 0 is the title).
     selected: Option<usize>,
     /// First line is the title.
-    window: Option<Vec<String>>,
+    window: Option<Vec<Line<'static>>>,
     /// The connection notice, drawn over the dimmed screen; first line is
     /// the title.
     alert: Option<Vec<String>>,
@@ -1823,7 +2026,7 @@ impl Decor {
         let mut body = Vec::new();
         if let Some(lines) = self.window.as_ref().filter(|lines| !lines.is_empty()) {
             let (title, text) = (&lines[0], &lines[1..]);
-            let widest = text.iter().chain([title]).map(|line| text_width(line)).max().unwrap_or(0) as u16;
+            let widest = text.iter().chain([title]).map(Line::width).max().unwrap_or(0) as u16;
             let width = (widest.clamp(24, 76) + 4).min(cols);
             let room = usize::from(rows.saturating_sub(4));
             // Scrolled so the highlighted line is shown.
@@ -1835,10 +2038,11 @@ impl Decor {
                 .skip(first)
                 .take(room)
                 .map(|(index, line)| {
-                    let pad = usize::from(width.saturating_sub(4)).saturating_sub(text_width(line));
-                    let line = Line::from(format!("{line}{}", " ".repeat(pad)));
+                    let pad = usize::from(width.saturating_sub(4)).saturating_sub(line.width());
+                    let mut line = line.clone();
+                    line.spans.push(Span::raw(" ".repeat(pad)));
                     if Some(index) == selected {
-                        line.reversed()
+                        line.fg(Color::White).bg(Color::Indexed(236)).bold()
                     } else {
                         line
                     }
@@ -1853,11 +2057,14 @@ impl Decor {
             if width >= 12 && height <= rows && !shown.is_empty() {
                 let area = Rect::new((cols - width) / 2, (rows - height) / 2, width, height);
                 // A colored outline on the default background.
+                let mut title = title.clone();
+                title.spans.insert(0, Span::raw(" "));
+                title.spans.push(Span::raw(" "));
                 let block = Block::bordered()
                     .border_type(BorderType::Rounded)
                     .border_style(Style::new().fg(Color::Blue))
                     .padding(Padding::horizontal(1))
-                    .title(Line::from(format!(" {title} ")).bold())
+                    .title(title.bold())
                     .title_bottom(Line::from(format!("{hint} ")).dim());
                 body.extend(widget_bytes(area, Paragraph::new(shown).block(block)));
                 if self.alert.is_none() {
@@ -1922,6 +2129,8 @@ impl Decor {
 fn widget_bytes(area: ratatui::layout::Rect, widget: impl ratatui::widgets::Widget) -> Vec<u8> {
     use ratatui::backend::{Backend, CrosstermBackend};
     use ratatui::buffer::Buffer;
+    static COLORS: std::sync::Once = std::sync::Once::new();
+    COLORS.call_once(|| ratatui::crossterm::style::force_color_output(true));
     let mut next = Buffer::empty(area);
     widget.render(area, &mut next);
     let mut unlike = Buffer::empty(area);
@@ -1959,7 +2168,7 @@ fn text_width(text: &str) -> usize {
     unicode_width::UnicodeWidthStr::width(text)
 }
 
-fn help_lines(key: u8, host: &str, label: &str, tmux: bool) -> Vec<String> {
+fn help_lines(key: u8, host: &str, label: &str, tmux: bool) -> Vec<Line<'static>> {
     let k = escape_name(key);
     let at = if key < 0x20 { "" } else { " at the start of a line" };
     vec![
@@ -1974,7 +2183,7 @@ fn help_lines(key: u8, host: &str, label: &str, tmux: bool) -> Vec<String> {
         format!("{k}{k}  send {k}"),
         String::new(),
         format!("Type these{at}."),
-    ]
+    ].into_iter().map(Line::from).collect()
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -2228,6 +2437,54 @@ mod tests {
     }
 
     #[test]
+    fn traffic_excludes_packets_dropped_during_tcp_reconnect() {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let wire = Wire::tcp(listener.local_addr().unwrap()).unwrap();
+        let (_server, _) = listener.accept().unwrap();
+        let now = Instant::now();
+        let mut link = Link {
+            window: ReplayWindow::new(), wire, key: Key::from_token("test"), attach: 1,
+            last_sent: now, owed: None, acked: (0, 0), arrivals: Vec::new(), clock: now, traffic: 0,
+        };
+        link.send_packet(b"sent");
+        assert_eq!(link.traffic, 4);
+        link.wire.reset(now);
+        assert!(link.wire.down());
+        link.send_packet(b"dropped while disconnected");
+        assert_eq!(link.traffic, 4);
+    }
+
+    #[test]
+    fn header_stats_sample_output_frames_and_packet_bytes() {
+        let start = Instant::now();
+        let mut stats = HeaderStats::new(start, 10, 500);
+        assert_eq!(stats.badge("work", "host", false), " work:host ");
+        assert_eq!(stats.badge("work", "host", true), " [0fps, --ms, 0KB/s] work:host ");
+        stats.sample(start + Duration::from_millis(500), 40, 7500);
+        assert_eq!(stats.fps, 0, "samples wait a full second");
+        stats.latency = Some(Duration::from_millis(30));
+        stats.sample(start + Duration::from_secs(1), 70, 14500);
+        assert_eq!(stats.badge("work", "host", true), " [60fps, 30ms, 14KB/s] work:host ");
+        stats.sample(start + Duration::from_secs(3), 70, 14500);
+        assert_eq!(stats.fps, 0, "idle screens do not invent FPS");
+        assert_eq!(stats.kbps, 0.0);
+
+        let mut output = Vec::new();
+        let mut paced = Paced::new(&mut output, true);
+        paced.write_all(b"header only").unwrap();
+        paced.flush().unwrap();
+        assert_eq!(paced.frames, 0);
+        paced.write_all(b"remote output").unwrap();
+        paced.remote_pending = true;
+        paced.write_all(b"more remote output").unwrap();
+        paced.flush().unwrap();
+        assert_eq!(paced.frames, 1, "one terminal flush, not one frame per packet");
+        paced.write_all(b"another header").unwrap();
+        paced.flush().unwrap();
+        assert_eq!(paced.frames, 1);
+    }
+
+    #[test]
     fn writes_follow_the_frames_the_program_draws() {
         let start = Instant::now();
         let mut screen = Vec::new();
@@ -2275,6 +2532,81 @@ mod tests {
     }
 
     #[test]
+    fn a_held_frame_closes_without_new_output_and_does_not_count_as_fps() {
+        let mut screen = Vec::new();
+        let start = Instant::now();
+        let mut out = Paced::new(&mut screen, true);
+        out.write_all(b"bottom row").unwrap();
+        out.remote_pending = true;
+        out.hold = true;
+        out.flush_paced(start).unwrap();
+        assert!(out.sync_open.is_some());
+        assert!(out.pending.is_empty());
+        assert_eq!(out.frames, 1);
+        // Additional pieces must not restart rsh's release deadline.
+        out.write_all(b" and more").unwrap();
+        out.flush_paced(start + Duration::from_millis(30)).unwrap();
+        out.hold = false;
+        out.flush_paced(start + SYNC_HOLD).unwrap();
+        assert!(out.sync_open.is_none());
+        assert_eq!(out.frames, 1);
+        drop(out);
+        assert_eq!(screen, b"\x1b[?2026hbottom row\x1b[?2026h and more\x1b[?2026l");
+    }
+
+    #[test]
+    fn a_held_frame_deadline_precedes_a_pending_repaint() {
+        let mut screen = Vec::new();
+        let start = Instant::now();
+        let mut out = Paced::new(&mut screen, true);
+        out.hold = true;
+        out.write_all(b"first").unwrap();
+        out.flush_paced(start).unwrap();
+        assert_eq!(out.due(), Some(start + SYNC_HOLD));
+        out.write_all(b"\x1b[2Jpartial repaint").unwrap();
+        out.since = Some(start + Duration::from_millis(100));
+        out.behind = true;
+        out.hold = false;
+        assert_eq!(out.due(), Some(start + SYNC_HOLD));
+        out.flush_paced(start + SYNC_HOLD).unwrap();
+        assert!(out.sync_open.is_none(), "the old frame closes while the repaint waits for its rest");
+        assert!(!out.pending.is_empty(), "the incomplete repaint is still paced");
+        assert_eq!(out.due(), Some(start + Duration::from_millis(100) + REPAINT_WAIT));
+        out.flush_paced(start + Duration::from_millis(100) + REPAINT_WAIT).unwrap();
+        drop(out);
+        assert_eq!(screen, b"\x1b[?2026hfirst\x1b[?2026l\x1b[?2026h\x1b[2Jpartial repaint\x1b[?2026l");
+    }
+
+    #[test]
+    fn sync_timeout_does_not_write_into_an_unfinished_tty_string() {
+        let mut screen = Vec::new();
+        let start = Instant::now();
+        let mut out = Paced::new(&mut screen, true);
+        out.hold = true;
+        out.write_all(b"first").unwrap();
+        out.flush_paced(start).unwrap();
+        // HOLD_LIMIT can pass part of a long OSC/DCS to the tty as raw bytes.
+        out.ground = false;
+        out.write_all(b"\x1b]52;c;partial").unwrap();
+        out.flush_paced(start + Duration::from_millis(30)).unwrap();
+        // The queued tail ends at ground, but the tty has not received it.
+        out.ground = true;
+        out.hold = false;
+        out.write_all(b"tail\x07").unwrap();
+        out.since = Some(start + Duration::from_millis(100));
+        out.behind = true;
+        out.updates = true;
+        assert_eq!(out.due(), Some(start + Duration::from_millis(100) + REPAINT_WAIT));
+        out.flush_paced(start + SYNC_HOLD).unwrap();
+        assert!(out.sync_open.is_some(), "no marker may be inserted inside an OSC payload");
+        out.behind = false;
+        out.flush_paced(start + Duration::from_millis(200)).unwrap();
+        assert!(out.sync_open.is_none());
+        drop(out);
+        assert_eq!(screen, b"\x1b[?2026hfirst\x1b]52;c;partialtail\x07\x1b[?2026l");
+    }
+
+    #[test]
     fn writes_are_synchronized_and_paced() {
         let mut screen = Vec::new();
         let start = Instant::now();
@@ -2289,7 +2621,7 @@ mod tests {
             out.hold = true;
             out.flush_paced(start + Duration::from_millis(30)).unwrap();
         }
-        assert_eq!(screen, b"\x1b[?2026hframe\x1b[?2026l\x1b[?2026hhalf", "the open frame is not ended for it");
+        assert_eq!(screen, b"\x1b[?2026hframe\x1b[?2026l\x1b[?2026hhalf\x1b[?2026l", "drop closes the held frame even with an empty buffer");
         // Frames at about 30 a second with jitter go out as they come; a
         // flood is held to about 33 writes a second.
         let mut screen = Vec::new();
@@ -2335,6 +2667,60 @@ mod tests {
         let mut piped = Vec::new();
         Paced::new(&mut piped, false).write_all(b"\x1b[?2026hx").unwrap();
         assert_eq!(piped, b"\x1b[?2026hx");
+    }
+
+    #[test]
+    fn completed_local_wheel_does_not_expire_an_armed_escape() {
+        let mut view = Viewport::new((80, 5));
+        let mut escape = Escape::new(Some(b'~'));
+        let mut remote = Vec::new();
+        let now = Instant::now();
+        assert!(escape.filter(b"~", &mut remote).is_empty());
+        assert!(view.input(b"\x1b[<64;", false, now).is_empty());
+        let keys = view.input(b"3;4M", false, now + PARTIAL_WAIT);
+        if view.partial_expired { escape.partial_since = Some(now); }
+        assert!(escape.filter(&keys, &mut remote).is_empty());
+        escape.expire(now + PARTIAL_WAIT, &mut remote);
+        assert!(remote.is_empty(), "a complete consumed mouse report must not send the held tilde");
+        assert!(matches!(escape.filter(b".", &mut remote).as_slice(), [Command::Detach]));
+        assert!(remote.is_empty());
+    }
+
+    #[test]
+    fn local_scroll_in_both_directions_bypasses_remote_frame_waits() {
+        struct Capture(Arc<std::sync::Mutex<Vec<u8>>>);
+        impl Write for Capture {
+            fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+                self.0.lock().unwrap().extend_from_slice(bytes);
+                Ok(bytes.len())
+            }
+            fn flush(&mut self) -> io::Result<()> { Ok(()) }
+        }
+        let bytes = Arc::new(std::sync::Mutex::new(Vec::new()));
+        let mut capture = Capture(bytes.clone());
+        let mut out = Paced::new(&mut capture, true);
+        out.viewport = Some(Viewport::new((80, 5)));
+        out.hold = true;
+        for n in 0..30 { out.write_all(format!("line {n:02}\r\n").as_bytes()).unwrap(); }
+        out.flush().unwrap();
+        let start = Instant::now();
+        // Neither direction may wait for a token, missing remote packets,
+        // or an application that has left synchronized output open.
+        for (wheel, expected) in [(b"\x1b[<64;3;4M".as_slice(), "line 23"), (b"\x1b[<65;3;4M".as_slice(), "line 26")] {
+            out.write_all(b"remote frame still arriving").unwrap();
+            out.prepare_viewport();
+            out.prepare_viewport();
+            assert!(out.viewport.as_mut().unwrap().input(wheel, false, start).is_empty());
+            out.behind = true;
+            out.updates = true;
+            out.tokens = 0.0;
+            out.filled = start;
+            out.flush_paced(start + Duration::from_millis(1)).unwrap();
+            let mut tty = Terminal::with_size(80, 6);
+            tty.feed(&bytes.lock().unwrap());
+            assert!(!tty.synchronized(), "scrolling must be visible in the same flush");
+            assert_eq!(tty.screen_line(1), expected);
+        }
     }
 
     #[test]

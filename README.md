@@ -116,13 +116,15 @@ Type these keys at the start of a line:
 Session rows show their type (`rsh` or `tmux`) followed by the session name.
 Both types use `attached`/`detached` for the active **rsh connection**.
 For tmux, native tmux clients are excluded: a session attached only through
-native tmux still shows `detached` here. The state also determines detached
-session priority in sorting. It does not change tmux's own attachment count.
+native tmux still shows `detached` here. It does not change tmux's own
+attachment count.
 Both kinds of session can keep running while detached. On older servers,
 the 60-session response limit may omit the rsh connection metadata for a
 tmux row; such a row appears detached until the server is updated.
 In `rsh ls`, use Up/Down and Enter to select, type to filter, and press
-`m` to rename the selected rsh or tmux session. Esc cancels the menu or
+`m` to rename the selected rsh or tmux session. Up/Down wrap between the first
+and last selectable rows, including when filtering. The `~l` session list
+also wraps, skipping host headings and unreachable rows. Esc cancels the menu or
 name editor; Ctrl+U clears the name field. Names are limited to 64 characters; tmux names also exclude
 `.`, `:`, `#` and `;`. Renaming preserves the running session.
 
@@ -136,22 +138,48 @@ In `~l`, completing or cancelling rename returns to the session list; a
 successful rename refreshes it and keeps the renamed row selected. `~m`
 returns directly to the session after renaming.
 
-Terminal output uses cyan for hosts/session names, magenta for session types,
-green/yellow for attachment state, and red for failures. `rsh --help`
-colors headings, options and escape shortcuts. Set `NO_COLOR=1` to disable
-colors; piped output and `TERM=dumb` also stay plain.
+Ordinary interactive sessions reserve the first row for a fixed header.
+rsh keeps the last 1000 body lines locally and handles mouse-wheel scrolling
+and Shift+PageUp / Shift+PageDown. While viewing history, PageUp / PageDown
+also work; Esc or typing returns to the live screen. New output keeps the
+history view anchored. Hold Shift while dragging to use the terminal app's
+text selection. The client uses the alternate screen and restores the local
+screen on detach or exit. tmux attachments keep their existing rendering and
+tmux copy-mode scrolling.
 
-Lists keep host groups together and put recently accessed sessions and
-detached tmux sessions first, then other detached rsh sessions, then
-unrelated attached sessions, empty hosts and unreachable hosts. Within the
-first group, the most recent local access wins. Successful connections are
-remembered alongside the auth file (`~/.rsh/known.recent` by default).
+Local scrolling in either direction redraws immediately, independently of
+network catch-up, output pacing and a remote program's synchronized frame.
+
+The local viewport renders text cells, colors and hyperlinks. Inline bitmap
+graphics protocols such as Kitty graphics and sixel are not supported by
+its terminal model. New ordinary interactive shells receive
+`TERM=xterm-256color` and `TERM_PROGRAM=rsh` to describe this terminal host.
+
+Terminal output uses cyan for hosts/session names, magenta for session types,
+green/yellow for attachment state, and red for failures. The in-session `~l`
+list uses the same colors, with dim size/idle metadata and a background
+highlight that preserves the selected row's colors. `rsh --help`
+colors headings, options and escape shortcuts. These colors are always
+enabled, including redirected output and terminals with `NO_COLOR` or `TERM=dumb`.
+
+Lists keep host groups together and sort sessions by **idle time ascending**
+(shortest first), regardless of type or attachment state. Host groups are
+ordered by their shortest session idle time; empty and unreachable hosts
+follow. When idle times are equal, the most recent local access wins.
+Successful connections are remembered alongside the auth file
+(`~/.rsh/known.recent` by default).
 
 `~` followed by Cmd+, also opens settings when the terminal forwards the
 Kitty Super-comma sequence (`CSI 44;9u`). A terminal app that reserves Cmd+,
 for its own preferences needs a key mapping to send that sequence; `~,`
 works with ordinary terminal input. Escape commands use `RSH_ESCAPE_KEY`
 when overridden and are disabled when it is empty.
+
+rsh schedules a 150 ms release for synchronized redraws left open by a
+remote program, even if no more output arrives or another repaint is waiting.
+Release occurs at a complete escape-sequence boundary; network and
+application redraw time are separate. Each complete terminal update retains its synchronization marks because a
+window resize may reset that state in the terminal.
 
 Use `rsh --help` for connection, server and forwarding options.
 
@@ -162,16 +190,27 @@ Use `rsh --help` for connection, server and forwarding options.
 ```yaml
 compress: always
 clipboard_read: false
+show_stats: false
 ```
 
 `compress` accepts `always` (the default), `adaptive`, or `none`.
 `--compress` overrides the file setting. `clipboard_read: false` blocks
 remote OSC 52 clipboard reads; the default is `true`.
 
+`show_stats: true` adds `[60fps, 30ms, 14KB/s] name:host` to the header;
+the default is `false`. Values update once a second: FPS counts terminal
+flushes containing remote output (an idle screen shows 0), latency is a
+ping round trip (`--ms` until the first reply), and KB/s is combined RX + TX
+encrypted packet bytes using decimal KB, excluding transport headers. While
+enabled, one ping per second measures latency even without typing. The
+header is hidden when the terminal is too narrow. For tmux attachments,
+the overlaid header also hides when it would cover the top-row cursor.
+
 The `~,` settings window shows the version, host, session, peer and config
-path. Its **Session** scope changes clipboard reads and local echo
-prediction immediately for the current connection. Its **Global** scope
-saves clipboard and compression defaults for new attachments, preserving
+path. Its **Session** scope changes clipboard reads, local echo prediction
+and header statistics immediately for the current connection. Its **Global**
+scope saves clipboard, compression and header statistics defaults for new
+attachments, preserving
 other settings and comments; `--compress` still takes precedence. Switch
 scope with Left/Right or Enter, move with Up/Down, and use Left/Right or
 Enter to change a value. Select “Rename current session” and press Enter
@@ -214,7 +253,10 @@ flowchart LR
   loss-protection copies. Sparse traffic can use short measurement copies
   when recent packet-pair measurements are unavailable.
 - **Rendering:** the client combines output into synchronized terminal
-  updates and provides adaptive local echo prediction.
+  updates and provides adaptive local echo prediction. Ordinary interactive
+  sessions render through a local terminal model with a separate header and
+  scrollable body; tmux attachments and noninteractive output retain the
+  byte-stream rendering path.
 - **Resources:** UDP sessions share a server process and socket. Quiet
   terminal history and buffers are compacted, and idle keepalives slow
   down after inactivity.
@@ -370,12 +412,12 @@ python3 benchmark/lab/lab.py stop
 ## Development
 
 ```sh
-(ulimit -n 4096 && env -u NO_COLOR cargo test --locked --all-targets)
+(ulimit -n 4096 && cargo test --locked --all-targets)
 python3 -m unittest discover -s benchmark/lab -p 'test_*.py' -v
 ```
 
 The Rust suite opens 300 idle TCP connections. The subshell sets its file
-descriptor limit and enables the color-dependent UI assertions for this run.
+descriptor limit for this run.
 
 Container integration tests are available in
 [`tests/container`](tests/container); read each script's setup requirements

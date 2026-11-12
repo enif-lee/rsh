@@ -9,6 +9,7 @@
 //! # Compress output: on any link (always), on slow or far ones (adaptive),
 //! # or not at all (none).
 //! compress: always
+//! show_stats: false
 //! ```
 
 use std::path::Path;
@@ -19,6 +20,8 @@ pub struct Config {
     /// with the clipboard to the host.
     pub clipboard_read: bool,
     pub compress: Compress,
+    /// Show frame rate, round-trip latency and packet traffic in the header.
+    pub show_stats: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -48,7 +51,7 @@ impl Compress {
 
 impl Default for Config {
     fn default() -> Self {
-        Config { clipboard_read: true, compress: Compress::Always }
+        Config { clipboard_read: true, compress: Compress::Always, show_stats: false }
     }
 }
 
@@ -122,6 +125,7 @@ impl Config {
             seen.push(key);
             match key {
                 "clipboard_read" => config.clipboard_read = flag()?,
+                "show_stats" => config.show_stats = flag()?,
                 "compress" => {
                     config.compress = Compress::from_name(value).ok_or_else(|| at(format!("compress must be adaptive, always or none, not `{value}`")))?;
                 }
@@ -154,6 +158,9 @@ mod tests {
     fn settings_parse_and_mistakes_are_errors() {
         assert_eq!(Config::parse("").unwrap(), Config::default());
         assert!(Config::default().clipboard_read);
+        assert!(!Config::default().show_stats);
+        assert!(Config::parse("show_stats: true").unwrap().show_stats);
+        assert!(Config::parse("show_stats: yes").is_err());
         let off = Config::parse("# mine\n\nclipboard_read: false   # no reads\n").unwrap();
         assert!(!off.clipboard_read);
         assert!(Config::parse("clipboard_read: true").unwrap().clipboard_read);

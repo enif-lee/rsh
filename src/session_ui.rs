@@ -22,6 +22,7 @@ pub enum Effect {
     Rename(Target, String),
     Clipboard(bool),
     Prediction(Mode),
+    ShowStats(bool),
 }
 
 enum Page {
@@ -36,12 +37,13 @@ pub struct Modal {
     config: Config,
     clipboard: bool,
     prediction: Mode,
+    show_stats: bool,
     pub status: String,
     pub busy: bool,
 }
 
 impl Modal {
-    pub fn settings(controls: &Controls, clipboard: bool, prediction: Mode) -> Self {
+    pub fn settings(controls: &Controls, clipboard: bool, prediction: Mode, show_stats: bool) -> Self {
         let loaded = Config::load(&controls.config_path);
         let status = loaded.as_ref().err().cloned().unwrap_or_default();
         Self {
@@ -51,6 +53,7 @@ impl Modal {
             config: loaded.unwrap_or_default(),
             clipboard,
             prediction,
+            show_stats,
             status,
             busy: false,
         }
@@ -67,6 +70,7 @@ impl Modal {
             config: Config::default(),
             clipboard: false,
             prediction: Mode::Adaptive,
+            show_stats: false,
             status: String::new(),
             busy: false,
         }
@@ -124,6 +128,7 @@ impl Modal {
                 } else {
                     format!("Prediction: {}", mode_name(self.prediction))
                 },
+                format!("Header stats (fps, RTT, KB/s): {}", if self.global { self.config.show_stats } else { self.show_stats }),
                 "Rename current session (Enter)".into(),
                 String::new(),
                 format!(
@@ -179,7 +184,7 @@ impl Modal {
             WindowKey::Up | WindowKey::Char('k') => {
                 self.selected = self.selected.saturating_sub(1).max(2)
             }
-            WindowKey::Down | WindowKey::Char('j') => self.selected = (self.selected + 1).min(5),
+            WindowKey::Down | WindowKey::Char('j') => self.selected = (self.selected + 1).min(6),
             WindowKey::Left | WindowKey::Right | WindowKey::Enter => {
                 let backwards = key == WindowKey::Left;
                 match self.selected {
@@ -229,7 +234,21 @@ impl Modal {
                         self.prediction = choices[(at + if backwards { 2 } else { 1 }) % 3];
                         return Effect::Prediction(self.prediction);
                     }
-                    5 if key == WindowKey::Enter => {
+                    5 if self.global => {
+                        let value = !self.config.show_stats;
+                        match Config::save_setting(&controls.config_path, "show_stats", if value { "true" } else { "false" }) {
+                            Ok(()) => {
+                                self.config.show_stats = value;
+                                self.status = "Saved for new attachments".into();
+                            }
+                            Err(err) => self.status = err,
+                        }
+                    }
+                    5 => {
+                        self.show_stats = !self.show_stats;
+                        return Effect::ShowStats(self.show_stats);
+                    }
+                    6 if key == WindowKey::Enter => {
                         self.page = Page::Rename {
                             target: here.clone(),
                             value: label.into(),
@@ -257,13 +276,14 @@ fn mode_name(mode: Mode) -> &'static str {
 mod tests {
     use super::*;
     fn controls() -> Controls {
+        static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
         Controls {
             rename: Arc::new(|_, name| Ok(name.into())),
             config_path: std::env::temp_dir()
                 .join(format!(
                     "rsh-settings-{}-{}",
                     std::process::id(),
-                    crate::server::now_ms()
+                    NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
                 ))
                 .join("config.yaml"),
             label: Arc::new(Mutex::new("old".into())),
@@ -274,7 +294,7 @@ mod tests {
     fn settings_distinguish_live_session_changes_and_saved_defaults() {
         let controls = controls();
         let target = Target::Rsh("h".into(), 1);
-        let mut window = Modal::settings(&controls, true, Mode::Adaptive);
+        let mut window = Modal::settings(&controls, true, Mode::Adaptive, false);
         window.handle(WindowKey::Down, &controls, &target, "old");
         assert!(matches!(
             window.handle(WindowKey::Right, &controls, &target, "old"),
@@ -298,9 +318,36 @@ mod tests {
             saved,
             Config {
                 clipboard_read: false,
-                compress: Compress::Adaptive
+                compress: Compress::Adaptive,
+                show_stats: false,
             }
         );
+        let _ = std::fs::remove_dir_all(controls.config_path.parent().unwrap());
+    }
+
+    #[test]
+    fn header_stats_can_change_live_or_be_saved_for_new_attachments() {
+        let controls = controls();
+        let target = Target::Rsh("h".into(), 1);
+        let mut window = Modal::settings(&controls, true, Mode::Adaptive, false);
+        window.selected = 5;
+        assert!(matches!(window.handle(WindowKey::Right, &controls, &target, "old"), Effect::ShowStats(true)));
+        assert!(!controls.config_path.exists());
+        window.selected = 2;
+        window.handle(WindowKey::Right, &controls, &target, "old");
+        window.selected = 5;
+        assert!(matches!(window.handle(WindowKey::Enter, &controls, &target, "old"), Effect::None));
+        assert!(Config::load(&controls.config_path).unwrap().show_stats);
+        // A saved global change does not override the current session's choice.
+        window.selected = 2;
+        window.handle(WindowKey::Left, &controls, &target, "old");
+        assert!(window.lines(&controls, "h", "peer", "old", false)[5].ends_with("true"));
+        window.selected = 5;
+        assert!(matches!(window.handle(WindowKey::Left, &controls, &target, "old"), Effect::ShowStats(false)));
+        assert!(Config::load(&controls.config_path).unwrap().show_stats);
+        window.handle(WindowKey::Down, &controls, &target, "old");
+        assert!(matches!(window.handle(WindowKey::Enter, &controls, &target, "old"), Effect::None));
+        assert!(window.lines(&controls, "h", "peer", "old", false)[0].contains("Rename"));
         let _ = std::fs::remove_dir_all(controls.config_path.parent().unwrap());
     }
 

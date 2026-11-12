@@ -47,7 +47,7 @@ fn spawn_with(args: &[&str], auth: &std::path::Path, peer: &str, script: &[u8]) 
     assert!(out.status.success(), "stderr={stderr} stdout={stdout}");
     assert!(!stdout.contains("authentication required"), "{stdout}");
     assert!(!stderr.contains("authentication required"), "{stderr}");
-    stdout
+    console::strip_ansi_codes(&stdout).into_owned()
 }
 
 #[test]
@@ -162,7 +162,7 @@ fn live_upgrade_keeps_sessions_and_attached_clients() {
             &attached,
             Input::Script(script),
             &mut out,
-            client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, controls: None },
+            client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, show_stats: false, controls: None },
         )
         .unwrap();
         (outcome, String::from_utf8_lossy(&out).into_owned())
@@ -222,7 +222,7 @@ fn live_upgrade_keeps_sessions_and_attached_clients() {
         &again,
         Input::Script(b"echo GOT:$KEEP\n".to_vec()),
         &mut out,
-        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, controls: None },
+        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, show_stats: false, controls: None },
     )
     .unwrap();
     let text = String::from_utf8_lossy(&out);
@@ -234,7 +234,7 @@ fn live_upgrade_keeps_sessions_and_attached_clients() {
         &ended,
         Input::Script(Vec::new()),
         &mut out,
-        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, controls: None },
+        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, show_stats: false, controls: None },
     )
     .unwrap();
     assert_eq!(outcome, Outcome::Exited(5), "{}", String::from_utf8_lossy(&out));
@@ -330,7 +330,7 @@ fn tmux_sessions_are_joined_listed_and_left() {
             attached,
             Input::Script(script.to_vec()),
             &mut out,
-            client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: Some("work".into()), clipboard_read: false, controls: None },
+            client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: Some("work".into()), clipboard_read: false, show_stats: false, controls: None },
         )
         .unwrap();
         (outcome, String::from_utf8_lossy(&out).into_owned())
