@@ -10,7 +10,7 @@
   <a href="#how-it-works"><img src="https://img.shields.io/badge/transport-UDP%20%2B%20TCP%20fallback-blue" alt="Transport"></a>
 </p>
 
-<p align="center"><strong>A remote shell for unreliable networks.</strong></p>
+<p align="center"><strong>The most efficient and reliable remote shell.</strong></p>
 
 rsh keeps your shell on the server so you can detach, reconnect, or change
 networks and return to the same session. It predicts keystrokes locally,
