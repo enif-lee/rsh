@@ -545,6 +545,13 @@ rate; memory row with ten simultaneous idle LAN sessions). Four jobs run in
 parallel; each case has two evaluations. Buffered catch-up bursts are excluded
 and FPS is capped at the requested 60 FPS ceiling.
 
+![rsh and OpenSSH drawing the same dashboard on a 256 kbit/s, RTT 100 ms link](docs/bench/v0.4.0/glance-dashboard.webp)
+
+Five seconds of that dashboard, played back at 24 FPS. rsh keeps the requested
+rate and a frame age near one round trip; OpenSSH falls to a few frames a
+second and the picture is several seconds old. The counters above each pane
+are that capture's own one-second window.
+
 ''' + glance_table() + '''
 
 For FPS, **vs SSH** is the multiple rsh/SSH (higher favors rsh). For age, RX,
