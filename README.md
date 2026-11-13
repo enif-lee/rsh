@@ -90,6 +90,30 @@ Rebuild them after changing the source so the client can install a matching
 build on remote hosts. Binaries stored outside `~/.rsh/bin` do not
 auto-update themselves.
 
+## Feature matrix
+
+| | OpenSSH (sshd) | Eternal Terminal | mosh | rsh |
+| --- | --- | --- | --- | --- |
+| Transport | TCP | TCP | UDP | UDP, or TCP on the same port when UDP is blocked |
+| Works where only TCP gets through | ✅ | ✅ | ❌ cannot connect | ✅ connects over TCP in 2.04 s |
+| Client changes IP address | ❌ connection drops (not back within 8 s) | ⚠️ reconnects over a new TCP connection (not within 8 s) | ✅ 3.09 s | ✅ 2.00 s (UDP); TCP not within 8 s |
+| Link down for a few seconds | ⚠️ back 5.02 s after the link | ⚠️ back 5.09 s after the link | ✅ back 1.01 s after the link | ✅ back 0.07 s after the link (UDP); TCP 5.23 s |
+| Client killed, started again | ❌ new shell | ❌ new shell | ❌ new shell | ✅ same shell in 0.56 s (UDP) |
+| Local echo prediction | ❌ | ❌ | ✅ adaptive | ✅ adaptive |
+| Slow link: shows the latest screen, not a backlog | ❌ | ❌ | ✅ | ✅ |
+| Program's bytes reach your terminal (scrollback, OSC) | ✅ | ✅ | ❌ screen state only | ✅ byte stream while the link keeps up; screen differences when it falls behind |
+| Compression | ⚠️ `-C`, off by default | not checked | ✅ zlib | ✅ deflate stream, on by default |
+| Port forwarding | ✅ `-L` `-R` `-D`, X11, agent | ✅ `-t` `-r`, agent | ❌ | ⚠️ `-L` `-R` |
+| File transfer | ✅ scp, sftp | ❌ | ❌ | ❌ |
+| List and switch sessions across hosts | ❌ | ❌ | ❌ | ✅ `rsh ls`, `~l` |
+| tmux | run it yourself | run it yourself | run it yourself | ✅ `--tmux` joins or creates a tmux session |
+| Server side | `sshd` | `sshd` + `etserver` daemon | `sshd` + a `mosh-server` per session (UDP 60000–61000) | one `rsh serve` for every session, port 2222, installed and upgraded over SSH by the client |
+| Memory, 10 sessions (clients + server) | 222.0 MiB | 207.5 MiB | 242.5 MiB | 36.2 MiB |
+| Upgrade the server without dropping sessions | n/a | not checked | n/a | ✅ hands sessions to the new binary |
+| Authentication | SSH keys, passwords | via SSH | via SSH | per-client token issued over SSH; X25519 per attach, XChaCha20-Poly1305 |
+
+Times are medians of two runs on an RTT 100 ms link, and memory is client plus server RSS for ten idle LAN sessions, both from the [v0.4.0 benchmark](BENCHMARK.md). A roaming result missing within eight seconds is not a measured recovery time. The other cells follow each project's behavior.
+
 ## Usage
 
 ```sh
