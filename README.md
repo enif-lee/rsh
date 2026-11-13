@@ -23,21 +23,24 @@ fallback on the same port.
 <!-- benchmark-summary:start -->
 ### Performance at a glance
 
-A 256 kbit/s link at RTT 100 ms, requesting 60 FPS in a 100×30 terminal.
-Four jobs run in parallel; each case has two evaluations. The memory row
-uses ten simultaneous idle LAN sessions.
+A 256 kbit/s link at RTT 100 ms, requesting 60 FPS in a 100×30 terminal
+(coding agent KiB/frame row on LAN where every stream transport delivers full
+rate; memory row with ten simultaneous idle LAN sessions). Four jobs run in
+parallel; each case has two evaluations. Buffered catch-up bursts are excluded
+and FPS is capped at the requested 60 FPS ceiling.
 
 | Measurement | **rsh (UDP)** | **vs SSH** | mosh | OpenSSH | Eternal Terminal |
 | --- | --- | --- | --- | --- | --- |
-| Dashboard observed FPS (average) | **57.0** | **9.42×** | 15.6 | 6.0 | 6.1 |
-| Dashboard observed FPS (median) | **57.0** | **9.42×** | 15.6 | 6.0 | 6.1 |
-| 1% / 5% low FPS | **39.4 / 44.2** | **9.52× / 8.63×** | 13.9 / 14.8 | 4.1 / 5.1 | 4.2 / 4.3 |
-| Frame age, ms | **72** | **52.17×** | 84 | 3782 | 3726 |
-| Received network, kbit/s | **211** | **1.18×** | 88 | 248 | 248 |
-| Packets per frame (in + out) | **2.01** | **2.34×** | 1.61 | 4.71 | 3.65 |
-| Key echo, ms | **7** | **17.42×** | 8 | 120 | 112 |
-| Bulk output to prompt, s | **0.16** | **143.94×** | 0.19 | 23.03 | 22.71 |
-| Ten idle LAN sessions, client + server MiB | **33.7** | **6.55×** | 243.1 | 220.6 | 201.4 |
+| Dashboard observed FPS (average) | **59.5** | **9.83×** | 15.6 | 6.0 | 6.2 |
+| Dashboard observed FPS (median) | **59.5** | **9.83×** | 15.6 | 6.0 | 6.2 |
+| 1% / 5% low FPS | **43.7 / 49.5** | **8.97× / 9.74×** | 14.4 / 14.8 | 4.9 / 5.1 | 4.2 / 4.2 |
+| Frame age, ms | **64** | **59.50×** | 83 | 3808 | 3818 |
+| Received network, kbit/s | **170** | **1.47×** | 90 | 250 | 250 |
+| Packets per frame (in + out) | **2.03** | **2.20×** | 1.68 | 4.47 | 3.78 |
+| Coding agent TUI RX, KiB/frame (LAN) | **0.17** | **22.48×** | 0.35 | 3.80 | 3.75 |
+| Key echo, ms | **7** | **18.16×** | 8 | 120 | 109 |
+| Bulk output to prompt, s | **0.15** | **150.03×** | 0.23 | 23.25 | 23.14 |
+| Ten idle LAN sessions, client + server MiB | **36.2** | **6.13×** | 242.5 | 222.0 | 207.5 |
 
 For FPS, **vs SSH** is rsh/SSH. For age, RX, packets, echo, bulk time and RSS it is
 SSH/rsh: a larger factor favors rsh, while a factor below 1 favors SSH.
@@ -45,7 +48,7 @@ The 1%/5% factors are separate. Resource ratios describe usage, not speed;
 ratios use unrounded statistics. Packets per frame is the median of each
 run's client inbound plus outbound packet rate divided by observed FPS.
 [Full results and methodology](BENCHMARK.md)
-include both rsh transports, every profile, CPU/RSS and collection failures.
+include both rsh transports, every profile, coding-agent efficiency, CPU/RSS and collection failures.
 <!-- benchmark-summary:end -->
 
 ## Installation
@@ -154,9 +157,12 @@ tmux copy-mode scrolling.
 
 Consecutive scroll requests are combined at an 8 ms frame interval; only
 the latest requested position is rendered, with bounded output in flight.
-Ordinary interactive sessions use the same server-side row comparison for
-live output: only changed spans and reusable row movements are sent. Repeated
-draws of identical rows do not send screen data, including hidden cursor
+Ordinary interactive sessions use the same server-side row and cell
+comparison for live output: unchanged rows are skipped by hash, moved row
+blocks scroll when that saves bytes, and modified rows choose the shortest
+encoding among sparse cell jumps, merged spans, trailing line erase (`EL`)
+and full-row rewrite, carrying pen attributes and OSC 8 hyperlinks inline.
+Repeated draws of identical rows do not send screen data, including hidden cursor
 movement and repeated window titles. Input modes, visible cursor changes,
 bell, clipboard and terminal queries still work. Pipes retain the original
 output bytes. The server keeps unfinished sequences and hidden drawing state
@@ -168,15 +174,16 @@ attaching an ordinary interactive client.
 The client compares consecutive visible frames to detect row movement in
 either direction, including a TUI transcript between a fixed title and input
 area. When it reduces output bytes, it scrolls only that body region and
-repaints the remaining changed rows. Detection uses frame contents rather
-than wheel events or history offsets; resizing forces a fresh render.
+updates the remaining changed rows with the same cell-versus-row cost check.
+Detection uses frame contents rather than wheel events or history offsets;
+resizing forces a fresh render.
 
 Use `rsh --profile-render <host> [name]`, or type `~p` at the start of a
-line during an ordinary session, to visualize the client's body row diff
+line during an ordinary session, to visualize the client's body diff
 (excluding header restoration and the diagnostic overlay's own writes):
-**green** rows moved and were reused, **red** rows were reprinted, and
-**gray** rows stayed unchanged. A partially edited row is also red because
-the renderer reprints that row. `[profile]` marks the mode in the header.
+**green** rows moved and were reused, **amber** spans were patched at the
+cell level, **red** rows were rewritten in full, and **gray** cells stayed
+unchanged. `[profile]` marks the mode in the header.
 The diagnostic backgrounds leave the application and server history intact;
 toggling off restores original colors. Diagnostic colors follow reused rows
 and repaint only when needed. They still add drawing work, so disable
@@ -303,59 +310,105 @@ The implementation is in [`src/server.rs`](src/server.rs),
 <!-- benchmark-details:start -->
 ## Performance
 
-Average FPS is the mean of the two per-run rates;1%/5% lows are reciprocals
-of pooled p99/p95 frame gaps. Network is client RX including protocol overhead;
-RSS is a sample, not peak memory. Frame observers differ across transports.
-See the [measurement scope](BENCHMARK.md#measurement-scope).
+Average FPS is the mean of the two per-run rates with buffered catch-up bursts
+excluded (capped at 60 FPS); 1%/5% lows are reciprocals of pooled p99/p95 frame
+gaps. Network is client RX including protocol overhead; RSS is a sample, not
+peak memory. Frame observers differ across transports. See the
+[measurement scope](BENCHMARK.md#measurement-scope).
 
 ### Dashboard on slow, distant and lossy links
 
-![Dashboard FPS and lows for all five transports](docs/bench/v0.3.0/fps-dashboard.svg)
+![Dashboard FPS and lows for all five transports](docs/bench/v0.4.0/fps-dashboard.svg)
 
 | Link | Tool | Avg FPS | 1% low | 5% low | Age ms | RX kbit/s | Client RSS MiB | Server RSS MiB |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 Mbit/s · RTT 100 ms | rsh (UDP) | 60.0 | 41.2 | 46.1 | 60 | 218 | 2.49 | 5.03 |
-| 1 Mbit/s · RTT 100 ms | OpenSSH | 23.6 | 6.6 | 7.2 | 2542 | 977 | 7.51 | 19.27 |
-| 1 Mbit/s · RTT 100 ms | mosh | 18.0 | 16.8 | 17.1 | 66 | 98 | 14.53 | 10.46 |
-| 256 kbit/s · RTT 100 ms | rsh (UDP) | 57.0 | 39.4 | 44.2 | 72 | 211 | 2.52 | 5.55 |
-| 256 kbit/s · RTT 100 ms | OpenSSH | 6.0 | 4.1 | 5.1 | 3782 | 248 | 7.38 | 19.31 |
-| 256 kbit/s · RTT 100 ms | mosh | 15.6 | 13.9 | 14.8 | 84 | 88 | 14.35 | 10.43 |
-| RTT 300 ms | rsh (UDP) | 59.0 | 36.2 | 45.5 | 156 | 216 | 2.52 | 5.07 |
-| RTT 300 ms | OpenSSH | 59.9 | 23.1 | 48.5 | 152 | 2502 | 7.44 | 18.46 |
-| RTT 300 ms | mosh | 6.6 | 6.3 | 6.4 | 161 | 37 | 14.55 | 10.31 |
-| 2% loss · RTT 100 ms | rsh (UDP) | 58.6 | 39.4 | 46.5 | 56 | 414 | 2.63 | 5.59 |
-| 2% loss · RTT 100 ms | OpenSSH | 33.6 | 5.0 | 9.6 | 1892 | 1373 | 7.52 | 19.31 |
-| 2% loss · RTT 100 ms | mosh | 17.9 | 3.8 | 17.8 | 61 | 103 | 14.82 | 10.55 |
-| 256 kbit/s · RTT 400 ms · 2% loss | rsh (UDP) | 29.0 | 1.7 | 32.3 | 230 | 174 | 2.95 | 5.71 |
-| 256 kbit/s · RTT 400 ms · 2% loss | OpenSSH | 6.0 | 1.0 | 1.7 | 4401 | 249 | 7.58 | 19.50 |
-| 256 kbit/s · RTT 400 ms · 2% loss | mosh | 4.5 | 1.2 | 4.6 | 234 | 26 | 14.44 | 10.39 |
+| 1 Mbit/s · RTT 100 ms | rsh (UDP) | 59.6 | 45.9 | 50.8 | 56 | 169 | 3.06 | 5.89 |
+| 1 Mbit/s · RTT 100 ms | OpenSSH | 17.0 | 6.4 | 6.9 | 1825 | 977 | 7.49 | 19.22 |
+| 1 Mbit/s · RTT 100 ms | mosh | 17.9 | 16.6 | 17.2 | 66 | 98 | 14.45 | 10.48 |
+| 256 kbit/s · RTT 100 ms | rsh (UDP) | 59.5 | 43.7 | 49.5 | 64 | 170 | 3.04 | 5.99 |
+| 256 kbit/s · RTT 100 ms | OpenSSH | 6.0 | 4.9 | 5.1 | 3808 | 250 | 7.37 | 19.32 |
+| 256 kbit/s · RTT 100 ms | mosh | 15.6 | 14.4 | 14.8 | 83 | 90 | 14.35 | 10.45 |
+| RTT 300 ms | rsh (UDP) | 59.7 | 44.4 | 48.1 | 153 | 167 | 3.05 | 5.74 |
+| RTT 300 ms | OpenSSH | 58.0 | 24.1 | 46.7 | 152 | 2507 | 7.45 | 18.48 |
+| RTT 300 ms | mosh | 6.5 | 6.4 | 6.4 | 160 | 36 | 14.29 | 10.36 |
+| 2% loss · RTT 100 ms | rsh (UDP) | 59.2 | 45.5 | 49.0 | 52 | 322 | 3.09 | 5.52 |
+| 2% loss · RTT 100 ms | OpenSSH | 14.8 | 4.8 | 5.0 | 1640 | 1159 | 7.53 | 19.57 |
+| 2% loss · RTT 100 ms | mosh | 17.6 | 3.7 | 17.5 | 61 | 102 | 14.51 | 10.74 |
+| 256 kbit/s · RTT 400 ms · 2% loss | rsh (UDP) | 24.5 | 1.2 | 15.6 | 220 | 159 | 3.29 | 6.21 |
+| 256 kbit/s · RTT 400 ms · 2% loss | OpenSSH | 2.3 | 0.4 | 0.4 | 4348 | 237 | 7.51 | 19.21 |
+| 256 kbit/s · RTT 400 ms · 2% loss | mosh | 4.1 | 1.2 | 4.6 | 234 | 23 | 14.37 | 10.54 |
+
+### Coding agent TUI (spinner, RGB token streaming & diff scroll)
+
+Models an Ink-based coding assistant redrawing an active response block,
+syntax-highlighted code, scrolling diffs and a bordered prompt/status footer.
+Cell-level `CHA` jumps, in-place region scrolling and `zstream` deflate keep wire
+traffic ~15–20× smaller than SSH and ET on unconstrained links while sustaining
+60 FPS on constrained links where byte streams saturate and lag.
+
+![Coding agent TUI FPS and lows](docs/bench/v0.4.0/fps-agent.svg)
+
+![Received KiB per displayed coding-agent frame](docs/bench/v0.4.0/network-agent.svg)
+
+| Link | rsh RX kbit/s | SSH RX kbit/s | ET RX kbit/s | mosh RX kbit/s | RX vs SSH | RX vs ET | rsh KiB/frame | KiB/frame vs SSH / ET / mosh |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| LAN | **83** | 1864 | 1842 | 133 | **22.46×** | **22.19×** | **0.17** | 22.48× / 22.21× / 2.10× |
+| RTT 100 ms | **83** | 1886 | 1860 | 57 | **22.72×** | **22.40×** | **0.17** | 22.81× / 22.65× / 2.20× |
+| 1 Mbit/s · RTT 100 ms | **84** | 978 | 978 | 54 | **11.65×** | **11.64×** | **0.17** | 24.97× / 21.97× / 2.11× |
+| 256 kbit/s · RTT 100 ms | **84** | 248 | 250 | 48 | **2.94×** | **2.96×** | **0.17** | 17.90× / 17.65× / 1.96× |
+| RTT 300 ms | **83** | 1885 | 1860 | 22 | **22.71×** | **22.41×** | **0.17** | 22.81× / 24.26× / 2.44× |
+| 2% loss · RTT 100 ms | **161** | 1128 | 1289 | 56 | **7.01×** | **8.01×** | **0.33** | 25.89× / 19.65× / 1.12× |
+| 512 kbit/s · RTT 200 ms · 1% loss | **146** | 500 | 498 | 29 | **3.43×** | **3.41×** | **0.30** | 17.10× / 12.74× / 1.26× |
+
+| Link | Tool | Avg FPS | 1% low | 5% low | Age ms | RX kbit/s | Client RSS MiB | Server RSS MiB |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| LAN | rsh (UDP) | 60.0 | 51.8 | 53.8 | 1 | 83 | 2.98 | 6.73 |
+| LAN | OpenSSH | 60.0 | 50.8 | 53.5 | 1 | 1864 | 7.38 | 18.39 |
+| LAN | ET | 60.0 | 50.3 | 52.6 | 1 | 1842 | 16.18 | 14.88 |
+| LAN | mosh | 45.8 | 37.3 | 39.4 | 10 | 133 | 15.21 | 10.41 |
+| 1 Mbit/s · RTT 100 ms | rsh (UDP) | 59.9 | 47.2 | 50.3 | 53 | 84 | 2.99 | 5.67 |
+| 1 Mbit/s · RTT 100 ms | OpenSSH | 27.9 | 6.8 | 16.0 | 1098 | 978 | 7.39 | 18.67 |
+| 1 Mbit/s · RTT 100 ms | ET | 31.8 | 16.3 | 20.0 | 1226 | 978 | 17.13 | 14.49 |
+| 1 Mbit/s · RTT 100 ms | mosh | 18.4 | 16.9 | 17.3 | 64 | 54 | 14.76 | 10.47 |
+| 256 kbit/s · RTT 100 ms | rsh (UDP) | 59.0 | 34.6 | 50.0 | 58 | 84 | 3.00 | 6.84 |
+| 256 kbit/s · RTT 100 ms | OpenSSH | 9.7 | 5.2 | 5.3 | 3103 | 248 | 7.49 | 19.17 |
+| 256 kbit/s · RTT 100 ms | ET | 9.9 | 5.3 | 6.9 | 3122 | 250 | 18.04 | 14.14 |
+| 256 kbit/s · RTT 100 ms | mosh | 17.1 | 14.0 | 14.7 | 72 | 48 | 14.75 | 10.42 |
+| RTT 300 ms | rsh (UDP) | 59.8 | 45.0 | 48.5 | 152 | 83 | 2.99 | 6.01 |
+| RTT 300 ms | OpenSSH | 59.5 | 42.6 | 49.5 | 152 | 1885 | 7.36 | 18.38 |
+| RTT 300 ms | ET | 55.2 | 32.2 | 48.8 | 152 | 1860 | 17.31 | 14.87 |
+| RTT 300 ms | mosh | 6.5 | 6.4 | 6.4 | 161 | 22 | 14.77 | 10.33 |
+| 2% loss · RTT 100 ms | rsh (UDP) | 58.9 | 42.7 | 48.5 | 52 | 161 | 2.98 | 6.66 |
+| 2% loss · RTT 100 ms | OpenSSH | 16.2 | 3.5 | 5.0 | 750 | 1128 | 7.70 | 19.34 |
+| 2% loss · RTT 100 ms | ET | 24.0 | 4.9 | 7.5 | 106 | 1289 | 18.14 | 14.62 |
+| 2% loss · RTT 100 ms | mosh | 18.4 | 9.3 | 17.5 | 60 | 56 | 14.59 | 10.47 |
 
 ### Random full screen
 
 Every cell changes each frame, exposing bandwidth and frame-gap limits.
 
-![Random-screen FPS and lows](docs/bench/v0.3.0/fps-random.svg)
+![Random-screen FPS and lows](docs/bench/v0.4.0/fps-random.svg)
 
 | Link | Tool | Avg FPS | 1% low | 5% low | Age ms | RX kbit/s | Client RSS MiB | Server RSS MiB |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 Mbit/s · RTT 100 ms | rsh (UDP) | 23.8 | 12.1 | 20.0 | 100 | 916 | 2.52 | 5.74 |
-| 1 Mbit/s · RTT 100 ms | OpenSSH | 10.1 | 6.4 | 6.8 | 3496 | 979 | 7.40 | 19.59 |
-| 1 Mbit/s · RTT 100 ms | mosh | 16.2 | 15.0 | 15.3 | 106 | 700 | 14.49 | 10.48 |
-| RTT 300 ms | rsh (UDP) | 57.4 | 27.6 | 44.2 | 157 | 2710 | 2.64 | 5.75 |
-| RTT 300 ms | OpenSSH | 60.0 | 13.6 | 46.7 | 152 | 5794 | 7.80 | 18.62 |
-| RTT 300 ms | mosh | 6.6 | 6.3 | 6.4 | 162 | 283 | 14.32 | 10.19 |
-| 2% loss · RTT 100 ms | rsh (UDP) | 54.2 | 9.2 | 42.9 | 57 | 5104 | 2.89 | 5.87 |
-| 2% loss · RTT 100 ms | OpenSSH | 26.2 | 4.6 | 6.1 | 1658 | 2548 | 7.64 | 19.15 |
-| 2% loss · RTT 100 ms | mosh | 15.1 | 3.1 | 6.0 | 62 | 797 | 14.38 | 10.91 |
-| 256 kbit/s · RTT 400 ms · 2% loss | rsh (UDP) | 5.2 | 1.5 | 2.2 | 367 | 219 | 2.60 | 5.42 |
-| 256 kbit/s · RTT 400 ms · 2% loss | OpenSSH | 2.7 | 0.3 | 0.9 | 4386 | 251 | 7.44 | 19.69 |
-| 256 kbit/s · RTT 400 ms · 2% loss | mosh | 4.0 | 2.2 | 2.3 | 382 | 184 | 14.43 | 10.43 |
+| 1 Mbit/s · RTT 100 ms | rsh (UDP) | 23.9 | 19.5 | 20.8 | 101 | 932 | 3.14 | 5.59 |
+| 1 Mbit/s · RTT 100 ms | OpenSSH | 8.2 | 5.1 | 6.3 | 3037 | 979 | 7.41 | 19.57 |
+| 1 Mbit/s · RTT 100 ms | mosh | 15.4 | 12.3 | 13.2 | 108 | 667 | 14.54 | 10.46 |
+| RTT 300 ms | rsh (UDP) | 59.2 | 33.6 | 46.5 | 154 | 2716 | 3.09 | 6.11 |
+| RTT 300 ms | OpenSSH | 55.0 | 12.4 | 43.7 | 152 | 5792 | 7.83 | 18.65 |
+| RTT 300 ms | mosh | 6.6 | 6.2 | 6.4 | 162 | 284 | 14.38 | 10.26 |
+| 2% loss · RTT 100 ms | rsh (UDP) | 56.8 | 29.3 | 44.6 | 54 | 5232 | 3.27 | 6.69 |
+| 2% loss · RTT 100 ms | OpenSSH | 13.3 | 4.6 | 5.0 | 1723 | 1824 | 7.60 | 19.53 |
+| 2% loss · RTT 100 ms | mosh | 15.2 | 3.1 | 9.2 | 63 | 796 | 14.48 | 10.99 |
+| 256 kbit/s · RTT 400 ms · 2% loss | rsh (UDP) | 3.8 | 0.9 | 1.4 | 391 | 204 | 3.27 | 7.10 |
+| 256 kbit/s · RTT 400 ms · 2% loss | OpenSSH | 1.9 | 0.4 | 1.2 | 4546 | 244 | 7.53 | 19.49 |
+| 256 kbit/s · RTT 400 ms · 2% loss | mosh | 4.0 | 2.2 | 2.3 | 386 | 187 | 14.45 | 10.33 |
 
 ### Network and memory
 
-![Received KiB per displayed dashboard frame](docs/bench/v0.3.0/network.svg)
+![Received KiB per displayed dashboard frame](docs/bench/v0.4.0/network.svg)
 
-![Client and server RSS for ten idle sessions](docs/bench/v0.3.0/memory-sessions.svg)
+![Client and server RSS for ten idle sessions](docs/bench/v0.4.0/memory-sessions.svg)
 
 The [full benchmark report](BENCHMARK.md) includes CPU/RSS, packets, connection,
 echo, bulk output, link changes and recovery, with all attempts retained.
@@ -366,14 +419,16 @@ Each evaluation contains two common 30-second impairment cycles over 60 seconds.
 Four sessions use 100×30 workload PTYs. These observations are separate from
 static tests and from the other rsh-transport cohort.
 
-![Moving-link FPS and lows, each evaluation separate](docs/bench/v0.3.0/moving.svg)
+![Moving-link FPS and lows, each evaluation separate](docs/bench/v0.4.0/moving.svg)
 
-Dashboard rsh averages: **41.17 / 32.17 FPS** across the two evaluations.
+Dashboard rsh averages: **33.87 / 34.27 FPS** across the two evaluations.
 
-Random screen rsh averages: **28.40 / 28.07 FPS** across the two evaluations.
+Random screen rsh averages: **26.75 / 27.87 FPS** across the two evaluations.
 
-High post-outage FPS can include backlog catch-up. Frame age, gaps and replay
-application timestamps remain in the [moving comparison](BENCHMARK.md#10-moving-network).
+Coding agent TUI rsh averages: **37.38 / 40.02 FPS** across the two evaluations.
+
+Buffered catch-up bursts are excluded from FPS; frame age, gaps and replay
+application timestamps remain in the [moving comparison](BENCHMARK.md#11-moving-network).
 Moving RSS uses the larger of midpoint/end samples; scene traffic includes
 warmup/drain. Synthetic links do not establish performance on every real radio
 network or fairness with competing traffic.
@@ -395,7 +450,7 @@ Run render and link-switch tests:
 python3 benchmark/lab/lab.py run --tools ssh,mosh,rsh \
   --tests render,switch --nets lan,wan,lowbw,highlat \
   --switches lan:lowbw,lowbw:highlat \
-  --scenes compress,bandwidth --fps 60 --duration 8 --iterations 2 --parallel 4
+  --scenes compress,bandwidth,agent --fps 60 --duration 8 --iterations 2 --parallel 4
 ```
 
 Performance measurements use four parallel jobs and two evaluations per case,
@@ -409,7 +464,7 @@ Run the moving-network demo:
 
 ```sh
 python3 benchmark/lab/lab.py demo --tools ssh,mosh,rsh --events '' \
-  --nets moving --scenes compress,bandwidth --fps 60 --duration 60
+  --nets moving --scenes compress,bandwidth,agent --fps 60 --duration 60
 ```
 
 To compare two Linux builds, pass `--rsh /path/to/baseline` and

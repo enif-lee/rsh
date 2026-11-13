@@ -1,0 +1,138 @@
+{
+  "version": "0.4.0",
+  "source_build_id": "c1a9b57e7aea",
+  "runtime_version": "rsh 0.4.0 build c1a9b57e7aea protocol 3 handoff 3 platform darwin-aarch64",
+  "platform": {
+    "host": "ProductName:\t\tmacOS\nProductVersion:\t\t27.0.1\nBuildVersion:\t\t26A434\n",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)"
+  },
+  "dist_files": {
+    "rsh-linux-x86_64": "f697aa34e2f2abe91658e7e8b3b1605d55ce8f511586d44ffecb956c4db0718c",
+    "rsh-linux-aarch64": "6f8eb99ee692b9c25de522251099f8c2f9fdd34cb8bdcfb62b4e2f2d55d457c2",
+    "rsh-darwin-aarch64": "94c0c9834c8c28b0be8e8951eba29a8d82bc258a8a0e55588e9e70dfa08e1199",
+    "rsh-darwin-x86_64": "59cf9dec2471bb45fe7806767a0dd18a8026481411a99e67c5412d74d18333cf"
+  },
+  "harness_files": {
+    "benchmark/lab/lab.py": "a51c7f3c5bd7d4ee06da9c1e096d46157ff1a7fd3ded6cd2faa1d24330c1edfd",
+    "benchmark/lab/agent.py": "306252b5e9ed9de87e6d647f533c1855162382dd63f18c99884a4f762d5efdec",
+    "benchmark/lab/scene.py": "ea495838750721c3b13ece87e6c63b855436e6291581179b44c178df433a05be",
+    "benchmark/lab/moving.py": "135041be66607bf14492079eea1efdb7eb488fc140df5ed5b28203961da7ee3a"
+  },
+  "endpoint_provenance": [
+    {
+      "container": "rl-0-srv",
+      "version": "rsh 0.4.0 build c1a9b57e7aea protocol 3 handoff 3 platform linux-aarch64",
+      "sha256": "6f8eb99ee692b9c25de522251099f8c2f9fdd34cb8bdcfb62b4e2f2d55d457c2",
+      "python": "Python 3.12.3",
+      "kernel": "7.2.12-orbstack-00394-gbecdd6130068",
+      "packages": "et\t7.0.0-noble1\niproute2\t6.1.0-1ubuntu6.4\nmosh\t1.4.0-1ubuntu3\nopenssh-client\t1:9.6p1-3ubuntu13.20\nopenssh-server\t1:9.6p1-3ubuntu13.20\npython3-pyte\t0.8.0-2\n"
+    },
+    {
+      "container": "rl-0-cli",
+      "version": "rsh 0.4.0 build c1a9b57e7aea protocol 3 handoff 3 platform linux-aarch64",
+      "sha256": "6f8eb99ee692b9c25de522251099f8c2f9fdd34cb8bdcfb62b4e2f2d55d457c2",
+      "python": "Python 3.12.3",
+      "kernel": "7.2.12-orbstack-00394-gbecdd6130068",
+      "packages": "et\t7.0.0-noble1\niproute2\t6.1.0-1ubuntu6.4\nmosh\t1.4.0-1ubuntu3\nopenssh-client\t1:9.6p1-3ubuntu13.20\nopenssh-server\t1:9.6p1-3ubuntu13.20\npython3-pyte\t0.8.0-2\n"
+    },
+    {
+      "container": "rl-1-srv",
+      "version": "rsh 0.4.0 build c1a9b57e7aea protocol 3 handoff 3 platform linux-aarch64",
+      "sha256": "6f8eb99ee692b9c25de522251099f8c2f9fdd34cb8bdcfb62b4e2f2d55d457c2",
+      "python": "Python 3.12.3",
+      "kernel": "7.2.12-orbstack-00394-gbecdd6130068",
+      "packages": "et\t7.0.0-noble1\niproute2\t6.1.0-1ubuntu6.4\nmosh\t1.4.0-1ubuntu3\nopenssh-client\t1:9.6p1-3ubuntu13.20\nopenssh-server\t1:9.6p1-3ubuntu13.20\npython3-pyte\t0.8.0-2\n"
+    },
+    {
+      "container": "rl-1-cli",
+      "version": "rsh 0.4.0 build c1a9b57e7aea protocol 3 handoff 3 platform linux-aarch64",
+      "sha256": "6f8eb99ee692b9c25de522251099f8c2f9fdd34cb8bdcfb62b4e2f2d55d457c2",
+      "python": "Python 3.12.3",
+      "kernel": "7.2.12-orbstack-00394-gbecdd6130068",
+      "packages": "et\t7.0.0-noble1\niproute2\t6.1.0-1ubuntu6.4\nmosh\t1.4.0-1ubuntu3\nopenssh-client\t1:9.6p1-3ubuntu13.20\nopenssh-server\t1:9.6p1-3ubuntu13.20\npython3-pyte\t0.8.0-2\n"
+    },
+    {
+      "container": "rl-2-srv",
+      "version": "rsh 0.4.0 build c1a9b57e7aea protocol 3 handoff 3 platform linux-aarch64",
+      "sha256": "6f8eb99ee692b9c25de522251099f8c2f9fdd34cb8bdcfb62b4e2f2d55d457c2",
+      "python": "Python 3.12.3",
+      "kernel": "7.2.12-orbstack-00394-gbecdd6130068",
+      "packages": "et\t7.0.0-noble1\niproute2\t6.1.0-1ubuntu6.4\nmosh\t1.4.0-1ubuntu3\nopenssh-client\t1:9.6p1-3ubuntu13.20\nopenssh-server\t1:9.6p1-3ubuntu13.20\npython3-pyte\t0.8.0-2\n"
+    },
+    {
+      "container": "rl-2-cli",
+      "version": "rsh 0.4.0 build c1a9b57e7aea protocol 3 handoff 3 platform linux-aarch64",
+      "sha256": "6f8eb99ee692b9c25de522251099f8c2f9fdd34cb8bdcfb62b4e2f2d55d457c2",
+      "python": "Python 3.12.3",
+      "kernel": "7.2.12-orbstack-00394-gbecdd6130068",
+      "packages": "et\t7.0.0-noble1\niproute2\t6.1.0-1ubuntu6.4\nmosh\t1.4.0-1ubuntu3\nopenssh-client\t1:9.6p1-3ubuntu13.20\nopenssh-server\t1:9.6p1-3ubuntu13.20\npython3-pyte\t0.8.0-2\n"
+    },
+    {
+      "container": "rl-3-srv",
+      "version": "rsh 0.4.0 build c1a9b57e7aea protocol 3 handoff 3 platform linux-aarch64",
+      "sha256": "6f8eb99ee692b9c25de522251099f8c2f9fdd34cb8bdcfb62b4e2f2d55d457c2",
+      "python": "Python 3.12.3",
+      "kernel": "7.2.12-orbstack-00394-gbecdd6130068",
+      "packages": "et\t7.0.0-noble1\niproute2\t6.1.0-1ubuntu6.4\nmosh\t1.4.0-1ubuntu3\nopenssh-client\t1:9.6p1-3ubuntu13.20\nopenssh-server\t1:9.6p1-3ubuntu13.20\npython3-pyte\t0.8.0-2\n"
+    },
+    {
+      "container": "rl-3-cli",
+      "version": "rsh 0.4.0 build c1a9b57e7aea protocol 3 handoff 3 platform linux-aarch64",
+      "sha256": "6f8eb99ee692b9c25de522251099f8c2f9fdd34cb8bdcfb62b4e2f2d55d457c2",
+      "python": "Python 3.12.3",
+      "kernel": "7.2.12-orbstack-00394-gbecdd6130068",
+      "packages": "et\t7.0.0-noble1\niproute2\t6.1.0-1ubuntu6.4\nmosh\t1.4.0-1ubuntu3\nopenssh-client\t1:9.6p1-3ubuntu13.20\nopenssh-server\t1:9.6p1-3ubuntu13.20\npython3-pyte\t0.8.0-2\n"
+    }
+  ],
+  "static_command": [
+    "/opt/homebrew/opt/python@3.15/bin/python3.15",
+    "/Users/ed/personal/rsh/benchmark/lab/lab.py",
+    "run",
+    "--rsh",
+    "/Users/ed/.rsh/dist/rsh-linux-aarch64",
+    "--keep",
+    "--tools",
+    "ssh,et,mosh,rsh,rsh-tcp",
+    "--tests",
+    "render,switch,echo,flood,outage,roam,reattach,udpblock,sessions",
+    "--nets",
+    "lan,wan,lowbw,mid5,verylow,slow64k,highlat,lossy,mobile,badmobile",
+    "--scenes",
+    "compress,bandwidth,agent",
+    "--switches",
+    "lan:highlat,lan:lowbw,lowbw:highlat,highlat:lossy,wan:verylow",
+    "--event-net",
+    "wan",
+    "--duration",
+    "8",
+    "--fps",
+    "60",
+    "--cols",
+    "100",
+    "--rows",
+    "30",
+    "--switch-at",
+    "2",
+    "--keys",
+    "10",
+    "--lines",
+    "100000",
+    "--down",
+    "5",
+    "--sessions",
+    "10",
+    "--iterations",
+    "2",
+    "--session-iterations",
+    "2",
+    "--parallel",
+    "4"
+  ],
+  "static_status": {
+    "state": "finished",
+    "jobs": 700,
+    "sha256": "2430daf66fc030d7c336f1bf15c940668e3bcb2954cfc32f936810ef535e765a",
+    "errors": 2
+  }
+}

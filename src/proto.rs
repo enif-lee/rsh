@@ -1281,7 +1281,18 @@ impl Sender {
     /// wait a round trip each time a frame did not fit, for the first round
     /// trips of every burst.
     fn least_flight(&self) -> u64 {
-        (MIN_WINDOW as f64 * (self.floor_rtt.unwrap_or(0.0) / 100.0).max(1.0)) as u64
+        let floor = self
+            .path
+            .and_then(|(_, rtt)| rtt)
+            .map_or(self.floor_rtt.unwrap_or(0.0), |model| {
+                model.max(self.floor_rtt.unwrap_or(0.0))
+            });
+        let base = if matches!(self.path, Some((None, _))) {
+            2 * MIN_WINDOW
+        } else {
+            MIN_WINDOW
+        };
+        (base as f64 * (floor / 100.0).max(1.0)) as u64
     }
 
     /// How fast output drains now, wire bytes a second, to tell whether a

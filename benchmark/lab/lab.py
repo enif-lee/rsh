@@ -114,6 +114,7 @@ MOVING_PERIOD = sum(phase[0] for phase in MOVING)
 SCENES = {
     "compress": "compressible: full-screen dashboard",
     "bandwidth": "incompressible: random full screen",
+    "agent": "Claude Code TUI: spinner, streaming & diff scroll",
 }
 EVENTS = {
     "outage": "link down",
@@ -481,13 +482,34 @@ COLUMNS = {
 POOLED = {"low1_fps": ("gaps_ms", 0.99), "low5_fps": ("gaps_ms", 0.95), "low1_after": ("gaps_after_ms", 0.99), "low5_after": ("gaps_after_ms", 0.95)}
 
 
+def pace_frames(seen, max_fps):
+    """Leaky-bucket rate limiter at `max_fps` (1 frame credit): absorbs normal
+    2-4 ms OS/PTY scheduling jitter around a steady cadence without dropping
+    legitimate frames, while discarding buffered catch-up bursts that arrive
+    after a stall so delayed frames can never exceed `max_fps`."""
+    if not max_fps or max_fps <= 0 or len(seen) <= 1:
+        return list(seen)
+    period = 1.0 / max_fps
+    jitter = period * 0.5
+    accepted = [seen[0]]
+    next_slot = seen[0][0] + period
+    for f in seen[1:]:
+        t = f[0]
+        if t + jitter >= next_slot:
+            accepted.append(f)
+            next_slot = max(next_slot, t) + period
+    return accepted
+
+
 def pooled_low(runs, name):
     """`name` over the gaps of all `runs`, or None without them."""
     field, q = POOLED[name]
     gaps = sorted(g for r in runs for g in r.get(field) or [])
     if len(gaps) < 10 or any(r.get(field) is None for r in runs):
         return None
-    return 1000 / max(gaps[min(len(gaps) - 1, math.ceil(len(gaps) * q) - 1)], 1e-3)
+    val = 1000 / max(gaps[min(len(gaps) - 1, math.ceil(len(gaps) * q) - 1)], 1e-3)
+    caps = [r["scene_fps"] for r in runs if r.get("scene_fps")]
+    return min(val, float(min(caps))) if caps else val
 
 
 def summary(results):
@@ -564,8 +586,9 @@ def rx_total(k):
 
 
 class Demo:
-    def __init__(self, tools):
+    def __init__(self, tools, max_fps=None):
         self.tools = tools
+        self.max_fps = max_fps
         # Frames are timed by the containers' clock (the Docker VM's), so
         # are the windows: the host's offset from it, taken once.
         sent = time.time()
@@ -680,7 +703,9 @@ class Demo:
     def watch(self, k):
         log = "/tmp/demo-%d.out" % self.attempt
         dexec(cli(k), "sh", "-c", "pkill -f '[a]gent.py watch'; rm -f /tmp/demo.status; true", check=False)
-        sh("docker", "exec", "-d", cli(k), "python3", "/tmp/agent.py", "watch", log, "/tmp/demo.status", "/tmp/demo.frames")
+        fps_opt = getattr(self, "max_fps", None)
+        extra = ["%g" % fps_opt] if fps_opt else []
+        sh("docker", "exec", "-d", cli(k), "python3", "/tmp/agent.py", "watch", log, "/tmp/demo.status", "/tmp/demo.frames", *extra)
 
     def restart(self):
         """New clients in every pane; when each showed a prompt (s after
@@ -809,7 +834,7 @@ class Demo:
                     time.sleep(1)
                 rx = [b - a for a, b in zip(rx, self.each(rx_total))]
                 window = {"kind": "render", "net": net, "scene": scene, "start": start, "end": start + duration, "seconds": duration,
-                          "until": self.now(), "done": done, "rx_bytes": rx, "rss_kb": rss}
+                          "scene_fps": fps, "until": self.now(), "done": done, "rx_bytes": rx, "rss_kb": rss}
                 if changes is not None:
                     window["network_changes"] = changes
                     window["network_trace"] = self.network_trace
@@ -954,7 +979,7 @@ def demo(opts):
 
 def control(opts):
     tools = opts.tools.split(",")
-    d = Demo(tools)
+    d = Demo(tools, max_fps=opts.fps)
     windows = []
     # Ctrl-b X (or `lab.py stop`) interrupts the controller: what ended so
     # far is summed up, and the demo closes as it would at the end.
@@ -1106,14 +1131,16 @@ def demo_summary(tools, windows):
             # or drain time in place of the fade. Static links retain the
             # original first-displayed-frame convention.
             first = w["start"] if w["net"] == "moving" else seen[0][0] if seen else w["start"]
-            seen = [f for f in seen if f[0] <= first + w["seconds"]]
+            max_fps = w.get("scene_fps")
+            seen = pace_frames([f for f in seen if f[0] <= first + w["seconds"]], max_fps)
+            cap = (lambda v: min(v, float(max_fps))) if max_fps and max_fps > 0 else (lambda v: v)
             times = [first] + [f[0] for f in seen] + [first + w["seconds"]]
-            fps[tool] = len(seen) / w["seconds"]
+            fps[tool] = cap(len(seen) / w["seconds"])
             # As games count them: the rate the slowest 1% and 5% of frame
             # times would give.
             gaps = sorted(b[0] - a[0] for a, b in zip(seen, seen[1:]))
             at = lambda q: gaps[min(len(gaps) - 1, math.ceil(len(gaps) * q) - 1)]
-            lows[tool] = (1 / max(at(0.99), 1e-3), 1 / max(at(0.95), 1e-3)) if len(gaps) >= 10 else (None, None)
+            lows[tool] = (cap(1 / max(at(0.99), 1e-3)), cap(1 / max(at(0.95), 1e-3))) if len(gaps) >= 10 else (None, None)
             age[tool] = statistics.median((f[0] - f[2]) * 1000 for f in seen) if seen else None
             results.append(dict(kind="render", net=w["net"], scene=w["scene"], tool=tool, fps=fps[tool], low1_fps=lows[tool][0], low5_fps=lows[tool][1], age_ms=age[tool],
                                 max_gap_ms=max(b - a for a, b in zip(times, times[1:])) * 1000, to_end=tool not in notes,

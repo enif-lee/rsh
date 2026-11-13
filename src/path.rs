@@ -30,6 +30,10 @@ const NEAR_RTTS: usize = 2;
 const RATE_KEPT: usize = 24;
 /// Rate samples older than this no longer count.
 const RATE_SPAN: Duration = Duration::from_secs(10);
+/// Once an unspread multi-packet train has confirmed a fast path (and no
+/// bottleneck or queue has appeared since), retain that confirmation across
+/// normal interactive pauses and lightweight scenes.
+const FAST_SPAN: Duration = Duration::from_secs(60);
 /// Datagrams sent back to back (within this, microseconds) leave the
 /// bottleneck one after the other when it is slower than the sender: the
 /// train's bytes after its first over the spread of their arrivals is the
@@ -305,6 +309,17 @@ impl PathModel {
                     if self.last_rtts.len() > LAST_RTTS {
                         self.last_rtts.pop_front();
                     }
+                    // When a full (>=600B) unspread back-to-back burst ends a
+                    // report while no bottleneck rate is active, record its
+                    // fast-path confirmation now so the sender need not wait
+                    // another round trip for a subsequent packet to close it.
+                    if self.rate(now).is_none()
+                        && self
+                            .train
+                            .is_some_and(|t| t.back_to_back && t.bytes >= 600 && t.last_us - t.first_us < SPREAD_US)
+                    {
+                        self.end_train(now);
+                    }
                     self.rebase_if_changed(now, at);
                     while self.rtt.back().is_some_and(|(_, r)| *r >= rtt) {
                         self.rtt.pop_back();
@@ -416,14 +431,31 @@ impl PathModel {
     /// Small, paced updates may never form a packet train: jitter then
     /// looks like a slow link, and sending at that rate cannot disprove it.
     /// One short copy a second measures serialization without the frame
-    /// spacing. Bulk output already supplies trains and needs no probe.
+    /// spacing. Also refresh `fast_seen` once when no bottleneck is shown
+    /// but `fast` has not been confirmed yet (e.g. after a path rebase on
+    /// small dashboard updates), so a subsequent heavy animation opens its
+    /// BDP window on the very first frame.
     pub fn probe_due(&mut self, now: Instant) -> bool {
         let recent = |at: Option<Instant>| at.is_some_and(|at| now.duration_since(at) < Duration::from_secs(1));
-        if self.rate(now).is_none_or(|rate| rate >= crate::proto::SLOW_RATE) || recent(self.train_seen) || recent(self.probed) {
+        if self.srtt.is_some() && self.rate(now).is_none() && self.queue_ms < 20.0 && !self.fast(now) {
+            if recent(self.probed) {
+                return false;
+            }
+            self.probed = Some(now);
+            return true;
+        }
+        if self.rate(now).is_none_or(|rate| rate >= crate::proto::SLOW_RATE)
+            || recent(self.train_seen)
+            || recent(self.probed)
+        {
             return false;
         }
         self.probed = Some(now);
         true
+    }
+
+    pub fn needs_full_probe(&self, now: Instant) -> bool {
+        self.srtt.is_some() && self.rate(now).is_none() && self.queue_ms < 20.0 && !self.fast(now)
     }
 
     /// Whether the path has room for copies of what goes now: no queue
@@ -488,8 +520,15 @@ impl PathModel {
         let unspread_since = self.far_since.is_some_and(|since| self.fast_sent.is_some_and(|at| at >= since));
         let quick = self.last_rtts.len() >= NEAR_RTTS && far(near) && unspread_since;
         let near_turned_far = quick || (self.last_rtts.len() >= LAST_RTTS && far(last));
-        let unspread = self.fast_seen.is_some_and(|at| now.duration_since(at) <= RATE_SPAN);
-        let longer = unspread && self.rate(now).is_none() && self.queue_ms >= 20.0 && last > least + 20.0 && self.last_rtts.len() >= LAST_RTTS;
+        let rtt_up = |rtt: f64| rtt > least + 20.0;
+        let up_since = self.last_rtts.iter().rev().take_while(|&&r| rtt_up(r)).count();
+        let unspread = self.fast_seen.is_some_and(|at| now.duration_since(at) <= FAST_SPAN);
+        let unspread_after_rise = up_since >= NEAR_RTTS
+            && self.fast_sent.is_some_and(|at| now.duration_since(at) <= Duration::from_millis((2.0 * near) as u64 + 100));
+        let longer = unspread
+            && self.rate(now).is_none()
+            && self.queue_ms >= 20.0
+            && (unspread_after_rise || (last > least + 20.0 && self.last_rtts.len() >= LAST_RTTS));
         // A queue that stands still for a second (or three round trips)
         // while no bottleneck shows, or while it is sent at under half its
         // rate, is a longer path: a queue of this sender's own grows while
@@ -521,11 +560,11 @@ impl PathModel {
         if !(near_turned_far || longer) {
             return;
         }
-        let last = if quick { near } else { last };
+        let last = if quick || unspread_after_rise { near } else { last };
         self.far_since = None;
         self.rtt.clear();
         self.rtt.push_back((now, last));
-        if quick {
+        if quick || unspread_after_rise {
             // Trains arrive unspread on the longer path: nothing waits on
             // it, and a rate sample across the change (the new delay read
             // as a spread) is no bottleneck's; what the program writes may
@@ -555,7 +594,7 @@ impl PathModel {
     pub fn fast(&self, now: Instant) -> bool {
         // A queue standing says otherwise, whatever was seen before (a LAN
         // that turned slow, before the new rate shows).
-        self.queue_ms < 20.0 && self.rate(now).is_none() && self.fast_seen.is_some_and(|at| now.duration_since(at) <= RATE_SPAN)
+        self.queue_ms < 20.0 && self.rate(now).is_none() && self.fast_seen.is_some_and(|at| now.duration_since(at) <= FAST_SPAN)
     }
 
     /// What the client took lately, wire bytes a second.
@@ -869,5 +908,26 @@ mod tests {
         // Sent twice as fast as the link takes: a queue grows.
         run(&mut model, start, 40, 1000, 15_000, 32_000.0, 50);
         assert!(model.queue_ms() > 100.0, "{}", model.queue_ms());
+    }
+
+    #[test]
+    fn constrained_to_fast_high_rtt_jump_rebases_within_two_reports() {
+        let start = Instant::now();
+        let mut model = PathModel::new(start);
+        // Phase 1: 1 Mbit/s, RTT 100 ms (delay 50 ms each way).
+        let now = run(&mut model, start, 64, 1000, 10, 125_000.0, 50);
+        assert!(model.rate(now).is_some());
+        // Phase 2: link switches to unlimited bandwidth, RTT 300 ms (delay 150 ms).
+        // Once two unspread trains clear the old rate, OWD/RTT rebase on the
+        // second elevated report instead of holding a 100 ms phantom queue for
+        // four full round trips.
+        let mut t = now + Duration::from_millis(200);
+        t = run_from(&mut model, start, t, 4, 1000, 10, 10e6, 150);
+        t = run_from(&mut model, start, t + Duration::from_millis(50), 4, 1000, 10, 10e6, 150);
+        t = run_from(&mut model, start, t + Duration::from_millis(50), 4, 1000, 10, 10e6, 150);
+        assert_eq!(model.rate(t + Duration::from_millis(400)), None);
+        assert!(model.fast(t + Duration::from_millis(400)));
+        assert!(model.queue_ms() < 20.0, "phantom queue remained: {}", model.queue_ms());
+        assert!(model.min_rtt().unwrap_or(0.0) > 250.0);
     }
 }

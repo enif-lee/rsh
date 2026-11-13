@@ -38,17 +38,21 @@ def medians(results, test, key, scene=None):
 
 def lows(results, scene):
     """{net: {tool: (1% low, 5% low)}} over every run's frame gaps."""
-    gaps = {}
+    gaps, caps = {}, {}
     for r in results:
         if r.get("test") == "render" and r.get("scene") == scene and r.get("gaps_ms") is not None:
             gaps.setdefault(r["net"], {}).setdefault(r["tool"], []).extend(r["gaps_ms"])
+            if r.get("scene_fps"):
+                caps.setdefault(r["net"], {}).setdefault(r["tool"], []).append(float(r["scene_fps"]))
     out = {}
     for net, tools in gaps.items():
         for tool, g in tools.items():
             g.sort()
             if len(g) >= 10:
                 at = lambda q: g[min(len(g) - 1, math.ceil(len(g) * q) - 1)]
-                out.setdefault(net, {})[tool] = (1000 / max(at(0.99), 1e-3), 1000 / max(at(0.95), 1e-3))
+                cap_list = caps.get(net, {}).get(tool)
+                cap = (lambda v: min(v, min(cap_list))) if cap_list else (lambda v: v)
+                out.setdefault(net, {})[tool] = (cap(1000 / max(at(0.99), 1e-3)), cap(1000 / max(at(0.95), 1e-3)))
     return out
 
 
@@ -199,14 +203,20 @@ def main():
                                  groups(fps_lows(results, "compress")), lows_fmt, True, pair="lows", value_w=175),
         "fps-random.svg": svg("Frames shown per second: a random full screen at %d fps" % rate, "every cell changes each frame; " + lows_note,
                               groups(fps_lows(results, "bandwidth")), lows_fmt, True, pair="lows", value_w=175),
+        "fps-agent.svg": svg("Frames shown per second: coding agent TUI at %d fps" % rate, "spinner, streaming & diff scroll; " + lows_note,
+                             groups(fps_lows(results, "agent")), lows_fmt, True, pair="lows", value_w=175),
         "age.svg": svg("How old the screen is: a full-screen dashboard at %d fps" % rate, "median age of what is on screen",
                        groups(medians(results, "render", "age_ms", "compress")), lambda v: "%.0f ms" % v if v < 1000 else "%.1f s" % (v / 1000), False, log=True),
         "flood.svg": svg("Time to finish `seq 1 100000`", "until the prompt is back",
                          groups(medians(results, "flood", "flood_s")), lambda v: "%.2f s" % v, False, log=True, missing="> 30 s (not done)"),
         "network.svg": svg("Network: data received per frame shown, a full-screen dashboard at %d fps" % rate, "bytes into the client, median of runs",
                            groups(per_frame(results, "compress")), lambda v: "%.2f KiB" % v, False, log=True),
+        "network-agent.svg": svg("Network: data received per frame shown, coding agent TUI at %d fps" % rate, "bytes into the client, median of runs",
+                                 groups(per_frame(results, "agent")), lambda v: "%.2f KiB" % v, False, log=True),
         "packets.svg": svg("Network: packets for each frame shown, a full-screen dashboard at %d fps" % rate, "the client's, solid: in, light: out",
                            groups(packets(results, "compress")), lambda v: "%.1f in / %.1f out" % v, False, pair="stack"),
+        "packets-agent.svg": svg("Network: packets for each frame shown, coding agent TUI at %d fps" % rate, "the client's, solid: in, light: out",
+                                 groups(packets(results, "agent")), lambda v: "%.1f in / %.1f out" % v, False, pair="stack"),
         "memory.svg": svg("Memory while drawing at %d fps" % rate, "resident memory halfway through each render, median of all of them",
                           memory(results), lambda v: "%.1f MiB" % v, False),
     }

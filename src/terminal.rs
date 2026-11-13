@@ -83,41 +83,63 @@ pub struct Attr {
     pub flags: u16,
 }
 
+const STYLE_FLAGS: Flags = Flags::from_bits_truncate(
+    Flags::BOLD.bits()
+        | Flags::DIM.bits()
+        | Flags::ITALIC.bits()
+        | Flags::INVERSE.bits()
+        | Flags::HIDDEN.bits()
+        | Flags::STRIKEOUT.bits()
+        | Flags::ALL_UNDERLINES.bits(),
+);
+
 impl Attr {
     /// 0 none, 1 single, 2 double, 3 curly, 4 dotted, 5 dashed.
+    #[inline]
     pub fn underline(&self) -> u8 {
         ((self.flags & UNDERLINE_MASK) >> UNDERLINE_SHIFT) as u8
     }
 
+    #[inline]
     fn of(cell: &GridCell) -> Self {
-        let mut flags = 0;
-        for (bit, ours) in [
-            (Flags::BOLD, BOLD),
-            (Flags::DIM, DIM),
-            (Flags::ITALIC, ITALIC),
-            (Flags::INVERSE, REVERSE),
-            (Flags::HIDDEN, HIDDEN),
-            (Flags::STRIKEOUT, STRIKE),
-        ] {
-            if cell.flags.contains(bit) {
-                flags |= ours;
-            }
-        }
-        let underline = [
-            (Flags::UNDERLINE, 1),
-            (Flags::DOUBLE_UNDERLINE, 2),
-            (Flags::UNDERCURL, 3),
-            (Flags::DOTTED_UNDERLINE, 4),
-            (Flags::DASHED_UNDERLINE, 5),
-        ]
-        .into_iter()
-        .find(|(bit, _)| cell.flags.contains(*bit))
-        .map_or(0, |(_, style)| style);
-        flags |= underline << UNDERLINE_SHIFT;
+        let raw = cell.flags & STYLE_FLAGS;
+        let flags = if raw.is_empty() {
+            0
+        } else {
+            let mut f = 0;
+            if raw.contains(Flags::BOLD) { f |= BOLD; }
+            if raw.contains(Flags::DIM) { f |= DIM; }
+            if raw.contains(Flags::ITALIC) { f |= ITALIC; }
+            if raw.contains(Flags::INVERSE) { f |= REVERSE; }
+            if raw.contains(Flags::HIDDEN) { f |= HIDDEN; }
+            if raw.contains(Flags::STRIKEOUT) { f |= STRIKE; }
+            let underline = if raw.intersects(Flags::ALL_UNDERLINES) {
+                if raw.contains(Flags::UNDERLINE) {
+                    1
+                } else if raw.contains(Flags::DOUBLE_UNDERLINE) {
+                    2
+                } else if raw.contains(Flags::UNDERCURL) {
+                    3
+                } else if raw.contains(Flags::DOTTED_UNDERLINE) {
+                    4
+                } else if raw.contains(Flags::DASHED_UNDERLINE) {
+                    5
+                } else {
+                    0
+                }
+            } else {
+                0
+            };
+            f | (underline << UNDERLINE_SHIFT)
+        };
         Attr {
             fg: color(cell.fg),
             bg: color(cell.bg),
-            underline_color: cell.underline_color().map_or(Color::Default, color),
+            underline_color: if cell.extra.is_none() {
+                Color::Default
+            } else {
+                cell.underline_color().map_or(Color::Default, color)
+            },
             flags,
         }
     }
@@ -172,7 +194,16 @@ struct RowHasher(u64);
 /// stationary blank area cannot displace a real scrolling block.
 /// Rows `a..b` take previous rows `a+k..b+k` (positive k moves up).
 /// Hashes only select a candidate; callers still compare/repaint its cells.
+#[cfg(test)]
 pub(crate) fn scroll_change(current: &[u64], previous: &[u64]) -> Option<(isize, usize, usize)> {
+    scroll_change_with_blank(current, previous, None)
+}
+
+pub(crate) fn scroll_change_with_blank(
+    current: &[u64],
+    previous: &[u64],
+    blank: Option<u64>,
+) -> Option<(isize, usize, usize)> {
     if current.len() != previous.len() { return None; }
     let rows = current.len();
     let mut best = None;
@@ -185,7 +216,7 @@ pub(crate) fn scroll_change(current: &[u64], previous: &[u64]) -> Option<(isize,
             let same = i < rows && j >= 0 && (j as usize) < rows && current[i] == previous[j as usize];
             if same {
                 start.get_or_insert(i);
-                changed += usize::from(current[i] != previous[i]);
+                changed += usize::from(current[i] != previous[i] && Some(current[i]) != blank);
             } else if let Some(a) = start.take() {
                 if changed >= 2 && changed > best_changed {
                     best = Some((k, a, i));
@@ -230,6 +261,115 @@ impl std::hash::Hasher for RowHasher {
     }
 }
 
+#[derive(Clone)]
+pub(crate) struct RowSnapshot {
+    pub line: Arc<Row<GridCell>>,
+    pub cols: usize,
+    pub hash: u64,
+}
+
+impl RowSnapshot {
+    pub fn of(line: Row<GridCell>, cols: usize) -> Self {
+        let hash = hash_row(&line, cols);
+        Self { line: Arc::new(line), cols, hash }
+    }
+
+    pub fn blank(cols: usize) -> Self {
+        Self::of(Row::new(cols), cols)
+    }
+}
+
+impl PartialEq for RowSnapshot {
+    fn eq(&self, other: &Self) -> bool {
+        self.cols == other.cols
+            && self.hash == other.hash
+            && (Arc::ptr_eq(&self.line, &other.line)
+                || same_row_cells(&self.line, &other.line, self.cols))
+    }
+}
+
+impl Eq for RowSnapshot {}
+
+impl std::fmt::Debug for RowSnapshot {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("RowSnapshot")
+            .field("cols", &self.cols)
+            .field("hash", &self.hash)
+            .field("text", &row_text(&self.line, self.cols))
+            .finish()
+    }
+}
+
+pub(crate) struct RowDiffPlan {
+    pub bytes: String,
+    pub pen: Attr,
+    pub touched: Vec<std::ops::Range<usize>>,
+    pub full_row: bool,
+}
+
+#[inline]
+fn cell_char(cell: &GridCell) -> char {
+    let spacer_mask = Flags::WIDE_CHAR_SPACER | Flags::LEADING_WIDE_CHAR_SPACER;
+    if !(cell.flags & spacer_mask).is_empty() {
+        if cell.flags.contains(Flags::WIDE_CHAR_SPACER) { SPACER } else { ' ' }
+    } else if cell.c == '\t' {
+        // alacritty keeps a tab's `\t` in the blank cells it skipped.
+        ' '
+    } else {
+        cell.c
+    }
+}
+
+#[inline]
+pub(crate) fn same_cell(a: &GridCell, b: &GridCell) -> bool {
+    if a.extra.is_none() && b.extra.is_none() {
+        if a.c == b.c && a.fg == b.fg && a.bg == b.bg && a.flags == b.flags {
+            return true;
+        }
+        return cell_char(a) == cell_char(b)
+            && color(a.fg) == color(b.fg)
+            && color(a.bg) == color(b.bg)
+            && (a.flags & STYLE_FLAGS) == (b.flags & STYLE_FLAGS);
+    }
+    cell_char(a) == cell_char(b)
+        && Attr::of(a) == Attr::of(b)
+        && a.zerowidth() == b.zerowidth()
+        && match (a.hyperlink(), b.hyperlink()) {
+            (None, None) => true,
+            (Some(a), Some(b)) => a.id() == b.id() && a.uri() == b.uri(),
+            _ => false,
+        }
+}
+
+pub(crate) fn same_row_cells(a: &Row<GridCell>, b: &Row<GridCell>, cols: usize) -> bool {
+    (0..cols).all(|col| same_cell(&a[Column(col)], &b[Column(col)]))
+}
+
+pub(crate) fn hash_row(row: &Row<GridCell>, cols: usize) -> u64 {
+    use std::hash::{Hash, Hasher};
+    let mut h = RowHasher(0);
+    for col in 0..cols {
+        let cell = &row[Column(col)];
+        let ch = cell_char(cell);
+        let attr = Attr::of(cell);
+        h.write_u64(u64::from(ch) | u64::from(attr.flags) << 32);
+        h.write_u64(u64::from(attr.fg.key()) | u64::from(attr.bg.key()) << 32);
+        if cell.extra.is_some() {
+            if attr.underline_color != Color::Default {
+                h.write_u32(attr.underline_color.key());
+            }
+            if let Some(marks) = cell.zerowidth() {
+                marks.hash(&mut h);
+            }
+            if let Some(link) = cell.hyperlink() {
+                link.id().hash(&mut h);
+                link.uri().hash(&mut h);
+            }
+        }
+    }
+    h.finish()
+}
+
 impl Cell {
     /// The right half of a wide character.
     pub fn is_spacer(&self) -> bool {
@@ -237,14 +377,7 @@ impl Cell {
     }
 
     fn of(cell: &GridCell) -> Self {
-        let ch = if cell.flags.contains(Flags::WIDE_CHAR_SPACER) {
-            SPACER
-        } else if cell.flags.contains(Flags::LEADING_WIDE_CHAR_SPACER) || cell.c == '\t' {
-            // alacritty keeps a tab's `\t` in the blank cells it skipped.
-            ' '
-        } else {
-            cell.c
-        };
+        let ch = cell_char(cell);
         let link = cell.hyperlink();
         let marks = cell.zerowidth().unwrap_or_default();
         let extra = if link.is_none() && marks.is_empty() {
@@ -752,6 +885,25 @@ impl Terminal {
         }).collect()
     }
 
+    pub(crate) fn snapshot_rows_from(&self, previous: &[RowSnapshot]) -> Vec<RowSnapshot> {
+        let term = self.term.borrow();
+        let grid = term.grid();
+        let cols = term.columns();
+        let offset = grid.display_offset() as i32;
+        (0..grid.screen_lines())
+            .map(|row| {
+                let line = &grid[Line(row as i32 - offset)];
+                let hash = hash_row(line, cols);
+                if let Some(prev) = previous.get(row) {
+                    if prev.cols == cols && prev.hash == hash && same_row_cells(line, &prev.line, cols) {
+                        return prev.clone();
+                    }
+                }
+                RowSnapshot { line: Arc::new(line.clone()), cols, hash }
+            })
+            .collect()
+    }
+
     /// Diagnostic background only: leave the application grid unchanged.
     pub(crate) fn render_profiled_row(&self, row: usize, background: u8) -> Vec<u8> {
         let term = self.term.borrow();
@@ -759,6 +911,26 @@ impl Terminal {
         let mut line = grid[Line(row as i32 - grid.display_offset() as i32)].clone();
         for col in 0..term.columns() {
             line[Column(col)].bg = AnsiColor::Indexed(background);
+            line[Column(col)].flags.remove(Flags::INVERSE);
+        }
+        let mut out = String::new();
+        render_row(&mut out, &line, term.columns());
+        out.into_bytes()
+    }
+
+    pub(crate) fn render_profiled_partial_row(
+        &self,
+        row: usize,
+        base_bg: u8,
+        patch_bg: u8,
+        touched: &[std::ops::Range<usize>],
+    ) -> Vec<u8> {
+        let term = self.term.borrow();
+        let grid = term.grid();
+        let mut line = grid[Line(row as i32 - grid.display_offset() as i32)].clone();
+        for col in 0..term.columns() {
+            let changed = touched.iter().any(|range| range.contains(&col));
+            line[Column(col)].bg = AnsiColor::Indexed(if changed { patch_bg } else { base_bg });
             line[Column(col)].flags.remove(Flags::INVERSE);
         }
         let mut out = String::new();
@@ -1049,18 +1221,6 @@ impl Terminal {
         out
     }
 
-    fn rows(&self) -> Vec<Vec<Cell>> {
-        let term = self.term.borrow();
-        let cols = term.columns();
-        (0..term.screen_lines())
-            .map(|row| {
-                // The row once, not per cell (each lookup goes round the ring).
-                let line = &term.grid()[Line(row as i32)];
-                (0..cols).map(|col| Cell::of(&line[Column(col)])).collect()
-            })
-            .collect()
-    }
-
     /// What sets the modes of `prev` to these, other than origin and insert
     /// mode; None for a change only a repaint makes (the kitty keyboard
     /// stack, modifyOtherKeys).
@@ -1131,73 +1291,107 @@ impl Terminal {
 
     fn same_rows(&self, other: &Terminal) -> bool {
         let (now, was) = (self.term.borrow(), other.term.borrow());
+        let cols = usize::from(self.size.0.max(2));
         (0..now.screen_lines()).all(|row| {
-            let (now, was) = (&now.grid()[Line(row as i32)], &was.grid()[Line(row as i32)]);
-            (0..usize::from(self.size.0.max(2))).all(|col| Cell::of(&now[Column(col)]) == Cell::of(&was[Column(col)]))
+            same_row_cells(&now.grid()[Line(row as i32)], &was.grid()[Line(row as i32)], cols)
         })
     }
 
     /// Bytes that turn `prev` (the screen a terminal shows) into this one:
-    /// a block of rows scrolled where the screen moved, the cells that
-    /// differ, then region, title and cursor. As mosh sends screens, for a
-    /// link too slow for every byte. None when only a repaint will do (a
-    /// size, alternate screen or mode change).
+    /// a block of rows scrolled where that saves wire bytes, changed cell
+    /// runs or whole-row/EL updates per modified row, then region, title and
+    /// cursor. None when only a repaint will do (a size, alternate screen or
+    /// mode-stack change).
     pub fn diff_from(&self, prev: &Terminal) -> Option<Vec<u8>> {
         if self.size() != prev.size() || self.alt_screen() != prev.alt_screen() {
             return None;
         }
         let modes = self.mode_changes(prev)?;
-        let (cur, mut old) = (self.rows(), prev.rows());
-        let rows = cur.len();
-        // Rows compared by hash in the search (a wrong match is caught by
-        // the caller's `same_screen`): rows² hashes, not rows² × cols cells.
-        // A cheap hash, two words a cell where there is no more to it.
-        let hash = |row: &Vec<Cell>| {
-            use std::hash::Hasher;
-            let mut h = RowHasher(0);
-            for cell in row {
-                let attr = &cell.attr;
-                h.write_u64(u64::from(cell.ch) | u64::from(attr.flags) << 32);
-                h.write_u64(u64::from(attr.fg.key()) | u64::from(attr.bg.key()) << 32);
-                if attr.underline_color != Color::Default || cell.extra != 0 {
-                    h.write_u64(u64::from(attr.underline_color.key()) ^ cell.extra);
+        let (now_term, was_term) = (self.term.borrow(), prev.term.borrow());
+        let (cols, rows) = (now_term.columns(), now_term.screen_lines());
+        // Row hashes filter unchanged rows up front and feed scroll detection
+        // without allocating per-cell vectors across the whole screen.
+        let hc: Vec<u64> = (0..rows).map(|r| hash_row(&now_term.grid()[Line(r as i32)], cols)).collect();
+        let ho: Vec<u64> = (0..rows).map(|r| hash_row(&was_term.grid()[Line(r as i32)], cols)).collect();
+        let diff_body = |old_rows: &[(&Row<GridCell>, u64)], mut pen: Attr| -> String {
+            let mut body = String::new();
+            for (row, &(old_line, old_hash)) in old_rows.iter().enumerate() {
+                let cur_line = &now_term.grid()[Line(row as i32)];
+                if hc[row] == old_hash && same_row_cells(cur_line, old_line, cols) {
+                    continue;
+                }
+                if let Some(plan) = plan_row_diff(row, cur_line, Some(old_line), cols, pen) {
+                    body.push_str(&plan.bytes);
+                    pen = plan.pen;
                 }
             }
-            h.finish()
+            body
         };
-        let (hc, ho): (Vec<u64>, Vec<u64>) = (cur.iter().map(hash).collect(), old.iter().map(hash).collect());
-        let blank = Cell::of(&GridCell::default());
+        let blank = Row::new(cols);
+        let blank_hash = hash_row(&blank, cols);
+        let plain_refs: Vec<(&Row<GridCell>, u64)> = (0..rows)
+            .map(|r| (&was_term.grid()[Line(r as i32)], ho[r]))
+            .collect();
+        let mut best_body = diff_body(&plain_refs, Attr::default());
+        let mut scroll_used = false;
+        if let Some((k, a, b)) = scroll_change_with_blank(&hc, &ho, Some(blank_hash)) {
+            // Rows a..b take old rows a+k..b+k: scroll the region only when
+            // the control sequence + remaining cell diffs beat in-place diffs.
+            let (top, bottom) = if k > 0 { (a, b - 1 + k as usize) } else { ((a as isize + k) as usize, b - 1) };
+            let n = k.unsigned_abs();
+            let mut candidate = String::new();
+            let _ = write!(
+                candidate,
+                "\x1b[{};{}r\x1b[{};1H\x1b[{}{}\x1b[r",
+                top + 1,
+                bottom + 1,
+                top + 1,
+                n,
+                if k > 0 { 'S' } else { 'T' }
+            );
+            let mut moved_refs = plain_refs;
+            let region = moved_refs[top..=bottom].to_vec();
+            for (offset, slot) in moved_refs[top..=bottom].iter_mut().enumerate() {
+                let from = offset as isize + k;
+                *slot = if from >= 0 && (from as usize) < region.len() {
+                    region[from as usize]
+                } else {
+                    (&blank, blank_hash)
+                };
+            }
+            candidate.push_str(&diff_body(&moved_refs, Attr::default()));
+            if candidate.len() < best_body.len() {
+                best_body = candidate;
+                scroll_used = true;
+            }
+        }
+        let newly_blank = (0..rows)
+            .filter(|&r| {
+                hc[r] == blank_hash
+                    && ho[r] != blank_hash
+                    && row_content_end(&now_term.grid()[Line(r as i32)], cols) == 0
+            })
+            .count();
+        let total_blank = hc.iter().filter(|&&h| h == blank_hash).count();
+        if best_body.len() > 6 && newly_blank >= 2 && total_blank * 2 >= rows {
+            let blank_refs = vec![(&blank, blank_hash); rows];
+            let mut cleared = String::from("\x1b[H\x1b[J");
+            cleared.push_str(&diff_body(&blank_refs, Attr::default()));
+            if cleared.len() < best_body.len() {
+                best_body = cleared;
+                scroll_used = false;
+            }
+        }
+        drop((now_term, was_term));
         // Autowrap off too while drawing: a terminal that draws a run of
         // non-ASCII cells wider than here (`WIDE_RUN`) must not wrap or
         // scroll with it at the right edge.
         let mut out = String::from("\x18\x1b[?2026h\x1b[0m\x1b(B\x0f\x1b[?6l\x1b[4l\x1b[?7l");
-        if let Some((k, a, b)) = scroll_change(&hc, &ho) {
-            // Rows a..b take old rows a+k..b+k: scroll the region they span.
-            let (top, bottom) = if k > 0 { (a, b - 1 + k as usize) } else { ((a as isize + k) as usize, b - 1) };
-            let n = k.unsigned_abs();
-            let _ = write!(out, "\x1b[{};{}r\x1b[{};1H\x1b[{}{}", top + 1, bottom + 1, top + 1, n, if k > 0 { 'S' } else { 'T' });
-            let region: Vec<Vec<Cell>> = old[top..=bottom].to_vec();
-            for (offset, row) in old[top..=bottom].iter_mut().enumerate() {
-                let from = offset as isize + k;
-                *row = if from >= 0 && (from as usize) < region.len() { region[from as usize].clone() } else { vec![blank; row.len()] };
-            }
-            out.push_str("\x1b[r");
-        }
-        for row in 0..rows {
-            let Some(first) = (0..cur[row].len()).find(|&col| cur[row][col] != old[row][col]) else {
-                continue;
-            };
-            // Spans do not carry hyperlinks; a repaint does.
-            if cur[row].iter().zip(&old[row]).any(|(new, was)| new != was && new.link) {
-                return None;
-            }
-            let last = (0..cur[row].len()).rev().find(|&col| cur[row][col] != old[row][col]).unwrap_or(first);
-            out.push_str(&String::from_utf8_lossy(&self.span(row, first, last + 1, false, true, WIDE_RUN)));
-        }
+        out.push_str(&best_body);
         let (top, bottom) = self.extra.region;
         if top != 0 || bottom != rows {
             let _ = write!(out, "\x1b[{};{}r", top + 1, bottom);
-        } else {
+        } else if !scroll_used && (prev.extra.region != (0, rows) || !prev.at_ground()) {
             out.push_str("\x1b[r");
         }
         // Origin, insert mode and autowrap were turned off to draw; the
@@ -1500,81 +1694,576 @@ fn render_row(out: &mut String, row: &Row<GridCell>, cols: usize) {
     }
 }
 
-pub fn sgr_string(attr: &Attr) -> String {
-    if *attr == Attr::default() {
-        return String::new();
+/// Minimum byte advantage required to split two nearby changed runs with a
+/// cursor jump instead of bridging across the unchanged cells between them.
+const MERGE_MARGIN: usize = 2;
+
+#[inline]
+fn push_usize(out: &mut String, mut n: usize) {
+    let mut digits = [0u8; 20];
+    let mut idx = digits.len();
+    loop {
+        idx -= 1;
+        digits[idx] = b'0' + (n % 10) as u8;
+        n /= 10;
+        if n == 0 {
+            break;
+        }
     }
-    let mut out = String::from("\x1b[0");
+    for &b in &digits[idx..] {
+        out.push(b as char);
+    }
+}
+
+#[inline]
+fn push_cup(out: &mut String, row_1: usize, col_1: usize) {
+    out.push_str("\x1b[");
+    push_usize(out, row_1);
+    out.push(';');
+    push_usize(out, col_1);
+    out.push('H');
+}
+
+#[inline]
+fn push_cha(out: &mut String, col_1: usize) {
+    out.push_str("\x1b[");
+    push_usize(out, col_1);
+    out.push('G');
+}
+
+fn row_content_end(line: &Row<GridCell>, cols: usize) -> usize {
+    let mut end = cols;
+    while end > 0 && is_default_blank(&line[Column(end - 1)]) {
+        end -= 1;
+    }
+    end
+}
+
+fn atomic_runs(cur: &Row<GridCell>, old: &Row<GridCell>, cols: usize, limit: usize) -> Vec<(usize, usize)> {
+    let mut runs: Vec<(usize, usize)> = Vec::new();
+    let mut col = 0;
+    while col < limit {
+        if same_cell(&cur[Column(col)], &old[Column(col)]) {
+            col += 1;
+            continue;
+        }
+        let mut start = col;
+        if start > 0 && cur[Column(start)].flags.contains(Flags::WIDE_CHAR_SPACER) {
+            start -= 1;
+        }
+        col += 1;
+        while col < limit && !same_cell(&cur[Column(col)], &old[Column(col)]) {
+            col += 1;
+        }
+        let mut end = col;
+        if end < cols && cur[Column(end)].flags.contains(Flags::WIDE_CHAR_SPACER) {
+            end += 1;
+            col = end;
+        }
+        if let Some(prev) = runs.last_mut() {
+            if start <= prev.1 {
+                prev.1 = prev.1.max(end);
+                continue;
+            }
+        }
+        runs.push((start, end));
+    }
+    runs
+}
+
+/// Emits `from..to` of `line` with cursor already at `(row, from)` and no
+/// active OSC 8 hyperlink. Returns `true` when the cursor ends unambiguously
+/// at `to` without ambiguous-width drift.
+fn emit_cells(
+    out: &mut String,
+    line: &Row<GridCell>,
+    cols: usize,
+    from: usize,
+    to: usize,
+    pen: &mut Attr,
+    guard_right: bool,
+) -> bool {
+    let mut link: Option<alacritty_terminal::term::cell::Hyperlink> = None;
+    let mut col = from;
+    let mut run = 0usize;
+    let mut exact = true;
+    while col < to {
+        let cell = &line[Column(col)];
+        if cell.flags.contains(Flags::WIDE_CHAR_SPACER) {
+            col += 1;
+            continue;
+        }
+        if cell.extra.is_some() || link.is_some() {
+            let cell_link = cell.hyperlink();
+            let same_link = match (&cell_link, &link) {
+                (None, None) => true,
+                (Some(a), Some(b)) => a.id() == b.id() && a.uri() == b.uri(),
+                _ => false,
+            };
+            if !same_link {
+                match &cell_link {
+                    Some(hl) => {
+                        out.push_str("\x1b]8;id=");
+                        out.push_str(hl.id());
+                        out.push(';');
+                        out.push_str(hl.uri());
+                        out.push_str("\x1b\\");
+                    }
+                    None => out.push_str("\x1b]8;;\x1b\\"),
+                }
+                link = cell_link;
+            }
+        }
+        let ours = Attr::of(cell);
+        if ours != *pen {
+            write_sgr_from(out, pen, &ours);
+            *pen = ours;
+        }
+        push_cell(out, cell);
+        col += if cell.flags.contains(Flags::WIDE_CHAR) { 2 } else { 1 };
+        if cell.c.is_ascii() {
+            run = 0;
+            exact = true;
+        } else {
+            run += 1;
+            exact = false;
+            let near_right = guard_right && col < cols && col + WIDE_RUN > to;
+            let next_ascii = col < to && line[Column(col)].c.is_ascii();
+            if col < to && (run >= WIDE_RUN || near_right || next_ascii) {
+                push_cha(out, col + 1);
+                run = 0;
+                exact = true;
+            }
+        }
+    }
+    if link.is_some() {
+        out.push_str("\x1b]8;;\x1b\\");
+    }
+    exact
+}
+
+fn advance_pen(line: &Row<GridCell>, from: usize, to: usize, pen: &mut Attr) {
+    let mut col = from;
+    while col < to {
+        let cell = &line[Column(col)];
+        if !cell.flags.contains(Flags::WIDE_CHAR_SPACER) {
+            *pen = Attr::of(cell);
+            col += if cell.flags.contains(Flags::WIDE_CHAR) { 2 } else { 1 };
+        } else {
+            col += 1;
+        }
+    }
+}
+
+fn merge_runs(
+    line: &Row<GridCell>,
+    cols: usize,
+    atomic: &[(usize, usize)],
+    erase_from: Option<usize>,
+    pen: Attr,
+) -> Vec<(usize, usize)> {
+    if atomic.len() <= 1 {
+        return atomic.to_vec();
+    }
+    let first = atomic[0];
+    let mut merged = Vec::with_capacity(atomic.len());
+    merged.push(first);
+    let mut scanned_to = first.0;
+    let mut pen_at_scanned = pen;
+    let mut buf = String::with_capacity(128);
+    for (idx, &(a2, b2)) in atomic.iter().enumerate().skip(1) {
+        let (a1, b1) = *merged.last().unwrap();
+        let tail_start = a1.max(b1.saturating_sub(WIDE_RUN));
+        if scanned_to < tail_start {
+            advance_pen(line, scanned_to, tail_start, &mut pen_at_scanned);
+            scanned_to = tail_start;
+        }
+        let is_last = idx + 1 == atomic.len();
+        let head_end = b2.min(a2 + WIDE_RUN + 1);
+        let guard_2 = head_end < cols && !(is_last && head_end == b2 && erase_from == Some(b2));
+
+        buf.clear();
+        let mut pen_sep = pen_at_scanned;
+        emit_cells(&mut buf, line, cols, tail_start, b1, &mut pen_sep, b1 < cols);
+        let pen_after_1 = pen_sep;
+        push_cha(&mut buf, a2 + 1);
+        emit_cells(&mut buf, line, cols, a2, head_end, &mut pen_sep, guard_2);
+        let separate_bytes = buf.len();
+
+        buf.clear();
+        let mut pen_bridge = pen_at_scanned;
+        emit_cells(&mut buf, line, cols, tail_start, head_end, &mut pen_bridge, guard_2);
+        let bridged_bytes = buf.len();
+
+        if bridged_bytes <= separate_bytes + MERGE_MARGIN {
+            *merged.last_mut().unwrap() = (a1, b2);
+        } else {
+            pen_at_scanned = pen_after_1;
+            scanned_to = a2;
+            merged.push((a2, b2));
+        }
+    }
+    merged
+}
+
+fn emit_runs(
+    row_idx: usize,
+    line: &Row<GridCell>,
+    cols: usize,
+    runs: &[(usize, usize)],
+    erase_from: Option<usize>,
+    mut pen: Attr,
+) -> (String, Attr) {
+    let mut out = String::with_capacity(cols + 32);
+    let mut cursor_col: Option<(usize, bool)> = None;
+    for (index, &(from, to)) in runs.iter().enumerate() {
+        if index == 0 {
+            push_cup(&mut out, row_idx + 1, from + 1);
+        } else {
+            push_cha(&mut out, from + 1);
+        }
+        let cleared_after = index + 1 == runs.len() && erase_from == Some(to);
+        let guard_right = to < cols && !cleared_after;
+        let exact = emit_cells(&mut out, line, cols, from, to, &mut pen, guard_right);
+        cursor_col = Some((to, exact));
+    }
+    if let Some(erase_col) = erase_from {
+        match cursor_col {
+            None => push_cup(&mut out, row_idx + 1, erase_col + 1),
+            Some((col, exact)) if col != erase_col || !exact => push_cha(&mut out, erase_col + 1),
+            Some(_) => {}
+        }
+        if pen.bg != Color::Default || (pen.flags & REVERSE) != 0 {
+            out.push_str("\x1b[0m");
+            pen = Attr::default();
+        }
+        out.push_str("\x1b[K");
+    }
+    (out, pen)
+}
+
+fn is_full_row_plan(runs: &[(usize, usize)], erase_from: Option<usize>, content_end: usize) -> bool {
+    match (runs, erase_from) {
+        ([], Some(0)) => true,
+        (&[(0, end)], erase) => erase.is_some() || end >= content_end,
+        _ => false,
+    }
+}
+
+/// Chooses the byte-minimal encoding for row `row_idx` among sparse cell runs,
+/// merged spans, trailing line erase (`EL`), and single-span row rewrite.
+pub(crate) fn plan_row_diff(
+    row_idx: usize,
+    cur: &Row<GridCell>,
+    old: Option<&Row<GridCell>>,
+    cols: usize,
+    pen: Attr,
+) -> Option<RowDiffPlan> {
+    let content_end = row_content_end(cur, cols);
+    let Some(old) = old else {
+        let runs: &[(usize, usize)] = if content_end > 0 { &[(0, content_end)] } else { &[] };
+        let erase = (content_end < cols).then_some(content_end);
+        let (bytes, next_pen) = emit_runs(row_idx, cur, cols, runs, erase, pen);
+        return Some(RowDiffPlan {
+            bytes,
+            pen: next_pen,
+            touched: std::iter::once(0..cols).collect(),
+            full_row: true,
+        });
+    };
+
+    let mut first_diff = None;
+    let mut last_diff = 0;
+    for col in 0..cols {
+        if !same_cell(&cur[Column(col)], &old[Column(col)]) {
+            first_diff.get_or_insert(col);
+            last_diff = col + 1;
+        }
+    }
+    let first_diff = first_diff?;
+    let first_start = if first_diff > 0 && cur[Column(first_diff)].flags.contains(Flags::WIDE_CHAR_SPACER) {
+        first_diff - 1
+    } else {
+        first_diff
+    };
+    let last_end = if last_diff < cols && cur[Column(last_diff)].flags.contains(Flags::WIDE_CHAR_SPACER) {
+        last_diff + 1
+    } else {
+        last_diff
+    };
+
+    let atomic_1 = atomic_runs(cur, old, cols, last_end);
+    let runs_1 = merge_runs(cur, cols, &atomic_1, None, pen);
+    let (bytes_1, pen_1) = emit_runs(row_idx, cur, cols, &runs_1, None, pen);
+    let mut chosen_multi = runs_1.len() > 1;
+    let mut best = RowDiffPlan {
+        bytes: bytes_1,
+        pen: pen_1,
+        touched: runs_1.iter().map(|&(a, b)| a..b).collect(),
+        full_row: is_full_row_plan(&runs_1, None, content_end),
+    };
+
+    if last_end > content_end {
+        let atomic_2 = atomic_runs(cur, old, cols, content_end);
+        let erase_col = if atomic_2.is_empty() { first_start } else { content_end };
+        let runs_2 = merge_runs(cur, cols, &atomic_2, Some(erase_col), pen);
+        let (bytes_2, pen_2) = emit_runs(row_idx, cur, cols, &runs_2, Some(erase_col), pen);
+        if bytes_2.len() <= best.bytes.len() {
+            let mut touched: Vec<_> = runs_2.iter().map(|&(a, b)| a..b).collect();
+            if erase_col < last_end {
+                touched.push(erase_col..last_end);
+            }
+            chosen_multi = runs_2.len() > 1;
+            best = RowDiffPlan {
+                bytes: bytes_2,
+                pen: pen_2,
+                touched,
+                full_row: is_full_row_plan(&runs_2, Some(erase_col), content_end),
+            };
+        }
+    }
+
+    // Upper-bound guard against multi-run fragmentation: only needed when
+    // the best plan so far splits into multiple runs.
+    if chosen_multi {
+        let (sweep_runs, sweep_erase): (&[(usize, usize)], Option<usize>) = if last_end <= content_end {
+            (&[(first_start, last_end)], None)
+        } else if first_start < content_end {
+            (&[(first_start, content_end)], Some(content_end))
+        } else {
+            (&[], Some(first_start))
+        };
+        let (bytes_3, pen_3) = emit_runs(row_idx, cur, cols, sweep_runs, sweep_erase, pen);
+        if bytes_3.len() < best.bytes.len() {
+            let mut touched: Vec<_> = sweep_runs.iter().map(|&(a, b)| a..b).collect();
+            if let Some(erase_col) = sweep_erase.filter(|&col| col < last_end) {
+                touched.push(erase_col..last_end);
+            }
+            best = RowDiffPlan {
+                bytes: bytes_3,
+                pen: pen_3,
+                touched,
+                full_row: is_full_row_plan(sweep_runs, sweep_erase, content_end),
+            };
+        }
+    }
+
+    Some(best)
+}
+
+pub(crate) fn restore_row_tail(
+    out: &mut String,
+    snapshot: &RowSnapshot,
+    row_idx: usize,
+    mut from: usize,
+    pen: &mut Attr,
+) {
+    let cols = snapshot.cols;
+    if from >= cols {
+        return;
+    }
+    if from > 0 && snapshot.line[Column(from)].flags.contains(Flags::WIDE_CHAR_SPACER) {
+        from -= 1;
+    }
+    let content_end = row_content_end(&snapshot.line, cols);
+    let (runs, erase_from): (&[(usize, usize)], Option<usize>) = if from >= content_end {
+        (&[], Some(from))
+    } else if content_end < cols {
+        (&[(from, content_end)], Some(content_end))
+    } else {
+        (&[(from, cols)], None)
+    };
+    let (bytes, next_pen) = emit_runs(row_idx, &snapshot.line, cols, runs, erase_from, *pen);
+    out.push_str(&bytes);
+    *pen = next_pen;
+}
+
+struct SgrBuf {
+    buf: [u8; 96],
+    len: usize,
+}
+
+impl SgrBuf {
+    #[inline]
+    fn new() -> Self {
+        Self { buf: [0; 96], len: 0 }
+    }
+
+    #[inline]
+    fn push_byte(&mut self, b: u8) {
+        self.buf[self.len] = b;
+        self.len += 1;
+    }
+
+    #[inline]
+    fn push_bytes(&mut self, bytes: &[u8]) {
+        self.buf[self.len..self.len + bytes.len()].copy_from_slice(bytes);
+        self.len += bytes.len();
+    }
+
+    #[inline]
+    fn push_u16(&mut self, mut n: u16) {
+        let mut digits = [0u8; 5];
+        let mut idx = 5;
+        loop {
+            idx -= 1;
+            digits[idx] = b'0' + (n % 10) as u8;
+            n /= 10;
+            if n == 0 {
+                break;
+            }
+        }
+        self.push_bytes(&digits[idx..]);
+    }
+
+    #[inline]
+    fn param(&mut self, first: &mut bool, n: u16) {
+        if !*first {
+            self.push_byte(b';');
+        }
+        *first = false;
+        self.push_u16(n);
+    }
+
+    #[inline]
+    fn color(&mut self, first: &mut bool, base: u16, color: Color) {
+        match color {
+            Color::Default => {}
+            Color::Named(n) if base != 58 && n < 8 => {
+                self.param(first, base - 8 + u16::from(n));
+            }
+            Color::Named(n) if base != 58 => {
+                self.param(first, base + 52 + u16::from(n) - 8);
+            }
+            Color::Named(n) | Color::Indexed(n) => {
+                self.param(first, base);
+                self.push_bytes(b";5;");
+                self.push_u16(u16::from(n));
+            }
+            Color::Rgb(r, g, b) => {
+                self.param(first, base);
+                self.push_bytes(b";2;");
+                self.push_u16(u16::from(r));
+                self.push_byte(b';');
+                self.push_u16(u16::from(g));
+                self.push_byte(b';');
+                self.push_u16(u16::from(b));
+            }
+        }
+    }
+
+    #[inline]
+    fn as_str(&self) -> &str {
+        std::str::from_utf8(&self.buf[..self.len]).expect("ascii sgr")
+    }
+}
+
+fn format_sgr_full(attr: &Attr) -> SgrBuf {
+    let mut s = SgrBuf::new();
+    if *attr == Attr::default() {
+        return s;
+    }
+    s.push_bytes(b"\x1b[0");
+    let mut first = false;
     for (bit, code) in [(BOLD, 1), (DIM, 2), (ITALIC, 3), (REVERSE, 7), (HIDDEN, 8), (STRIKE, 9)] {
         if attr.flags & bit != 0 {
-            let _ = write!(out, ";{code}");
+            s.param(&mut first, code);
         }
     }
     match attr.underline() {
         0 => {}
-        1 => out.push_str(";4"),
+        1 => s.push_bytes(b";4"),
         style => {
-            let _ = write!(out, ";4:{style}");
+            s.push_bytes(b";4:");
+            s.push_u16(u16::from(style));
         }
     }
-    color_params(&mut out, 38, attr.fg);
-    color_params(&mut out, 48, attr.bg);
-    color_params(&mut out, 58, attr.underline_color);
-    out.push('m');
-    out
+    s.color(&mut first, 38, attr.fg);
+    s.color(&mut first, 48, attr.bg);
+    s.color(&mut first, 58, attr.underline_color);
+    s.push_byte(b'm');
+    s
 }
 
-/// The SGR that takes the pen from `old` to `new`: only what changed when
-/// nothing needs turning off, else a reset and all of `new`.
-pub fn sgr_from(old: &Attr, new: &Attr) -> String {
-    let plain = !UNDERLINE_MASK;
-    if old.flags & plain & !new.flags != 0 || (old.underline() != 0 && new.underline() == 0) {
-        return if *new == Attr::default() { "\x1b[0m".into() } else { sgr_string(new) };
+#[inline]
+fn write_sgr_from(out: &mut String, old: &Attr, new: &Attr) {
+    if old == new {
+        return;
     }
-    let mut out = String::from("\x1b[");
-    for (bit, code) in [(BOLD, 1), (DIM, 2), (ITALIC, 3), (REVERSE, 7), (HIDDEN, 8), (STRIKE, 9)] {
-        if new.flags & bit != 0 && old.flags & bit == 0 {
-            let _ = write!(out, ";{code}");
+    if *new == Attr::default() {
+        out.push_str("\x1b[0m");
+        return;
+    }
+    let full = format_sgr_full(new);
+    let mut delta = SgrBuf::new();
+    delta.push_bytes(b"\x1b[");
+    let mut first = true;
+    let old_bd = old.flags & (BOLD | DIM);
+    let new_bd = new.flags & (BOLD | DIM);
+    if old_bd & !new_bd != 0 {
+        delta.param(&mut first, 22);
+        if new_bd & BOLD != 0 {
+            delta.param(&mut first, 1);
+        }
+        if new_bd & DIM != 0 {
+            delta.param(&mut first, 2);
+        }
+    } else {
+        if new_bd & BOLD != 0 && old_bd & BOLD == 0 {
+            delta.param(&mut first, 1);
+        }
+        if new_bd & DIM != 0 && old_bd & DIM == 0 {
+            delta.param(&mut first, 2);
+        }
+    }
+    for (bit, on, off) in [
+        (ITALIC, 3, 23),
+        (REVERSE, 7, 27),
+        (HIDDEN, 8, 28),
+        (STRIKE, 9, 29),
+    ] {
+        if old.flags & bit != 0 && new.flags & bit == 0 {
+            delta.param(&mut first, off);
+        } else if new.flags & bit != 0 && old.flags & bit == 0 {
+            delta.param(&mut first, on);
         }
     }
     match new.underline() {
         style if style == old.underline() => {}
-        1 => out.push_str(";4"),
+        0 => delta.param(&mut first, 24),
+        1 => delta.param(&mut first, 4),
         style => {
-            let _ = write!(out, ";4:{style}");
+            if !first {
+                delta.push_byte(b';');
+            }
+            first = false;
+            delta.push_bytes(b"4:");
+            delta.push_u16(u16::from(style));
         }
     }
     for (base, was, now) in [(38, old.fg, new.fg), (48, old.bg, new.bg), (58, old.underline_color, new.underline_color)] {
         if was != now {
             if now == Color::Default {
-                let _ = write!(out, ";{}", base + 1);
+                delta.param(&mut first, base + 1);
             } else {
-                color_params(&mut out, base, now);
+                delta.color(&mut first, base, now);
             }
         }
     }
-    // The first parameter's separator.
-    out.remove(2);
-    out.push('m');
-    out
+    delta.push_byte(b'm');
+    out.push_str(if delta.len <= full.len { delta.as_str() } else { full.as_str() });
 }
 
-fn color_params(out: &mut String, base: u16, color: Color) {
-    match color {
-        Color::Default => {}
-        Color::Named(n) if base != 58 && n < 8 => {
-            let _ = write!(out, ";{}", base - 8 + u16::from(n));
-        }
-        Color::Named(n) if base != 58 => {
-            let _ = write!(out, ";{}", base + 52 + u16::from(n) - 8);
-        }
-        Color::Named(n) | Color::Indexed(n) => {
-            let _ = write!(out, ";{base};5;{n}");
-        }
-        Color::Rgb(r, g, b) => {
-            let _ = write!(out, ";{base};2;{r};{g};{b}");
-        }
-    }
+pub fn sgr_string(attr: &Attr) -> String {
+    format_sgr_full(attr).as_str().to_string()
+}
+
+/// The SGR that takes the pen from `old` to `new`: incremental flag/color
+/// transitions when shorter, or a full reset-and-apply otherwise.
+pub fn sgr_from(old: &Attr, new: &Attr) -> String {
+    let mut out = String::new();
+    write_sgr_from(&mut out, old, new);
+    out
 }
 
 /// alacritty's handler, watched for the state it keeps private.
@@ -2447,6 +3136,126 @@ mod tests {
         // A switch to the alternate screen is not bridged.
         b.feed(b"\x1b[?1049h");
         assert!(b.diff_from(&a).is_none());
+    }
+
+    #[test]
+    fn cell_diff_jumps_across_unchanged_spans_and_erases_shrunken_tails() {
+        let mut prev = Terminal::with_history(160, 6, 0);
+        let middle = "─".repeat(140);
+        prev.feed(format!("\x1b[1;1H[|] {middle} 12:00:00\r\n").as_bytes());
+        prev.feed(format!("\x1b[2;1Hprefix {}\x1b[3;1H", "x".repeat(120)).as_bytes());
+
+        let mut next = Terminal::with_history(160, 6, 0);
+        next.feed(&prev.render(0));
+        // Row 0: only spinner at col 1 and clock seconds at col 152 change.
+        // Row 1: 120 trailing 'x' characters shrink to blank.
+        next.feed(b"\x1b[1;2H/\x1b[1;152H1\x1b[2;8H\x1b[K");
+
+        let diff = next.diff_from(&prev).expect("incremental diff");
+        let text = String::from_utf8_lossy(&diff);
+        assert!(!text.contains(&middle), "unchanged middle span must not be resent: {text:?}");
+        assert!(text.contains("\x1b[152G"), "distant cell edit uses CHA jump: {text:?}");
+        assert!(text.contains("\x1b[K"), "shrunken line tail uses EL instead of 120 spaces: {text:?}");
+        assert!(diff.len() < 90, "expected compact cell diff, got {} bytes: {text:?}", diff.len());
+
+        prev.feed(&diff);
+        assert!(next.same_screen(&prev));
+    }
+
+    #[test]
+    fn cell_diff_bridges_tiny_gaps_bounds_fragmented_rows_and_carries_hyperlinks() {
+        let mut prev = Terminal::with_history(80, 4, 0);
+        prev.feed(b"\x1b[1;1Haa__bb\x1b[2;1H");
+        for col in 0..80 {
+            prev.feed(if col % 2 == 0 { b"a" } else { b"b" });
+        }
+        prev.feed(b"\x1b[3;1Hbefore \x1b]8;id=k;https://old.example\x1b\\old-link\x1b]8;;\x1b\\ keep");
+
+        let mut next = Terminal::with_history(80, 4, 0);
+        next.feed(&prev.render(0));
+        // Row 0: 2-char unchanged gap "__" is cheaper to bridge than CSI G.
+        next.feed(b"\x1b[1;1HXX\x1b[1;5HYY");
+        // Row 1: checkerboard edits on every even column must stay bounded by sweep.
+        for col in (0..80).step_by(2) {
+            next.feed(format!("\x1b[2;{}HZ", col + 1).as_bytes());
+        }
+        // Row 2: inline OSC 8 hyperlink edit stays a delta rather than returning None.
+        next.feed(b"\x1b[3;8H\x1b]8;id=k2;https://new.example\x1b\\new-link\x1b]8;;\x1b\\");
+
+        let diff = next.diff_from(&prev).expect("hyperlink edits must not force full repaint");
+        let text = String::from_utf8_lossy(&diff);
+        assert!(text.contains("XX__YY"), "2-byte ASCII gap should bridge into one span: {text:?}");
+        assert!(text.contains("\x1b]8;id=k2;https://new.example\x1b\\new-link\x1b]8;;\x1b\\"));
+        assert!(diff.len() < 260, "checkerboard row must fall back to contiguous sweep, got {} bytes", diff.len());
+
+        prev.feed(&diff);
+        assert!(next.same_screen(&prev));
+    }
+
+    #[test]
+    fn screen_clear_beats_per_row_erases_without_pushing_primary_history() {
+        let mut prev = Terminal::with_size(80, 24);
+        let mut client = Terminal::with_size(80, 24);
+        for n in 0..30 {
+            let line = format!("row {n:02}: {}\r\n", "payload ".repeat(6));
+            prev.feed(line.as_bytes());
+            client.feed(line.as_bytes());
+        }
+        let history_before = client.scrollback_len();
+        let mut next = Terminal::with_size(80, 24);
+        next.feed(&prev.render(1000));
+        next.feed(b"\x1b[H\x1b[J$ ");
+
+        let diff = next.diff_from(&client).expect("clear diff");
+        assert!(diff.len() < 80, "expected compact clear diff, got {} bytes", diff.len());
+        client.feed(&diff);
+        assert!(next.same_screen(&client));
+        assert_eq!(client.scrollback_len(), history_before, "ED 0 from home must not push primary rows into scrollback");
+    }
+
+    #[test]
+    fn random_cell_and_attribute_edits_round_trip_through_diff_from() {
+        let mut seed = 0x517c_c1b7_2722_0a95u64;
+        let mut rng = move || {
+            seed ^= seed << 13;
+            seed ^= seed >> 7;
+            seed ^= seed << 17;
+            seed
+        };
+        let glyphs = ["a", "Z", " ", "한", "글", "🚀", "█", "─"];
+        let sgrs = [
+            "\x1b[0m",
+            "\x1b[1;31m",
+            "\x1b[2;3;38;5;208m",
+            "\x1b[4:3;58;5;45;48;2;10;20;30m",
+            "\x1b[7;9;32m",
+            "\x1b]8;id=r;https://rsh.invalid\x1b\\",
+            "\x1b]8;;\x1b\\",
+        ];
+        let mut server = Terminal::with_history(40, 8, 0);
+        let mut shadow = Terminal::with_history(40, 8, 0);
+        for step in 0..250 {
+            if step % 40 == 39 {
+                server.feed(b"\x1b[0m\x1b]8;;\x1b\\\x1b[H\x1b[J");
+            } else if step % 15 == 14 {
+                server.feed(b"\x1b[0m\x1b]8;;\x1b\\\x1b[8;1H\r\n");
+            }
+            let edits = 1 + (rng() % 12) as usize;
+            for _ in 0..edits {
+                let r = (rng() % 8) as usize + 1;
+                let c = (rng() % 40) as usize + 1;
+                let sgr = sgrs[(rng() as usize) % sgrs.len()];
+                let g = glyphs[(rng() as usize) % glyphs.len()];
+                server.feed(format!("\x1b[{r};{c}H{sgr}{g}").as_bytes());
+                if rng() % 5 == 0 {
+                    server.feed(b"\x1b[0m\x1b]8;;\x1b\\\x1b[K");
+                }
+            }
+            server.feed(b"\x1b]8;;\x1b\\");
+            let diff = server.diff_from(&shadow).expect("same size/screen diff");
+            shadow.feed(&diff);
+            assert!(server.same_screen(&shadow), "mismatch at step {step}");
+        }
     }
 }
 

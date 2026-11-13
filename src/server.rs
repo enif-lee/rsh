@@ -1823,6 +1823,9 @@ impl State {
         // At the end the last update goes at once: the client stops at the
         // stream's end and would miss one still waiting for its turn.
         let ending = session.exit_code.is_some();
+        if let Some(attach) = session.attach.as_mut() {
+            attach.open_window(now);
+        }
         if session.attach.as_ref().is_some_and(|a| a.scroll_due(now)
             || ending && a.scroll.as_ref().is_some_and(|s| s.dirty)) {
             session.refresh_scroll(now);
@@ -1949,15 +1952,32 @@ impl State {
             batch.push(sealed);
             // An independently deflated datagram cannot be cut to a prefix.
             let small = stream.data.len() < proto::CHUNK && (attach.syncing_until.is_none() || attach.update_len <= proto::CHUNK);
-            let probe = udp && small && flags & proto::FLAG_DEFLATE == 0 && !stream.data.is_empty() && attach.path.as_mut().is_some_and(|path| path.probe_due(now));
+            let full_probe = udp
+                && small
+                && flags & proto::FLAG_DEFLATE == 0
+                && !stream.data.is_empty()
+                && attach.path.as_ref().is_some_and(|path| path.needs_full_probe(now));
+            let probe = udp
+                && small
+                && flags & proto::FLAG_DEFLATE == 0
+                && !stream.data.is_empty()
+                && attach.path.as_mut().is_some_and(|path| path.probe_due(now));
             if !stream.data.is_empty() && (attach.doubling && room || probe) {
-                // A capacity probe needs only a short second datagram. Its
-                // prefix is ordinary duplicate stream data; it changes no
-                // protocol or receive state and costs at most 64 data bytes.
-                let data = if probe && !(attach.doubling && room) { &stream.data[..stream.data.len().min(64)] } else { stream.data };
-                let mut copy = ServerStream { data, pn: None, ..stream.clone() };
-                copy.pn = number(&mut attach.path, copy.encode().len(), true);
-                batch.push(proto::seal(&attach.key, Dir::ToClient, KIND_STREAM, attach.id, &copy.encode()));
+                let copies = if full_probe && !(attach.doubling && room) {
+                    (640usize.div_ceil(stream.data.len() + proto::WIRE_OVERHEAD as usize)).clamp(1, 5)
+                } else {
+                    1
+                };
+                let data = if probe && !(attach.doubling && room) && !full_probe {
+                    &stream.data[..stream.data.len().min(64)]
+                } else {
+                    stream.data
+                };
+                for _ in 0..copies {
+                    let mut copy = ServerStream { data, pn: None, ..stream.clone() };
+                    copy.pn = number(&mut attach.path, copy.encode().len(), true);
+                    batch.push(proto::seal(&attach.key, Dir::ToClient, KIND_STREAM, attach.id, &copy.encode()));
+                }
             }
             sent = true;
             attach.reply_due = false;
@@ -2124,12 +2144,98 @@ impl Attachment {
 
     fn scroll_at(&self) -> Option<Instant> {
         let scroll = self.scroll.as_ref()?;
-        (scroll.dirty && (self.output.all_sent() && self.output.pending() <= 2 * self.update_len.max(proto::CHUNK)
-            || scroll.skipped || scroll.request.reset > scroll.status.serial && scroll.request.position == 0))
-            .then(|| {
-                let at = scroll.at + SCROLL_FRAME_GAP;
-                scroll.sync_since.filter(|_| !scroll.active).map_or(at, |since| at.max(since + VIEW_SYNC_HOLD))
-            })
+        if !scroll.dirty {
+            return None;
+        }
+        let immediate = scroll.skipped
+            || scroll.request.reset > scroll.status.serial && scroll.request.position == 0;
+        let base_at = scroll.at + SCROLL_FRAME_GAP;
+        let held = |at: Instant| {
+            scroll
+                .sync_since
+                .filter(|_| !scroll.active)
+                .map_or(at, |since| at.max(since + VIEW_SYNC_HOLD))
+        };
+        if immediate {
+            return Some(held(base_at));
+        }
+        if !self.output.all_sent() {
+            return None;
+        }
+        let user_scrolling = scroll.active || scroll.request.serial > scroll.status.serial;
+        if let Some(bdp) = self.output.slow_bdp() {
+            let in_flight = self.output.in_flight_wire();
+            let update = self.update_len as u64 + proto::WIRE_OVERHEAD;
+            let rate = self.output.slow_rate().expect("slow");
+            if self.modelled() {
+                if in_flight > 0 && in_flight + update > bdp + 4 * update {
+                    return None;
+                }
+            } else if in_flight > 0 && in_flight + update > bdp + 2 * update {
+                return None;
+            }
+            if user_scrolling {
+                let gap = if self.modelled() {
+                    self.link_free
+                        .unwrap_or(scroll.at)
+                        .saturating_duration_since(scroll.at)
+                } else {
+                    Duration::from_secs_f64(update as f64 / rate) + SLOW_ROOM
+                };
+                return Some(held(scroll.at + gap.max(SCROLL_FRAME_GAP)));
+            }
+            // If the output fits comfortably in the slow link with no standing
+            // queue (e.g. compact cell-diff frames on a 256k-1Mbit link), let
+            // frames stream at the 8ms cadence instead of adding screen-mode
+            // coalescing gaps. Only pace by link serialization when heavier.
+            let made_stream = self.made.1.max(self.made.2);
+            let fits_link = self.queue_delay() < Duration::from_millis(20)
+                && made_stream as f64 <= rate * SYNC_SPAN.as_secs_f64() * 0.7;
+            if fits_link {
+                return Some(held(base_at));
+            }
+            let gap = if self.modelled() {
+                self.link_free
+                    .unwrap_or(scroll.at)
+                    .saturating_duration_since(scroll.at)
+            } else {
+                Duration::from_secs_f64(update as f64 / rate) + SLOW_ROOM
+            };
+            let min_gap = if self.animating() {
+                self.output_gap.clamp(MIN_SCREEN_GAP, SCREEN_GAP)
+            } else {
+                SCROLL_FRAME_GAP
+            };
+            let idle = scroll.at + gap.max(min_gap);
+            let wait = if self.modelled() || is_tcp_addr(self.addr) {
+                FRESH_WAIT.min(gap / 4)
+            } else {
+                FRESH_WAIT
+            };
+            let at = match self.output_at {
+                Some(at) if at >= idle => at,
+                Some(at) if self.animating() => {
+                    let next = at + self.output_gap;
+                    if next > idle && next <= idle + wait { next } else { idle }
+                }
+                _ => idle,
+            };
+            return Some(held(at));
+        }
+        // On a fast high-RTT link, allow up to the transport window (BDP) in
+        // flight while no queue stands; if a queue builds, pace by half RTT.
+        if self.output.in_flight() >= self.output.window() {
+            return None;
+        }
+        if self.queue_delay() >= LAG_LIMIT / 2 {
+            let half = self
+                .output
+                .srtt()
+                .map_or(Duration::from_millis(50), |srtt| srtt / 2);
+            let gap = half.clamp(SCROLL_FRAME_GAP, Duration::from_millis(250));
+            return Some(held(scroll.at + gap));
+        }
+        Some(held(base_at))
     }
 
     fn scroll_due(&self, now: Instant) -> bool {
@@ -2266,7 +2372,29 @@ impl Attachment {
         let rtt = if path.rate(now).is_none() && path.queue_ms() < 20.0 { path.srtt().map_or(rtt, |srtt| srtt.max(rtt)) } else { rtt };
         // The program's pace only on a path seen to take a burst at once:
         // on a slow one not yet measured, the first of a burst would queue.
-        let made = if path.fast(now) { self.stream_len(self.made.1.max(self.made.2)) as f64 / SYNC_SPAN.as_secs_f64() } else { 0.0 };
+        let made = if path.fast(now) {
+            let span = now.duration_since(self.made.0).as_secs_f64();
+            let window_rate = if self.made.2 > 0 {
+                (self.made.1 as f64 / span.max(0.05)).max(self.made.2 as f64 / SYNC_SPAN.as_secs_f64())
+            } else {
+                self.made.1 as f64 / span.clamp(0.05, SYNC_SPAN.as_secs_f64())
+            };
+            let base_rate = if self.scroll.is_some() {
+                window_rate
+            } else {
+                self.stream_len(window_rate as usize) as f64
+            };
+            let step_rate = if self.animating() && self.update_len > 0 {
+                let wire_packets = (self.update_len as u64).div_ceil(proto::CHUNK as u64).max(1);
+                let wire_frame = self.update_len as u64 + wire_packets * proto::WIRE_OVERHEAD;
+                wire_frame as f64 / self.screen_gap().as_secs_f64()
+            } else {
+                0.0
+            };
+            base_rate.max(step_rate)
+        } else {
+            0.0
+        };
         let rate = path.delivery_rate().max(made);
         self.output.set_path_window(rate, rtt);
     }
@@ -2506,11 +2634,21 @@ impl Session {
             current.same_screen(previous).then_some(bytes)
         }) };
         let effects = std::mem::take(&mut attach.scroll.as_mut().unwrap().effects.bytes);
+        let mut sent_bytes = 0usize;
         if let Some(bytes) = &mut delta {
             bytes.extend_from_slice(&effects);
             if !bytes.is_empty() {
-                attach.push_output(bytes);
-                attach.update_len = bytes.len();
+                let direct = attach.push_output(bytes);
+                let staged = attach.stage(false);
+                let len = if direct {
+                    bytes.len()
+                } else if staged > 0 {
+                    staged
+                } else {
+                    attach.stream_len(bytes.len())
+                };
+                attach.update_len = len;
+                sent_bytes = len;
             }
         } else {
             let screen = current.render(0);
@@ -2521,10 +2659,22 @@ impl Session {
             fresh.extend_from_slice(format!("\x1b]2;{}\x07", current.title().chars().take(1024).collect::<String>()).as_bytes());
             fresh.extend_from_slice(&effects);
             attach.reset_output(&fresh);
-            attach.update_len = fresh.len();
+            let len = attach.output.pending();
+            attach.update_len = len;
+            sent_bytes = len;
             let mut previous = Terminal::with_history(cols, rows, 0);
             previous.feed(&screen);
             attach.shadow = Some(previous);
+        }
+        if sent_bytes > 0 {
+            if now.duration_since(attach.made.0) >= 2 * SYNC_SPAN {
+                attach.made = (now, 0, 0);
+            } else if now.duration_since(attach.made.0) >= SYNC_SPAN {
+                attach.made = (now, 0, attach.made.1);
+            }
+            attach.made.1 += sent_bytes;
+            attach.reckon_link(now);
+            attach.updates = attach.updates.wrapping_add(1);
         }
         attach.syncing_until = None;
         attach.repaint_due = false;
@@ -2654,30 +2804,16 @@ impl Session {
             self.term.stop_capture();
             return;
         };
-        if let Some(scroll) = attach.scroll.as_mut() {
-            // A disconnected or slow viewer has the same memory bound as
-            // the normal output stream. These are complete side effects;
-            // dropping them cannot split a sequence in the next frame.
-            if scroll.effects.bytes.len() > OUTPUT_BACKLOG { scroll.effects.bytes.clear(); }
-            for event in events {
-                let reply = match event {
-                    Event::PtyWrite(reply) => Some(reply.into_bytes()),
-                    _ => None,
-                };
-                if let Some(reply) = reply.filter(|reply| self.pty_in.len() + reply.len() <= INPUT_BACKLOG) { self.pty_in.extend(reply); }
-            }
-            scroll.sync_since = if self.term.synchronized() { Some(scroll.sync_since.unwrap_or_else(Instant::now)) } else { None };
-            scroll.dirty = true;
-            return;
-        }
         let now = Instant::now();
         attach.mid_sequence = if self.tail.is_empty() { None } else { attach.mid_sequence.or(Some(now)) };
-        if now.duration_since(attach.made.0) >= 2 * SYNC_SPAN {
-            attach.made = (now, 0, 0);
-        } else if now.duration_since(attach.made.0) >= SYNC_SPAN {
-            attach.made = (now, 0, attach.made.1);
+        if attach.scroll.is_none() {
+            if now.duration_since(attach.made.0) >= 2 * SYNC_SPAN {
+                attach.made = (now, 0, 0);
+            } else if now.duration_since(attach.made.0) >= SYNC_SPAN {
+                attach.made = (now, 0, attach.made.1);
+            }
+            attach.made.1 += bytes.len();
         }
-        attach.made.1 += bytes.len();
         attach.step_bytes += bytes.len();
         // Reads less than a few ms apart are one write (a frame read in
         // pieces); a stream that does not pause has no steps.
@@ -2698,6 +2834,22 @@ impl Session {
         } else {
             // Within a write: not a step, but the output is newer.
             attach.output_at = Some(now);
+        }
+        if let Some(scroll) = attach.scroll.as_mut() {
+            // A disconnected or slow viewer has the same memory bound as
+            // the normal output stream. These are complete side effects;
+            // dropping them cannot split a sequence in the next frame.
+            if scroll.effects.bytes.len() > OUTPUT_BACKLOG { scroll.effects.bytes.clear(); }
+            for event in events {
+                let reply = match event {
+                    Event::PtyWrite(reply) => Some(reply.into_bytes()),
+                    _ => None,
+                };
+                if let Some(reply) = reply.filter(|reply| self.pty_in.len() + reply.len() <= INPUT_BACKLOG) { self.pty_in.extend(reply); }
+            }
+            scroll.sync_since = if self.term.synchronized() { Some(scroll.sync_since.unwrap_or_else(Instant::now)) } else { None };
+            scroll.dirty = true;
+            return;
         }
         if attach.syncing_until.is_some() {
             // Still behind while updates queue on the path or wait to go,
@@ -3756,5 +3908,39 @@ mod server_scroll_tests {
         assert_eq!(scroll.status.offset, 1000);
         assert!((120..=126).contains(&frames), "{frames} frames for 1000 requests");
         eprintln!("1000 requests / second -> {frames} server frames, {bytes} output bytes, latest request selected within 8ms");
+    }
+
+    #[test]
+    fn high_rtt_scroll_pipeline_sustains_frames_up_to_bdp_without_stalling_at_two_updates() {
+        let (server, id) = fixture();
+        let mut state = server.state();
+        let session = state.sessions.get_mut(&id).unwrap();
+        let start = Instant::now();
+        drain(session, start);
+
+        // Simulate a fast 300ms-RTT link where each frame takes ~6 KB compressed:
+        // 18 frames (~108 KB) must be able to stay in flight without stalling
+        // after two frames (~12 KB) while waiting for the first 300ms ACK.
+        let attach = session.attach.as_mut().unwrap();
+        let rtt_ms = 300.0;
+        attach.output.set_path(None, Some(rtt_ms));
+        attach.output.set_path_window(600_000.0, rtt_ms);
+
+        let mut emitted = 0;
+        for step in 1..=18u64 {
+            let now = start + Duration::from_millis(step * 16);
+            session.output(format!("\x1b[1;1Hframe-{step:03}-{}\r\n", "X".repeat(60)).as_bytes());
+            assert!(
+                session.attach.as_ref().unwrap().scroll_due(now),
+                "frame {step} stalled before 300ms ACK arrived"
+            );
+            session.refresh_scroll(now);
+            let attach = session.attach.as_mut().unwrap();
+            attach.stage(false);
+            while attach.output.next_chunk(now).is_some() {}
+            emitted += 1;
+        }
+        assert_eq!(emitted, 18);
+        assert!(session.attach.as_ref().unwrap().made.1 > 0, "scroll sessions must track output rate for BDP window opening");
     }
 }

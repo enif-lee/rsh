@@ -216,6 +216,26 @@ class MovingSummaryTests(unittest.TestCase):
             self.assertEqual([r["fps"] for r in results], [0.2, 0.2])
             self.assertEqual([r["max_gap_ms"] for r in results], [8000, 5000])
 
+    def test_demo_summary_excludes_buffered_burst_frames_and_caps_at_scene_fps(self):
+        window = dict(kind="render", net="highlat", scene="bandwidth", start=100.0, end=102.0,
+                      until=105.0, seconds=2, scene_fps=60, done=[True, True])
+        # SSH stalls in second 0 (30 frames) then dumps 35 buffered frames in 3ms
+        # plus 59 paced frames in second 1 (124 raw frames / 2s = 62 raw fps,
+        # which used to hide the stall and exceed 60 fps).
+        ssh_lines = [f"{100.0 + i / 60.0:.6f} {i} {100.0 + i / 60.0:.6f} bandwidth" for i in range(30)]
+        ssh_lines += [f"{101.0 + i * 0.0001:.6f} {30 + i} {100.5 + i / 60.0:.6f} bandwidth" for i in range(35)]
+        ssh_lines += [f"{101.0 + i / 60.0:.6f} {65 + i} {101.0 + i / 60.0:.6f} bandwidth" for i in range(1, 60)]
+        rsh_lines = [f"{100.0 + i / 60.0:.6f} {i} {100.0 + i / 60.0:.6f} bandwidth" for i in range(121)]
+        frames = {lab.cli(0): "\n".join(ssh_lines) + "\n", lab.cli(1): "\n".join(rsh_lines) + "\n"}
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.object(lab, "HERE", directory), patch.object(lab, "dexec", side_effect=lambda c, *a, **kw: Mock(stdout=frames[c])):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    lab.demo_summary(["ssh", "rsh"], [window])
+            results = json.loads(next((Path(directory) / "out").glob("demo-*.json")).read_text())["results"]
+            by_tool = {r["tool"]: r for r in results}
+            self.assertEqual(by_tool["ssh"]["fps"], 45.0)
+            self.assertEqual(by_tool["rsh"]["fps"], 60.0)
+
     def test_late_scene_start_keeps_the_scheduled_end(self):
         clock = Clock()
         clock.at = 100

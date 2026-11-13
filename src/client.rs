@@ -2271,7 +2271,7 @@ fn help_lines(key: u8, host: &str, label: &str, tmux: bool) -> Vec<Line<'static>
         format!("{k}m  rename the current session"),
         format!("{k},  settings (or {k} then Cmd+, if forwarded)"),
         format!("{k}r  repaint the screen from the server"),
-        format!("{k}p  toggle row profiling (green: moved; red: redrawn; gray: unchanged)"),
+        format!("{k}p  toggle render profiling (green: moved; amber: cells; red: row; gray: unchanged)"),
         format!("{k}h  this help"),
         format!("{k}{k}  send {k}"),
         String::new(),

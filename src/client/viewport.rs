@@ -3,7 +3,10 @@
 //! alternate screen while the header overlays the first body row.
 use super::{next_unit, Unit, PARTIAL_WAIT};
 use crate::proto::{ScrollRequest, ScrollStatus};
-use crate::terminal::{scroll_change, Effects, Terminal};
+use crate::terminal::{
+    plan_row_diff, restore_row_tail, same_row_cells, scroll_change_with_blank, Attr, Effects,
+    RowSnapshot, Terminal,
+};
 use alacritty_terminal::event::{Event, WindowSize};
 use alacritty_terminal::vte::Parser;
 #[cfg(test)]
@@ -14,6 +17,7 @@ use std::time::Instant;
 enum RowUpdate {
     Unchanged,
     Moved,
+    Partial,
     Redrawn,
 }
 
@@ -22,9 +26,18 @@ impl RowUpdate {
         match self {
             Self::Unchanged => 236,
             Self::Moved => 22,
+            Self::Partial => 94,
             Self::Redrawn => 52,
         }
     }
+}
+
+struct ShiftPlan {
+    control: Vec<u8>,
+    top: usize,
+    bottom: usize,
+    moved: std::ops::Range<usize>,
+    exposed: std::ops::Range<usize>,
 }
 
 pub(super) struct Viewport {
@@ -35,7 +48,7 @@ pub(super) struct Viewport {
     scrolling: bool,
     parser: Parser,
     effects: Effects,
-    rows: Vec<Vec<u8>>,
+    rows: Vec<RowSnapshot>,
     profiling: bool,
     profile_painted: Vec<Option<RowUpdate>>,
     pub badge: String,
@@ -44,7 +57,7 @@ pub(super) struct Viewport {
     pub interactive: bool,
     pub scroll_until: Option<Instant>,
     pub partial_expired: bool,
-    badge_drawn: bool,
+    badge_from: Option<usize>,
     started: bool,
     partial: Vec<u8>,
     partial_since: Option<Instant>,
@@ -53,6 +66,7 @@ pub(super) struct Viewport {
     cell_size: (u16, u16),
     cell_size_requested: bool,
     pixel_mouse: bool,
+    last_modes: Vec<u8>,
 }
 
 impl Viewport {
@@ -76,7 +90,7 @@ impl Viewport {
             interactive: false,
             scroll_until: None,
             partial_expired: false,
-            badge_drawn: false,
+            badge_from: None,
             started: false,
             partial: Vec::new(),
             partial_since: None,
@@ -85,6 +99,7 @@ impl Viewport {
             cell_size: (0, 0),
             cell_size_requested: false,
             pixel_mouse: false,
+            last_modes: Vec::new(),
         }
     }
 
@@ -116,6 +131,7 @@ impl Viewport {
     pub fn invalidate(&mut self) {
         self.rows.clear();
         self.profile_painted.clear();
+        self.last_modes.clear();
         self.dirty = true;
     }
 
@@ -321,50 +337,93 @@ impl Viewport {
         out.append(&mut self.effects.bytes);
         // Body coordinates fill the physical screen. Restore the old
         // overlay before any row movement so it never scrolls into the body.
-        out.extend_from_slice(b"\x1b[?25l\x1b[r\x1b[?6l\x1b[4l\x1b[?7l\x1b(B\x0f");
-        if self.badge_drawn {
+        out.extend_from_slice(b"\x1b[?25l\x1b[r\x1b[?6l\x1b[4l\x1b[?7l\x1b(B\x0f\x1b[0m");
+        let mut pen = Attr::default();
+        if let Some(badge_col) = self.badge_from.take() {
             if let Some(row) = self.rows.first() {
-                out.extend_from_slice(b"\x1b[1;1H");
-                out.extend_from_slice(row);
+                let mut restored = String::new();
+                restore_row_tail(&mut restored, row, 0, badge_col, &mut pen);
+                out.extend_from_slice(restored.as_bytes());
                 if let Some(painted) = self.profile_painted.first_mut() {
                     *painted = None;
                 }
             }
-            self.badge_drawn = false;
         }
-        let rows = self.terminal.display_rows();
+        let rows = self.terminal.snapshot_rows_from(&self.rows);
+        let cols = usize::from(self.terminal.size().0);
         let mut updates = self
             .profiling
             .then(|| vec![RowUpdate::Unchanged; rows.len()]);
         if self.profiling {
             self.profile_painted.resize(rows.len(), None);
         }
-        let moved = self.shift_rows(&rows).map(|(control, moved)| {
-            out.extend(control);
-            moved
+        let shifted = self.shift_rows(&rows).inspect(|plan| {
+            out.extend_from_slice(&plan.control);
+            pen = Attr::default();
         });
-        for (row, bytes) in rows.iter().enumerate() {
-            let repaint = self.rows.get(row) != Some(bytes);
-            if let Some(updates) = &mut updates {
-                updates[row] = if repaint {
-                    RowUpdate::Redrawn
-                } else if moved.as_ref().is_some_and(|range| range.contains(&row)) {
-                    RowUpdate::Moved
-                } else {
-                    RowUpdate::Unchanged
-                };
+        for (row, snap) in rows.iter().enumerate() {
+            let old = self.rows.get(row);
+            let exposed = shifted
+                .as_ref()
+                .is_some_and(|p| p.exposed.contains(&row));
+            let same = old.is_some_and(|prev| prev == snap);
+            if same {
+                if let Some(updates) = &mut updates {
+                    updates[row] = if exposed {
+                        RowUpdate::Redrawn
+                    } else if shifted.as_ref().is_some_and(|p| p.moved.contains(&row)) {
+                        RowUpdate::Moved
+                    } else {
+                        RowUpdate::Unchanged
+                    };
+                }
+                continue;
             }
-            if repaint {
+            let Some(plan) = plan_row_diff(
+                row,
+                &snap.line,
+                old.map(|prev| &*prev.line),
+                snap.cols,
+                pen,
+            ) else {
+                continue;
+            };
+            if self.profiling {
+                let moved_row = shifted
+                    .as_ref()
+                    .is_some_and(|p| row >= p.top && row <= p.bottom && !exposed);
+                let kind = if exposed || plan.full_row {
+                    RowUpdate::Redrawn
+                } else {
+                    RowUpdate::Partial
+                };
+                if let Some(updates) = &mut updates {
+                    updates[row] = kind;
+                }
                 out.extend_from_slice(format!("\x1b[{};1H", row + 1).as_bytes());
-                if self.profiling {
+                if kind == RowUpdate::Redrawn {
                     out.extend(
                         self.terminal
                             .render_profiled_row(row, RowUpdate::Redrawn.background()),
                     );
-                    self.profile_painted[row] = Some(RowUpdate::Redrawn);
                 } else {
-                    out.extend_from_slice(bytes);
+                    let base = if moved_row {
+                        RowUpdate::Moved.background()
+                    } else {
+                        RowUpdate::Unchanged.background()
+                    };
+                    out.extend(self.terminal.render_profiled_partial_row(
+                        row,
+                        base,
+                        RowUpdate::Partial.background(),
+                        &plan.touched,
+                    ));
                 }
+                pen = Attr::default();
+                self.profile_painted[row] = Some(kind);
+            } else {
+                out.extend_from_slice(plan.bytes.as_bytes());
+                pen = plan.pen;
             }
         }
         self.rows = rows;
@@ -373,9 +432,13 @@ impl Viewport {
                 if self.profile_painted[row] != Some(update) {
                     out.extend_from_slice(format!("\x1b[{};1H", row + 1).as_bytes());
                     out.extend(self.terminal.render_profiled_row(row, update.background()));
+                    pen = Attr::default();
                     self.profile_painted[row] = Some(update);
                 }
             }
+        }
+        if pen != Attr::default() {
+            out.extend_from_slice(b"\x1b[0m");
         }
         let offset = self.offset;
         let mut badge = if offset > 0 {
@@ -386,7 +449,6 @@ impl Viewport {
         if self.profiling {
             badge.insert_str(0, " [profile] ");
         }
-        let cols = usize::from(self.terminal.size().0);
         if unicode_width::UnicodeWidthStr::width(badge.as_str()) > cols {
             badge.clone_from(&self.badge);
         }
@@ -415,10 +477,14 @@ impl Viewport {
                 )
                 .as_bytes(),
             );
-            self.badge_drawn = true;
+            self.badge_from = Some(from);
         }
         self.pixel_mouse = self.terminal.pixel_mouse() && self.cell_size.1 > 0;
-        out.extend(self.terminal.display_modes(self.pixel_mouse));
+        let modes = self.terminal.display_modes(self.pixel_mouse);
+        if modes != self.last_modes {
+            out.extend_from_slice(&modes);
+            self.last_modes = modes;
+        }
         if offset == 0 && self.terminal.cursor_visible() {
             let (row, col) = self.terminal.cursor();
             out.extend_from_slice(format!("\x1b[{};{}H\x1b[?25h", row + 1, col + 1).as_bytes());
@@ -431,8 +497,7 @@ impl Viewport {
     /// Infer movement from frame contents, including an application's
     /// scrolling transcript between stationary header/prompt/footer rows.
     /// No wheel event or history/display_offset hint is required.
-    fn shift_rows(&mut self, next: &[Vec<u8>]) -> Option<(Vec<u8>, std::ops::Range<usize>)> {
-        use std::hash::Hasher;
+    fn shift_rows(&mut self, next: &[RowSnapshot]) -> Option<ShiftPlan> {
         if next.len() != self.rows.len()
             || next
                 .iter()
@@ -444,16 +509,11 @@ impl Viewport {
         {
             return None;
         }
-        let hash = |row: &Vec<u8>| {
-            let mut h = std::collections::hash_map::DefaultHasher::new();
-            h.write(row);
-            h.finish()
-        };
-        let current: Vec<_> = next.iter().map(hash).collect();
-        let previous: Vec<_> = self.rows.iter().map(hash).collect();
-        let Some((k, a, b)) = scroll_change(&current, &previous) else {
-            return None;
-        };
+        let cols = next.first().map_or(0, |r| r.cols);
+        let blank = RowSnapshot::blank(cols);
+        let current: Vec<u64> = next.iter().map(|r| r.hash).collect();
+        let previous: Vec<u64> = self.rows.iter().map(|r| r.hash).collect();
+        let (k, a, b) = scroll_change_with_blank(&current, &previous, Some(blank.hash))?;
         let (top, bottom) = if k > 0 {
             (a, b - 1 + k as usize)
         } else {
@@ -468,51 +528,75 @@ impl Viewport {
             n,
             if k > 0 { 'S' } else { 'T' }
         );
-        let mut before = 0;
-        let mut after = control.len();
-        for row in top..=bottom {
-            let cost = next[row].len() + format!("\x1b[{};1H", physical(row)).len();
-            if next[row] != self.rows[row] {
-                before += cost;
+        let mut before = 0usize;
+        let mut pen_before = Attr::default();
+        for (row, cur) in next.iter().enumerate().take(bottom + 1).skip(top) {
+            let old = &self.rows[row];
+            if cur.hash == old.hash && same_row_cells(&cur.line, &old.line, cur.cols) {
+                continue;
             }
-            let from = row as isize + k;
-            if from < top as isize
-                || from > bottom as isize
-                || next[row] != self.rows[from as usize]
+            if let Some(plan) = plan_row_diff(row, &cur.line, Some(&old.line), cur.cols, pen_before)
             {
-                after += cost;
+                before += plan.bytes.len();
+                pen_before = plan.pen;
             }
         }
-        // Exact byte comparisons cover collisions and extra changed rows
-        // at either end. Do not scroll when it would increase the payload.
+        let mut after = control.len();
+        let mut pen_after = Attr::default();
+        for (row, cur) in next.iter().enumerate().take(bottom + 1).skip(top) {
+            let from = row as isize + k;
+            let prev = if from >= top as isize && from <= bottom as isize {
+                &self.rows[from as usize]
+            } else {
+                &blank
+            };
+            if cur.hash == prev.hash && same_row_cells(&cur.line, &prev.line, cur.cols) {
+                continue;
+            }
+            if let Some(plan) = plan_row_diff(row, &cur.line, Some(&prev.line), cur.cols, pen_after)
+            {
+                after += plan.bytes.len();
+                pen_after = plan.pen;
+            }
+        }
+        // Cell-level byte costs guard against hash collisions and cases where
+        // sparse cell edits cost fewer bytes than scrolling the region.
         if after >= before {
             return None;
         }
         let region = &mut self.rows[top..=bottom];
-        if k > 0 {
+        let exposed = if k > 0 {
             region.rotate_left(n);
-            let exposed = region.len() - n;
-            for row in &mut region[exposed..] {
-                row.clear();
+            let exp_start = region.len() - n;
+            for row in &mut region[exp_start..] {
+                *row = blank.clone();
             }
+            (bottom + 1 - n)..(bottom + 1)
         } else {
             region.rotate_right(n);
             for row in &mut region[..n] {
-                row.clear();
+                *row = blank.clone();
             }
-        }
+            top..(top + n)
+        };
         if self.profiling {
             let painted = &mut self.profile_painted[top..=bottom];
             if k > 0 {
                 painted.rotate_left(n);
-                let exposed = painted.len() - n;
-                painted[exposed..].fill(None);
+                let exp_start = painted.len() - n;
+                painted[exp_start..].fill(None);
             } else {
                 painted.rotate_right(n);
                 painted[..n].fill(None);
             }
         }
-        Some((control.into_bytes(), a..b))
+        Some(ShiftPlan {
+            control: control.into_bytes(),
+            top,
+            bottom,
+            moved: a..b,
+            exposed,
+        })
     }
 
     pub fn finish(&mut self) -> Vec<u8> {
@@ -520,6 +604,7 @@ impl Viewport {
             return Vec::new();
         }
         self.started = false;
+        self.last_modes.clear();
         b"\x1b[?2026l\x1b[<99u\x1b[>4;0m\x1b[?1000l\x1b[?1002l\x1b[?1003l\x1b[?1005l\x1b[?1006l\x1b[?1015l\x1b[?1016l\x1b[?1004l\x1b[?2004l\x1b[?1l\x1b>\x1b[0 q\x1b[?7h\x1b[?25h\x1b[?1049l".to_vec()
     }
 }
@@ -938,9 +1023,12 @@ mod tests {
     #[test]
     fn row_movement_is_skipped_when_control_bytes_cost_more() {
         let mut view = Viewport::new((80, 3));
-        view.rows = vec![b"x".to_vec(), b"a".to_vec(), b"b".to_vec()];
+        view.feed(b"\x1b[1;1Hx\x1b[2;1Ha\x1b[3;1Hb");
+        view.draw();
         let previous = view.rows.clone();
-        let next = vec![b"a".to_vec(), b"b".to_vec(), b"c".to_vec()];
+        let mut after = Terminal::with_history(80, 3, 0);
+        after.feed(b"\x1b[1;1Ha\x1b[2;1Hb\x1b[3;1Hc");
+        let next = after.snapshot_rows_from(&[]);
         assert!(view.shift_rows(&next).is_none());
         assert_eq!(view.rows, previous);
     }
@@ -1249,5 +1337,70 @@ mod tests {
         view.feed(b"\x1b[14t");
         assert!(String::from_utf8_lossy(&view.replies).contains("\x1b[4;120;700t"));
         assert!(String::from_utf8_lossy(&view.finish()).contains("\x1b[?1016l"));
+    }
+
+    #[test]
+    fn viewport_patches_changed_cells_only_and_profiles_partial_rows_in_amber() {
+        use crate::terminal::Color;
+        let mut view = Viewport::new((120, 6));
+        let mut reference = Viewport::new((120, 6));
+        let mut tty = Terminal::with_size(120, 6);
+        let mut full_tty = Terminal::with_size(120, 6);
+
+        let middle = "═".repeat(90);
+        let initial = format!("\x1b[2;1H[0] {middle} 00:00\x1b[3;1Hfull row before");
+        view.feed(initial.as_bytes());
+        reference.feed(initial.as_bytes());
+        tty.feed(&view.draw());
+        full_tty.feed(&reference.draw());
+
+        // Sparse update on row 1 (col 1 and col 100): must not reprint the 90-col bar.
+        view.feed(b"\x1b[2;2H1\x1b[2;100H9");
+        reference.feed(b"\x1b[2;2H1\x1b[2;100H9");
+        let delta = view.draw();
+        assert!(!String::from_utf8_lossy(&delta).contains(&middle));
+        assert!(delta.len() < 70, "expected sparse local draw, got {} bytes", delta.len());
+        tty.feed(&delta);
+        reference.invalidate();
+        full_tty.feed(&reference.draw());
+        assert!(tty.same_screen(&full_tty));
+
+        // Enable profiling: sparse cell edit paints edited cells amber (94) and
+        // leaves untouched cells on the same row gray (236).
+        view.set_profiling(true);
+        tty.feed(&view.draw());
+        assert_eq!(tty.cell(1, 10).unwrap().attr.bg, Color::Indexed(236));
+
+        view.feed(b"\x1b[2;2H2");
+        reference.feed(b"\x1b[2;2H2");
+        tty.feed(&view.draw());
+        reference.invalidate();
+        full_tty.feed(&reference.draw());
+        assert_eq!(tty.cell(1, 1).unwrap().attr.bg, Color::Indexed(94));
+        assert_eq!(tty.cell(1, 10).unwrap().attr.bg, Color::Indexed(236));
+
+        // Turning profiling off restores exact application colors and screen state.
+        view.set_profiling(false);
+        tty.feed(&view.draw());
+        assert!(tty.same_screen(&full_tty));
+    }
+
+    #[test]
+    fn clearing_to_a_single_prompt_erases_in_place_without_scrolling_blank_rows() {
+        let mut view = Viewport::new((100, 30));
+        let mut tty = Terminal::with_size(100, 30);
+        view.badge = " test1:server ".into();
+        view.feed(b"dev@server:~$ echo READY\r\nREADY\r\n$ ");
+        tty.feed(&view.draw());
+        view.feed(b"\x1b[H\x1b[2J$ ");
+        let cleared = view.draw();
+        let text = String::from_utf8_lossy(&cleared);
+        assert!(
+            !text.contains("\x1b[2S"),
+            "single moving prompt plus blank rows must not scroll: {text:?}"
+        );
+        tty.feed(&cleared);
+        assert_eq!(tty.screen_line(1), "");
+        assert_eq!(tty.screen_line(2), "");
     }
 }

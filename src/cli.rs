@@ -124,7 +124,7 @@ keys in a session (typed at the start of a line, as in ssh)
   ~m             rename the current rsh or tmux session
   ~,             settings; arrows move/change, Enter activates, Esc closes
                  also ~ then Cmd+, when the terminal forwards CSI 44;9u
-  ~p             toggle row profiling (green moved, red redrawn, gray unchanged)
+  ~p             toggle render profiling (green moved, amber cells, red row, gray idle)
   ~r             repaint the screen from the server
   ~h             these keys
   ~~             send ~

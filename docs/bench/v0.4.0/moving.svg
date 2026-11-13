@@ -1,0 +1,190 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="626" viewBox="0 0 760 626" role="img" aria-label="Moving link: two 30-second cycles">
+<style>svg{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif}.bg{fill:#fcfcfb}.t1{fill:#1d1d1b}.t2{fill:#5f5e58}.axis{stroke:#e2e1dc}.s-rsh{fill:#2a78d6}.s-ssh{fill:#1baf7a}.s-et{fill:#eda100}.s-mosh{fill:#e87ba4}@media (prefers-color-scheme:dark){.bg{fill:#1a1a19}.t1{fill:#f0efec}.t2{fill:#c3c2b7}.axis{stroke:#3a3a37}.s-rsh{fill:#3987e5}.s-ssh{fill:#199e70}.s-et{fill:#c98500}.s-mosh{fill:#d55181}}</style>
+<rect class="bg" width="100%" height="100%" rx="8"/>
+<text class="t1" x="16" y="26" font-size="15" font-weight="600">Moving link: two 30-second cycles</text>
+<text class="t2" x="16" y="44" font-size="11.5">UDP cohort; evaluations separate; strongest: FPS, softer: 5% low, softest: 1% low (higher is better)</text>
+<rect class="s-rsh" x="16" y="56" width="10" height="10" rx="2"/>
+<text class="t2" x="30" y="65" font-size="11.5">rsh (UDP)</text>
+<rect class="s-ssh" x="112" y="56" width="10" height="10" rx="2"/>
+<text class="t2" x="126" y="65" font-size="11.5">OpenSSH</text>
+<rect class="s-et" x="195" y="56" width="10" height="10" rx="2"/>
+<text class="t2" x="209" y="65" font-size="11.5">ET</text>
+<rect class="s-mosh" x="241" y="56" width="10" height="10" rx="2"/>
+<text class="t2" x="255" y="65" font-size="11.5">mosh</text>
+<text class="t1" x="16" y="90" font-size="12" font-weight="600">Dashboard · evaluation 0</text>
+<line class="axis" x1="108" y1="96" x2="108" y2="150" stroke-width="1"/>
+<text class="t2" x="102" y="107" font-size="11" text-anchor="end">rsh (UDP)</text>
+<rect class="s-rsh" x="108" y="98" width="403.7" height="11" rx="2"/>
+<rect class="bg" x="108" y="98" width="161.1" height="11" rx="2"/>
+<rect class="s-rsh" x="108" y="98" width="161.1" height="11" rx="2" opacity="0.8"/>
+<rect class="bg" x="108" y="98" width="48.9" height="11" rx="2"/>
+<rect class="s-rsh" x="108" y="98" width="48.9" height="11" rx="2" opacity="0.6"/>
+<text class="t1" x="517.7" y="107" font-size="11" font-weight="600">33.87 / 4.10 / 13.51</text>
+<text class="t2" x="102" y="120" font-size="11" text-anchor="end">OpenSSH</text>
+<rect class="s-ssh" x="108" y="111" width="246.1" height="11" rx="2"/>
+<rect class="bg" x="108" y="111" width="124.2" height="11" rx="2"/>
+<rect class="s-ssh" x="108" y="111" width="124.2" height="11" rx="2" opacity="0.8"/>
+<rect class="bg" x="108" y="111" width="41.1" height="11" rx="2"/>
+<rect class="s-ssh" x="108" y="111" width="41.1" height="11" rx="2" opacity="0.6"/>
+<text class="t1" x="360.1" y="120" font-size="11">20.65 / 3.45 / 10.42</text>
+<text class="t2" x="102" y="133" font-size="11" text-anchor="end">ET</text>
+<rect class="s-et" x="108" y="124" width="240.8" height="11" rx="2"/>
+<rect class="bg" x="108" y="124" width="104.6" height="11" rx="2"/>
+<rect class="s-et" x="108" y="124" width="104.6" height="11" rx="2" opacity="0.8"/>
+<rect class="bg" x="108" y="124" width="32.9" height="11" rx="2"/>
+<rect class="s-et" x="108" y="124" width="32.9" height="11" rx="2" opacity="0.6"/>
+<text class="t1" x="354.8" y="133" font-size="11">20.20 / 2.76 / 8.77</text>
+<text class="t2" x="102" y="146" font-size="11" text-anchor="end">mosh</text>
+<rect class="s-mosh" x="108" y="137" width="172.8" height="11" rx="2"/>
+<rect class="bg" x="108" y="137" width="69.3" height="11" rx="2"/>
+<rect class="s-mosh" x="108" y="137" width="69.3" height="11" rx="2" opacity="0.8"/>
+<rect class="bg" x="108" y="137" width="34.8" height="11" rx="2"/>
+<rect class="s-mosh" x="108" y="137" width="34.8" height="11" rx="2" opacity="0.6"/>
+<text class="t1" x="286.8" y="146" font-size="11">14.50 / 2.92 / 5.81</text>
+<text class="t1" x="16" y="178" font-size="12" font-weight="600">Random screen · evaluation 0</text>
+<line class="axis" x1="108" y1="184" x2="108" y2="238" stroke-width="1"/>
+<text class="t2" x="102" y="195" font-size="11" text-anchor="end">rsh (UDP)</text>
+<rect class="s-rsh" x="108" y="186" width="318.9" height="11" rx="2"/>
+<rect class="bg" x="108" y="186" width="88.3" height="11" rx="2"/>
+<rect class="s-rsh" x="108" y="186" width="88.3" height="11" rx="2" opacity="0.8"/>
+<rect class="bg" x="108" y="186" width="30.7" height="11" rx="2"/>
+<rect class="s-rsh" x="108" y="186" width="30.7" height="11" rx="2" opacity="0.6"/>
+<text class="t1" x="432.9" y="195" font-size="11" font-weight="600">26.75 / 2.58 / 7.41</text>
+<text class="t2" x="102" y="208" font-size="11" text-anchor="end">OpenSSH</text>
+<rect class="s-ssh" x="108" y="199" width="201.8" height="11" rx="2"/>
+<rect class="bg" x="108" y="199" width="58.4" height="11" rx="2"/>
+<rect class="s-ssh" x="108" y="199" width="58.4" height="11" rx="2" opacity="0.8"/>
+<rect class="bg" x="108" y="199" width="31.0" height="11" rx="2"/>
+<rect class="s-ssh" x="108" y="199" width="31.0" height="11" rx="2" opacity="0.6"/>
+<text class="t1" x="315.8" y="208" font-size="11">16.93 / 2.60 / 4.90</text>
+<text class="t2" x="102" y="221" font-size="11" text-anchor="end">ET</text>
+<rect class="s-et" x="108" y="212" width="241.4" height="11" rx="2"/>
+<rect class="bg" x="108" y="212" width="106.4" height="11" rx="2"/>
+<rect class="s-et" x="108" y="212" width="106.4" height="11" rx="2" opacity="0.8"/>
+<rect class="bg" x="108" y="212" width="26.5" height="11" rx="2"/>
+<rect class="s-et" x="108" y="212" width="26.5" height="11" rx="2" opacity="0.6"/>
+<text class="t1" x="355.4" y="221" font-size="11">20.25 / 2.22 / 8.93</text>
+<text class="t2" x="102" y="234" font-size="11" text-anchor="end">mosh</text>
+<rect class="s-mosh" x="108" y="225" width="155.6" height="11" rx="2"/>
+<rect class="bg" x="108" y="225" width="45.5" height="11" rx="2"/>
+<rect class="s-mosh" x="108" y="225" width="45.5" height="11" rx="2" opacity="0.8"/>
+<rect class="bg" x="108" y="225" width="34.3" height="11" rx="2"/>
+<rect class="s-mosh" x="108" y="225" width="34.3" height="11" rx="2" opacity="0.6"/>
+<text class="t1" x="269.6" y="234" font-size="11">13.05 / 2.87 / 3.82</text>
+<text class="t1" x="16" y="266" font-size="12" font-weight="600">Coding agent TUI · evaluation 0</text>
+<line class="axis" x1="108" y1="272" x2="108" y2="326" stroke-width="1"/>
+<text class="t2" x="102" y="283" font-size="11" text-anchor="end">rsh (UDP)</text>
+<rect class="s-rsh" x="108" y="274" width="445.6" height="11" rx="2"/>
+<rect class="bg" x="108" y="274" width="177.9" height="11" rx="2"/>
+<rect class="s-rsh" x="108" y="274" width="177.9" height="11" rx="2" opacity="0.8"/>
+<rect class="bg" x="108" y="274" width="58.1" height="11" rx="2"/>
+<rect class="s-rsh" x="108" y="274" width="58.1" height="11" rx="2" opacity="0.6"/>
+<text class="t1" x="559.6" y="283" font-size="11" font-weight="600">37.38 / 4.88 / 14.93</text>
+<text class="t2" x="102" y="296" font-size="11" text-anchor="end">OpenSSH</text>
+<rect class="s-ssh" x="108" y="287" width="148.8" height="11" rx="2"/>
+<rect class="bg" x="108" y="287" width="143.6" height="11" rx="2"/>
+<rect class="s-ssh" x="108" y="287" width="143.6" height="11" rx="2" opacity="0.8"/>
+<rect class="bg" x="108" y="287" width="41.7" height="11" rx="2"/>
+<rect class="s-ssh" x="108" y="287" width="41.7" height="11" rx="2" opacity="0.6"/>
+<text class="t1" x="262.8" y="296" font-size="11">12.48 / 3.50 / 12.05</text>
+<text class="t2" x="102" y="309" font-size="11" text-anchor="end">ET</text>
+<rect class="s-et" x="108" y="300" width="374.1" height="11" rx="2"/>
+<rect class="bg" x="108" y="300" width="195.4" height="11" rx="2"/>
+<rect class="s-et" x="108" y="300" width="195.4" height="11" rx="2" opacity="0.8"/>
+<rect class="bg" x="108" y="300" width="62.1" height="11" rx="2"/>
+<rect class="s-et" x="108" y="300" width="62.1" height="11" rx="2" opacity="0.6"/>
+<text class="t1" x="488.1" y="309" font-size="11">31.38 / 5.21 / 16.39</text>
+<text class="t2" x="102" y="322" font-size="11" text-anchor="end">mosh</text>
+<rect class="s-mosh" x="108" y="313" width="175.4" height="11" rx="2"/>
+<rect class="bg" x="108" y="313" width="75.0" height="11" rx="2"/>
+<rect class="s-mosh" x="108" y="313" width="75.0" height="11" rx="2" opacity="0.8"/>
+<rect class="bg" x="108" y="313" width="26.4" height="11" rx="2"/>
+<rect class="s-mosh" x="108" y="313" width="26.4" height="11" rx="2" opacity="0.6"/>
+<text class="t1" x="289.4" y="322" font-size="11">14.72 / 2.21 / 6.29</text>
+<text class="t1" x="16" y="354" font-size="12" font-weight="600">Dashboard · evaluation 1</text>
+<line class="axis" x1="108" y1="360" x2="108" y2="414" stroke-width="1"/>
+<text class="t2" x="102" y="371" font-size="11" text-anchor="end">rsh (UDP)</text>
+<rect class="s-rsh" x="108" y="362" width="408.5" height="11" rx="2"/>
+<rect class="bg" x="108" y="362" width="172.8" height="11" rx="2"/>
+<rect class="s-rsh" x="108" y="362" width="172.8" height="11" rx="2" opacity="0.8"/>
+<rect class="bg" x="108" y="362" width="53.5" height="11" rx="2"/>
+<rect class="s-rsh" x="108" y="362" width="53.5" height="11" rx="2" opacity="0.6"/>
+<text class="t1" x="522.5" y="371" font-size="11" font-weight="600">34.27 / 4.48 / 14.49</text>
+<text class="t2" x="102" y="384" font-size="11" text-anchor="end">OpenSSH</text>
+<rect class="s-ssh" x="108" y="375" width="242.6" height="11" rx="2"/>
+<rect class="bg" x="108" y="375" width="100.2" height="11" rx="2"/>
+<rect class="s-ssh" x="108" y="375" width="100.2" height="11" rx="2" opacity="0.8"/>
+<rect class="bg" x="108" y="375" width="21.4" height="11" rx="2"/>
+<rect class="s-ssh" x="108" y="375" width="21.4" height="11" rx="2" opacity="0.6"/>
+<text class="t1" x="356.6" y="384" font-size="11">20.35 / 1.79 / 8.40</text>
+<text class="t2" x="102" y="397" font-size="11" text-anchor="end">ET</text>
+<rect class="s-et" x="108" y="388" width="241.6" height="11" rx="2"/>
+<rect class="bg" x="108" y="388" width="90.3" height="11" rx="2"/>
+<rect class="s-et" x="108" y="388" width="90.3" height="11" rx="2" opacity="0.8"/>
+<rect class="bg" x="108" y="388" width="24.8" height="11" rx="2"/>
+<rect class="s-et" x="108" y="388" width="24.8" height="11" rx="2" opacity="0.6"/>
+<text class="t1" x="355.6" y="397" font-size="11">20.27 / 2.08 / 7.58</text>
+<text class="t2" x="102" y="410" font-size="11" text-anchor="end">mosh</text>
+<rect class="s-mosh" x="108" y="401" width="173.6" height="11" rx="2"/>
+<rect class="bg" x="108" y="401" width="65.1" height="11" rx="2"/>
+<rect class="s-mosh" x="108" y="401" width="65.1" height="11" rx="2" opacity="0.8"/>
+<rect class="bg" x="108" y="401" width="26.4" height="11" rx="2"/>
+<rect class="s-mosh" x="108" y="401" width="26.4" height="11" rx="2" opacity="0.6"/>
+<text class="t1" x="287.6" y="410" font-size="11">14.57 / 2.22 / 5.46</text>
+<text class="t1" x="16" y="442" font-size="12" font-weight="600">Random screen · evaluation 1</text>
+<line class="axis" x1="108" y1="448" x2="108" y2="502" stroke-width="1"/>
+<text class="t2" x="102" y="459" font-size="11" text-anchor="end">rsh (UDP)</text>
+<rect class="s-rsh" x="108" y="450" width="332.2" height="11" rx="2"/>
+<rect class="bg" x="108" y="450" width="112.5" height="11" rx="2"/>
+<rect class="s-rsh" x="108" y="450" width="112.5" height="11" rx="2" opacity="0.8"/>
+<rect class="bg" x="108" y="450" width="34.4" height="11" rx="2"/>
+<rect class="s-rsh" x="108" y="450" width="34.4" height="11" rx="2" opacity="0.6"/>
+<text class="t1" x="446.2" y="459" font-size="11" font-weight="600">27.87 / 2.88 / 9.43</text>
+<text class="t2" x="102" y="472" font-size="11" text-anchor="end">OpenSSH</text>
+<rect class="s-ssh" x="108" y="463" width="189.3" height="11" rx="2"/>
+<rect class="bg" x="108" y="463" width="79.5" height="11" rx="2"/>
+<rect class="s-ssh" x="108" y="463" width="79.5" height="11" rx="2" opacity="0.8"/>
+<rect class="bg" x="108" y="463" width="21.2" height="11" rx="2"/>
+<rect class="s-ssh" x="108" y="463" width="21.2" height="11" rx="2" opacity="0.6"/>
+<text class="t1" x="303.3" y="472" font-size="11">15.88 / 1.78 / 6.67</text>
+<text class="t2" x="102" y="485" font-size="11" text-anchor="end">ET</text>
+<rect class="s-et" x="108" y="476" width="84.4" height="11" rx="2"/>
+<rect class="bg" x="108" y="476" width="39.3" height="11" rx="2"/>
+<rect class="s-et" x="108" y="476" width="39.3" height="11" rx="2" opacity="0.8"/>
+<rect class="bg" x="108" y="476" width="6.2" height="11" rx="2"/>
+<rect class="s-et" x="108" y="476" width="6.2" height="11" rx="2" opacity="0.6"/>
+<text class="t1" x="198.4" y="485" font-size="11">7.08 / 0.52 / 3.30</text>
+<text class="t2" x="102" y="498" font-size="11" text-anchor="end">mosh</text>
+<rect class="s-mosh" x="108" y="489" width="155.8" height="11" rx="2"/>
+<rect class="bg" x="108" y="489" width="47.9" height="11" rx="2"/>
+<rect class="s-mosh" x="108" y="489" width="47.9" height="11" rx="2" opacity="0.8"/>
+<rect class="bg" x="108" y="489" width="34.4" height="11" rx="2"/>
+<rect class="s-mosh" x="108" y="489" width="34.4" height="11" rx="2" opacity="0.6"/>
+<text class="t1" x="269.8" y="498" font-size="11">13.07 / 2.88 / 4.02</text>
+<text class="t1" x="16" y="530" font-size="12" font-weight="600">Coding agent TUI · evaluation 1</text>
+<line class="axis" x1="108" y1="536" x2="108" y2="590" stroke-width="1"/>
+<text class="t2" x="102" y="547" font-size="11" text-anchor="end">rsh (UDP)</text>
+<rect class="s-rsh" x="108" y="538" width="477.0" height="11" rx="2"/>
+<rect class="bg" x="108" y="538" width="313.7" height="11" rx="2"/>
+<rect class="s-rsh" x="108" y="538" width="313.7" height="11" rx="2" opacity="0.8"/>
+<rect class="bg" x="108" y="538" width="59.0" height="11" rx="2"/>
+<rect class="s-rsh" x="108" y="538" width="59.0" height="11" rx="2" opacity="0.6"/>
+<text class="t1" x="591.0" y="547" font-size="11" font-weight="600">40.02 / 4.95 / 26.32</text>
+<text class="t2" x="102" y="560" font-size="11" text-anchor="end">OpenSSH</text>
+<rect class="s-ssh" x="108" y="551" width="383.6" height="11" rx="2"/>
+<rect class="bg" x="108" y="551" width="175.3" height="11" rx="2"/>
+<rect class="s-ssh" x="108" y="551" width="175.3" height="11" rx="2" opacity="0.8"/>
+<rect class="bg" x="108" y="551" width="41.5" height="11" rx="2"/>
+<rect class="s-ssh" x="108" y="551" width="41.5" height="11" rx="2" opacity="0.6"/>
+<text class="t1" x="497.6" y="560" font-size="11">32.18 / 3.48 / 14.71</text>
+<text class="t2" x="102" y="573" font-size="11" text-anchor="end">ET</text>
+<rect class="s-et" x="108" y="564" width="2.0" height="11" rx="2"/>
+<text class="t1" x="116.0" y="573" font-size="11">0.00 / — / —</text>
+<text class="t2" x="102" y="586" font-size="11" text-anchor="end">mosh</text>
+<rect class="s-mosh" x="108" y="577" width="170.3" height="11" rx="2"/>
+<rect class="bg" x="108" y="577" width="71.8" height="11" rx="2"/>
+<rect class="s-mosh" x="108" y="577" width="71.8" height="11" rx="2" opacity="0.8"/>
+<rect class="bg" x="108" y="577" width="25.3" height="11" rx="2"/>
+<rect class="s-mosh" x="108" y="577" width="25.3" height="11" rx="2" opacity="0.6"/>
+<text class="t1" x="284.3" y="586" font-size="11">14.28 / 2.12 / 6.02</text>
+</svg>

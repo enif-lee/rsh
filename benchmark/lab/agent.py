@@ -128,6 +128,11 @@ class Client:
     def look(self, now):
         """The screen as shown now: torn (rows of different frames) or
         blank (most rows without their frame number, as after a clear)."""
+        m = header(self.screen, 60)
+        if m and m.group(3) == "agent":
+            empty = sum(1 for y in range(1, self.rows) if not "".join(self.screen.buffer[y][x].data for x in range(self.cols)).strip())
+            self.states.append((now, False, empty > (self.rows - 1) * 0.7))
+            return
         tags = []
         for y in range(1, self.rows):
             row = self.screen.buffer[y]
@@ -329,39 +334,77 @@ def stall_times(seen):
     return [(round(at, 3), round(ms), skipped) for at, ms, skipped in gaps if ms > 2.5 * usual][:10]
 
 
-def lows(seen):
+def pace_frames(seen, max_fps):
+    """Leaky-bucket rate limiter at `max_fps` (1 frame credit): absorbs normal
+    2-4 ms OS/PTY scheduling jitter around a steady cadence without dropping
+    legitimate frames, while discarding buffered catch-up bursts that arrive
+    after a stall so delayed frames can never exceed `max_fps`."""
+    if not max_fps or max_fps <= 0 or len(seen) <= 1:
+        return list(seen)
+    period = 1.0 / max_fps
+    # Allow up to half a frame period of arrival jitter around steady slots,
+    # never accumulating past `now` during a stall (so a post-stall burst only
+    # scores 1 frame, not the stalled backlog).
+    jitter = period * 0.5
+    accepted = [seen[0]]
+    next_slot = seen[0][0] + period
+    for f in seen[1:]:
+        t = f[0]
+        if t + jitter >= next_slot:
+            accepted.append(f)
+            next_slot = max(next_slot, t) + period
+    return accepted
+
+
+def lows(seen, max_fps=None):
     gaps = sorted((b[0] - a[0]) * 1000 for a, b in zip(seen, seen[1:]))
     if len(gaps) < 10:
         return {"low1_fps": None, "low5_fps": None}
     at = lambda q: gaps[min(len(gaps) - 1, math.ceil(len(gaps) * q) - 1)]
-    return {"low1_fps": round(1000 / max(at(0.99), 1e-3), 1), "low5_fps": round(1000 / max(at(0.95), 1e-3), 1)}
-
-
-def render_stats(seen, start, end):
-    """fps, frame age (made on the server, shown here; the containers
-    share a clock), the longest gap (edges included), fps each second."""
-    span = max(end - start, 1e-6)
-    ages = sorted((f[0] - f[2]) * 1000 for f in seen)
-    times = [start] + [f[0] for f in seen] + [end]
+    cap = (lambda v: min(v, float(max_fps))) if max_fps and max_fps > 0 else (lambda v: v)
     return {
-        "frames": len(seen),
-        "fps": round(len(seen) / span, 1),
+        "low1_fps": round(cap(1000 / max(at(0.99), 1e-3)), 1),
+        "low5_fps": round(cap(1000 / max(at(0.95), 1e-3)), 1),
+    }
+
+
+def render_stats(seen, start, end, max_fps=None):
+    """fps, frame age (made on the server, shown here; the containers
+    share a clock), the longest gap (edges included), fps each second.
+    When `max_fps` is set, buffered catch-up frames arriving faster than
+    the target frame interval are excluded and rates are capped at `max_fps`."""
+    span = max(end - start, 1e-6)
+    paced = pace_frames(seen, max_fps)
+    cap_int = int(round(max_fps)) if max_fps and max_fps > 0 else None
+    cap_rate = (lambda v: min(v, float(max_fps))) if max_fps and max_fps > 0 else (lambda v: v)
+    ages = sorted((f[0] - f[2]) * 1000 for f in paced)
+    times = [start] + [f[0] for f in paced] + [end]
+    per_s = [sum(1 for f in paced if start + k <= f[0] < start + k + 1) for k in range(int(span))]
+    if cap_int is not None:
+        per_s = [min(v, cap_int) for v in per_s]
+    first_s = sum(1 for f in paced if f[0] < start + 1)
+    if cap_int is not None:
+        first_s = min(first_s, cap_int)
+    return {
+        "raw_frames": len(seen),
+        "frames": len(paced),
+        "fps": round(cap_rate(len(paced) / span), 1),
         "age_ms": round(statistics.median(ages)) if ages else None,
         "age_p95_ms": round(ages[math.ceil(len(ages) * 0.95) - 1]) if len(ages) >= 20 else None,
         "max_gap_ms": round(max(b - a for a, b in zip(times, times[1:])) * 1000),
         # As games count them: the rate the slowest 1% and 5% of frame
         # times would give (1000 / the 99th and 95th percentile gap, ms).
-        **lows(seen),
+        **lows(paced, max_fps=max_fps),
         # Frame gaps by 10 ms, for where the slow ones come from.
         # Every frame gap, ms, so lows can be taken over all the runs
         # together (`lab.py summary`): one run's 1% low is about its
         # longest gap alone.
-        "gaps_ms": [round((b[0] - a[0]) * 1000, 1) for a, b in zip(seen, seen[1:])],
-        "gap_hist": sorted(collections.Counter(int((b[0] - a[0]) * 100) * 10 for a, b in zip(seen, seen[1:])).items()),
-        "per_s": [sum(1 for f in seen if start + k <= f[0] < start + k + 1) for k in range(int(span))],
+        "gaps_ms": [round((b[0] - a[0]) * 1000, 1) for a, b in zip(paced, paced[1:])],
+        "gap_hist": sorted(collections.Counter(int((b[0] - a[0]) * 100) * 10 for a, b in zip(paced, paced[1:])).items()),
+        "per_s": per_s,
         # The first second alone: how fast the tool settles at the start.
-        "first_s_fps": sum(1 for f in seen if f[0] < start + 1),
-        "first_s_age_ms": round(statistics.median((f[0] - f[2]) * 1000 for f in seen if f[0] < start + 1)) if any(f[0] < start + 1 for f in seen) else None,
+        "first_s_fps": first_s,
+        "first_s_age_ms": round(statistics.median((f[0] - f[2]) * 1000 for f in paced if f[0] < start + 1)) if any(f[0] < start + 1 for f in paced) else None,
     }
 
 
@@ -529,19 +572,23 @@ def main_run(job):
         out.update(sessions_test(c, tool, name, job.get("count", 10), cols, rows))
         return out
     if test == "render":
-        start, stop, marks = run_scene(c, job["scene"], job["duration"], job["scene_fps"], tool=job["tool"])
+        max_fps = job.get("scene_fps")
+        start, stop, marks = run_scene(c, job["scene"], job["duration"], max_fps, tool=job["tool"])
         seen = frames_between(c, job["scene"], start, stop)
-        out.update(render_stats(seen, start, stop), kbit_s=marks["kbit_s"], pkts_in_s=marks["pkts_in_s"], pkts_out_s=marks["pkts_out_s"], stalls=stalls(seen), stall_at=stall_times(seen), **screen_stats(c, start, stop, seen),
+        paced = pace_frames(seen, max_fps)
+        out.update(render_stats(seen, start, stop, max_fps=max_fps), kbit_s=marks["kbit_s"], pkts_in_s=marks["pkts_in_s"], pkts_out_s=marks["pkts_out_s"], stalls=stalls(paced), stall_at=stall_times(paced), **screen_stats(c, start, stop, paced),
                    rss_client_kb=marks["rss_client_kb"], rss_server_kb=marks["rss_server_kb"], cpu_client=marks["cpu_client"], cpu_server=marks["cpu_server"])
     elif test == "switch":
         # The link changes during the scene: how fast the tool follows.
         at = job["switch_at"]
-        start, stop, marks = run_scene(c, job["scene"], at + job["duration"], job["scene_fps"], [(at, "shape " + job["to"])])
+        max_fps = job.get("scene_fps")
+        start, stop, marks = run_scene(c, job["scene"], at + job["duration"], max_fps, [(at, "shape " + job["to"])])
         seen = frames_between(c, job["scene"], start, stop)
-        out.update(render_stats(seen, start, stop), stalls=stalls(seen), **screen_stats(c, start, stop, seen))
+        paced = pace_frames(seen, max_fps)
+        out.update(render_stats(seen, start, stop, max_fps=max_fps), stalls=stalls(paced), **screen_stats(c, start, stop, paced))
         moved = marks["shape " + job["to"]]
-        before = render_stats([f for f in seen if f[0] < moved], start, moved)
-        after = render_stats([f for f in seen if f[0] >= moved], moved, stop)
+        before = render_stats([f for f in seen if f[0] < moved], start, moved, max_fps=max_fps)
+        after = render_stats([f for f in seen if f[0] >= moved], moved, stop, max_fps=max_fps)
         out.update(fps_before=before["fps"], fps_after=after["fps"], age_after_ms=after["age_ms"],
                    low1_after=after["low1_fps"], low5_after=after["low5_fps"], gaps_after_ms=after["gaps_ms"])
         # Seconds from the change until a second at 90% of the rate the
@@ -587,11 +634,12 @@ def main_run(job):
     return out
 
 
-def main_watch(log, status_path, frames_path):
+def main_watch(log, status_path, frames_path, max_fps=None):
     """A demo pane: follows what the client wrote (`script -f` keeps it in
     the log), rebuilds the screen with pyte, and every quarter second
     writes frames a second, frame age, how long the screen stood still and
     the download rate; each new frame goes to the frames log."""
+    max_fps = float(max_fps) if max_fps else None
     screen = pyte.Screen(400, 200)
     stream = pyte.ByteStream(screen)
 
@@ -633,10 +681,13 @@ def main_watch(log, status_path, frames_path):
             last_status = now
             rx.append((now, rx_bytes()))
             rx = [r for r in rx if now - r[0] <= 1.0] or rx[-1:]
-            recent = [s for s in seen if now - s[0] <= 1.0]
+            recent = pace_frames([s for s in seen if now - s[0] <= 1.0], max_fps)
+            live_fps = float(len(recent))
+            if max_fps:
+                live_fps = min(live_fps, max_fps)
             span = rx[-1][0] - rx[0][0]
             status = {
-                "fps": float(len(recent)),
+                "fps": live_fps,
                 "still_s": now - seen[-1][0] if seen else None,
                 "age_ms": statistics.median((s[0] - s[2]) * 1000 for s in recent) if recent else None,
                 "kbit_s": (rx[-1][1] - rx[0][1]) * 8 / 1000 / span if span > 0 else 0.0,
@@ -650,4 +701,4 @@ if __name__ == "__main__":
     if sys.argv[1] == "run":
         print(json.dumps(main_run(json.loads(sys.argv[2]))), flush=True)
     else:
-        main_watch(*sys.argv[2:5])
+        main_watch(*sys.argv[2:6])
