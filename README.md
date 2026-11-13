@@ -29,9 +29,10 @@ rate; memory row with ten simultaneous idle LAN sessions). Four jobs run in
 parallel; each case has two evaluations. Buffered catch-up bursts are excluded
 and FPS is capped at the requested 60 FPS ceiling.
 
-![rsh and OpenSSH drawing the same dashboard on a 256 kbit/s, RTT 100 ms link](docs/bench/v0.4.0/glance-dashboard.webp)
-
-<p align="center"><sub><em>rsh ~60 FPS · OpenSSH a few FPS, seconds behind</em></sub></p>
+<p align="center">
+<img src="docs/bench/v0.4.0/glance-dashboard.webp" alt="rsh and OpenSSH drawing the same dashboard on a 256 kbit/s, RTT 100 ms link"><br>
+<sub><em>rsh ~60 FPS · OpenSSH a few FPS, seconds behind</em></sub>
+</p>
 
 | Measurement | **rsh (UDP)** | **vs SSH** | mosh | OpenSSH | Eternal Terminal |
 | --- | --- | --- | --- | --- | --- |
