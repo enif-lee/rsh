@@ -23,6 +23,7 @@ pub enum Effect {
     Clipboard(bool),
     Prediction(Mode),
     ShowStats(bool),
+    Inspect(bool),
 }
 
 enum Page {
@@ -38,12 +39,19 @@ pub struct Modal {
     clipboard: bool,
     prediction: Mode,
     show_stats: bool,
+    inspect: Option<bool>,
     pub status: String,
     pub busy: bool,
 }
 
 impl Modal {
-    pub fn settings(controls: &Controls, clipboard: bool, prediction: Mode, show_stats: bool) -> Self {
+    pub fn settings(
+        controls: &Controls,
+        clipboard: bool,
+        prediction: Mode,
+        show_stats: bool,
+        inspect: Option<bool>,
+    ) -> Self {
         let loaded = Config::load(&controls.config_path);
         let status = loaded.as_ref().err().cloned().unwrap_or_default();
         Self {
@@ -54,6 +62,7 @@ impl Modal {
             clipboard,
             prediction,
             show_stats,
+            inspect,
             status,
             busy: false,
         }
@@ -71,6 +80,7 @@ impl Modal {
             clipboard: false,
             prediction: Mode::Adaptive,
             show_stats: false,
+            inspect: None,
             status: String::new(),
             busy: false,
         }
@@ -129,6 +139,13 @@ impl Modal {
                     format!("Prediction: {}", mode_name(self.prediction))
                 },
                 format!("Header stats (fps, RTT, KB/s): {}", if self.global { self.config.show_stats } else { self.show_stats }),
+                if self.global {
+                    format!("Inspect (frame diff): {}", self.config.inspect)
+                } else if let Some(inspect) = self.inspect {
+                    format!("Inspect (frame diff): {inspect}")
+                } else {
+                    "Inspect (frame diff): unavailable in tmux".into()
+                },
                 "Rename current session (Enter)".into(),
                 String::new(),
                 format!(
@@ -184,7 +201,7 @@ impl Modal {
             WindowKey::Up | WindowKey::Char('k') => {
                 self.selected = self.selected.saturating_sub(1).max(2)
             }
-            WindowKey::Down | WindowKey::Char('j') => self.selected = (self.selected + 1).min(6),
+            WindowKey::Down | WindowKey::Char('j') => self.selected = (self.selected + 1).min(7),
             WindowKey::Left | WindowKey::Right | WindowKey::Enter => {
                 let backwards = key == WindowKey::Left;
                 match self.selected {
@@ -239,7 +256,7 @@ impl Modal {
                         match Config::save_setting(&controls.config_path, "show_stats", if value { "true" } else { "false" }) {
                             Ok(()) => {
                                 self.config.show_stats = value;
-                                self.status = "Saved for new attachments".into();
+                                self.status = "Saved for new attachments (--inspect takes precedence)".into();
                             }
                             Err(err) => self.status = err,
                         }
@@ -248,7 +265,24 @@ impl Modal {
                         self.show_stats = !self.show_stats;
                         return Effect::ShowStats(self.show_stats);
                     }
-                    6 if key == WindowKey::Enter => {
+                    6 if self.global => {
+                        let value = !self.config.inspect;
+                        match Config::save_setting(&controls.config_path, "inspect", if value { "true" } else { "false" }) {
+                            Ok(()) => {
+                                self.config.inspect = value;
+                                self.status = "Saved for new attachments (--inspect takes precedence)".into();
+                            }
+                            Err(err) => self.status = err,
+                        }
+                    }
+                    6 => {
+                        if let Some(inspect) = &mut self.inspect {
+                            *inspect = !*inspect;
+                            return Effect::Inspect(*inspect);
+                        }
+                        self.status = "Inspect mode is available in ordinary rsh sessions".into();
+                    }
+                    7 if key == WindowKey::Enter => {
                         self.page = Page::Rename {
                             target: here.clone(),
                             value: label.into(),
@@ -294,7 +328,7 @@ mod tests {
     fn settings_distinguish_live_session_changes_and_saved_defaults() {
         let controls = controls();
         let target = Target::Rsh("h".into(), 1);
-        let mut window = Modal::settings(&controls, true, Mode::Adaptive, false);
+        let mut window = Modal::settings(&controls, true, Mode::Adaptive, false, Some(false));
         window.handle(WindowKey::Down, &controls, &target, "old");
         assert!(matches!(
             window.handle(WindowKey::Right, &controls, &target, "old"),
@@ -320,34 +354,50 @@ mod tests {
                 clipboard_read: false,
                 compress: Compress::Adaptive,
                 show_stats: false,
+                inspect: false,
             }
         );
         let _ = std::fs::remove_dir_all(controls.config_path.parent().unwrap());
     }
 
     #[test]
-    fn header_stats_can_change_live_or_be_saved_for_new_attachments() {
+    fn header_stats_and_inspect_can_change_live_or_be_saved_for_new_attachments() {
         let controls = controls();
         let target = Target::Rsh("h".into(), 1);
-        let mut window = Modal::settings(&controls, true, Mode::Adaptive, false);
+        let mut window = Modal::settings(&controls, true, Mode::Adaptive, false, Some(false));
         window.selected = 5;
         assert!(matches!(window.handle(WindowKey::Right, &controls, &target, "old"), Effect::ShowStats(true)));
+        window.selected = 6;
+        assert!(matches!(window.handle(WindowKey::Right, &controls, &target, "old"), Effect::Inspect(true)));
         assert!(!controls.config_path.exists());
         window.selected = 2;
         window.handle(WindowKey::Right, &controls, &target, "old");
         window.selected = 5;
         assert!(matches!(window.handle(WindowKey::Enter, &controls, &target, "old"), Effect::None));
-        assert!(Config::load(&controls.config_path).unwrap().show_stats);
+        window.selected = 6;
+        assert!(matches!(window.handle(WindowKey::Enter, &controls, &target, "old"), Effect::None));
+        let saved = Config::load(&controls.config_path).unwrap();
+        assert!(saved.show_stats && saved.inspect);
         // A saved global change does not override the current session's choice.
         window.selected = 2;
         window.handle(WindowKey::Left, &controls, &target, "old");
         assert!(window.lines(&controls, "h", "peer", "old", false)[5].ends_with("true"));
+        assert!(window.lines(&controls, "h", "peer", "old", false)[6].ends_with("true"));
         window.selected = 5;
         assert!(matches!(window.handle(WindowKey::Left, &controls, &target, "old"), Effect::ShowStats(false)));
-        assert!(Config::load(&controls.config_path).unwrap().show_stats);
+        window.selected = 6;
+        assert!(matches!(window.handle(WindowKey::Left, &controls, &target, "old"), Effect::Inspect(false)));
+        let saved = Config::load(&controls.config_path).unwrap();
+        assert!(saved.show_stats && saved.inspect);
         window.handle(WindowKey::Down, &controls, &target, "old");
         assert!(matches!(window.handle(WindowKey::Enter, &controls, &target, "old"), Effect::None));
         assert!(window.lines(&controls, "h", "peer", "old", false)[0].contains("Rename"));
+
+        let mut tmux_window = Modal::settings(&controls, true, Mode::Adaptive, false, None);
+        assert!(tmux_window.lines(&controls, "h", "peer", "old", true)[6].contains("unavailable in tmux"));
+        tmux_window.selected = 6;
+        assert!(matches!(tmux_window.handle(WindowKey::Enter, &controls, &target, "old"), Effect::None));
+        assert!(tmux_window.status.contains("ordinary rsh sessions"));
         let _ = std::fs::remove_dir_all(controls.config_path.parent().unwrap());
     }
 

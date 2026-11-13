@@ -354,10 +354,10 @@ fn tmux_menu_rename_is_visible_in_an_immediate_and_reopened_list() {
         "xterm-256color",
     );
     active.wait("after:fixture.example");
-    active.send(b"~p");
-    active.wait("Render profiling is available in ordinary rsh sessions.");
+    active.send(b"~i");
+    active.wait("Inspect mode is available in ordinary rsh sessions.");
     active.send(b"q");
-    active.wait_gone("Render profiling is available in ordinary rsh sessions.");
+    active.wait_gone("Inspect mode is available in ordinary rsh sessions.");
     active.send(b"~l");
     active.wait("attached 130x");
     assert_eq!(active.attr("tmux   after", "tmux").fg, rsh::terminal::Color::Indexed(5));
@@ -640,8 +640,8 @@ fn header_stats_toggle_live_and_persist_as_global_defaults() {
     assert!(rsh::config::Config::load(&config).unwrap().show_stats);
     menu.send(b"\x1b");
     menu.wait_gone("rsh settings");
-    // Rename through settings is still reachable after inserting the new row.
-    menu.send(b"~,\x1b[B\x1b[B\x1b[B\x1b[B\r");
+    // Rename through settings is still reachable after inserting the new rows.
+    menu.send(b"~,\x1b[B\x1b[B\x1b[B\x1b[B\x1b[B\r");
     menu.wait("Rename session");
     menu.send(b"\x15"); // Rename input ignores control characters.
     menu.send(b"\x7f\x7f\x7f\x7f\x7f\x7f\x7frenamed\r");
@@ -715,26 +715,41 @@ fn unfinished_synchronized_frame_is_released_before_the_heartbeat() {
 }
 
 #[test]
-fn render_profiling_flag_and_escape_restore_application_colors_without_typing_keys() {
+fn inspect_flag_settings_and_escape_enable_stats_and_faint_diff_without_typing_keys() {
     use rsh::terminal::Color;
     let server = Server::spawn();
     server.allow("fixture.example", "token");
-    let dir = Temp::new("render-profile");
+    let dir = Temp::new("inspect-mode");
     let auth = dir.0.join("known");
+    let config = dir.0.join(".rsh").join("config.yaml");
     let mut store = AuthStore::new(); store.insert("fixture.example", "token"); store.save(&auth).unwrap();
     let address = server.addr().to_string();
     let command = "printf '\\033[1;1H\\033[44mORIGINAL\\033[0m\\033[8;1H'; read reply; printf 'KEY:%s\\n' \"$reply\"; read finish";
     let mut menu = Menu::start(
-        &["--profile-render", "--auth", auth.to_str().unwrap(), "--peer", &address,
-          "fixture.example", "profile", "--", command], &dir.0, false, "xterm-256color",
+        &["--inspect", "--auth", auth.to_str().unwrap(), "--peer", &address,
+          "fixture.example", "inspect", "--", command], &dir.0, false, "xterm-256color",
     );
-    menu.wait("ORIGINAL"); menu.wait("[profile]");
-    assert!(matches!(menu.attr("ORIGINAL", "ORIGINAL").bg, Color::Indexed(22 | 52 | 236)));
-    menu.send(b"~p"); menu.wait_gone("[profile]");
+    menu.wait("ORIGINAL");
+    menu.wait("[inspect]");
+    menu.wait("KB/s] inspect:fixture.example");
+    assert!(matches!(
+        menu.attr("ORIGINAL", "ORIGINAL").bg,
+        Color::Rgb(26, 26, 28) | Color::Rgb(24, 34, 27) | Color::Rgb(38, 25, 27)
+    ));
+    menu.send(b"~i"); menu.wait_gone("[inspect]");
+    assert!(menu.text().contains("KB/s] inspect:fixture.example"));
     assert_eq!(menu.attr("ORIGINAL", "ORIGINAL").bg, Color::Named(4));
-    menu.send(b"~p"); menu.wait("[profile]");
-    assert_eq!(menu.attr("ORIGINAL", "ORIGINAL").bg, Color::Indexed(236));
-    menu.send(b"~p"); menu.wait_gone("[profile]");
+    // Re-enable inspect through settings (row 6) and save global default.
+    menu.send(b"~,\x1b[B\x1b[B\x1b[B\x1b[B\x1b[C");
+    menu.wait("Inspect (frame diff): true");
+    menu.send(b"\x1b[A\x1b[A\x1b[A\x1b[A\x1b[C\x1b[B\x1b[B\x1b[B\x1b[B\x1b[C");
+    menu.wait("Saved for new attachments");
+    assert!(rsh::config::Config::load(&config).unwrap().inspect);
+    menu.send(b"\x1b");
+    menu.wait_gone("rsh settings");
+    menu.wait("[inspect]");
+    assert_eq!(menu.attr("ORIGINAL", "ORIGINAL").bg, Color::Rgb(26, 26, 28));
+    menu.send(b"~p"); menu.wait_gone("[inspect]");
     assert_eq!(menu.attr("ORIGINAL", "ORIGINAL").bg, Color::Named(4));
     menu.send(b"hello\r"); menu.wait("KEY:hello");
 }

@@ -164,7 +164,7 @@ pub struct Options<'a> {
     /// `~/.rsh/config.yaml`).
     pub clipboard_read: bool,
     pub show_stats: bool,
-    pub profile_render: bool,
+    pub inspect: bool,
     pub controls: Option<crate::session_ui::Controls>,
 }
 
@@ -269,7 +269,7 @@ enum Command {
     List,
     Rename,
     Settings,
-    Profile,
+    Inspect,
 }
 
 /// One piece of input, as far as the escape key cares.
@@ -363,7 +363,7 @@ impl Escape {
                     Some('.') => Some(Command::Detach),
                     Some('h' | '?') => Some(Command::Help),
                     Some('r') => Some(Command::Redraw),
-                    Some('p') => Some(Command::Profile),
+                    Some('i' | 'p') => Some(Command::Inspect),
                     Some('l') => Some(Command::List),
                     Some('m') => Some(Command::Rename),
                     Some(',') => Some(Command::Settings),
@@ -711,7 +711,7 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
         }
         link.scroll = Some(proto::ScrollRequest::default());
         let mut viewport = Viewport::new(size);
-        viewport.set_profiling(opts.profile_render);
+        viewport.set_inspecting(opts.inspect);
         out.viewport = Some(viewport);
     }
     let mut mirror = Terminal::with_history(size.0, size.1, 0);
@@ -1127,6 +1127,13 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                                 opts.show_stats = value;
                                 stats = HeaderStats::new(now, out.frames, link.traffic);
                             }
+                            Effect::Inspect(value) => {
+                                opts.inspect = value;
+                                out.prepare_viewport();
+                                if let Some(viewport) = &mut out.viewport {
+                                    viewport.set_inspecting(value);
+                                }
+                            }
                             Effect::Clipboard(value) => opts.clipboard_read = value,
                             Effect::Prediction(mode) => {
                                 out.write_all(&predictor.undo(&mirror))?;
@@ -1230,7 +1237,10 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                                 modal_serial += 1;
                                 let window = if matches!(command, Command::Rename) {
                                     crate::session_ui::Modal::rename(here.clone(), label.clone())
-                                } else { crate::session_ui::Modal::settings(controls, opts.clipboard_read, prediction_mode, opts.show_stats) };
+                                } else {
+                                    let inspect = out.viewport.as_ref().map(|v| v.inspecting());
+                                    crate::session_ui::Modal::settings(controls, opts.clipboard_read, prediction_mode, opts.show_stats, inspect)
+                                };
                                 out.write_all(&decor.undo(&mirror))?;
                                 decor.window = Some(window.lines(controls, &attached.host, &attached.peer.to_string(), &label, opts.tmux.is_some()).into_iter().map(Line::from).collect());
                                 decor.selected = Some(window.selected);
@@ -1246,12 +1256,14 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                             return Ok(if opts.tmux.is_some() { Outcome::Left } else { Outcome::Detached });
                         }
                         Command::Redraw => redraw_wanted = Some(rx.gen),
-                        Command::Profile => {
+                        Command::Inspect => {
                             if let Some(viewport) = &mut out.viewport {
-                                viewport.set_profiling(!viewport.profiling());
+                                let next = !viewport.inspecting();
+                                opts.inspect = next;
+                                viewport.set_inspecting(next);
                             } else {
                                 out.write_all(&decor.undo(&mirror))?;
-                                decor.window = Some(vec![Line::from("Row render profiling"), Line::from("Render profiling is available in ordinary rsh sessions.")]);
+                                decor.window = Some(vec![Line::from("Frame diff inspect"), Line::from("Inspect mode is available in ordinary rsh sessions.")]);
                                 decor.selected = None;
                             }
                             wrote = true;
@@ -2271,7 +2283,7 @@ fn help_lines(key: u8, host: &str, label: &str, tmux: bool) -> Vec<Line<'static>
         format!("{k}m  rename the current session"),
         format!("{k},  settings (or {k} then Cmd+, if forwarded)"),
         format!("{k}r  repaint the screen from the server"),
-        format!("{k}p  toggle render profiling (green: moved; amber: cells; red: row; gray: unchanged)"),
+        format!("{k}i  toggle frame diff inspect (green: moved; amber: cells; red: row; gray: unchanged)"),
         format!("{k}h  this help"),
         format!("{k}{k}  send {k}"),
         String::new(),
@@ -2379,7 +2391,7 @@ mod tests {
                 Command::List => 'l',
                 Command::Rename => 'm',
                 Command::Settings => ',',
-                Command::Profile => 'p',
+                Command::Inspect => 'i',
             })
             .collect()
     }
@@ -2817,12 +2829,16 @@ mod tests {
     }
 
     #[test]
-    fn render_profile_escape_is_consumed_locally_including_encoded_keys() {
+    fn inspect_escape_is_consumed_locally_including_encoded_keys_and_legacy_alias() {
         let mut escape = Escape::new(Some(b'~'));
         let mut remote = Vec::new();
-        assert!(matches!(escape.filter(b"~p", &mut remote).as_slice(), [Command::Profile]));
+        assert!(matches!(escape.filter(b"~i", &mut remote).as_slice(), [Command::Inspect]));
         assert!(remote.is_empty());
-        assert!(matches!(escape.filter(b"~\x1b[112u", &mut remote).as_slice(), [Command::Profile]));
+        assert!(matches!(escape.filter(b"~\x1b[105u", &mut remote).as_slice(), [Command::Inspect]));
+        assert!(remote.is_empty());
+        assert!(matches!(escape.filter(b"~p", &mut remote).as_slice(), [Command::Inspect]));
+        assert!(remote.is_empty());
+        assert!(matches!(escape.filter(b"~\x1b[112u", &mut remote).as_slice(), [Command::Inspect]));
         assert!(remote.is_empty());
     }
 

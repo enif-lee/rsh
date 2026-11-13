@@ -52,7 +52,7 @@ fn run_script(peer: SocketAddr, action: Action, script: &str) -> (Attached, Outc
             sessions: None,
             frames: None,
             tmux: None,
-            clipboard_read: false, profile_render: false, show_stats: false, controls: None,
+            clipboard_read: false, inspect: false, show_stats: false, controls: None,
         },
     )
     .unwrap();
@@ -293,7 +293,7 @@ fn input_past_the_pty_backlog_arrives_whole_over_tcp() {
         &attached,
         Input::Script("x\n".repeat(300_000).into_bytes()),
         &mut out,
-        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, profile_render: false, show_stats: false, controls: None },
+        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, inspect: false, show_stats: false, controls: None },
     )
     .unwrap();
     assert_eq!(outcome, Outcome::Exited(0));
@@ -380,7 +380,7 @@ fn compression_asked_for_works_on_a_fast_link_too() {
     };
     let mut out = Vec::new();
     let script = b"sleep 1; yes abcdefgh | head -n 20000; echo DONE-$((6*7))\n".to_vec();
-    let options = client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, profile_render: false, show_stats: false, controls: None };
+    let options = client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, inspect: false, show_stats: false, controls: None };
     let outcome = client::run(&mut mux, &attached, Input::Script(script), &mut out, options).unwrap();
     assert_eq!(outcome, Outcome::Detached);
     let text = String::from_utf8_lossy(&out);
@@ -426,7 +426,7 @@ fn command_session_reports_exit_code_and_is_removed() {
         &attached,
         Input::Script(Vec::new()),
         &mut out,
-        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, profile_render: false, show_stats: false, controls: None },
+        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, inspect: false, show_stats: false, controls: None },
     )
     .unwrap();
     assert_eq!(outcome, Outcome::Exited(7));
@@ -452,7 +452,7 @@ fn second_client_takes_over_and_first_is_kicked() {
         &a,
         Input::Script(b"echo hi\n".to_vec()),
         &mut out,
-        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, profile_render: false, show_stats: false, controls: None },
+        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, inspect: false, show_stats: false, controls: None },
     )
     .unwrap();
     assert!(matches!(outcome, Outcome::Kicked(ref reason) if reason.contains("another client")), "{outcome:?}");
@@ -590,7 +590,7 @@ fn stale_attachment_is_told_after_server_restart() {
         &attached,
         Input::Script(b"x".to_vec()),
         &mut out,
-        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, profile_render: false, show_stats: false, controls: None },
+        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, inspect: false, show_stats: false, controls: None },
     )
     .unwrap();
     assert!(matches!(outcome, Outcome::Kicked(ref reason) if reason.contains("no longer has")), "{outcome:?}");
@@ -694,7 +694,7 @@ fn local_and_remote_port_forwarding() {
             &attached,
             Input::Script(b"for i in 1 2 3 4 5 6 7 8; do echo tick; sleep 0.5; done\n".to_vec()),
             &mut out,
-            client::Options { size: (80, 24), escape: None, raw: None, forwarder: Some(forwarder), allowed_targets: vec![echo.to_string()], sessions: None, frames: None, tmux: None, clipboard_read: false, profile_render: false, show_stats: false, controls: None },
+            client::Options { size: (80, 24), escape: None, raw: None, forwarder: Some(forwarder), allowed_targets: vec![echo.to_string()], sessions: None, frames: None, tmux: None, clipboard_read: false, inspect: false, show_stats: false, controls: None },
         )
         .unwrap()
     });
@@ -822,7 +822,7 @@ fn attach_in_the_middle_of_an_escape_sequence() {
         &second,
         Input::Script(Vec::new()),
         &mut out,
-        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, profile_render: false, show_stats: false, controls: None },
+        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, inspect: false, show_stats: false, controls: None },
     )
     .unwrap();
     assert_eq!(outcome, Outcome::Exited(0));
@@ -853,7 +853,7 @@ fn revoked_token_ends_its_attachment_and_bad_permissions_fail_closed() {
         &attached,
         Input::Script(b"while :; do echo tick; sleep 0.2; done\n".to_vec()),
         &mut out,
-        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, profile_render: false, show_stats: false, controls: None },
+        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, inspect: false, show_stats: false, controls: None },
     )
     .unwrap();
     assert!(matches!(outcome, Outcome::Kicked(ref reason) if reason.contains("revoked")), "{outcome:?}");
@@ -889,7 +889,7 @@ fn rename_preserves_attachment_and_refuses_collisions() {
     // The original attachment can still type and receive its output.
     let mut out = Vec::new();
     let outcome = client::run(&mut mux, &attached, Input::Script(b"echo RENAME_ALIVE; exit\n".to_vec()), &mut out,
-        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, profile_render: false, show_stats: false, controls: None }).unwrap();
+        client::Options { size: (80, 24), escape: None, raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: false, inspect: false, show_stats: false, controls: None }).unwrap();
     assert_eq!(outcome, Outcome::Exited(0));
     assert!(String::from_utf8_lossy(&out).contains("RENAME_ALIVE"));
 }
@@ -936,7 +936,7 @@ fn tty_rename_and_settings_keep_coalesced_keys_off_the_remote_shell() {
     let mut capture = Capture(output.clone());
     let worker = thread::spawn(move || {
         client::run(&mut mux, &attached, Input::Tty(read.as_raw_fd()), &mut capture,
-            client::Options { size: (100, 30), escape: Some(b'~'), raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: true, profile_render: false, show_stats: false, controls: Some(controls) }).unwrap()
+            client::Options { size: (100, 30), escape: Some(b'~'), raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: None, frames: None, tmux: None, clipboard_read: true, inspect: false, show_stats: false, controls: Some(controls) }).unwrap()
     });
     // One read contains the open command, the whole edited name and Enter.
     write.write_all("~m\x7f\x7f\x7f\x7f\x7f\x7f새 이름 qjk\r".as_bytes()).unwrap();
@@ -1030,7 +1030,7 @@ fn a_tmux_rename_refreshes_the_list_behind_a_new_editor() {
         let screen = Arc::new(Mutex::new(Terminal::with_size(100, 30)));
         let mut output = Screen(screen.clone());
         let worker = thread::spawn(move || client::run(&mut mux, &attached, Input::Tty(read.as_raw_fd()), &mut output,
-            client::Options { size: (100, 30), escape: Some(b'~'), raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: Some(lister), frames: None, tmux: Some("before".into()), clipboard_read: false, profile_render: false, show_stats: false, controls: Some(controls) }).unwrap());
+            client::Options { size: (100, 30), escape: Some(b'~'), raw: None, forwarder: None, allowed_targets: Vec::new(), sessions: Some(lister), frames: None, tmux: Some("before".into()), clipboard_read: false, inspect: false, show_stats: false, controls: Some(controls) }).unwrap());
         let text = || { let screen = screen.lock().unwrap(); (0..30).map(|row| screen.screen_line(row)).collect::<Vec<_>>().join("\n") };
         let until = |ready: &dyn Fn() -> bool| {
             let deadline = Instant::now() + Duration::from_secs(4);

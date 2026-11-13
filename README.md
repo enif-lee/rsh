@@ -23,7 +23,7 @@ fallback on the same port.
 <!-- benchmark-summary:start -->
 ### Performance at a glance
 
-A 256 kbit/s link at RTT 100 ms, requesting 60 FPS in a 100×30 terminal
+**A 256 kbit/s link at RTT 100 ms**, requesting 60 FPS in a 100×30 terminal
 (coding agent KiB/frame row on LAN where every stream transport delivers full
 rate; memory row with ten simultaneous idle LAN sessions). Four jobs run in
 parallel; each case has two evaluations. Buffered catch-up bursts are excluded
@@ -32,22 +32,21 @@ and FPS is capped at the requested 60 FPS ceiling.
 | Measurement | **rsh (UDP)** | **vs SSH** | mosh | OpenSSH | Eternal Terminal |
 | --- | --- | --- | --- | --- | --- |
 | Dashboard observed FPS (average) | **59.5** | **9.83×** | 15.6 | 6.0 | 6.2 |
-| Dashboard observed FPS (median) | **59.5** | **9.83×** | 15.6 | 6.0 | 6.2 |
 | 1% / 5% low FPS | **43.7 / 49.5** | **8.97× / 9.74×** | 14.4 / 14.8 | 4.9 / 5.1 | 4.2 / 4.2 |
-| Frame age, ms | **64** | **59.50×** | 83 | 3808 | 3818 |
-| Received network, kbit/s | **170** | **1.47×** | 90 | 250 | 250 |
-| Packets per frame (in + out) | **2.03** | **2.20×** | 1.68 | 4.47 | 3.78 |
-| Coding agent TUI RX, KiB/frame (LAN) | **0.17** | **22.48×** | 0.35 | 3.80 | 3.75 |
-| Key echo, ms | **7** | **18.16×** | 8 | 120 | 109 |
-| Bulk output to prompt, s | **0.15** | **150.03×** | 0.23 | 23.25 | 23.14 |
-| Ten idle LAN sessions, client + server MiB | **36.2** | **6.13×** | 242.5 | 222.0 | 207.5 |
+| Frame age, ms | **64** | **-98%** | 83 | 3808 | 3818 |
+| Received network, kbit/s | **170** | **-32%** | 90 | 250 | 250 |
+| Packets per frame (in + out) | **2.03** | **-55%** | 1.68 | 4.47 | 3.78 |
+| Coding agent TUI RX, KiB/frame (LAN) | **0.17** | **-96%** | 0.35 | 3.80 | 3.75 |
+| Key echo, ms | **7** | **-94%** | 8 | 120 | 109 |
+| Bulk output to prompt, s | **0.15** | **-99%** | 0.23 | 23.25 | 23.14 |
+| Ten idle LAN sessions, client + server MiB | **36.2** | **-84%** | 242.5 | 222.0 | 207.5 |
 
-For FPS, **vs SSH** is rsh/SSH. For age, RX, packets, echo, bulk time and RSS it is
-SSH/rsh: a larger factor favors rsh, while a factor below 1 favors SSH.
-The 1%/5% factors are separate. Resource ratios describe usage, not speed;
-ratios use unrounded statistics. Packets per frame is the median of each
-run's client inbound plus outbound packet rate divided by observed FPS.
-[Full results and methodology](BENCHMARK.md)
+For FPS, **vs SSH** is the multiple rsh/SSH (higher favors rsh). For age, RX,
+packets, echo, bulk time and RSS it is the percentage change `(rsh - SSH) / SSH`
+(negative favors rsh). The 1%/5% factors are separate. Resource ratios describe
+usage, not speed; ratios use unrounded statistics. Packets per frame is the
+median of each run's client inbound plus outbound packet rate divided by observed
+FPS. [Full results and methodology](BENCHMARK.md)
 include both rsh transports, every profile, coding-agent efficiency, CPU/RSS and collection failures.
 <!-- benchmark-summary:end -->
 
@@ -112,7 +111,7 @@ Type these keys at the start of a line:
 | `~l` | Open the session list; `m` renames the selected session |
 | `~m` | Rename the current rsh or tmux session |
 | `~,` | Open settings; arrows navigate and change values, Enter activates |
-| `~p` | Toggle row render profiling (ordinary sessions) |
+| `~i` | Toggle frame diff inspect (ordinary sessions) |
 | `~r` | Request a repaint |
 | `~h` | Show escape-key help |
 | `~~` | Send a literal tilde |
@@ -178,17 +177,18 @@ updates the remaining changed rows with the same cell-versus-row cost check.
 Detection uses frame contents rather than wheel events or history offsets;
 resizing forces a fresh render.
 
-Use `rsh --profile-render <host> [name]`, or type `~p` at the start of a
-line during an ordinary session, to visualize the client's body diff
-(excluding header restoration and the diagnostic overlay's own writes):
-**green** rows moved and were reused, **amber** spans were patched at the
-cell level, **red** rows were rewritten in full, and **gray** cells stayed
-unchanged. `[profile]` marks the mode in the header.
+Use `rsh --inspect <host> [name]` to enable both header statistics (`fps`,
+`RTT`, `KB/s`) and the client's body frame diff overlay, or toggle frame diff
+inspect via `~,` settings or `~i` at the start of a line during an ordinary
+session: faint **green** rows moved and were reused, faint **amber** spans
+were patched at the cell level, faint **red** rows were rewritten in full,
+and faint **gray** cells stayed unchanged. `[inspect]` marks the mode in the
+header.
 The diagnostic backgrounds leave the application and server history intact;
 toggling off restores original colors. Diagnostic colors follow reused rows
 and repaint only when needed. They still add drawing work, so disable
-profiling when measuring render time or throughput.
-It is unavailable for tmux attachments and noninteractive output.
+inspect mode when measuring render time or throughput.
+Frame diff inspect is unavailable for tmux attachments and noninteractive output.
 
 The local viewport renders text cells, colors and hyperlinks. Inline bitmap
 graphics protocols such as Kitty graphics and sixel are not supported by
@@ -231,6 +231,7 @@ Use `rsh --help` for connection, server and forwarding options.
 compress: always
 clipboard_read: false
 show_stats: false
+inspect: false
 ```
 
 `compress` accepts `always` (the default), `adaptive`, or `none`.
@@ -247,11 +248,11 @@ overlaid header hides when the terminal is too narrow or when it would
 cover the top-row cursor.
 
 The `~,` settings window shows the version, host, session, peer and config
-path. Its **Session** scope changes clipboard reads, local echo prediction
-and header statistics immediately for the current connection. Its **Global**
-scope saves clipboard, compression and header statistics defaults for new
-attachments, preserving
-other settings and comments; `--compress` still takes precedence. Switch
+path. Its **Session** scope changes clipboard reads, local echo prediction,
+header statistics and frame diff inspect immediately for the current
+connection. Its **Global** scope saves clipboard, compression, header
+statistics and frame diff inspect defaults for new attachments, preserving
+other settings and comments; `--compress` and `--inspect` still take precedence. Switch
 scope with Left/Right or Enter, move with Up/Down, and use Left/Right or
 Enter to change a value. Select “Rename current session” and press Enter
 to edit its name. Esc closes or cancels.

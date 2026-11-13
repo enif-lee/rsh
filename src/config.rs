@@ -10,6 +10,7 @@
 //! # or not at all (none).
 //! compress: always
 //! show_stats: false
+//! inspect: false
 //! ```
 
 use std::path::Path;
@@ -22,6 +23,8 @@ pub struct Config {
     pub compress: Compress,
     /// Show frame rate, round-trip latency and packet traffic in the header.
     pub show_stats: bool,
+    /// Highlight moved, cell-patched, rewritten and unchanged rows in the viewport.
+    pub inspect: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -51,7 +54,7 @@ impl Compress {
 
 impl Default for Config {
     fn default() -> Self {
-        Config { clipboard_read: true, compress: Compress::Always, show_stats: false }
+        Config { clipboard_read: true, compress: Compress::Always, show_stats: false, inspect: false }
     }
 }
 
@@ -126,6 +129,7 @@ impl Config {
             match key {
                 "clipboard_read" => config.clipboard_read = flag()?,
                 "show_stats" => config.show_stats = flag()?,
+                "inspect" => config.inspect = flag()?,
                 "compress" => {
                     config.compress = Compress::from_name(value).ok_or_else(|| at(format!("compress must be adaptive, always or none, not `{value}`")))?;
                 }
@@ -159,8 +163,11 @@ mod tests {
         assert_eq!(Config::parse("").unwrap(), Config::default());
         assert!(Config::default().clipboard_read);
         assert!(!Config::default().show_stats);
+        assert!(!Config::default().inspect);
         assert!(Config::parse("show_stats: true").unwrap().show_stats);
         assert!(Config::parse("show_stats: yes").is_err());
+        assert!(Config::parse("inspect: true").unwrap().inspect);
+        assert!(Config::parse("inspect: yes").is_err());
         let off = Config::parse("# mine\n\nclipboard_read: false   # no reads\n").unwrap();
         assert!(!off.clipboard_read);
         assert!(Config::parse("clipboard_read: true").unwrap().clipboard_read);

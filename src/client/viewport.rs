@@ -14,7 +14,7 @@ use std::fmt::Write as _;
 use std::time::Instant;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum RowUpdate {
+pub(crate) enum RowUpdate {
     Unchanged,
     Moved,
     Partial,
@@ -22,12 +22,12 @@ enum RowUpdate {
 }
 
 impl RowUpdate {
-    fn background(self) -> u8 {
+    pub(crate) const fn background(self) -> (u8, u8, u8) {
         match self {
-            Self::Unchanged => 236,
-            Self::Moved => 22,
-            Self::Partial => 94,
-            Self::Redrawn => 52,
+            Self::Unchanged => (26, 26, 28),
+            Self::Moved => (24, 34, 27),
+            Self::Partial => (36, 32, 23),
+            Self::Redrawn => (38, 25, 27),
         }
     }
 }
@@ -49,8 +49,8 @@ pub(super) struct Viewport {
     parser: Parser,
     effects: Effects,
     rows: Vec<RowSnapshot>,
-    profiling: bool,
-    profile_painted: Vec<Option<RowUpdate>>,
+    inspecting: bool,
+    inspect_painted: Vec<Option<RowUpdate>>,
     pub badge: String,
     pub armed: bool,
     pub dirty: bool,
@@ -82,8 +82,8 @@ impl Viewport {
             parser: Parser::new(),
             effects: Effects::default(),
             rows: Vec::new(),
-            profiling: false,
-            profile_painted: Vec::new(),
+            inspecting: false,
+            inspect_painted: Vec::new(),
             badge: String::new(),
             armed: false,
             dirty: true,
@@ -103,11 +103,11 @@ impl Viewport {
         }
     }
 
-    pub fn set_profiling(&mut self, enabled: bool) {
-        if self.profiling == enabled {
+    pub fn set_inspecting(&mut self, enabled: bool) {
+        if self.inspecting == enabled {
             return;
         }
-        self.profiling = enabled;
+        self.inspecting = enabled;
         // Diagnostic backgrounds never enter the model or its row cache.
         // Disabling them restores every original cell, including app colors.
         if !enabled {
@@ -118,8 +118,8 @@ impl Viewport {
         self.interactive = true;
     }
 
-    pub fn profiling(&self) -> bool {
-        self.profiling
+    pub fn inspecting(&self) -> bool {
+        self.inspecting
     }
 
     pub fn resize(&mut self, size: (u16, u16)) {
@@ -130,7 +130,7 @@ impl Viewport {
 
     pub fn invalidate(&mut self) {
         self.rows.clear();
-        self.profile_painted.clear();
+        self.inspect_painted.clear();
         self.last_modes.clear();
         self.dirty = true;
     }
@@ -344,7 +344,7 @@ impl Viewport {
                 let mut restored = String::new();
                 restore_row_tail(&mut restored, row, 0, badge_col, &mut pen);
                 out.extend_from_slice(restored.as_bytes());
-                if let Some(painted) = self.profile_painted.first_mut() {
+                if let Some(painted) = self.inspect_painted.first_mut() {
                     *painted = None;
                 }
             }
@@ -352,10 +352,10 @@ impl Viewport {
         let rows = self.terminal.snapshot_rows_from(&self.rows);
         let cols = usize::from(self.terminal.size().0);
         let mut updates = self
-            .profiling
+            .inspecting
             .then(|| vec![RowUpdate::Unchanged; rows.len()]);
-        if self.profiling {
-            self.profile_painted.resize(rows.len(), None);
+        if self.inspecting {
+            self.inspect_painted.resize(rows.len(), None);
         }
         let shifted = self.shift_rows(&rows).inspect(|plan| {
             out.extend_from_slice(&plan.control);
@@ -388,7 +388,7 @@ impl Viewport {
             ) else {
                 continue;
             };
-            if self.profiling {
+            if self.inspecting {
                 let moved_row = shifted
                     .as_ref()
                     .is_some_and(|p| row >= p.top && row <= p.bottom && !exposed);
@@ -404,7 +404,7 @@ impl Viewport {
                 if kind == RowUpdate::Redrawn {
                     out.extend(
                         self.terminal
-                            .render_profiled_row(row, RowUpdate::Redrawn.background()),
+                            .render_inspected_row(row, RowUpdate::Redrawn.background()),
                     );
                 } else {
                     let base = if moved_row {
@@ -412,7 +412,7 @@ impl Viewport {
                     } else {
                         RowUpdate::Unchanged.background()
                     };
-                    out.extend(self.terminal.render_profiled_partial_row(
+                    out.extend(self.terminal.render_inspected_partial_row(
                         row,
                         base,
                         RowUpdate::Partial.background(),
@@ -420,7 +420,7 @@ impl Viewport {
                     ));
                 }
                 pen = Attr::default();
-                self.profile_painted[row] = Some(kind);
+                self.inspect_painted[row] = Some(kind);
             } else {
                 out.extend_from_slice(plan.bytes.as_bytes());
                 pen = plan.pen;
@@ -429,11 +429,11 @@ impl Viewport {
         self.rows = rows;
         if let Some(updates) = updates {
             for (row, update) in updates.into_iter().enumerate() {
-                if self.profile_painted[row] != Some(update) {
+                if self.inspect_painted[row] != Some(update) {
                     out.extend_from_slice(format!("\x1b[{};1H", row + 1).as_bytes());
-                    out.extend(self.terminal.render_profiled_row(row, update.background()));
+                    out.extend(self.terminal.render_inspected_row(row, update.background()));
                     pen = Attr::default();
-                    self.profile_painted[row] = Some(update);
+                    self.inspect_painted[row] = Some(update);
                 }
             }
         }
@@ -446,8 +446,12 @@ impl Viewport {
         } else {
             self.badge.clone()
         };
-        if self.profiling {
-            badge.insert_str(0, " [profile] ");
+        if self.inspecting {
+            if badge.is_empty() {
+                badge = " [inspect] ".into();
+            } else {
+                badge.insert_str(0, " [inspect]");
+            }
         }
         if unicode_width::UnicodeWidthStr::width(badge.as_str()) > cols {
             badge.clone_from(&self.badge);
@@ -579,8 +583,8 @@ impl Viewport {
             }
             top..(top + n)
         };
-        if self.profiling {
-            let painted = &mut self.profile_painted[top..=bottom];
+        if self.inspecting {
+            let painted = &mut self.inspect_painted[top..=bottom];
             if k > 0 {
                 painted.rotate_left(n);
                 let exp_start = painted.len() - n;
@@ -750,10 +754,18 @@ mod tests {
         use crate::terminal::Color;
         let mut view = Viewport::new((100, 20));
         let mut reference = Viewport::new((100, 20));
-        view.set_profiling(true);
-        reference.set_profiling(true);
+        view.set_inspecting(true);
+        reference.set_inspecting(true);
         let mut tty = Terminal::with_size(100, 20);
         let mut full = Terminal::with_size(100, 20);
+        let moved_bg = {
+            let (r, g, b) = RowUpdate::Moved.background();
+            Color::Rgb(r, g, b)
+        };
+        let redrawn_bg = {
+            let (r, g, b) = RowUpdate::Redrawn.background();
+            Color::Rgb(r, g, b)
+        };
         for (step, first) in [100, 102, 100].into_iter().enumerate() {
             let mut frame = String::from("\x1b[1;1Hfixed title\x1b[K");
             for row in 1..18 {
@@ -780,12 +792,12 @@ mod tests {
                 for row in moved {
                     assert_eq!(
                         tty.cell(row, 0).unwrap().attr.bg,
-                        Color::Indexed(22),
+                        moved_bg,
                         "frame {step}, row {row} must reuse even a repeated blank row"
                     );
                 }
                 for row in if step == 1 { 16..18 } else { 1..3 } {
-                    assert_eq!(tty.cell(row, 0).unwrap().attr.bg, Color::Indexed(52));
+                    assert_eq!(tty.cell(row, 0).unwrap().attr.bg, redrawn_bg);
                 }
             }
             for row in 0..20 {
@@ -800,13 +812,17 @@ mod tests {
     }
 
     #[test]
-    fn profiling_marks_reused_redrawn_and_unchanged_rows_without_changing_the_model() {
+    fn inspect_marks_reused_redrawn_and_unchanged_rows_without_changing_the_model() {
         use crate::terminal::Color;
+        let rgb = |u: RowUpdate| {
+            let (r, g, b) = u.background();
+            Color::Rgb(r, g, b)
+        };
         let mut view = Viewport::new((100, 12));
         let mut reference = Viewport::new((100, 12));
         view.badge = " session:host ".into();
         reference.badge.clone_from(&view.badge);
-        view.set_profiling(true);
+        view.set_inspecting(true);
         let mut tty = Terminal::with_size(100, 12);
         let mut normal = Terminal::with_size(100, 12);
         for (step, first) in [100, 101, 100].into_iter().enumerate() {
@@ -820,17 +836,24 @@ mod tests {
                 "diagnostic colors must not enter diff cache"
             );
             let colors = if step == 0 {
-                [52, 52, 52, 52]
+                [RowUpdate::Redrawn; 4]
             } else if step == 1 {
-                [236, 22, 52, 236]
+                [
+                    RowUpdate::Unchanged,
+                    RowUpdate::Moved,
+                    RowUpdate::Redrawn,
+                    RowUpdate::Unchanged,
+                ]
             } else {
-                [236, 52, 22, 236]
+                [
+                    RowUpdate::Unchanged,
+                    RowUpdate::Redrawn,
+                    RowUpdate::Moved,
+                    RowUpdate::Unchanged,
+                ]
             };
-            for (row, background) in [0, 2, 9, 10].into_iter().zip(colors) {
-                assert_eq!(
-                    tty.cell(row, 0).unwrap().attr.bg,
-                    Color::Indexed(background)
-                );
+            for (row, update) in [0, 2, 9, 10].into_iter().zip(colors) {
+                assert_eq!(tty.cell(row, 0).unwrap().attr.bg, rgb(update));
             }
             for row in 0..12 {
                 for col in 0..70 {
@@ -848,7 +871,7 @@ mod tests {
         tty.feed(&view.draw());
         assert_eq!(
             tty.cell(2, 0).unwrap().attr.bg,
-            Color::Indexed(236),
+            rgb(RowUpdate::Unchanged),
             "an idle frame reuses its rows in place"
         );
         let idle = view.draw();
@@ -866,14 +889,14 @@ mod tests {
         normal.feed(&reference.draw());
         assert_eq!(
             tty.cell(2, 0).unwrap().attr.bg,
-            Color::Indexed(52),
-            "inverse video must not hide profiling backgrounds"
+            rgb(RowUpdate::Redrawn),
+            "inverse video must not hide inspect backgrounds"
         );
-        view.set_profiling(false);
+        view.set_inspecting(false);
         tty.feed(&view.draw());
         assert!(
             tty.same_screen(&normal),
-            "turning profiling off restores original colors, inverse video, cursor and header"
+            "turning inspect off restores original colors, inverse video, cursor and header"
         );
     }
 
@@ -1340,8 +1363,12 @@ mod tests {
     }
 
     #[test]
-    fn viewport_patches_changed_cells_only_and_profiles_partial_rows_in_amber() {
+    fn viewport_patches_changed_cells_only_and_inspects_partial_rows_in_amber() {
         use crate::terminal::Color;
+        let rgb = |u: RowUpdate| {
+            let (r, g, b) = u.background();
+            Color::Rgb(r, g, b)
+        };
         let mut view = Viewport::new((120, 6));
         let mut reference = Viewport::new((120, 6));
         let mut tty = Terminal::with_size(120, 6);
@@ -1365,22 +1392,22 @@ mod tests {
         full_tty.feed(&reference.draw());
         assert!(tty.same_screen(&full_tty));
 
-        // Enable profiling: sparse cell edit paints edited cells amber (94) and
-        // leaves untouched cells on the same row gray (236).
-        view.set_profiling(true);
+        // Enable inspect: sparse cell edit paints edited cells faint amber and
+        // leaves untouched cells on the same row faint neutral gray.
+        view.set_inspecting(true);
         tty.feed(&view.draw());
-        assert_eq!(tty.cell(1, 10).unwrap().attr.bg, Color::Indexed(236));
+        assert_eq!(tty.cell(1, 10).unwrap().attr.bg, rgb(RowUpdate::Unchanged));
 
         view.feed(b"\x1b[2;2H2");
         reference.feed(b"\x1b[2;2H2");
         tty.feed(&view.draw());
         reference.invalidate();
         full_tty.feed(&reference.draw());
-        assert_eq!(tty.cell(1, 1).unwrap().attr.bg, Color::Indexed(94));
-        assert_eq!(tty.cell(1, 10).unwrap().attr.bg, Color::Indexed(236));
+        assert_eq!(tty.cell(1, 1).unwrap().attr.bg, rgb(RowUpdate::Partial));
+        assert_eq!(tty.cell(1, 10).unwrap().attr.bg, rgb(RowUpdate::Unchanged));
 
-        // Turning profiling off restores exact application colors and screen state.
-        view.set_profiling(false);
+        // Turning inspect off restores exact application colors and screen state.
+        view.set_inspecting(false);
         tty.feed(&view.draw());
         assert!(tty.same_screen(&full_tty));
     }

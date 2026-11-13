@@ -905,12 +905,17 @@ impl Terminal {
     }
 
     /// Diagnostic background only: leave the application grid unchanged.
-    pub(crate) fn render_profiled_row(&self, row: usize, background: u8) -> Vec<u8> {
+    pub(crate) fn render_inspected_row(&self, row: usize, background: (u8, u8, u8)) -> Vec<u8> {
         let term = self.term.borrow();
         let grid = term.grid();
         let mut line = grid[Line(row as i32 - grid.display_offset() as i32)].clone();
+        let bg = AnsiColor::Spec(Rgb {
+            r: background.0,
+            g: background.1,
+            b: background.2,
+        });
         for col in 0..term.columns() {
-            line[Column(col)].bg = AnsiColor::Indexed(background);
+            line[Column(col)].bg = bg;
             line[Column(col)].flags.remove(Flags::INVERSE);
         }
         let mut out = String::new();
@@ -918,19 +923,29 @@ impl Terminal {
         out.into_bytes()
     }
 
-    pub(crate) fn render_profiled_partial_row(
+    pub(crate) fn render_inspected_partial_row(
         &self,
         row: usize,
-        base_bg: u8,
-        patch_bg: u8,
+        base_bg: (u8, u8, u8),
+        patch_bg: (u8, u8, u8),
         touched: &[std::ops::Range<usize>],
     ) -> Vec<u8> {
         let term = self.term.borrow();
         let grid = term.grid();
         let mut line = grid[Line(row as i32 - grid.display_offset() as i32)].clone();
+        let base = AnsiColor::Spec(Rgb {
+            r: base_bg.0,
+            g: base_bg.1,
+            b: base_bg.2,
+        });
+        let patch = AnsiColor::Spec(Rgb {
+            r: patch_bg.0,
+            g: patch_bg.1,
+            b: patch_bg.2,
+        });
         for col in 0..term.columns() {
             let changed = touched.iter().any(|range| range.contains(&col));
-            line[Column(col)].bg = AnsiColor::Indexed(if changed { patch_bg } else { base_bg });
+            line[Column(col)].bg = if changed { patch } else { base };
             line[Column(col)].flags.remove(Flags::INVERSE);
         }
         let mut out = String::new();

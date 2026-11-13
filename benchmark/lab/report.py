@@ -507,7 +507,6 @@ def glance_table():
 
     specs = [
         ('Dashboard observed FPS (average)', average, True, 1),
-        ('Dashboard observed FPS (median)', lambda t: median(rs[t], 'fps'), True, 1),
         ('1% / 5% low FPS', lambda t: (low(rs[t]), low(rs[t], quantile=.95)), True, 1),
         ('Frame age, ms', lambda t: median(rs[t], 'age_ms'), False, 0),
         ('Received network, kbit/s', lambda t: median(rs[t], 'kbit_s'), False, 0),
@@ -524,7 +523,9 @@ def glance_table():
             return ' / '.join(factor(x, y, higher) for x, y in zip(a, b))
         if a is None or b is None or a <= 0 or b <= 0:
             return '—'
-        return f'{(a/b if higher else b/a):.2f}×'
+        if higher:
+            return f'{a / b:.2f}×'
+        return f'{(a - b) / b * 100:+.0f}%'
 
     rows = []
     for label, get, higher, digits in specs:
@@ -538,7 +539,7 @@ def glance_table():
 def readme_sections():
     opening = '''### Performance at a glance
 
-A 256 kbit/s link at RTT 100 ms, requesting 60 FPS in a 100×30 terminal
+**A 256 kbit/s link at RTT 100 ms**, requesting 60 FPS in a 100×30 terminal
 (coding agent KiB/frame row on LAN where every stream transport delivers full
 rate; memory row with ten simultaneous idle LAN sessions). Four jobs run in
 parallel; each case has two evaluations. Buffered catch-up bursts are excluded
@@ -546,12 +547,12 @@ and FPS is capped at the requested 60 FPS ceiling.
 
 ''' + glance_table() + '''
 
-For FPS, **vs SSH** is rsh/SSH. For age, RX, packets, echo, bulk time and RSS it is
-SSH/rsh: a larger factor favors rsh, while a factor below 1 favors SSH.
-The 1%/5% factors are separate. Resource ratios describe usage, not speed;
-ratios use unrounded statistics. Packets per frame is the median of each
-run's client inbound plus outbound packet rate divided by observed FPS.
-[Full results and methodology](BENCHMARK.md)
+For FPS, **vs SSH** is the multiple rsh/SSH (higher favors rsh). For age, RX,
+packets, echo, bulk time and RSS it is the percentage change `(rsh - SSH) / SSH`
+(negative favors rsh). The 1%/5% factors are separate. Resource ratios describe
+usage, not speed; ratios use unrounded statistics. Packets per frame is the
+median of each run's client inbound plus outbound packet rate divided by observed
+FPS. [Full results and methodology](BENCHMARK.md)
 include both rsh transports, every profile, coding-agent efficiency, CPU/RSS and collection failures.
 '''
     compact = lambda row: row[:2] + row[3:4] + row[5:]
