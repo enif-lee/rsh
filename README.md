@@ -31,7 +31,7 @@ and FPS is capped at the requested 60 FPS ceiling.
 
 ![rsh and OpenSSH drawing the same dashboard on a 256 kbit/s, RTT 100 ms link](docs/bench/v0.4.0/glance-dashboard.webp)
 
-<p align="center"><small><em>rsh stays near 60 FPS with frame age near one round trip; OpenSSH falls to a few frames a second and several seconds behind.</em></small></p>
+<p align="center"><sub><em>rsh ~60 FPS · OpenSSH a few FPS, seconds behind</em></sub></p>
 
 | Measurement | **rsh (UDP)** | **vs SSH** | mosh | OpenSSH | Eternal Terminal |
 | --- | --- | --- | --- | --- | --- |
