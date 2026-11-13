@@ -13,7 +13,7 @@ Colors are a validated categorical palette (light and dark), assigned to the
 tools in a fixed order; every bar carries its value, so identity and value
 never rest on color alone.
 """
-import json, math, os, statistics, sys
+import html, json, math, os, statistics, sys
 
 ORDER = ["rsh", "rsh-tcp", "ssh", "et", "mosh"]
 NAME = {"rsh": "rsh (UDP)", "rsh-tcp": "rsh (TCP)", "ssh": "OpenSSH", "et": "ET", "mosh": "mosh"}
@@ -133,26 +133,27 @@ def svg(title, note, groups, fmt, higher, log=False, missing="n/a", pair=None, v
     css += [".s-%s{fill:%s}" % (t.replace("-", "_"), LIGHT[t]) for t in tools]
     dark = [".bg{fill:#1a1a19}.t1{fill:#f0efec}.t2{fill:#c3c2b7}.axis{stroke:#3a3a37}"] + [".s-%s{fill:%s}" % (t.replace("-", "_"), DARK[t]) for t in tools]
     css.append("@media (prefers-color-scheme:dark){%s}" % "".join(dark))
-    out = ['<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" viewBox="0 0 %d %d" role="img" aria-label="%s">' % (WIDTH, height, WIDTH, height, title),
+    esc = lambda s: html.escape(str(s), quote=True)
+    out = ['<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" viewBox="0 0 %d %d" role="img" aria-label="%s">' % (WIDTH, height, WIDTH, height, esc(title)),
            "<style>%s</style>" % "".join(css), '<rect class="bg" width="100%" height="100%" rx="8"/>',
-           '<text class="t1" x="16" y="26" font-size="15" font-weight="600">%s</text>' % title,
-           '<text class="t2" x="16" y="44" font-size="11.5">%s (%s is better%s)</text>' % (note, "higher" if higher else "lower", ", log scale" if log else "")]
+           '<text class="t1" x="16" y="26" font-size="15" font-weight="600">%s</text>' % esc(title),
+           '<text class="t2" x="16" y="44" font-size="11.5">%s (%s is better%s)</text>' % (esc(note), "higher" if higher else "lower", ", log scale" if log else "")]
     x = 16
     for t in tools:
         out.append('<rect class="s-%s" x="%d" y="%d" width="10" height="10" rx="2"/>' % (t.replace("-", "_"), x, top - 2))
-        out.append('<text class="t2" x="%d" y="%d" font-size="11.5">%s</text>' % (x + 14, top + 7, NAME[t]))
+        out.append('<text class="t2" x="%d" y="%d" font-size="11.5">%s</text>' % (x + 14, top + 7, esc(NAME[t])))
         x += 14 + 7.2 * len(NAME[t]) + 18
     y = top + legend_h
     for label, values in groups:
-        out.append('<text class="t1" x="16" y="%d" font-size="12" font-weight="600">%s</text>' % (y + 10, label))
+        out.append('<text class="t1" x="16" y="%d" font-size="12" font-weight="600">%s</text>' % (y + 10, esc(label)))
         y += 18
         best = (max if higher else min)((v if not pair else v[0] for v in values.values() if v is not None), default=None)
         out.append('<line class="axis" x1="%d" y1="%d" x2="%d" y2="%d" stroke-width="1"/>' % (LABEL_W + 16, y - 2, LABEL_W + 16, y + len(tools) * (BAR + GAP)))
         for t in tools:
             v = values.get(t)
-            out.append('<text class="t2" x="%d" y="%d" font-size="11" text-anchor="end">%s</text>' % (LABEL_W + 10, y + BAR - 2, NAME[t]))
+            out.append('<text class="t2" x="%d" y="%d" font-size="11" text-anchor="end">%s</text>' % (LABEL_W + 10, y + BAR - 2, esc(NAME[t])))
             if v is None:
-                out.append('<text class="t2" x="%d" y="%d" font-size="11">%s</text>' % (LABEL_W + 20, y + BAR - 2, missing))
+                out.append('<text class="t2" x="%d" y="%d" font-size="11">%s</text>' % (LABEL_W + 20, y + BAR - 2, esc(missing)))
             elif pair == "lows":
                 cls = t.replace("-", "_")
                 width = lambda x: max(2.0, plot * scale(x) / most if most else 0)
@@ -167,7 +168,7 @@ def svg(title, note, groups, fmt, higher, log=False, missing="n/a", pair=None, v
                 # otherwise steady) draws past it.
                 total = max(width(x) for x in v if x is not None)
                 weight = ' font-weight="600"' if v[0] == best else ""
-                out.append('<text class="t1" x="%.1f" y="%d" font-size="11"%s>%s</text>' % (LABEL_W + 22 + total, y + BAR - 2, weight, fmt(v)))
+                out.append('<text class="t1" x="%.1f" y="%d" font-size="11"%s>%s</text>' % (LABEL_W + 22 + total, y + BAR - 2, weight, esc(fmt(v))))
             elif pair:
                 cls = t.replace("-", "_")
                 first = max(2.0, plot * scale(v[0]) / most if most else 0)
@@ -175,12 +176,12 @@ def svg(title, note, groups, fmt, higher, log=False, missing="n/a", pair=None, v
                 out.append('<rect class="s-%s" x="%d" y="%d" width="%.1f" height="%d" rx="2" opacity="0.38"/>' % (cls, LABEL_W + 16, y, total, BAR))
                 out.append('<rect class="s-%s" x="%d" y="%d" width="%.1f" height="%d" rx="2"/>' % (cls, LABEL_W + 16, y, first, BAR))
                 weight = ' font-weight="600"' if v[0] == best else ""
-                out.append('<text class="t1" x="%.1f" y="%d" font-size="11"%s>%s</text>' % (LABEL_W + 22 + total, y + BAR - 2, weight, fmt(v)))
+                out.append('<text class="t1" x="%.1f" y="%d" font-size="11"%s>%s</text>' % (LABEL_W + 22 + total, y + BAR - 2, weight, esc(fmt(v))))
             else:
                 w = max(2.0, plot * scale(v) / most if most else 0)
                 out.append('<rect class="s-%s" x="%d" y="%d" width="%.1f" height="%d" rx="2"/>' % (t.replace("-", "_"), LABEL_W + 16, y, w, BAR))
                 weight = ' font-weight="600"' if v == best else ""
-                out.append('<text class="t1" x="%.1f" y="%d" font-size="11"%s>%s</text>' % (LABEL_W + 22 + w, y + BAR - 2, weight, fmt(v)))
+                out.append('<text class="t1" x="%.1f" y="%d" font-size="11"%s>%s</text>' % (LABEL_W + 22 + w, y + BAR - 2, weight, esc(fmt(v))))
             y += BAR + GAP
         y += GROUP_GAP
     out.append("</svg>")

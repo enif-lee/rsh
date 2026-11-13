@@ -2,7 +2,7 @@
 <style>svg{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif}.bg{fill:#fcfcfb}.t1{fill:#1d1d1b}.t2{fill:#5f5e58}.axis{stroke:#e2e1dc}.s-rsh{fill:#2a78d6}.s-rsh_tcp{fill:#eb6834}.s-ssh{fill:#1baf7a}.s-et{fill:#eda100}.s-mosh{fill:#e87ba4}@media (prefers-color-scheme:dark){.bg{fill:#1a1a19}.t1{fill:#f0efec}.t2{fill:#c3c2b7}.axis{stroke:#3a3a37}.s-rsh{fill:#3987e5}.s-rsh_tcp{fill:#d95926}.s-ssh{fill:#199e70}.s-et{fill:#c98500}.s-mosh{fill:#d55181}}</style>
 <rect class="bg" width="100%" height="100%" rx="8"/>
 <text class="t1" x="16" y="26" font-size="15" font-weight="600">Network: packets for each frame shown, coding agent TUI at 60 fps</text>
-<text class="t2" x="16" y="44" font-size="11.5">the client's, solid: in, light: out (lower is better)</text>
+<text class="t2" x="16" y="44" font-size="11.5">the client&#x27;s, solid: in, light: out (lower is better)</text>
 <rect class="s-rsh" x="16" y="56" width="10" height="10" rx="2"/>
 <text class="t2" x="30" y="65" font-size="11.5">rsh (UDP)</text>
 <rect class="s-rsh_tcp" x="112" y="56" width="10" height="10" rx="2"/>
