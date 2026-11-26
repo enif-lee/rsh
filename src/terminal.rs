@@ -3274,6 +3274,12 @@ mod tests {
     }
 }
 
+/// The virtual terminal's primary device attributes answer (to DA1 and
+/// DECID). `Effects` passes both to the real terminal as DA1, in order with
+/// the queries before them; the client hands this back in place of its
+/// answer, so programs still see the virtual terminal's capabilities.
+pub(crate) const LOCAL_DA1: &str = "\x1b[?6c";
+
 #[derive(Default)]
 pub(crate) struct Effects {
     pub bytes: Vec<u8>,
@@ -3288,6 +3294,13 @@ impl Perform for Effects {
     fn execute(&mut self, byte: u8) {
         if byte == 7 {
             self.bytes.push(byte);
+        }
+    }
+
+    fn esc_dispatch(&mut self, intermediates: &[u8], _: bool, byte: u8) {
+        // DECID asks what DA1 asks; it goes on the same way (see `csi_dispatch`).
+        if byte == b'Z' && intermediates.is_empty() {
+            self.bytes.extend_from_slice(b"\x1b[c");
         }
     }
 
@@ -3317,6 +3330,15 @@ impl Perform for Effects {
     }
 
     fn csi_dispatch(&mut self, params: &Params, intermediates: &[u8], _: bool, action: char) {
+        // Primary device attributes go to the real terminal, behind the
+        // queries passed on before them: programs end a batch of queries
+        // with DA1 and take an earlier DA1 answer to mean the rest have
+        // none. The virtual terminal's own answer (`LOCAL_DA1`) is dropped.
+        // Which forms are DA1 follows the virtual terminal (first value 0).
+        if action == 'c' && intermediates.is_empty() && params.iter().next().is_none_or(|p| p.first() == Some(&0)) {
+            self.bytes.extend_from_slice(b"\x1b[c");
+            return;
+        }
         // Preserve window operations other than size queries, answered above.
         if action != 't'
             || !intermediates.is_empty()

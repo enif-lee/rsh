@@ -1,7 +1,7 @@
 //! State of local settings and rename windows. Network work stays off the
 //! terminal loop so keepalives and remote output continue while editing.
-use crate::client::{Target, WindowKey};
-use crate::config::{Compress, Config};
+use crate::client::{escape_name, Target, WindowKey};
+use crate::config::{check_escape_key, escape_key_value, Compress, Config};
 use crate::predict::Mode;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
@@ -24,6 +24,8 @@ pub enum Effect {
     Prediction(Mode),
     ShowStats(bool),
     Inspect(bool),
+    /// The new escape key, saved, now also this attachment's.
+    EscapeKey(u8),
 }
 
 enum Page {
@@ -40,9 +42,25 @@ pub struct Modal {
     prediction: Mode,
     show_stats: bool,
     inspect: Option<bool>,
+    /// This attachment's escape key; a captured one replaces it unless
+    /// `RSH_ESCAPE_KEY` sets it.
+    escape: Option<u8>,
+    /// `RSH_ESCAPE_KEY` sets the key of every attachment of this process.
+    escape_from_env: bool,
+    /// The next key typed becomes the saved escape key.
+    capturing: bool,
     pub status: String,
     pub busy: bool,
 }
+
+/// How the settings show an escape key.
+fn key_name(key: Option<u8>) -> String {
+    key.map_or_else(|| "off".into(), escape_name)
+}
+
+/// Rows of the settings page that can be selected.
+const PREFIX_ROW: usize = 7;
+const RENAME_ROW: usize = 8;
 
 impl Modal {
     pub fn settings(
@@ -51,6 +69,7 @@ impl Modal {
         prediction: Mode,
         show_stats: bool,
         inspect: Option<bool>,
+        escape: Option<u8>,
     ) -> Self {
         let loaded = Config::load(&controls.config_path);
         let status = loaded.as_ref().err().cloned().unwrap_or_default();
@@ -63,6 +82,9 @@ impl Modal {
             prediction,
             show_stats,
             inspect,
+            escape,
+            escape_from_env: crate::config::escape_key_from_env().is_some(),
+            capturing: false,
             status,
             busy: false,
         }
@@ -81,6 +103,9 @@ impl Modal {
             prediction: Mode::Adaptive,
             show_stats: false,
             inspect: None,
+            escape: None,
+            escape_from_env: false,
+            capturing: false,
             status: String::new(),
             busy: false,
         }
@@ -146,6 +171,13 @@ impl Modal {
                 } else {
                     "Inspect (frame diff): unavailable in tmux".into()
                 },
+                if self.capturing {
+                    "Prefix key: press the new key (Esc cancels)".into()
+                } else if self.escape == self.config.escape_key {
+                    format!("Prefix key: {} (saved; Enter changes)", key_name(self.config.escape_key))
+                } else {
+                    format!("Prefix key: {} (saved; this session {})", key_name(self.config.escape_key), key_name(self.escape))
+                },
                 "Rename current session (Enter)".into(),
                 String::new(),
                 format!(
@@ -172,6 +204,9 @@ impl Modal {
         here: &Target,
         label: &str,
     ) -> Effect {
+        if self.capturing {
+            return self.capture(key, controls);
+        }
         if key == WindowKey::Close {
             return Effect::Close;
         }
@@ -201,7 +236,7 @@ impl Modal {
             WindowKey::Up | WindowKey::Char('k') => {
                 self.selected = self.selected.saturating_sub(1).max(2)
             }
-            WindowKey::Down | WindowKey::Char('j') => self.selected = (self.selected + 1).min(7),
+            WindowKey::Down | WindowKey::Char('j') => self.selected = (self.selected + 1).min(RENAME_ROW),
             WindowKey::Left | WindowKey::Right | WindowKey::Enter => {
                 let backwards = key == WindowKey::Left;
                 match self.selected {
@@ -282,7 +317,12 @@ impl Modal {
                         }
                         self.status = "Inspect mode is available in ordinary rsh sessions".into();
                     }
-                    7 if key == WindowKey::Enter => {
+                    PREFIX_ROW => {
+                        // Saved and applied at once in either scope.
+                        self.capturing = true;
+                        self.status.clear();
+                    }
+                    RENAME_ROW if key == WindowKey::Enter => {
                         self.page = Page::Rename {
                             target: here.clone(),
                             value: label.into(),
@@ -295,6 +335,47 @@ impl Modal {
             _ => {}
         }
         Effect::None
+    }
+
+    /// The next key typed becomes the saved escape key.
+    pub fn capturing(&self) -> bool {
+        self.capturing
+    }
+
+    /// The key typed while waiting for a new escape key.
+    /// It is saved and, unless `RSH_ESCAPE_KEY` sets this attachment's
+    /// key, used from the next key on.
+    fn capture(&mut self, key: WindowKey, controls: &Controls) -> Effect {
+        let byte = match key {
+            WindowKey::Close => {
+                self.capturing = false;
+                self.status = "Prefix key unchanged".into();
+                return Effect::None;
+            }
+            WindowKey::Char(ch) if ch.is_ascii() => ch as u8,
+            _ => {
+                self.status = "That key cannot be the prefix key; press another or Esc".into();
+                return Effect::None;
+            }
+        };
+        if let Err(err) = check_escape_key(byte) {
+            self.status = format!("{err}; press another or Esc");
+            return Effect::None;
+        }
+        self.capturing = false;
+        if let Err(err) = Config::save_setting(&controls.config_path, "escape_key", &escape_key_value(Some(byte))) {
+            self.status = err;
+            return Effect::None;
+        }
+        self.config.escape_key = Some(byte);
+        if self.escape_from_env {
+            self.status = "Saved; RSH_ESCAPE_KEY sets this rsh's key".into();
+            return Effect::None;
+        }
+        self.escape = Some(byte);
+        let at = if byte < 0x20 { "" } else { " at the start of a line" };
+        self.status = format!("Saved; {}. now detaches{at}", escape_name(byte));
+        Effect::EscapeKey(byte)
     }
 }
 
@@ -328,7 +409,7 @@ mod tests {
     fn settings_distinguish_live_session_changes_and_saved_defaults() {
         let controls = controls();
         let target = Target::Rsh("h".into(), 1);
-        let mut window = Modal::settings(&controls, true, Mode::Adaptive, false, Some(false));
+        let mut window = Modal::settings(&controls, true, Mode::Adaptive, false, Some(false), Some(b'~'));
         window.handle(WindowKey::Down, &controls, &target, "old");
         assert!(matches!(
             window.handle(WindowKey::Right, &controls, &target, "old"),
@@ -355,6 +436,7 @@ mod tests {
                 compress: Compress::Adaptive,
                 show_stats: false,
                 inspect: false,
+                escape_key: Some(b'~'),
             }
         );
         let _ = std::fs::remove_dir_all(controls.config_path.parent().unwrap());
@@ -364,7 +446,7 @@ mod tests {
     fn header_stats_and_inspect_can_change_live_or_be_saved_for_new_attachments() {
         let controls = controls();
         let target = Target::Rsh("h".into(), 1);
-        let mut window = Modal::settings(&controls, true, Mode::Adaptive, false, Some(false));
+        let mut window = Modal::settings(&controls, true, Mode::Adaptive, false, Some(false), Some(b'~'));
         window.selected = 5;
         assert!(matches!(window.handle(WindowKey::Right, &controls, &target, "old"), Effect::ShowStats(true)));
         window.selected = 6;
@@ -389,15 +471,58 @@ mod tests {
         assert!(matches!(window.handle(WindowKey::Left, &controls, &target, "old"), Effect::Inspect(false)));
         let saved = Config::load(&controls.config_path).unwrap();
         assert!(saved.show_stats && saved.inspect);
+        window.selected = RENAME_ROW - 1;
         window.handle(WindowKey::Down, &controls, &target, "old");
         assert!(matches!(window.handle(WindowKey::Enter, &controls, &target, "old"), Effect::None));
         assert!(window.lines(&controls, "h", "peer", "old", false)[0].contains("Rename"));
 
-        let mut tmux_window = Modal::settings(&controls, true, Mode::Adaptive, false, None);
+        let mut tmux_window = Modal::settings(&controls, true, Mode::Adaptive, false, None, Some(b'~'));
         assert!(tmux_window.lines(&controls, "h", "peer", "old", true)[6].contains("unavailable in tmux"));
         tmux_window.selected = 6;
         assert!(matches!(tmux_window.handle(WindowKey::Enter, &controls, &target, "old"), Effect::None));
         assert!(tmux_window.status.contains("ordinary rsh sessions"));
+        let _ = std::fs::remove_dir_all(controls.config_path.parent().unwrap());
+    }
+
+    #[test]
+    fn prefix_key_is_captured_checked_saved_and_applied_at_once() {
+        let controls = controls();
+        let target = Target::Rsh("h".into(), 1);
+        let mut window = Modal::settings(&controls, true, Mode::Adaptive, false, Some(false), Some(b'~'));
+        window.escape_from_env = false;
+        let line = |window: &Modal| window.lines(&controls, "h", "peer", "old", false)[PREFIX_ROW].clone();
+        assert_eq!(line(&window), "Prefix key: ~ (saved; Enter changes)");
+        window.selected = PREFIX_ROW;
+        window.handle(WindowKey::Enter, &controls, &target, "old");
+        assert!(line(&window).contains("press the new key"));
+        // Keys a session needs and command keys are refused; `q` and Enter
+        // do not leave the capture either.
+        for key in [WindowKey::Char('\x04'), WindowKey::Char('.'), WindowKey::Char(' '), WindowKey::Enter, WindowKey::Char('한')] {
+            assert!(matches!(window.handle(key, &controls, &target, "old"), Effect::None));
+            assert!(line(&window).contains("press the new key"), "{key:?}");
+        }
+        assert!(!controls.config_path.exists());
+        assert!(matches!(window.handle(WindowKey::Char('\x1e'), &controls, &target, "old"), Effect::EscapeKey(0x1e)));
+        assert_eq!(Config::load(&controls.config_path).unwrap().escape_key, Some(0x1e));
+        assert_eq!(std::fs::read_to_string(&controls.config_path).unwrap(), "escape_key: ctrl-^\n");
+        assert_eq!(line(&window), "Prefix key: Ctrl-^ (saved; Enter changes)");
+        assert_eq!(window.status, "Saved; Ctrl-^. now detaches");
+        // Esc leaves the capture, not the window.
+        window.handle(WindowKey::Right, &controls, &target, "old");
+        assert!(matches!(window.handle(WindowKey::Close, &controls, &target, "old"), Effect::None));
+        assert_eq!(window.status, "Prefix key unchanged");
+        assert!(matches!(window.handle(WindowKey::Close, &controls, &target, "old"), Effect::Close));
+        window.handle(WindowKey::Enter, &controls, &target, "old");
+        assert!(matches!(window.handle(WindowKey::Char('`'), &controls, &target, "old"), Effect::EscapeKey(b'`')));
+        assert_eq!(std::fs::read_to_string(&controls.config_path).unwrap(), "escape_key: \"`\"\n");
+        assert_eq!(window.status, "Saved; `. now detaches at the start of a line");
+        // RSH_ESCAPE_KEY keeps this process's key; the choice is still saved.
+        window.escape_from_env = true;
+        window.handle(WindowKey::Enter, &controls, &target, "old");
+        assert!(matches!(window.handle(WindowKey::Char('!'), &controls, &target, "old"), Effect::None));
+        assert_eq!(Config::load(&controls.config_path).unwrap().escape_key, Some(b'!'));
+        assert_eq!(line(&window), "Prefix key: ! (saved; this session `)");
+        assert_eq!(window.status, "Saved; RSH_ESCAPE_KEY sets this rsh's key");
         let _ = std::fs::remove_dir_all(controls.config_path.parent().unwrap());
     }
 

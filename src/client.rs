@@ -1135,6 +1135,10 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                                 }
                             }
                             Effect::Clipboard(value) => opts.clipboard_read = value,
+                            Effect::EscapeKey(key) => {
+                                escape.key = Some(key);
+                                opts.escape = Some(key);
+                            }
                             Effect::Prediction(mode) => {
                                 out.write_all(&predictor.undo(&mirror))?;
                                 prediction_mode = mode;
@@ -1239,7 +1243,7 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
                                     crate::session_ui::Modal::rename(here.clone(), label.clone())
                                 } else {
                                     let inspect = out.viewport.as_ref().map(|v| v.inspecting());
-                                    crate::session_ui::Modal::settings(controls, opts.clipboard_read, prediction_mode, opts.show_stats, inspect)
+                                    crate::session_ui::Modal::settings(controls, opts.clipboard_read, prediction_mode, opts.show_stats, inspect, escape.key)
                                 };
                                 out.write_all(&decor.undo(&mirror))?;
                                 decor.window = Some(window.lines(controls, &attached.host, &attached.peer.to_string(), &label, opts.tmux.is_some()).into_iter().map(Line::from).collect());
@@ -1375,7 +1379,14 @@ pub fn run(mux: &mut HostMux, attached: &Attached, input: Input, screen: &mut dy
         // The start of a sequence nothing completed is typed text after all.
         let mut late = Vec::new();
         escape.expire(Instant::now(), &mut late);
-        if decor.window.is_some() && late == b"\x1b" {
+        if let (Some(window), Some(controls)) = (modal.as_mut().filter(|window| window.capturing() && late == b"\x1b"), opts.controls.as_ref()) {
+            // Esc while a key is being captured cancels the capture only.
+            out.write_all(&decor.undo(&mirror))?;
+            window.handle(WindowKey::Close, controls, &here, &label);
+            decor.window = Some(window.lines(controls, &attached.host, &attached.peer.to_string(), &label, opts.tmux.is_some()).into_iter().map(Line::from).collect());
+            wrote = true;
+            late.clear();
+        } else if decor.window.is_some() && late == b"\x1b" {
             out.write_all(&decor.undo(&mirror))?;
             modal = None;
             if let Some(line) = list_return.take() {

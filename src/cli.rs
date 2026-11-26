@@ -1,4 +1,4 @@
-use crate::client::{self, Attached, Input, Outcome, Target, DEFAULT_ESCAPE};
+use crate::client::{self, Attached, Input, Outcome, Target};
 use clap::{Parser, Subcommand};
 use crate::crypto::{new_token, Key};
 use crate::forward::{Forwarder, Spec};
@@ -29,14 +29,56 @@ fn help_styles() -> clap::builder::Styles {
         .placeholder(AnsiColor::Yellow.on_default())
 }
 
-fn help_text(error: &clap::Error) -> String {
-    let rendered = error.render().ansi().to_string();
+/// The escape key this rsh uses: `RSH_ESCAPE_KEY`, else `escape_key` in
+/// the config (the default when it cannot be read).
+fn current_escape_key() -> Option<u8> {
+    crate::config::escape_key_from_env().unwrap_or_else(|| {
+        crate::config::Config::load(&home().join(".rsh/config.yaml")).unwrap_or_default().escape_key
+    })
+}
+
+/// The help with `{k}` as the escape key (`~` when there is none) and the
+/// command keys' descriptions kept in one column.
+fn with_escape_key(text: &str, key: Option<u8>) -> String {
+    let place = match key {
+        None => "(off: escape_key is none or RSH_ESCAPE_KEY empty; shown with ~)",
+        Some(key) if key < 0x20 => "(typed anywhere)",
+        Some(_) => "(typed at the start of a line, as in ssh)",
+    };
+    let name = client::escape_name(key.unwrap_or(client::DEFAULT_ESCAPE));
+    text.split_inclusive('\n').map(|line| {
+        let line = line.replace("{where}", place);
+        let Some(rest) = line.strip_prefix("  {k}") else { return line.replace("{k}", &name) };
+        // A key and its description: "  {k}l             sessions ...".
+        let (command, description) = rest.split_once("  ").map(|(c, d)| (c, d.trim_start())).unwrap_or((rest, ""));
+        let command = format!("{name}{}", command.replace("{k}", &name));
+        if description.is_empty() || command.contains(' ') {
+            return format!("  {name}{}", rest.replace("{k}", &name));
+        }
+        format!("  {command:<14} {}", description.replace("{k}", &name))
+    }).collect()
+}
+
+fn help_text(error: &clap::Error, key: Option<u8>) -> String {
+    let rendered = with_escape_key(&error.render().ansi().to_string(), key);
+    let name = client::escape_name(key.unwrap_or(client::DEFAULT_ESCAPE));
+    // A key row: the escape key and a command (or itself), then a space;
+    // not prose that happens to start with the key (`~/.rsh/...`).
+    let key_row = |line: &str| {
+        line.strip_prefix("  ").and_then(|rest| rest.strip_prefix(name.as_str())).is_some_and(|rest| {
+            let rest = rest.strip_prefix(name.as_str()).or_else(|| rest.strip_prefix(['.', 'l', 'm', ',', 'i', 'r', 'h']));
+            rest.is_some_and(|rest| rest.starts_with(' '))
+        })
+    };
     rendered.split_inclusive('\n').map(|line| {
         match line.trim_end() {
-            "rsh <host>" | "keys in a session (typed at the start of a line, as in ssh)" | "menus" | "auth file" => {
+            "rsh <host>" | "menus" | "auth file" => {
                 format!("{}{}", paint(line.trim_end(), console::Style::new().cyan().bold()), if line.ends_with('\n') { "\n" } else { "" })
             }
-            _ if line.starts_with("  ~") => {
+            heading if heading.starts_with("keys in a session (") => {
+                format!("{}{}", paint(heading, console::Style::new().cyan().bold()), if line.ends_with('\n') { "\n" } else { "" })
+            }
+            _ if key_row(line) => {
                 let key = line.split_whitespace().next().unwrap_or("");
                 line.replacen(key, &paint(key, console::Style::new().yellow().bold()), 1)
             }
@@ -110,27 +152,29 @@ rsh <host>
   When the host has live sessions, a menu offers them and a new session.
   rsh <host> <name> opens or resumes the session called <name>; a new
   session without a name gets the first free remote-<n>. The name and
-  host show at the top right (orange while ~ waits for a command).
+  host show at the top right (orange while {k} waits for a command).
   rsh <host> <name> --tmux joins the host's tmux session <name> (made if
-  missing, first free remote-<n> without a name); detaching in tmux or ~.
+  missing, first free remote-<n> without a name); detaching in tmux or {k}.
   leaves it running in tmux and ends the rsh session.
-  rsh ls and ~l list rsh sessions and tmux sessions together.
+  rsh ls and {k}l list rsh sessions and tmux sessions together.
 
-keys in a session (typed at the start of a line, as in ssh)
-  ~.             detach; the session keeps running (in a tmux session:
+keys in a session {where}
+  {k}.             detach; the session keeps running (in a tmux session:
                  leave tmux; the tmux session keeps running)
-  ~l             sessions of every known host; Up/Down and Enter switch
+  {k}l             sessions of every known host; Up/Down and Enter switch
                  to one, q closes
-  ~m             rename the current rsh or tmux session
-  ~,             settings; arrows move/change, Enter activates, Esc closes
-                 also ~ then Cmd+, when the terminal forwards CSI 44;9u
-  ~i             toggle frame diff inspect (green moved, amber cells, red row, gray idle)
-  ~r             repaint the screen from the server
-  ~h             these keys
-  ~~             send ~
-  RSH_ESCAPE_KEY sets another escape character; empty disables it.
-  A control character (e.g. RSH_ESCAPE_KEY=$'\\x1e' for Ctrl-^) works
-  anywhere, not only at the start of a line.
+  {k}m             rename the current rsh or tmux session
+  {k},             settings; arrows move/change, Enter activates, Esc closes
+                 also {k} then Cmd+, when the terminal forwards CSI 44;9u
+  {k}i             toggle frame diff inspect (green moved, amber cells, red row, gray idle)
+  {k}r             repaint the screen from the server
+  {k}h             these keys
+  {k}{k}             send {k}
+  {k}, sets another escape key, used at once and saved as escape_key in
+  ~/.rsh/config.yaml (escape_key: none there disables it). RSH_ESCAPE_KEY
+  sets this rsh's key over it; empty disables it.
+  A control key (e.g. Ctrl-^, RSH_ESCAPE_KEY=$'\\x1e') works anywhere,
+  not only at the start of a line.
 
 menus
   Up/Down move and wrap at either end, typing filters, Enter selects,
@@ -228,14 +272,14 @@ struct Cli {
     /// Session name to create or resume
     #[arg(long)]
     name: Option<String>,
-    /// Join the host's tmux session NAME (tmux new-session -A); ~. leaves it
+    /// Join the host's tmux session NAME (tmux new-session -A); {k}. leaves it
     #[arg(long, conflicts_with = "run")]
     tmux: bool,
     /// Compress the session's output: always (any link), adaptive (slow or
     /// far links), none; over `compress` in ~/.rsh/config.yaml (always)
     #[arg(long, value_name = "MODE", value_parser = parse_compress)]
     compress: Option<crate::config::Compress>,
-    /// Show header stats (fps, RTT, KB/s) and frame diff tint in ordinary interactive sessions (~i toggles diff)
+    /// Show header stats (fps, RTT, KB/s) and frame diff tint in ordinary interactive sessions ({k}i toggles diff)
     #[arg(long, alias = "profile-render", conflicts_with = "tmux")]
     inspect: bool,
     /// Forward a local port to host:port as seen from the server
@@ -446,7 +490,7 @@ fn session(args: &[String], keys: &mut Keys, stdout: &mut dyn Write, tty: bool) 
     let opts = match Options::parse(args) {
         Ok(opts) => opts,
         Err(err) if matches!(err.kind(), clap::error::ErrorKind::DisplayHelp | clap::error::ErrorKind::DisplayHelpOnMissingArgumentOrSubcommand) => {
-            write!(stdout, "{}", help_text(&err)).map_err(|err| err.to_string())?;
+            write!(stdout, "{}", help_text(&err, current_escape_key())).map_err(|err| err.to_string())?;
             return Ok(0);
         }
         Err(err) => return Err(err.render().to_string().trim_start_matches("error: ").trim_end().to_string()),
@@ -1082,11 +1126,6 @@ fn attach(
     if tty {
         client::install_signal_handlers();
     }
-    let escape = match env::var("RSH_ESCAPE_KEY") {
-        Ok(value) if value.is_empty() => None,
-        Ok(value) if value.len() == 1 && value.as_bytes()[0] < 0x80 => Some(value.as_bytes()[0]),
-        _ => Some(DEFAULT_ESCAPE),
-    };
     // While a session owns the terminal no spinner draws on it (`~l`
     // lists hosts on other threads; a switch says hello over the screen).
     struct Quiet;
@@ -1115,6 +1154,8 @@ fn attach(
     };
     loop {
         let config = if first { config.clone() } else { crate::config::Config::load(&home().join(".rsh/config.yaml"))? };
+        // RSH_ESCAPE_KEY over `escape_key`, read again for every attachment.
+        let escape = crate::config::escape_key_from_env().unwrap_or(config.escape_key);
         let size = if tty { crate::pty::window_size(1) } else { (80, 24) };
         let mut mux = HostMux::new();
         let sock = mux.socket_for(&host, peer).map_err(|err| err.to_string())?;
@@ -2083,9 +2124,27 @@ mod tests {
     fn help_and_row_colors_preserve_plain_text() {
         let error = Cli::try_parse_from(["rsh", "--help"]).err().unwrap();
         let plain = error.render().to_string();
-        let colored = help_text(&error);
-        assert!(colored.contains("\x1b["));
-        assert_eq!(console::strip_ansi_codes(&colored), plain);
+        for key in [Some(b'~'), Some(0x1e), Some(b'`'), None] {
+            let colored = help_text(&error, key);
+            assert!(colored.contains("\x1b["));
+            assert_eq!(console::strip_ansi_codes(&colored), with_escape_key(&plain, key));
+        }
+        // Keys and descriptions follow the escape key, in one column.
+        let tilde = with_escape_key(&plain, Some(b'~'));
+        assert!(!tilde.contains("{k}") && !tilde.contains("{where}"));
+        assert!(tilde.contains("keys in a session (typed at the start of a line, as in ssh)\n  ~.             detach;"));
+        assert!(tilde.contains("\n  ~~             send ~\n"));
+        let ctrl = with_escape_key(&plain, Some(0x1e));
+        assert!(ctrl.contains("keys in a session (typed anywhere)\n  Ctrl-^.        detach;"));
+        assert!(ctrl.contains("\n  Ctrl-^Ctrl-^   send Ctrl-^\n"));
+        assert!(ctrl.contains("orange while Ctrl-^ waits") && ctrl.contains("rsh ls and Ctrl-^l list"));
+        assert!(["  ~.", "  ~l", "  ~,", "  ~~", "or ~.", "while ~ ", "~. leaves", "~i toggles"].iter().all(|old| !ctrl.contains(old)));
+        assert!(ctrl.contains("Ctrl-^. leaves it") && ctrl.contains("Ctrl-^i toggles diff"));
+        // Only key rows are painted as keys, not prose that starts like one.
+        let painted = |key: Option<u8>, text: &str| help_text(&error, key).contains(&paint(text, console::Style::new().yellow().bold()));
+        assert!(painted(Some(b'~'), "~.") && painted(Some(b'~'), "~~") && painted(Some(0x1e), "Ctrl-^l"));
+        assert!(!painted(Some(b'~'), "~/.rsh/config.yaml") && !painted(Some(b'T'), "The"));
+        assert!(with_escape_key(&plain, None).contains("keys in a session (off: escape_key is none or RSH_ESCAPE_KEY empty; shown with ~)\n  ~."));
         let rows = [Row::Open { host: "host".into() }, Row::Tmux { host: "host".into(), attached: false, tmux: TmuxInfo { name: "work".into(), clients: 0, cols: 80, rows: 24, idle_secs: 1, session: 0 } }, Row::Down { host: "down".into(), error: "no reply".into() }, Row::New];
         for row in rows {
             let plain = row_text(1, &row, false);
@@ -2300,7 +2359,8 @@ mod tests {
     #[test]
     fn help_and_parse() {
         let (_, text) = run_text(&["--help"], "");
-        for command in ["<HOST>", "ls", "kill", "serve", "bootstrap", "--name", "--auth", "--peer", "--bind", "~.", "kept until they exit"] {
+        let detach = format!("{}.", client::escape_name(current_escape_key().unwrap_or(client::DEFAULT_ESCAPE)));
+        for command in ["<HOST>", "ls", "kill", "serve", "bootstrap", "--name", "--auth", "--peer", "--bind", &detach, "kept until they exit"] {
             assert!(text.contains(command), "{command} in {text}");
         }
         assert!(Options::parse(&args(&["--inspect", "host"])).unwrap().inspect);

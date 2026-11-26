@@ -21,6 +21,8 @@ impl Menu {
             "env".into(),
             "-u".into(),
             "NO_COLOR".into(),
+            "-u".into(),
+            "RSH_ESCAPE_KEY".into(),
             "RSH_NO_UPDATE=1".into(),
             format!("HOME={}", dir.display()),
             format!("TERM={term}"),
@@ -641,7 +643,7 @@ fn header_stats_toggle_live_and_persist_as_global_defaults() {
     menu.send(b"\x1b");
     menu.wait_gone("rsh settings");
     // Rename through settings is still reachable after inserting the new rows.
-    menu.send(b"~,\x1b[B\x1b[B\x1b[B\x1b[B\x1b[B\r");
+    menu.send(b"~,\x1b[B\x1b[B\x1b[B\x1b[B\x1b[B\x1b[B\r");
     menu.wait("Rename session");
     menu.send(b"\x15"); // Rename input ignores control characters.
     menu.send(b"\x7f\x7f\x7f\x7f\x7f\x7f\x7frenamed\r");
@@ -655,13 +657,37 @@ fn header_stats_toggle_live_and_persist_as_global_defaults() {
     menu.wait_gone("KB/s]");
     assert!(menu.text().contains("renamed:fixture.example"));
     assert!(rsh::config::Config::load(&config).unwrap().show_stats);
-    menu.send(b"~.");
+    // A new prefix key is saved and applies to this attachment at once.
+    menu.send(b"~,\x1b[B\x1b[B\x1b[B\x1b[B\x1b[B\r");
+    menu.wait("press the new key");
+    menu.send(b"\x1e");
+    menu.wait("Saved; Ctrl-^. now detaches");
+    menu.wait("Prefix key: Ctrl-^ (saved; Enter changes)");
+    // A real Esc (alone, after the escape wait) cancels a capture only.
+    menu.send(b"\r");
+    menu.wait("press the new key");
+    menu.send(b"\x1b");
+    menu.wait("Prefix key unchanged");
+    assert!(menu.text().contains("rsh settings"));
+    assert_eq!(rsh::config::Config::load(&config).unwrap().escape_key, Some(0x1e));
+    menu.send(b"\x1b");
+    menu.wait_gone("rsh settings");
+    menu.send(b"\x15~.");
+    menu.send(b"\x15echo prefix-now\r");
+    menu.wait_for("echo output", |text| text.lines().any(|line| line.trim_end() == "prefix-now"));
+    assert!(!menu.text().contains("detached"));
+    menu.send(b"\x1e.");
     menu.wait("detached");
     drop(menu);
     let args = ["--auth", auth.to_str().unwrap(), "--peer", &address, "fixture.example", "renamed"];
     let mut next = Menu::start(&args, &dir.0, true, "xterm-256color");
     next.wait("KB/s] renamed:fixture.example");
-    next.send(b"~.");
+    // `~.` at the start of a line is plain typing now.
+    next.send(b"\x15~.");
+    next.send(b"\x15echo prefix-moved\r");
+    next.wait_for("echo output", |text| text.lines().any(|line| line.trim_end() == "prefix-moved"));
+    assert!(!next.text().contains("detached"));
+    next.send(b"\x1e.");
     next.wait("detached");
 }
 

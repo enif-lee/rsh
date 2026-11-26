@@ -241,8 +241,9 @@ Successful connections are remembered alongside the auth file
 `~` followed by Cmd+, also opens settings when the terminal forwards the
 Kitty Super-comma sequence (`CSI 44;9u`). A terminal app that reserves Cmd+,
 for its own preferences needs a key mapping to send that sequence; `~,`
-works with ordinary terminal input. Escape commands use `RSH_ESCAPE_KEY`
-when overridden and are disabled when it is empty.
+works with ordinary terminal input. Escape commands use another key when
+`escape_key` (below) or `RSH_ESCAPE_KEY` sets one, and are disabled by
+`escape_key: none` or an empty `RSH_ESCAPE_KEY`.
 
 rsh schedules a 150 ms release for synchronized redraws left open by a
 remote program, even if no more output arrives or another repaint is waiting.
@@ -261,6 +262,7 @@ compress: always
 clipboard_read: false
 show_stats: false
 inspect: false
+escape_key: "~"
 ```
 
 `compress` accepts `always` (the default), `adaptive`, or `none`.
@@ -276,12 +278,23 @@ enabled, one ping per second measures latency even without typing. The
 overlaid header hides when the terminal is too narrow or when it would
 cover the top-row cursor.
 
+`escape_key` is the key before rsh's commands (`~.`, `~,` and the rest): a
+printable character, quoted, which counts at the start of a line, or
+`ctrl-<key>` (for example `ctrl-^` or `ctrl-]`), which counts anywhere; the
+default is `"~"`, and `none` turns the commands off. Command keys
+(`. h ? r i p l m ,`), space and keys a session needs (Ctrl-C, Ctrl-D,
+Backspace, Tab, Enter, Ctrl-Z, Esc, NUL) cannot be the escape key.
+`RSH_ESCAPE_KEY` takes precedence.
+
 The `~,` settings window shows the version, host, session, peer and config
 path. Its **Session** scope changes clipboard reads, local echo prediction,
 header statistics and frame diff inspect immediately for the current
 connection. Its **Global** scope saves clipboard, compression, header
 statistics and frame diff inspect defaults for new attachments, preserving
-other settings and comments; `--compress` and `--inspect` still take precedence. Switch
+other settings and comments; `--compress` and `--inspect` still take precedence.
+“Prefix key” saves a new escape key and uses it at once, in either scope
+(unless `RSH_ESCAPE_KEY` sets the key of this rsh process): press Enter
+(or Left/Right), then the key (Esc cancels). Switch
 scope with Left/Right or Enter, move with Up/Down, and use Left/Right or
 Enter to change a value. Select “Rename current session” and press Enter
 to edit its name. Esc closes or cancels.
@@ -290,7 +303,7 @@ to edit its name. Esc closes or cancels.
 | --- | --- |
 | `RSH_NO_UPDATE=1` | Disable automatic client updates |
 | `RSH_PREDICTION=never` or `always` | Override adaptive local echo prediction |
-| `RSH_ESCAPE_KEY` | Change the escape character; an empty value disables it |
+| `RSH_ESCAPE_KEY` | Change the escape character over `escape_key`; an empty value disables it |
 | `RSH_AUTH` | Use another client token file instead of `~/.rsh/known` |
 | `RSH_PEER` | Connect directly to an existing server at `HOST:PORT` |
 

@@ -8,7 +8,7 @@ use crate::proto::{
 };
 use crate::path::PathModel;
 use crate::pty::{kill_group, try_wait, Pty, SpawnOptions};
-use crate::terminal::{Effects, Terminal};
+use crate::terminal::{Effects, Terminal, LOCAL_DA1};
 use alacritty_terminal::{vte::Parser, event::Event};
 use crate::wire::{is_tcp_addr, TcpSide};
 use std::collections::{BTreeMap, VecDeque};
@@ -2842,7 +2842,7 @@ impl Session {
             if scroll.effects.bytes.len() > OUTPUT_BACKLOG { scroll.effects.bytes.clear(); }
             for event in events {
                 let reply = match event {
-                    Event::PtyWrite(reply) => Some(reply.into_bytes()),
+                    Event::PtyWrite(reply) if reply != LOCAL_DA1 => Some(reply.into_bytes()),
                     _ => None,
                 };
                 if let Some(reply) = reply.filter(|reply| self.pty_in.len() + reply.len() <= INPUT_BACKLOG) { self.pty_in.extend(reply); }
@@ -3653,11 +3653,12 @@ mod server_scroll_tests {
             assert_eq!(client.scrollback_len(), 0);
         }
         let (row, col) = session.term.cursor();
-        session.output(b"\x1b[6n\x1b]52;c;aGVsbG8=\x07\x07");
+        session.output(b"\x1b[6n\x1b]52;c;aGVsbG8=\x07\x07\x1b]11;?\x07\x1b[c");
+        // DA1 is answered by the real terminal, after the OSC 11 before it.
         assert_eq!(session.pty_in.iter().copied().collect::<Vec<_>>(), format!("\x1b[{};{}R", row + 1, col + 1).as_bytes());
         session.refresh_scroll(now + Duration::from_millis(32));
         let bytes = drain(session, now + Duration::from_millis(32));
-        assert!(String::from_utf8_lossy(&bytes).contains("\x1b]52;c;aGVsbG8=\x07\x07"));
+        assert!(String::from_utf8_lossy(&bytes).contains("\x1b]52;c;aGVsbG8=\x07\x07\x1b]11;?\x07\x1b[c"));
         session.attach.as_mut().unwrap().scroll.as_mut().unwrap().apply(&mut session.term, request(4, 4, 0));
         session.refresh_scroll(now + Duration::from_millis(40));
         client.feed(&drain(session, now + Duration::from_millis(40)));

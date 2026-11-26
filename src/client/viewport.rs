@@ -4,7 +4,7 @@
 use super::{next_unit, Unit, PARTIAL_WAIT};
 use crate::proto::{ScrollRequest, ScrollStatus};
 use crate::terminal::{
-    plan_row_diff, restore_row_tail, same_row_cells, scroll_change_with_blank, Attr, Effects,
+    plan_row_diff, restore_row_tail, same_row_cells, scroll_change_with_blank, Attr, Effects, LOCAL_DA1,
     RowSnapshot, Terminal,
 };
 use alacritty_terminal::event::{Event, WindowSize};
@@ -209,6 +209,12 @@ impl Viewport {
                     continue;
                 }
             }
+            // The real terminal's DA1 answer stands in for the virtual
+            // terminal's, whose capabilities programs talk to.
+            if !self.pasting && unit == Unit::Report && raw.starts_with(b"\x1b[?") && raw.ends_with(b"c") {
+                out.extend_from_slice(LOCAL_DA1.as_bytes());
+                continue;
+            }
             if raw == b"\x1b[200~" {
                 self.pasting = true;
             }
@@ -225,21 +231,22 @@ impl Viewport {
                 if !window && button & 64 != 0 && !released {
                     self.scroll_until = Some(now + std::time::Duration::from_millis(100));
                 }
+                let lines = if released { None } else { wheel_lines(button) };
                 if !window && self.scrolling {
-                    if button & 64 != 0 && !released {
-                        self.scroll(if button & 1 == 0 { 3 } else { -3 });
+                    if let Some(lines) = lines {
+                        self.scroll(lines);
                     }
                 } else if self.terminal.mouse_mode() {
                     if !self.terminal.pixel_mouse() || pixel_mouse {
                         out.extend(self.terminal.mouse_report(button, x, y, released));
                     }
-                } else if !window && button & 64 != 0 && !released {
+                } else if let Some(lines) = lines.filter(|_| !window) {
                     if !self.terminal.alt_screen() {
-                        self.scroll(if button & 1 == 0 { 3 } else { -3 });
+                        self.scroll(lines);
                     } else {
                         // Full-screen programs without mouse reporting retain
                         // the usual alternate-screen wheel-as-arrow behavior.
-                        let arrow = if button & 1 == 0 { b'A' } else { b'B' };
+                        let arrow = if lines > 0 { b'A' } else { b'B' };
                         let prefix = if self.terminal.application_cursor() {
                             b'O'
                         } else {
@@ -308,7 +315,7 @@ impl Viewport {
         let (cols, rows) = self.terminal.size();
         for event in self.terminal.take_events() {
             match event {
-                Event::PtyWrite(reply) => self.replies.extend_from_slice(reply.as_bytes()),
+                Event::PtyWrite(reply) if reply != LOCAL_DA1 => self.replies.extend_from_slice(reply.as_bytes()),
                 Event::TextAreaSizeRequest(format) => self.replies.extend_from_slice(
                     format(WindowSize {
                         num_lines: rows,
@@ -613,6 +620,17 @@ impl Viewport {
     }
 }
 
+/// History lines a wheel button scrolls: 3 back for up (64), 3 forward
+/// for down (65), whatever modifiers are held. A trackpad also sends left
+/// and right (66, 67) as it drifts sideways; those do not scroll.
+fn wheel_lines(button: u16) -> Option<i32> {
+    match button & !(4 | 8 | 16) {
+        64 => Some(3),
+        65 => Some(-3),
+        _ => None,
+    }
+}
+
 fn mouse(raw: &[u8]) -> Option<(u16, u16, u16, bool)> {
     if let Some(body) = raw.strip_prefix(b"\x1b[M") {
         let [button, x, y] = body else {
@@ -715,7 +733,9 @@ fn cell_size_report(raw: &[u8]) -> Option<(u16, u16)> {
 
 /// Non-grid effects still belong to the real terminal: clipboard, palette,
 /// shell integration, title and bell. Cursor/status replies come from the
-/// virtual terminal so they cannot expose the physical header offset.
+/// virtual terminal so they cannot expose the physical header offset. DA1
+/// is asked of the real terminal, behind the queries before it, and its
+/// answer is replaced with the virtual terminal's (`LOCAL_DA1`).
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1223,6 +1243,25 @@ mod tests {
     }
 
     #[test]
+    fn horizontal_wheel_does_not_scroll_vertically() {
+        let now = Instant::now();
+        let mut view = Viewport::new((80, 5));
+        assert!(view.input(b"\x1b[<64;10;3M", false, now).is_empty());
+        assert_eq!(view.request.position, 3);
+        // Left and right (a trackpad drifting sideways), also with Shift.
+        for event in [&b"\x1b[<66;10;3M"[..], b"\x1b[<67;10;3M", b"\x1b[<71;10;3M"] {
+            assert!(view.input(event, false, now).is_empty());
+            assert_eq!(view.request.position, 3, "{event:?}");
+        }
+        assert!(view.input(b"\x1b[<69;10;3M", false, now).is_empty());
+        assert_eq!(view.request.position, 0, "Shift+down still scrolls");
+        let mut full = Viewport::new((80, 5));
+        full.feed(b"\x1b[?1049h");
+        assert!(full.input(b"\x1b[<67;10;3M", false, now).is_empty(), "no arrows in full-screen programs");
+        assert_eq!(full.input(b"\x1b[<65;10;3M", false, now), b"\x1b[B\x1b[B\x1b[B");
+    }
+
+    #[test]
     fn interrupted_mouse_reports_preserve_the_following_key() {
         let now = Instant::now();
         for prefix in [b"\x1b[<64;".as_slice(), b"\x1b[96;10;".as_slice()] {
@@ -1330,6 +1369,26 @@ mod tests {
         assert!(output.contains("\x1b]52;c;aGVsbG8=\x07"));
         assert!(output.contains("\x1b]10;?\x1b\\"));
         assert!(output.contains("\x1b]2;remote title\x07\x07"));
+    }
+
+    #[test]
+    fn device_attributes_follow_queries_to_the_terminal() {
+        // A program ends its queries with DA1; answered here, it would
+        // overtake the terminal's OSC 11 answer, which then arrives as typing.
+        let mut view = Viewport::new((80, 5));
+        view.draw();
+        view.feed(b"\x1b]11;?\x07\x1b[c\x1b[0c\x1b[5n");
+        view.feed(b"\x1bZ\x1b[0;1c\x1b[>c");
+        // DA2 is still answered here; DA1 and DECID are not.
+        let replies = String::from_utf8_lossy(&view.replies).into_owned();
+        assert!(replies.starts_with("\x1b[0n\x1b[>0;") && replies.ends_with(";1c") && !replies.contains("?6c"), "{replies:?}");
+        let output = view.draw();
+        assert!(String::from_utf8_lossy(&output).contains("\x1b]11;?\x07\x1b[c\x1b[c"));
+        assert_eq!(String::from_utf8_lossy(&output).matches("\x1b[c").count(), 4, "DA1, CSI 0 c, DECID, CSI 0;1 c");
+        // The real terminal's answer (sixel and all) reaches the program as
+        // the virtual terminal's.
+        let now = Instant::now();
+        assert_eq!(view.input(b"\x1b]11;rgb:0/0/0\x07\x1b[?62;4;22c", false, now), b"\x1b]11;rgb:0/0/0\x07\x1b[?6c");
     }
 
     #[test]

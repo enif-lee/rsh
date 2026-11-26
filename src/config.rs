@@ -11,6 +11,10 @@
 //! compress: always
 //! show_stats: false
 //! inspect: false
+//! # The key before rsh's commands (`~.` detaches): a printable character
+//! # (quoted, used at the start of a line), ctrl-<key> (used anywhere) or
+//! # none. RSH_ESCAPE_KEY takes precedence.
+//! escape_key: "~"
 //! ```
 
 use std::path::Path;
@@ -25,6 +29,62 @@ pub struct Config {
     pub show_stats: bool,
     /// Highlight moved, cell-patched, rewritten and unchanged rows in the viewport.
     pub inspect: bool,
+    /// The key before rsh's own commands; `None` turns them off.
+    pub escape_key: Option<u8>,
+}
+
+/// The keys that follow the escape key as commands: as the escape key
+/// itself, one of them could never be typed through to the session.
+const COMMAND_KEYS: &[u8] = b".h?ripml,";
+
+/// Whether `key` may be the escape key: printable ASCII but space and the
+/// command keys, or a control character that no session needs for itself
+/// (not NUL, Ctrl-C, Ctrl-D, Backspace, Tab, Enter, Ctrl-Z or Esc).
+pub fn check_escape_key(key: u8) -> Result<(), String> {
+    match key {
+        b'!'..=b'~' if !COMMAND_KEYS.contains(&key) => Ok(()),
+        0x01..=0x1f if ![0x03, 0x04, 0x08, 0x09, 0x0a, 0x0d, 0x1a, 0x1b].contains(&key) => Ok(()),
+        _ => Err(format!("{} cannot be the escape key", crate::client::escape_name(key))),
+    }
+}
+
+/// `escape_key`'s value for `key`: `none`, `ctrl-a`, `ctrl-^`, or the
+/// character quoted (so `#` is not taken for a comment).
+pub fn escape_key_value(key: Option<u8>) -> String {
+    match key {
+        None => "none".into(),
+        Some(key) if key < 0x20 => format!("ctrl-{}", char::from(key + 0x40).to_ascii_lowercase()),
+        Some(key) => format!("\"{}\"", char::from(key)),
+    }
+}
+
+/// `RSH_ESCAPE_KEY` when it sets the escape key: empty turns it off, one
+/// ASCII character is the key; any other value leaves `escape_key`.
+pub fn escape_key_from_env() -> Option<Option<u8>> {
+    match std::env::var("RSH_ESCAPE_KEY") {
+        Ok(value) if value.is_empty() => Some(None),
+        Ok(value) if value.len() == 1 && value.as_bytes()[0] < 0x80 => Some(Some(value.as_bytes()[0])),
+        _ => None,
+    }
+}
+
+fn parse_escape_key(value: &str) -> Result<Option<u8>, String> {
+    if value.eq_ignore_ascii_case("none") {
+        return Ok(None);
+    }
+    let unquoted = value
+        .strip_prefix('"').and_then(|v| v.strip_suffix('"'))
+        .or_else(|| value.strip_prefix('\'').and_then(|v| v.strip_suffix('\'')))
+        .unwrap_or(value);
+    let key = match (unquoted.as_bytes(), unquoted.get(..5).map(str::to_ascii_lowercase).as_deref()) {
+        ([key], _) => *key,
+        (_, Some("ctrl-")) if unquoted.len() == 6 => match unquoted.as_bytes()[5].to_ascii_uppercase() {
+            ch @ (b'@'..=b'_') => ch - 0x40,
+            _ => return Err(format!("escape_key: no control character for `{value}`")),
+        },
+        _ => return Err(format!("escape_key must be a character, ctrl-<key> or none, not `{value}`")),
+    };
+    check_escape_key(key).map(|()| Some(key)).map_err(|err| format!("escape_key: {err}"))
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -54,7 +114,7 @@ impl Compress {
 
 impl Default for Config {
     fn default() -> Self {
-        Config { clipboard_read: true, compress: Compress::Always, show_stats: false, inspect: false }
+        Config { clipboard_read: true, compress: Compress::Always, show_stats: false, inspect: false, escape_key: Some(crate::client::DEFAULT_ESCAPE) }
     }
 }
 
@@ -106,9 +166,11 @@ impl Config {
         let mut config = Self::default();
         let mut seen = Vec::new();
         for (number, line) in text.strip_prefix('\u{feff}').unwrap_or(text).lines().enumerate() {
-            let line = match line.find('#') {
-                Some(at) if at == 0 || line[..at].ends_with(char::is_whitespace) => &line[..at],
-                _ => line,
+            // A comment starts with a `#` at the start or after a space, so
+            // `escape_key: "#" # note` keeps its quoted `#`.
+            let line = match line.match_indices('#').find(|(at, _)| *at == 0 || line[..*at].ends_with(char::is_whitespace)) {
+                Some((at, _)) => &line[..at],
+                None => line,
             };
             if line.trim().is_empty() {
                 continue;
@@ -130,6 +192,7 @@ impl Config {
                 "clipboard_read" => config.clipboard_read = flag()?,
                 "show_stats" => config.show_stats = flag()?,
                 "inspect" => config.inspect = flag()?,
+                "escape_key" => config.escape_key = parse_escape_key(value).map_err(at)?,
                 "compress" => {
                     config.compress = Compress::from_name(value).ok_or_else(|| at(format!("compress must be adaptive, always or none, not `{value}`")))?;
                 }
@@ -143,6 +206,29 @@ impl Config {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn escape_key_reads_characters_control_keys_and_none() {
+        assert_eq!(Config::default().escape_key, Some(b'~'));
+        for (value, key) in [("\"~\"", Some(b'~')), ("'#'", Some(b'#')), ("\"#\" # note", Some(b'#')), ("`", Some(b'`')), ("ctrl-^", Some(0x1e)), ("Ctrl-]", Some(0x1d)), ("\"ctrl-a\"", Some(0x01)), ("None", None)] {
+            assert_eq!(Config::parse(&format!("escape_key: {value}")).unwrap().escape_key, key, "{value}");
+            assert_eq!(Config::parse(&format!("escape_key: {}", escape_key_value(key))).unwrap().escape_key, key);
+        }
+        assert_eq!(escape_key_value(Some(0x1e)), "ctrl-^");
+        // A saved key keeps the comment after it.
+        let dir = std::env::temp_dir().join(format!("rsh-config-escape-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("config.yaml");
+        std::fs::write(&path, "escape_key: \"~\" # my key\n").unwrap();
+        Config::save_setting(&path, "escape_key", &escape_key_value(Some(b'#'))).unwrap();
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), "escape_key: \"#\" # my key\n");
+        assert_eq!(Config::load(&path).unwrap().escape_key, Some(b'#'));
+        let _ = std::fs::remove_dir_all(dir);
+        // Keys a session needs, command keys and what is not one key.
+        for value in ["ctrl-c", "ctrl-m", "ctrl-[", "\".\"", "l", "\" \"", "ab", "ctrl-", "ctrl-1", "#"] {
+            assert!(Config::parse(&format!("escape_key: {value}")).is_err(), "{value}");
+        }
+    }
 
     #[test]
     fn saving_preserves_comments_and_other_settings() {
